@@ -1,0 +1,42 @@
+package ast
+
+import (
+	"bytes"
+	"emerald/lexer"
+)
+
+type MethodCall struct {
+	Left      Expression
+	Token     lexer.Token // The . token
+	Method    Expression  // IdentifierExpression of the property we're accessing
+	Arguments []Expression
+}
+
+func (pa *MethodCall) expressionNode()      {}
+func (pa *MethodCall) TokenLiteral() string { return pa.Token.Literal }
+func (pa *MethodCall) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(pa.Left.String())
+	out.WriteString(pa.TokenLiteral())
+	out.WriteString(pa.Method.String())
+
+	if len(pa.Arguments) != 0 {
+		out.WriteString("(")
+
+		for i, argument := range pa.Arguments {
+			out.WriteString(argument.String())
+
+			if i != len(pa.Arguments)-1 {
+				out.WriteString(", ")
+			}
+		}
+
+		out.WriteString(")")
+	}
+
+	out.WriteString(")")
+
+	return out.String()
+}
