@@ -99,7 +99,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 			return err
 		}
 
-		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value <= otherVal.Value)
+		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value >= otherVal.Value)
 	},
 }
 

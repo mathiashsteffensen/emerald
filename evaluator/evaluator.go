@@ -146,7 +146,11 @@ func evalInfixExpression(
 	return left.SEND(Eval, env, operator, left, nil, right)
 }
 
-func evalIfExpression(definitionContext object.EmeraldValue, ie *ast.IfExpression, env object.Environment) object.EmeraldValue {
+func evalIfExpression(
+	definitionContext object.EmeraldValue,
+	ie *ast.IfExpression,
+	env object.Environment,
+) object.EmeraldValue {
 	condition := Eval(definitionContext, ie.Condition, env)
 	if isError(condition) {
 		return condition
