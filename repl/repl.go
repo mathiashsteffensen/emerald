@@ -39,7 +39,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program, env)
+		evaluated := evaluator.Eval(object.Object, program, env)
 
 		if evaluated != nil {
 			if evaluated.RespondsTo("to_s", evaluated) {

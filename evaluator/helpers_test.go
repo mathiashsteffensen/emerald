@@ -42,7 +42,7 @@ func testBooleanObject(t *testing.T, obj object.EmeraldValue, expected bool) boo
 func testIntegerObject(t *testing.T, obj object.EmeraldValue, expected int64) bool {
 	result, ok := obj.(*object.IntegerInstance)
 	if !ok {
-		t.Errorf("object is not Integer. got=%T (%+v)", obj, obj)
+		t.Errorf("object is not Integer. got=%T (%+v) (%s)", obj, obj, obj.Inspect())
 		return false
 	}
 	if result.Value != expected {
