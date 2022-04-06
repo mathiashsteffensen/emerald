@@ -24,7 +24,7 @@ type (
 		ExtractMethod(name string, target EmeraldValue) (EmeraldValue, EmeraldValue)
 		RespondsTo(name string, target EmeraldValue) bool
 		SEND(
-			eval func(definitionContext EmeraldValue, node ast.Node, env Environment) EmeraldValue,
+			eval func(executionContext EmeraldValue, node ast.Node, env Environment) EmeraldValue,
 			env Environment,
 			name string,
 			target EmeraldValue,
@@ -77,7 +77,7 @@ func (val *BaseEmeraldValue) RespondsTo(name string, target EmeraldValue) bool {
 }
 
 func (val *BaseEmeraldValue) SEND(
-	eval func(definitionContext EmeraldValue, node ast.Node, env Environment) EmeraldValue,
+	eval func(executionContext EmeraldValue, node ast.Node, env Environment) EmeraldValue,
 	env Environment,
 	name string,
 	target EmeraldValue,

@@ -8,8 +8,10 @@ func TestNextToken(t *testing.T) {
 	input := `five = 5;
 	ten = 10;
 
-	def add(x, y)
-		x + y;
+	class Integer
+		def add(y)
+			self + y
+		end
 	end
 
 	result = add(five, ten);
@@ -49,17 +51,17 @@ func TestNextToken(t *testing.T) {
 		{ASSIGN, "="},
 		{INT, "10"},
 		{SEMICOLON, ";"},
+		{CLASS, "class"},
+		{IDENT, "Integer"},
 		{DEF, "def"},
 		{IDENT, "add"},
 		{LPAREN, "("},
-		{IDENT, "x"},
-		{COMMA, ","},
 		{IDENT, "y"},
 		{RPAREN, ")"},
-		{IDENT, "x"},
+		{IDENT, "self"},
 		{PLUS, "+"},
 		{IDENT, "y"},
-		{SEMICOLON, ";"},
+		{END, "end"},
 		{END, "end"},
 		{IDENT, "result"},
 		{ASSIGN, "="},

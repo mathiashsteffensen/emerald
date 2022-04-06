@@ -51,6 +51,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(lexer.NULL, p.parseNullExpression)
 	p.registerPrefix(lexer.DEF, p.parseMethodLiteral)
+	p.registerPrefix(lexer.CLASS, p.parseClassLiteral)
 
 	p.infixParseFns = make(map[lexer.TokenType]infixParseFn)
 	p.registerInfix(lexer.PLUS, p.parseInfixExpression)
@@ -459,8 +460,23 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 	return method
 }
 
+func (p *Parser) parseClassLiteral() ast.Expression {
+	class := &ast.ClassLiteral{Token: p.curToken}
+
+	p.nextToken()
+
+	class.Name = p.parseIdentifierExpression().(*ast.IdentifierExpression)
+	if p.peekTokenIs(lexer.SEMICOLON) {
+		p.nextToken()
+	}
+
+	class.Body = p.parseBlockStatement(lexer.END)
+
+	return class
+}
+
 func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
-	node := &ast.MethodCall{Token: p.curToken, Left: left}
+	node := &ast.MethodCall{Token: p.curToken, Left: left, CallExpression: &ast.CallExpression{}}
 
 	if !p.expectPeek(lexer.IDENT) {
 		return nil

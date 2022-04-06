@@ -118,6 +118,19 @@ func TestIfElseExpression(t *testing.T) {
 			},
 		},
 		{
+			"multi line with method call",
+			`if x < y
+				Logger.info("Hello World!")
+			 else
+				y
+			end`,
+			func(t *testing.T, evaluated ast.Expression) {
+				if _, ok := evaluated.(*ast.MethodCall); !ok {
+					t.Fatalf("exp not method call got=%T", evaluated)
+				}
+			},
+		},
+		{
 			"multi line and nested",
 			`if x < y
 				if x

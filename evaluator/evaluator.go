@@ -6,23 +6,23 @@ import (
 	"fmt"
 )
 
-func Eval(definitionContext object.EmeraldValue, node ast.Node, env object.Environment) object.EmeraldValue {
+func Eval(executionContext object.EmeraldValue, node ast.Node, env object.Environment) object.EmeraldValue {
 	switch node := node.(type) {
 	case *ast.AST:
 		return evalAST(node, env)
 	case *ast.BlockStatement:
-		return evalBlockStatement(definitionContext, node, env)
+		return evalBlockStatement(executionContext, node, env)
 	case *ast.ExpressionStatement:
-		return Eval(definitionContext, node.Expression, env)
+		return Eval(executionContext, node.Expression, env)
 	case *ast.ReturnStatement:
-		val := Eval(definitionContext, node.ReturnValue, env)
+		val := Eval(executionContext, node.ReturnValue, env)
 		if isError(val) {
 			return val
 		}
 
 		return &object.ReturnValue{Value: val}
 	case *ast.AssignmentExpression:
-		val := Eval(definitionContext, node.Value, env)
+		val := Eval(executionContext, node.Value, env)
 
 		if isError(val) {
 			return val
@@ -31,8 +31,10 @@ func Eval(definitionContext object.EmeraldValue, node ast.Node, env object.Envir
 		env.Set(node.Name.Value, val)
 
 		return val
+	case *ast.ClassLiteral:
+		return evalClassLiteral(node, env)
 	case *ast.MethodLiteral:
-		return definitionContext.DefineMethod(object.NewBlock(node.Parameters, node.Body, env), object.NewString(node.Name.String()))
+		return executionContext.DefineMethod(object.NewBlock(node.Parameters, node.Body, env), object.NewString(node.Name.String()))
 	case *ast.IntegerLiteral:
 		return object.NewInteger(node.Value)
 	case *ast.StringLiteral:
@@ -40,45 +42,49 @@ func Eval(definitionContext object.EmeraldValue, node ast.Node, env object.Envir
 	case *ast.BooleanExpression:
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.PrefixExpression:
-		right := Eval(definitionContext, node.Right, env)
+		right := Eval(executionContext, node.Right, env)
 		if isError(right) {
 			return right
 		}
 
 		return evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
-		left := Eval(definitionContext, node.Left, env)
+		left := Eval(executionContext, node.Left, env)
 		if isError(left) {
 			return left
 		}
 
-		right := Eval(definitionContext, node.Right, env)
+		right := Eval(executionContext, node.Right, env)
 		if isError(right) {
 			return right
 		}
 
 		return evalInfixExpression(node.Operator, left, right, env)
 	case *ast.IfExpression:
-		return evalIfExpression(definitionContext, node, env)
+		return evalIfExpression(executionContext, node, env)
 	case *ast.IdentifierExpression:
-		return evalIdentifier(node, env)
+		return evalIdentifier(executionContext, node, env)
+	case *ast.MethodCall:
+		target := Eval(executionContext, node.Left, env)
+
+		return Eval(target, node.CallExpression, env)
 	case *ast.CallExpression:
-		function := Eval(definitionContext, node.Method, env)
+		function := Eval(executionContext, node.Method, env)
 		if isError(function) {
 			return function
 		}
 
-		args := evalExpressions(definitionContext, node.Arguments, env)
+		args := evalExpressions(executionContext, node.Arguments, env)
 		if len(args) == 1 && isError(args[0]) {
 			return args[0]
 		}
 
-		return evalBlock(definitionContext, node.Method.String(), function, args)
+		return evalBlock(executionContext, node.Method.String(), function, args)
 	case *ast.NullExpression:
 		return object.NULL
+	default:
+		return newError("Unimplemented ast expression %T", node)
 	}
-
-	return nil
 }
 
 func evalAST(program *ast.AST, env object.Environment) object.EmeraldValue {
@@ -99,11 +105,11 @@ func evalAST(program *ast.AST, env object.Environment) object.EmeraldValue {
 	return result
 }
 
-func evalBlockStatement(definitionContext object.EmeraldValue, block *ast.BlockStatement, env object.Environment) object.EmeraldValue {
+func evalBlockStatement(executionContext object.EmeraldValue, block *ast.BlockStatement, env object.Environment) object.EmeraldValue {
 	var result object.EmeraldValue
 
 	for _, statement := range block.Statements {
-		result = Eval(definitionContext, statement, env)
+		result = Eval(executionContext, statement, env)
 		if result != nil {
 			if result.Type() == object.RETURN_VALUE || isError(result) {
 				return result
@@ -147,25 +153,26 @@ func evalInfixExpression(
 }
 
 func evalIfExpression(
-	definitionContext object.EmeraldValue,
+	executionContext object.EmeraldValue,
 	ie *ast.IfExpression,
 	env object.Environment,
 ) object.EmeraldValue {
-	condition := Eval(definitionContext, ie.Condition, env)
+	condition := Eval(executionContext, ie.Condition, env)
 	if isError(condition) {
 		return condition
 	}
 
 	if isTruthy(condition) {
-		return Eval(definitionContext, ie.Consequence, env)
+		return Eval(executionContext, ie.Consequence, env)
 	} else if ie.Alternative != nil {
-		return Eval(definitionContext, ie.Alternative, env)
+		return Eval(executionContext, ie.Alternative, env)
 	} else {
 		return object.NULL
 	}
 }
 
 func evalIdentifier(
+	executionContext object.EmeraldValue,
 	node *ast.IdentifierExpression,
 	env object.Environment,
 ) object.EmeraldValue {
@@ -174,24 +181,24 @@ func evalIdentifier(
 		return val
 	}
 
-	if !object.Object.RespondsTo(node.Value, object.Object) {
+	if !executionContext.RespondsTo(node.Value, executionContext) {
 		return newError("identifier not found: " + node.Value)
 	}
 
-	method, _ := object.Object.ExtractMethod(node.Value, object.Object)
+	method, _ := executionContext.ExtractMethod(node.Value, executionContext)
 
 	return method
 }
 
 func evalExpressions(
-	definitionContext object.EmeraldValue,
+	executionContext object.EmeraldValue,
 	exps []ast.Expression,
 	env object.Environment,
 ) []object.EmeraldValue {
 	var result []object.EmeraldValue
 
 	for _, e := range exps {
-		evaluated := Eval(definitionContext, e, env)
+		evaluated := Eval(executionContext, e, env)
 		if isError(evaluated) {
 			return []object.EmeraldValue{evaluated}
 		}
@@ -218,16 +225,16 @@ func isTruthy(obj object.EmeraldValue) bool {
 	}
 }
 
-func evalBlock(definitionContext object.EmeraldValue, name string, block object.EmeraldValue, args []object.EmeraldValue) object.EmeraldValue {
+func evalBlock(executionContext object.EmeraldValue, name string, block object.EmeraldValue, args []object.EmeraldValue) object.EmeraldValue {
 	switch block := block.(type) {
 	case *object.Block:
 		extendedEnv := extendBlockEnv(block, args)
-		evaluated := Eval(definitionContext, block.Body, extendedEnv)
+		evaluated := Eval(executionContext, block.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.WrappedBuiltInMethod:
-		return block.Method(object.Object, nil, args...)
+		return block.Method(executionContext, nil, args...)
 	default:
-		return newError("not a method: %s", name)
+		return newError("not a method: %s (%+v)", name, block)
 	}
 }
 

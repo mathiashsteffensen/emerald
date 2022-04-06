@@ -14,11 +14,23 @@ func TestMethodLiteral(t *testing.T) {
 	}{
 		{
 			"defining on main Object",
-			`def log(msg)
+			`
+			def log(msg)
 				puts(msg)
 			end`,
 			"log",
 			"Object",
+		},
+		{
+			"overloading Integer class",
+			`
+			class Integer
+				def times(x, y)
+					x * y
+				end
+			end`,
+			"times",
+			"Integer",
 		},
 	}
 

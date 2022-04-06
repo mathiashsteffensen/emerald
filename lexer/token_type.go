@@ -38,6 +38,7 @@ const (
 	RBRACKET  TokenType = "]"
 
 	// Keywords
+	CLASS  TokenType = "CLASS"
 	DEF    TokenType = "DEF"
 	TRUE   TokenType = "TRUE"
 	FALSE  TokenType = "FALSE"
@@ -49,6 +50,7 @@ const (
 )
 
 var keywords = map[string]TokenType{
+	"class":  CLASS,
 	"def":    DEF,
 	"true":   TRUE,
 	"false":  FALSE,

@@ -6,10 +6,9 @@ import (
 )
 
 type MethodCall struct {
-	Left      Expression
-	Token     lexer.Token // The . token
-	Method    Expression  // IdentifierExpression of the property we're accessing
-	Arguments []Expression
+	Left  Expression
+	Token lexer.Token // The . token
+	*CallExpression
 }
 
 func (pa *MethodCall) expressionNode()      {}

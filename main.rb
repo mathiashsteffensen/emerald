@@ -1,13 +1,15 @@
 x = 5
 y = 7
 
-def log(msg)
-    puts(msg)
+class Logger
+    def info(msg)
+        puts("INFO ¦ " + msg)
+    end
 end
 
 if x < y
     if true
-        log("Hello World!")
+        Logger.info("Hello World!")
     end
 else
     y
