@@ -45,8 +45,10 @@ func TestEvalClassLiteral(t *testing.T) {
 				t.Fatalf("class %s does not exist in the environment", tt.class)
 			}
 
-			if !class.RespondsTo(tt.method, class) {
-				t.Fatalf("class %s does not respond to %s", tt.class, tt.method)
+			instance := class.(*object.Class).New()
+
+			if !instance.RespondsTo(tt.method, instance) {
+				t.Fatalf("instance of %s does not respond to %s", tt.class, tt.method)
 			}
 		})
 	}

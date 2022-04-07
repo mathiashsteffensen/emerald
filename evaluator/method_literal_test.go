@@ -11,6 +11,7 @@ func TestMethodLiteral(t *testing.T) {
 		input     string
 		method    string
 		definedOn string
+		isStatic  bool
 	}{
 		{
 			"defining on main Object",
@@ -20,6 +21,7 @@ func TestMethodLiteral(t *testing.T) {
 			end`,
 			"log",
 			"Object",
+			true,
 		},
 		{
 			"overloading Integer class",
@@ -31,6 +33,7 @@ func TestMethodLiteral(t *testing.T) {
 			end`,
 			"times",
 			"Integer",
+			false,
 		},
 	}
 
@@ -45,8 +48,16 @@ func TestMethodLiteral(t *testing.T) {
 				t.Fatalf("class %s does not exist in the environment", tt.definedOn)
 			}
 
-			if !class.RespondsTo(tt.method, class) {
-				t.Fatalf("class %s does not respond to %s", tt.definedOn, tt.method)
+			var target object.EmeraldValue
+
+			if tt.isStatic {
+				target = class
+			} else {
+				target = class.(*object.Class).New()
+			}
+
+			if !target.RespondsTo(tt.method, target) {
+				t.Fatalf("%s does not respond to %s", tt.definedOn, tt.method)
 			}
 		})
 	}

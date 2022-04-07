@@ -58,7 +58,7 @@ func TestNextToken(t *testing.T) {
 		{LPAREN, "("},
 		{IDENT, "y"},
 		{RPAREN, ")"},
-		{IDENT, "self"},
+		{SELF, "self"},
 		{PLUS, "+"},
 		{IDENT, "y"},
 		{END, "end"},

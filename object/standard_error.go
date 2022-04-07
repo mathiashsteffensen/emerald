@@ -5,7 +5,7 @@ import "fmt"
 var StandardError *Class
 
 func init() {
-	StandardError = NewClass("StandardError", Object, BuiltInMethodSet{})
+	StandardError = NewClass("StandardError", Object, BuiltInMethodSet{}, BuiltInMethodSet{})
 }
 
 type standardError struct {

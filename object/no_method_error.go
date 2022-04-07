@@ -1,3 +1,3 @@
 package object
 
-var NoMethodError = NewClass("NoMethodError", StandardError, BuiltInMethodSet{})
+var NoMethodError = NewClass("NoMethodError", StandardError, BuiltInMethodSet{}, BuiltInMethodSet{})

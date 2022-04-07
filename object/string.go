@@ -25,5 +25,6 @@ func init() {
 				return NewString(target.(*StringInstance).Value + args[0].(*StringInstance).Value)
 			},
 		},
+		BuiltInMethodSet{},
 	)
 }

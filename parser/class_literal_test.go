@@ -7,8 +7,8 @@ import (
 
 func TestClassLiteral(t *testing.T) {
 	input := `class Integer
-		def add(y)
-			self + y
+		def add(x, y)
+			x + y
 		end
 	end`
 

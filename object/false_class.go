@@ -12,7 +12,7 @@ func init() {
 		"!=": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
 			return nativeBoolToBooleanObject(target != args[0])
 		},
-	})
+	}, BuiltInMethodSet{})
 
 	FALSE = FalseClass.New()
 }

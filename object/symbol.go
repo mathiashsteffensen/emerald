@@ -13,6 +13,7 @@ func init() {
 				return NewString(val[1:])
 			},
 		},
+		BuiltInMethodSet{},
 	)
 }
 

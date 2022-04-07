@@ -13,9 +13,9 @@ func evalClassLiteral(
 
 	class, ok := env.Get(name)
 	if !ok {
-		class = object.NewClass(name, object.Object, object.BuiltInMethodSet{})
+		class = object.NewClass(name, object.Object, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 		env.Set(name, class)
 	}
 
-	return Eval(class, cl.Body, env)
+	return Eval(object.ExecutionContext{Target: class}, cl.Body, env)
 }

@@ -6,10 +6,10 @@ import (
 	"fmt"
 )
 
-func Eval(executionContext object.EmeraldValue, node ast.Node, env object.Environment) object.EmeraldValue {
+func Eval(executionContext object.ExecutionContext, node ast.Node, env object.Environment) object.EmeraldValue {
 	switch node := node.(type) {
 	case *ast.AST:
-		return evalAST(node, env)
+		return evalAST(executionContext, node, env)
 	case *ast.BlockStatement:
 		return evalBlockStatement(executionContext, node, env)
 	case *ast.ExpressionStatement:
@@ -34,7 +34,11 @@ func Eval(executionContext object.EmeraldValue, node ast.Node, env object.Enviro
 	case *ast.ClassLiteral:
 		return evalClassLiteral(node, env)
 	case *ast.MethodLiteral:
-		return executionContext.DefineMethod(object.NewBlock(node.Parameters, node.Body, env), object.NewString(node.Name.String()))
+		return executionContext.Target.DefineMethod(
+			executionContext.IsStatic,
+			object.NewBlock(node.Parameters, node.Body, env),
+			object.NewString(node.Name.String()),
+		)
 	case *ast.IntegerLiteral:
 		return object.NewInteger(node.Value)
 	case *ast.StringLiteral:
@@ -67,7 +71,7 @@ func Eval(executionContext object.EmeraldValue, node ast.Node, env object.Enviro
 	case *ast.MethodCall:
 		target := Eval(executionContext, node.Left, env)
 
-		return Eval(target, node.CallExpression, env)
+		return Eval(object.ExecutionContext{Target: target}, node.CallExpression, env)
 	case *ast.CallExpression:
 		function := Eval(executionContext, node.Method, env)
 		if isError(function) {
@@ -87,11 +91,11 @@ func Eval(executionContext object.EmeraldValue, node ast.Node, env object.Enviro
 	}
 }
 
-func evalAST(program *ast.AST, env object.Environment) object.EmeraldValue {
+func evalAST(executionContext object.ExecutionContext, program *ast.AST, env object.Environment) object.EmeraldValue {
 	var result object.EmeraldValue
 
 	for _, statement := range program.Statements {
-		result = Eval(object.Object, statement, env)
+		result = Eval(executionContext, statement, env)
 
 		switch result := result.(type) {
 		case *object.ReturnValue:
@@ -105,7 +109,7 @@ func evalAST(program *ast.AST, env object.Environment) object.EmeraldValue {
 	return result
 }
 
-func evalBlockStatement(executionContext object.EmeraldValue, block *ast.BlockStatement, env object.Environment) object.EmeraldValue {
+func evalBlockStatement(executionContext object.ExecutionContext, block *ast.BlockStatement, env object.Environment) object.EmeraldValue {
 	var result object.EmeraldValue
 
 	for _, statement := range block.Statements {
@@ -153,7 +157,7 @@ func evalInfixExpression(
 }
 
 func evalIfExpression(
-	executionContext object.EmeraldValue,
+	executionContext object.ExecutionContext,
 	ie *ast.IfExpression,
 	env object.Environment,
 ) object.EmeraldValue {
@@ -172,7 +176,7 @@ func evalIfExpression(
 }
 
 func evalIdentifier(
-	executionContext object.EmeraldValue,
+	executionContext object.ExecutionContext,
 	node *ast.IdentifierExpression,
 	env object.Environment,
 ) object.EmeraldValue {
@@ -181,17 +185,16 @@ func evalIdentifier(
 		return val
 	}
 
-	if !executionContext.RespondsTo(node.Value, executionContext) {
-		return newError("identifier not found: " + node.Value)
+	method, err := executionContext.Target.ExtractMethod(node.Value, executionContext.Target, executionContext.Target)
+	if err != nil {
+		return err
 	}
-
-	method, _ := executionContext.ExtractMethod(node.Value, executionContext)
 
 	return method
 }
 
 func evalExpressions(
-	executionContext object.EmeraldValue,
+	executionContext object.ExecutionContext,
 	exps []ast.Expression,
 	env object.Environment,
 ) []object.EmeraldValue {
@@ -225,14 +228,14 @@ func isTruthy(obj object.EmeraldValue) bool {
 	}
 }
 
-func evalBlock(executionContext object.EmeraldValue, name string, block object.EmeraldValue, args []object.EmeraldValue) object.EmeraldValue {
+func evalBlock(executionContext object.ExecutionContext, name string, block object.EmeraldValue, args []object.EmeraldValue) object.EmeraldValue {
 	switch block := block.(type) {
 	case *object.Block:
 		extendedEnv := extendBlockEnv(block, args)
 		evaluated := Eval(executionContext, block.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.WrappedBuiltInMethod:
-		return block.Method(executionContext, nil, args...)
+		return block.Method(executionContext.Target, nil, args...)
 	default:
 		return newError("not a method: %s (%+v)", name, block)
 	}

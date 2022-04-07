@@ -17,7 +17,7 @@ func testEval(input string, envs ...object.Environment) object.EmeraldValue {
 		env = envs[0]
 	}
 
-	return Eval(object.Object, program, env)
+	return Eval(object.ExecutionContext{Target: object.Object, IsStatic: true}, program, env)
 }
 
 func testNullObject(t *testing.T, obj object.EmeraldValue) bool {
