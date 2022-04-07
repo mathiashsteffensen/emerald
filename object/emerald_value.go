@@ -185,8 +185,13 @@ func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom Emer
 		return super, nil
 	}
 
+	// Also check Objects static methods
+	if method, err := Object.extractStaticMethod(name, Object, target); err == nil {
+		return method, nil
+	}
+
 	return nil, NewStandardError(
-		fmt.Sprintf("undefined method %s for %s:%s", name, target.Inspect(), target.(*Class).Name),
+		fmt.Sprintf("undefined method %s for %s:%s", name, target.Inspect(), target.ParentClass().(*Class).Name),
 	)
 }
 

@@ -23,6 +23,9 @@ func init() {
 			},
 		},
 		BuiltInMethodSet{
+			"new": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+				return target.(*Class).New()
+			},
 			"puts": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
 				strings := []any{}
 				byteLength := 0
