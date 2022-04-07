@@ -32,7 +32,9 @@ func Eval(executionContext object.ExecutionContext, node ast.Node, env object.En
 
 		return val
 	case *ast.ClassLiteral:
-		return evalClassLiteral(node, env)
+		return evalClassLiteral(executionContext, node, env)
+	case *ast.StaticClassLiteral:
+		return evalClassLiteral(executionContext, node, env)
 	case *ast.MethodLiteral:
 		return executionContext.Target.DefineMethod(
 			executionContext.IsStatic,

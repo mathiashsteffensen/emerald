@@ -461,6 +461,10 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 }
 
 func (p *Parser) parseClassLiteral() ast.Expression {
+	if p.peekTokenIs(lexer.APPEND) {
+		return p.parseStaticClassLiteral()
+	}
+
 	class := &ast.ClassLiteral{Token: p.curToken}
 
 	p.nextToken()
@@ -468,6 +472,20 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 	class.Name = p.parseIdentifierExpression().(*ast.IdentifierExpression)
 	if p.peekTokenIs(lexer.SEMICOLON) {
 		p.nextToken()
+	}
+
+	class.Body = p.parseBlockStatement(lexer.END)
+
+	return class
+}
+
+func (p *Parser) parseStaticClassLiteral() ast.Expression {
+	class := &ast.StaticClassLiteral{Token: p.curToken}
+
+	p.nextToken()
+
+	if !p.expectPeek(lexer.SELF) {
+		return nil
 	}
 
 	class.Body = p.parseBlockStatement(lexer.END)

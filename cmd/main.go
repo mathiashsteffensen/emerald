@@ -29,7 +29,7 @@ func main() {
 
 	env := object.NewEnvironment()
 
-	evaluated := evaluator.Eval(object.Object, program, env)
+	evaluated := evaluator.Eval(object.ExecutionContext{Target: object.Object, IsStatic: true}, program, env)
 
 	if evaluated != nil {
 		if evaluated.RespondsTo("to_s", evaluated) {

@@ -7,10 +7,11 @@ import (
 
 func TestEvalClassLiteral(t *testing.T) {
 	tests := []struct {
-		name   string
-		input  string
-		class  string
-		method string
+		name     string
+		input    string
+		class    string
+		method   string
+		isStatic bool
 	}{
 		{
 			"extending a builtin class",
@@ -21,9 +22,10 @@ func TestEvalClassLiteral(t *testing.T) {
 			end`,
 			"Integer",
 			"do_math",
+			false,
 		},
 		{
-			"constructing a new class",
+			"constructing a new class with an instance method",
 			`class Logger
 				def info(msg)
 					puts("INFO | " + msg)
@@ -31,6 +33,20 @@ func TestEvalClassLiteral(t *testing.T) {
 			end`,
 			"Logger",
 			"info",
+			false,
+		},
+		{
+			"constructing a new class with a static method - eigenclass style",
+			`class Logger
+				class << self
+					def info(msg)
+						puts("INFO | " + msg)
+					end
+				end
+			end`,
+			"Logger",
+			"info",
+			true,
 		},
 	}
 
@@ -45,9 +61,15 @@ func TestEvalClassLiteral(t *testing.T) {
 				t.Fatalf("class %s does not exist in the environment", tt.class)
 			}
 
-			instance := class.(*object.Class).New()
+			var target object.EmeraldValue
 
-			if !instance.RespondsTo(tt.method, instance) {
+			if tt.isStatic {
+				target = class
+			} else {
+				target = class.(*object.Class).New()
+			}
+
+			if !target.RespondsTo(tt.method, target) {
 				t.Fatalf("instance of %s does not respond to %s", tt.class, tt.method)
 			}
 		})

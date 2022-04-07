@@ -20,6 +20,8 @@ func TestNextToken(t *testing.T) {
 	!-/*5;
 	5 < 10 > 5;
 
+	[] << 5
+
 	if (5 < 10)
 		return true;
 	else
@@ -88,6 +90,10 @@ func TestNextToken(t *testing.T) {
 		{GT, ">"},
 		{INT, "5"},
 		{SEMICOLON, ";"},
+		{LBRACKET, "["},
+		{RBRACKET, "]"},
+		{APPEND, "<<"},
+		{INT, "5"},
 		{IF, "if"},
 		{LPAREN, "("},
 		{INT, "5"},

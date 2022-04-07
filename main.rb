@@ -2,8 +2,10 @@ x = 5
 y = 7
 
 class Logger
-    def info(msg)
-        puts("INFO ¦ " + msg)
+    class << self
+        def info(msg)
+            puts("INFO ¦ " + msg)
+        end
     end
 end
 

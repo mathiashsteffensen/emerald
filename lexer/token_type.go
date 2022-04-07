@@ -24,6 +24,7 @@ const (
 	NOT_EQ   TokenType = "!="
 	LT_OR_EQ TokenType = "<="
 	GT_OR_EQ TokenType = ">="
+	APPEND   TokenType = "<<"
 	DOT      TokenType = "."
 
 	// Delimiters
