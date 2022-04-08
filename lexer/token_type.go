@@ -37,6 +37,7 @@ const (
 	RBRACE    TokenType = "}"
 	LBRACKET  TokenType = "["
 	RBRACKET  TokenType = "]"
+	LINE      TokenType = "|"
 
 	// Keywords
 	CLASS  TokenType = "CLASS"

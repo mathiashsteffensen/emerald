@@ -6,12 +6,12 @@ import (
 )
 
 func TestMethodCallParsing(t *testing.T) {
-	input := "1.add(2, 3, 4 + 5);"
+	input := "1.add(2, 3, 4 + 5) { |num, next| num + next }.first"
 
 	program := testParseAST(t, input)
 
 	if len(program.Statements) != 1 {
-		t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
+		t.Fatalf("program.Statements does not contain %d statements. got=%d (%+v)\n", 1, len(program.Statements), program.Statements)
 	}
 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
@@ -22,8 +22,13 @@ func TestMethodCallParsing(t *testing.T) {
 		t.Fatalf("stmt.Expression is not ast.MethodCall. got=%T", stmt.Expression)
 	}
 
-	if !testLiteralExpression(t, exp.Left, 1) {
+	if !testIdentifier(t, exp.Method, "first") {
 		return
+	}
+
+	exp, ok = exp.Left.(*ast.MethodCall)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.MethodCall. got=%T", stmt.Expression)
 	}
 
 	if !testIdentifier(t, exp.Method, "add") {
@@ -37,4 +42,8 @@ func TestMethodCallParsing(t *testing.T) {
 	testLiteralExpression(t, exp.Arguments[0], 2)
 	testLiteralExpression(t, exp.Arguments[1], 3)
 	testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
+
+	if exp.Block == nil {
+		t.Fatalf("method call was not passed a block")
+	}
 }

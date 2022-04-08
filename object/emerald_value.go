@@ -6,7 +6,7 @@ import (
 )
 
 type (
-	BuiltInMethod        func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue
+	BuiltInMethod        func(target EmeraldValue, block *Block, yield YieldFunc, args ...EmeraldValue) EmeraldValue
 	WrappedBuiltInMethod struct {
 		*BaseEmeraldValue
 		Method BuiltInMethod
@@ -25,7 +25,7 @@ type (
 		RespondsTo(name string, target EmeraldValue) bool
 		SEND(
 			eval func(executionContext ExecutionContext, node ast.Node, env Environment) EmeraldValue,
-			env Environment,
+			yield YieldFunc,
 			name string,
 			target EmeraldValue,
 			block *Block,
@@ -104,7 +104,7 @@ func (val *BaseEmeraldValue) RespondsTo(name string, target EmeraldValue) bool {
 
 func (val *BaseEmeraldValue) SEND(
 	eval func(executionContext ExecutionContext, node ast.Node, env Environment) EmeraldValue,
-	env Environment,
+	yield YieldFunc,
 	name string,
 	target EmeraldValue,
 	block *Block,
@@ -117,7 +117,7 @@ func (val *BaseEmeraldValue) SEND(
 
 	switch method := method.(type) {
 	case *WrappedBuiltInMethod:
-		return method.Method(target, block, args...)
+		return method.Method(target, block, yield, args...)
 	case *Block:
 		evaluated := eval(ExecutionContext{Target: target}, method.Body, extendBlockEnv(method, args))
 		return unwrapReturnValue(evaluated)

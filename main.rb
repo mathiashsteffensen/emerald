@@ -18,7 +18,9 @@ instance = Logger.new
 if x < y
     if true
         Logger.info("Hello World!")
-        instance.debug(" from debug land")
+        instance.debug("From debug land")
+
+        ["this", "is", "an", "array"].each  { |msg| Logger.info(msg ) }
     end
 else
     y

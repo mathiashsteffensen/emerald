@@ -21,7 +21,7 @@ func NewInteger(val int64) EmeraldValue {
 }
 
 var integerBuiltInMethodSet = BuiltInMethodSet{
-	"+": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+	"+": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 		otherVal, err := requireOneIntegerArg("+", args)
 		if err != nil {
 			return err
@@ -29,7 +29,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value + otherVal.Value)
 	},
-	"-": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+	"-": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 		otherVal, err := requireOneIntegerArg("-", args)
 		if err != nil {
 			return err
@@ -37,7 +37,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value - otherVal.Value)
 	},
-	"*": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+	"*": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 		otherVal, err := requireOneIntegerArg("*", args)
 		if err != nil {
 			return err
@@ -45,7 +45,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value * otherVal.Value)
 	},
-	"/": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+	"/": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 		otherVal, err := requireOneIntegerArg("/", args)
 		if err != nil {
 			return err
@@ -53,7 +53,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value / otherVal.Value)
 	},
-	"<": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+	"<": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 		otherVal, err := requireOneIntegerArg("<", args)
 		if err != nil {
 			return err
@@ -61,7 +61,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value < otherVal.Value)
 	},
-	">": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+	">": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 		otherVal, err := requireOneIntegerArg(">", args)
 		if err != nil {
 			return err
@@ -69,7 +69,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value > otherVal.Value)
 	},
-	"==": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+	"==": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 		otherVal, err := requireOneIntegerArg("==", args)
 		if err != nil {
 			return err
@@ -77,7 +77,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value == otherVal.Value)
 	},
-	"!=": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+	"!=": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -85,7 +85,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value != otherVal.Value)
 	},
-	"<=": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+	"<=": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -93,7 +93,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value <= otherVal.Value)
 	},
-	">=": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+	">=": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err

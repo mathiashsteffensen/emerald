@@ -9,24 +9,24 @@ func init() {
 		"Object",
 		nil,
 		BuiltInMethodSet{
-			"class": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+			"class": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				return target.ParentClass()
 			},
-			"to_s": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+			"to_s": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				return NewString(target.Inspect())
 			},
-			"==": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+			"==": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				return nativeBoolToBooleanObject(target.Inspect() == args[0].Inspect())
 			},
-			"!=": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+			"!=": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				return nativeBoolToBooleanObject(target.Inspect() != args[0].Inspect())
 			},
 		},
 		BuiltInMethodSet{
-			"new": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+			"new": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				return target.(*Class).New()
 			},
-			"puts": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+			"puts": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				strings := []any{}
 				byteLength := 0
 
@@ -43,10 +43,10 @@ func init() {
 	)
 
 	NilClass = NewClass("NilClass", Object, BuiltInMethodSet{
-		"==": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+		"==": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 			return nativeBoolToBooleanObject(target == args[0])
 		},
-		"!=": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+		"!=": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 			return nativeBoolToBooleanObject(target != args[0])
 		},
 	}, BuiltInMethodSet{})

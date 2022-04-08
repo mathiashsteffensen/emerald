@@ -18,10 +18,10 @@ func init() {
 		"String",
 		Object,
 		BuiltInMethodSet{
-			"to_s": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+			"to_s": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				return target
 			},
-			"+": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+			"+": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				return NewString(target.(*StringInstance).Value + args[0].(*StringInstance).Value)
 			},
 		},

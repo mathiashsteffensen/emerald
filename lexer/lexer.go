@@ -42,7 +42,7 @@ func (l *Lexer) Snapshot(token Token) string {
 	buf.WriteString(l.currentInput.content[start:end])
 	buf.WriteString("\n")
 
-	for i := 0; i < token.Column; i++ {
+	for i := 0; i < token.Pos-start; i++ {
 		buf.WriteString(" ")
 	}
 	buf.WriteString("^")
@@ -130,6 +130,8 @@ func (l *Lexer) Run() {
 				tok = l.newToken(LBRACKET, l.currentChar)
 			case ']':
 				tok = l.newToken(RBRACKET, l.currentChar)
+			case '|':
+				tok = l.newToken(LINE, l.currentChar)
 			case ':':
 				tok = l.newToken(COLON, l.currentChar)
 			case '.':

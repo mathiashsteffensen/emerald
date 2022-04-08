@@ -7,7 +7,7 @@ func init() {
 		"Symbol",
 		Object,
 		BuiltInMethodSet{
-			"to_s": func(target EmeraldValue, block *Block, args ...EmeraldValue) EmeraldValue {
+			"to_s": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				val := target.Inspect()
 
 				return NewString(val[1:])

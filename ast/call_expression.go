@@ -10,6 +10,7 @@ type CallExpression struct {
 	Token     lexer.Token // The '(' token
 	Method    Expression  // Identifier
 	Arguments []Expression
+	Block     *BlockLiteral
 }
 
 func (ce *CallExpression) expressionNode()      {}

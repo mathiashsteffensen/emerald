@@ -21,6 +21,7 @@ func TestNextToken(t *testing.T) {
 	5 < 10 > 5;
 
 	[] << 5
+	[].each { |w| do_stuff(w) }
 
 	if (5 < 10)
 		return true;
@@ -94,6 +95,19 @@ func TestNextToken(t *testing.T) {
 		{RBRACKET, "]"},
 		{APPEND, "<<"},
 		{INT, "5"},
+		{LBRACKET, "["},
+		{RBRACKET, "]"},
+		{DOT, "."},
+		{IDENT, "each"},
+		{LBRACE, "{"},
+		{LINE, "|"},
+		{IDENT, "w"},
+		{LINE, "|"},
+		{IDENT, "do_stuff"},
+		{LPAREN, "("},
+		{IDENT, "w"},
+		{RPAREN, ")"},
+		{RBRACE, "}"},
 		{IF, "if"},
 		{LPAREN, "("},
 		{INT, "5"},

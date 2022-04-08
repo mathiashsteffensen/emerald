@@ -35,6 +35,11 @@ func (pa *MethodCall) String() string {
 		out.WriteString(")")
 	}
 
+	if pa.Block != nil {
+		out.WriteString(" ")
+		out.WriteString(pa.Block.String())
+	}
+
 	out.WriteString(")")
 
 	return out.String()
