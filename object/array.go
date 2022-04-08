@@ -20,6 +20,15 @@ func init() {
 
 			return NewArray(newArr)
 		},
+		"each": func(target EmeraldValue, block *Block, yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+			arr := target.(*ArrayInstance)
+
+			for _, val := range arr.Value {
+				yield(target, block, val)
+			}
+
+			return arr
+		},
 		"first": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 			return target.(*ArrayInstance).Value[0]
 		},

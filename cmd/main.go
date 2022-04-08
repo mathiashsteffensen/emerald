@@ -38,7 +38,7 @@ func main() {
 				evaluated.
 					SEND(
 						evaluator.Eval,
-						env,
+						evaluator.Yield(),
 						"to_s",
 						evaluated,
 						nil,

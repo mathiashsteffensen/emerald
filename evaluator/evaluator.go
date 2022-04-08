@@ -110,7 +110,7 @@ func Eval(executionContext object.ExecutionContext, node ast.Node, env object.En
 	}
 }
 
-func yield() object.YieldFunc {
+func Yield() object.YieldFunc {
 	return func(target object.EmeraldValue, block *object.Block, args ...object.EmeraldValue) object.EmeraldValue {
 		return evalBlock(object.ExecutionContext{Target: target}, "YIELD", block, nil, args)
 	}
@@ -178,7 +178,7 @@ func evalInfixExpression(
 	left, right object.EmeraldValue,
 	env object.Environment,
 ) object.EmeraldValue {
-	return left.SEND(Eval, yield(), operator, left, nil, right)
+	return left.SEND(Eval, Yield(), operator, left, nil, right)
 }
 
 func evalIfExpression(
@@ -260,7 +260,7 @@ func evalBlock(executionContext object.ExecutionContext, name string, block obje
 		evaluated := Eval(executionContext, block.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.WrappedBuiltInMethod:
-		return block.Method(executionContext.Target, givenBlock, yield(), args...)
+		return block.Method(executionContext.Target, givenBlock, Yield(), args...)
 	default:
 		return newError("not a method: %s (%+v)", name, block)
 	}
