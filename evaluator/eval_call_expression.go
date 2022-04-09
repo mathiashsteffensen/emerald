@@ -3,12 +3,14 @@ package evaluator
 import (
 	"emerald/ast"
 	"emerald/object"
+	"fmt"
 )
 
 func evalCallExpression(executionContext object.ExecutionContext, target object.EmeraldValue, node *ast.CallExpression, env object.Environment) object.EmeraldValue {
-	function := evalIdentifier(object.ExecutionContext{Target: target}, node.Method.(*ast.IdentifierExpression), env)
-	if isError(function) {
-		return function
+	method, err := target.ExtractMethod(node.Method.(*ast.IdentifierExpression).Value, target, target)
+	if err != nil {
+		fmt.Printf("%#v\n", env)
+		return err
 	}
 
 	args := evalExpressions(executionContext, node.Arguments, env)
@@ -29,5 +31,5 @@ func evalCallExpression(executionContext object.ExecutionContext, target object.
 		block = evaluated.(*object.Block)
 	}
 
-	return evalBlock(executionContext, target, node.Method.String(), function, block, args)
+	return evalBlock(executionContext, target, node.Method.String(), method, block, args)
 }
