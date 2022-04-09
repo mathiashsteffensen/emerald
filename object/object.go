@@ -40,16 +40,14 @@ func init() {
 			},
 			"puts": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				strings := []any{}
-				byteLength := 0
 
 				for _, arg := range args {
 					strings = append(strings, arg.Inspect())
-					byteLength += len(arg.Inspect())
 				}
 
 				fmt.Println(strings...)
 
-				return NewInteger(int64(byteLength))
+				return NULL
 			},
 		},
 	)

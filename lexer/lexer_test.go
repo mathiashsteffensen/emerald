@@ -26,6 +26,8 @@ func TestNextToken(t *testing.T) {
 		do_stuff(w)
 	end
 
+	# This is a comment
+
 	if (5 < 10)
 		return true;
 	else

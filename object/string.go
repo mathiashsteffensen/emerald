@@ -1,6 +1,9 @@
 package object
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 var String *Class
 
@@ -40,6 +43,9 @@ func init() {
 				}
 
 				return NewString(targetString.Value + argString.Value)
+			},
+			"upcase": func(target EmeraldValue, block *Block, yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+				return NewString(strings.ToUpper(target.(*StringInstance).Value))
 			},
 		},
 		BuiltInMethodSet{},

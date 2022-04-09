@@ -68,6 +68,11 @@ func (l *Lexer) Run() {
 			l.eatWhitespace()
 
 			switch l.currentChar {
+			case '#':
+				for l.currentChar != '\n' {
+					l.readChar()
+				}
+				continue
 			case '=':
 				if l.peekChar() == '=' {
 					char := l.currentChar

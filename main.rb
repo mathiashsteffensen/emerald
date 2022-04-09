@@ -6,7 +6,7 @@ LEVELS = [:fatal, :error, :warn, :info, :debug, :trace]
 class Logger
     LEVELS.each do |lvl|
         define_method(lvl.to_s) do |msg|
-            puts(lvl.to_s + " | " + msg)
+            puts(lvl.to_s.upcase + " | " + msg)
         end
     end
 
@@ -37,14 +37,12 @@ instance = Logger.new
 
 if x < y
     if true
+        Logger.info("Hello World!")
+        Logger.debug("Hello World!")
+
         instance.debug("debug msg")
 
         ["this", "is", "an", "array"].each { |msg| instance.warn(msg) }
-
-        instance.info("Logger instance has the following methods:")
-        instance.methods.each { |msg| instance.info(msg) }
-        Logger.info("Hello World!")
-        Logger.debug("Hello World!")
     end
 else
     y
