@@ -9,7 +9,7 @@ func TestNextToken(t *testing.T) {
 	ten = 10;
 
 	class Integer
-		def add(y)
+		def add_num(y)
 			self + y
 		end
 	end
@@ -22,6 +22,9 @@ func TestNextToken(t *testing.T) {
 
 	[] << 5
 	[].each { |w| do_stuff(w) }
+	[].each do |w|
+		do_stuff(w)
+	end
 
 	if (5 < 10)
 		return true;
@@ -57,7 +60,7 @@ func TestNextToken(t *testing.T) {
 		{CLASS, "class"},
 		{IDENT, "Integer"},
 		{DEF, "def"},
-		{IDENT, "add"},
+		{IDENT, "add_num"},
 		{LPAREN, "("},
 		{IDENT, "y"},
 		{RPAREN, ")"},
@@ -108,6 +111,19 @@ func TestNextToken(t *testing.T) {
 		{IDENT, "w"},
 		{RPAREN, ")"},
 		{RBRACE, "}"},
+		{LBRACKET, "["},
+		{RBRACKET, "]"},
+		{DOT, "."},
+		{IDENT, "each"},
+		{DO, "do"},
+		{LINE, "|"},
+		{IDENT, "w"},
+		{LINE, "|"},
+		{IDENT, "do_stuff"},
+		{LPAREN, "("},
+		{IDENT, "w"},
+		{RPAREN, ")"},
+		{END, "end"},
 		{IF, "if"},
 		{LPAREN, "("},
 		{INT, "5"},

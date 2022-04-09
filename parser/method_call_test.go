@@ -6,12 +6,15 @@ import (
 )
 
 func TestMethodCallParsing(t *testing.T) {
-	input := "1.add(2, 3, 4 + 5) { |num, next| num + next }.first"
+	input := `
+		1.add(2, 3, 4 + 5) { |num, next| num + next }.first
+		Logger.info(msg)
+	`
 
 	program := testParseAST(t, input)
 
-	if len(program.Statements) != 1 {
-		t.Fatalf("program.Statements does not contain %d statements. got=%d (%+v)\n", 1, len(program.Statements), program.Statements)
+	if len(program.Statements) != 2 {
+		t.Fatalf("program.Statements does not contain 2 statements. got=%d (%+v)\n", len(program.Statements), program.Statements)
 	}
 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
@@ -45,5 +48,21 @@ func TestMethodCallParsing(t *testing.T) {
 
 	if exp.Block == nil {
 		t.Fatalf("method call was not passed a block")
+	}
+
+	stmt, ok = program.Statements[1].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("stmt is not ast.ExpressionStatement. got=%T", program.Statements[0])
+	}
+	exp, ok = stmt.Expression.(*ast.MethodCall)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.MethodCall. got=%T", stmt.Expression)
+	}
+
+	if !testIdentifier(t, exp.Left, "Logger") {
+		return
+	}
+	if !testIdentifier(t, exp.Method, "info") {
+		return
 	}
 }

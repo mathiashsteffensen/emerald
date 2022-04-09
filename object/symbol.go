@@ -22,7 +22,7 @@ type SymbolInstance struct {
 	Value string
 }
 
-func (s *SymbolInstance) Inspect() string { return s.Value }
+func (s *SymbolInstance) Inspect() string { return ":" + s.Value }
 
 func NewSymbol(val string) EmeraldValue {
 	return &SymbolInstance{Symbol.New(), val}

@@ -1,5 +1,7 @@
 package object
 
+import "fmt"
+
 var String *Class
 
 type StringInstance struct {
@@ -22,7 +24,22 @@ func init() {
 				return target
 			},
 			"+": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
-				return NewString(target.(*StringInstance).Value + args[0].(*StringInstance).Value)
+				targetString := target.(*StringInstance)
+
+				argString, ok := args[0].(*StringInstance)
+				if !ok {
+					var typ string
+
+					if args[0].Type() == CLASS_VALUE {
+						typ = args[0].(*Class).Name
+					} else {
+						typ = args[0].ParentClass().(*Class).Name
+					}
+
+					return NewStandardError(fmt.Sprintf("no implicit conversion of %s to String", typ))
+				}
+
+				return NewString(targetString.Value + argString.Value)
 			},
 		},
 		BuiltInMethodSet{},

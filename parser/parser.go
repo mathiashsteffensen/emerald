@@ -52,6 +52,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.NULL, p.parseNullExpression)
 	p.registerPrefix(lexer.DEF, p.parseMethodLiteral)
 	p.registerPrefix(lexer.CLASS, p.parseClassLiteral)
+	p.registerPrefix(lexer.COLON, p.parseSymbolLiteral)
 
 	p.infixParseFns = make(map[lexer.TokenType]infixParseFn)
 	p.registerInfix(lexer.PLUS, p.parseInfixExpression)
@@ -221,6 +222,18 @@ func (p *Parser) parseStringLiteral() ast.Expression {
 	return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
 }
 
+func (p *Parser) parseSymbolLiteral() ast.Expression {
+	symbol := &ast.SymbolLiteral{Token: p.curToken}
+
+	if !p.expectPeekMultiple(lexer.IDENT, lexer.STRING) {
+		return nil
+	}
+
+	symbol.Value = p.curToken.Literal
+
+	return symbol
+}
+
 func (p *Parser) parsePrefixExpression() ast.Expression {
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
@@ -347,10 +360,12 @@ func (p *Parser) parseBlockStatement(endToken lexer.TokenType) *ast.BlockStateme
 	return block
 }
 
-func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
-	exp := &ast.CallExpression{Token: p.curToken, Method: function}
+func (p *Parser) parseCallExpression(method ast.Expression) ast.Expression {
+	exp := &ast.CallExpression{Token: p.curToken, Method: method}
 
 	exp.Arguments = p.parseCallArguments()
+
+	exp.Block = p.parseBlockLiteral()
 
 	return exp
 }
@@ -507,26 +522,39 @@ func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
 		node.Arguments = p.parseCallArguments()
 	}
 
-	if p.peekTokenIs(lexer.LBRACE) {
-		p.nextToken()
-
-		node.Block = &ast.BlockLiteral{Body: &ast.BlockStatement{}, Token: p.curToken}
-
-		if p.peekTokenIs(lexer.LINE) {
-			p.nextToken()
-			node.Block.Parameters = p.parseExpressionList(lexer.LINE)
-		}
-
-		node.Block.Body = p.parseBlockStatement(lexer.RBRACE)
-
-		p.nextToken()
-	}
+	node.Block = p.parseBlockLiteral()
 
 	if p.curTokenIs(lexer.DOT) {
 		return p.parseMethodCall(node)
 	}
 
 	return node
+}
+
+func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
+	if !p.peekTokenIs(lexer.LBRACE) && !p.peekTokenIs(lexer.DO) {
+		return nil
+	}
+
+	var endToken lexer.TokenType
+	if p.peekTokenIs(lexer.LBRACE) {
+		endToken = lexer.RBRACE
+	} else {
+		endToken = lexer.END
+	}
+
+	p.nextToken()
+
+	block := &ast.BlockLiteral{Body: &ast.BlockStatement{}, Token: p.curToken}
+
+	if p.peekTokenIs(lexer.LINE) {
+		p.nextToken()
+		block.Parameters = p.parseExpressionList(lexer.LINE)
+	}
+
+	block.Body = p.parseBlockStatement(endToken)
+
+	return block
 }
 
 func (p *Parser) curTokenIs(t lexer.TokenType) bool {

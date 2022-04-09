@@ -28,8 +28,8 @@ func main() {
 	}
 
 	env := object.NewEnvironment()
-
-	evaluated := evaluator.Eval(object.ExecutionContext{Target: object.Object, IsStatic: true}, program, env)
+	ctx := object.ExecutionContext{Target: object.Object, IsStatic: true}
+	evaluated := evaluator.Eval(ctx, program, env)
 
 	if evaluated != nil {
 		if evaluated.RespondsTo("to_s", evaluated) {
@@ -38,7 +38,7 @@ func main() {
 				evaluated.
 					SEND(
 						evaluator.Eval,
-						evaluator.Yield(),
+						evaluator.Yield(ctx),
 						"to_s",
 						evaluated,
 						nil,

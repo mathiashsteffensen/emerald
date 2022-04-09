@@ -127,6 +127,10 @@ func (val *BaseEmeraldValue) SEND(
 }
 
 func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, EmeraldValue) {
+	if val == nil {
+		return nil, NewStandardError(fmt.Sprintf("Invalid method call %s on %#v", name, target))
+	}
+
 	if _, ok := target.(*Class); ok {
 		return val.extractStaticMethod(name, extractFrom, target)
 	} else {

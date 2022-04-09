@@ -45,10 +45,12 @@ func Eval(executionContext object.ExecutionContext, node ast.Node, env object.En
 		return object.NewInteger(node.Value)
 	case *ast.StringLiteral:
 		return object.NewString(node.Value)
+	case *ast.SymbolLiteral:
+		return evalSymbolLiteral(node)
 	case *ast.ArrayLiteral:
 		return evalArrayLiteral(executionContext, node, env)
 	case *ast.BlockLiteral:
-		return object.NewBlock(node.Parameters, node.Body, env)
+		return object.NewBlock(node.Parameters, node.Body, object.NewEnclosedEnvironment(env))
 	case *ast.BooleanExpression:
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.PrefixExpression:
@@ -69,40 +71,29 @@ func Eval(executionContext object.ExecutionContext, node ast.Node, env object.En
 			return right
 		}
 
-		return evalInfixExpression(node.Operator, left, right, env)
+		return evalInfixExpression(node.Operator, left, right, executionContext)
 	case *ast.IfExpression:
 		return evalIfExpression(executionContext, node, env)
 	case *ast.IdentifierExpression:
-		return evalIdentifier(executionContext, node, env)
+		ident := evalIdentifier(executionContext, node, env)
+
+		switch ident.(type) {
+		case *object.Block:
+			return evalBlock(executionContext, executionContext.Target, node.Value, ident, nil, []object.EmeraldValue{})
+		case *object.WrappedBuiltInMethod:
+			return evalBlock(executionContext, executionContext.Target, node.Value, ident, nil, []object.EmeraldValue{})
+		}
+
+		return ident
 	case *ast.MethodCall:
 		target := Eval(executionContext, node.Left, env)
+		if isError(target) {
+			return target
+		}
 
-		return Eval(object.ExecutionContext{Target: target}, node.CallExpression, env)
+		return evalCallExpression(executionContext, target, node.CallExpression, env)
 	case *ast.CallExpression:
-		function := Eval(executionContext, node.Method, env)
-		if isError(function) {
-			return function
-		}
-
-		args := evalExpressions(executionContext, node.Arguments, env)
-		if len(args) == 1 && isError(args[0]) {
-			return args[0]
-		}
-
-		var block *object.Block
-
-		if node.Block == nil {
-			block = nil
-		} else {
-			evaluated := Eval(executionContext, node.Block, env)
-			if isError(evaluated) {
-				return evaluated
-			}
-
-			block = evaluated.(*object.Block)
-		}
-
-		return evalBlock(executionContext, node.Method.String(), function, block, args)
+		return evalCallExpression(executionContext, executionContext.Target, node, env)
 	case *ast.NullExpression:
 		return object.NULL
 	default:
@@ -110,9 +101,9 @@ func Eval(executionContext object.ExecutionContext, node ast.Node, env object.En
 	}
 }
 
-func Yield() object.YieldFunc {
-	return func(target object.EmeraldValue, block *object.Block, args ...object.EmeraldValue) object.EmeraldValue {
-		return evalBlock(object.ExecutionContext{Target: target}, "YIELD", block, nil, args)
+func Yield(executionContext object.ExecutionContext) object.YieldFunc {
+	return func(block *object.Block, args ...object.EmeraldValue) object.EmeraldValue {
+		return evalBlock(executionContext, executionContext.Target, "YIELD", block, nil, args)
 	}
 }
 
@@ -176,9 +167,9 @@ func evalMinusPrefixOperatorExpression(right object.EmeraldValue) object.Emerald
 func evalInfixExpression(
 	operator string,
 	left, right object.EmeraldValue,
-	env object.Environment,
+	ctx object.ExecutionContext,
 ) object.EmeraldValue {
-	return left.SEND(Eval, Yield(), operator, left, nil, right)
+	return left.SEND(Eval, Yield(ctx), operator, left, nil, right)
 }
 
 func evalIfExpression(
@@ -212,6 +203,7 @@ func evalIdentifier(
 
 	method, err := executionContext.Target.ExtractMethod(node.Value, executionContext.Target, executionContext.Target)
 	if err != nil {
+		fmt.Printf("%#v\n", env)
 		return err
 	}
 
@@ -253,25 +245,26 @@ func isTruthy(obj object.EmeraldValue) bool {
 	}
 }
 
-func evalBlock(executionContext object.ExecutionContext, name string, block object.EmeraldValue, givenBlock *object.Block, args []object.EmeraldValue) object.EmeraldValue {
+func evalBlock(executionContext object.ExecutionContext, target object.EmeraldValue, name string, block object.EmeraldValue, givenBlock *object.Block, args []object.EmeraldValue) object.EmeraldValue {
 	switch block := block.(type) {
 	case *object.Block:
-		extendedEnv := extendBlockEnv(block, args)
-		evaluated := Eval(executionContext, block.Body, extendedEnv)
+		extendedEnv := extendBlockEnv(block.Env, block.Parameters, args)
+		evaluated := Eval(object.ExecutionContext{Target: target}, block.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.WrappedBuiltInMethod:
-		return block.Method(executionContext.Target, givenBlock, Yield(), args...)
+		return block.Method(target, givenBlock, Yield(executionContext), args...)
 	default:
-		return newError("not a method: %s (%+v)", name, block)
+		return newError("not a method: %s %T", name, block)
 	}
 }
 
 func extendBlockEnv(
-	fn *object.Block,
+	env object.Environment,
+	params []ast.Expression,
 	args []object.EmeraldValue,
 ) object.Environment {
-	env := object.NewEnclosedEnvironment(fn.Env)
-	for paramIdx, param := range fn.Parameters {
+	env = object.NewEnclosedEnvironment(env)
+	for paramIdx, param := range params {
 		env.Set(param.(*ast.IdentifierExpression).Value, args[paramIdx])
 	}
 	return env

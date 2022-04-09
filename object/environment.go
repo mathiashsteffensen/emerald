@@ -13,11 +13,17 @@ type environment struct {
 var defaultEnvironment = &environment{nil, map[string]EmeraldValue{}}
 
 func NewEnvironment() Environment {
-	return &environment{env: defaultEnvironment.env}
+	env := &environment{env: map[string]EmeraldValue{}}
+
+	for k, v := range defaultEnvironment.env {
+		env.env[k] = v
+	}
+
+	return env
 }
 
 func NewEnclosedEnvironment(outer Environment) Environment {
-	env := NewEnvironment().(*environment)
+	env := &environment{env: map[string]EmeraldValue{}}
 
 	env.outerEnv = outer
 
@@ -30,5 +36,13 @@ func (env *environment) Set(name string, val EmeraldValue) {
 
 func (env *environment) Get(name string) (EmeraldValue, bool) {
 	val, ok := env.env[name]
+	if ok {
+		return val, ok
+	}
+
+	if env.outerEnv != nil {
+		return env.outerEnv.Get(name)
+	}
+
 	return val, ok
 }

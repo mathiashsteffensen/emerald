@@ -42,6 +42,7 @@ const (
 	// Keywords
 	CLASS  TokenType = "CLASS"
 	DEF    TokenType = "DEF"
+	DO     TokenType = "DO"
 	END    TokenType = "END"
 	TRUE   TokenType = "TRUE"
 	FALSE  TokenType = "FALSE"
@@ -55,6 +56,7 @@ const (
 var keywords = map[string]TokenType{
 	"class":  CLASS,
 	"def":    DEF,
+	"do":     DO,
 	"true":   TRUE,
 	"false":  FALSE,
 	"self":   SELF,
