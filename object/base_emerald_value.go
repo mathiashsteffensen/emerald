@@ -6,10 +6,12 @@ import (
 )
 
 type BaseEmeraldValue struct {
-	staticBuiltInMethodSet BuiltInMethodSet
-	staticDefinedMethodSet DefinedMethodSet
-	builtInMethodSet       BuiltInMethodSet
-	definedMethodSet       DefinedMethodSet
+	staticBuiltInMethodSet  BuiltInMethodSet
+	staticDefinedMethodSet  DefinedMethodSet
+	staticInstanceVariables map[string]EmeraldValue
+	builtInMethodSet        BuiltInMethodSet
+	definedMethodSet        DefinedMethodSet
+	instanceVariables       map[string]EmeraldValue
 }
 
 func (val *BaseEmeraldValue) StaticBuiltInMethodSet() BuiltInMethodSet {
@@ -26,6 +28,22 @@ func (val *BaseEmeraldValue) StaticDefinedMethodSet() DefinedMethodSet {
 	}
 
 	return val.staticDefinedMethodSet
+}
+
+func (val *BaseEmeraldValue) StaticInstanceVariables() map[string]EmeraldValue {
+	if val.staticInstanceVariables == nil {
+		val.staticInstanceVariables = map[string]EmeraldValue{}
+	}
+
+	return val.staticInstanceVariables
+}
+
+func (val *BaseEmeraldValue) InstanceVariables() map[string]EmeraldValue {
+	if val.instanceVariables == nil {
+		val.instanceVariables = map[string]EmeraldValue{}
+	}
+
+	return val.instanceVariables
 }
 
 func (val *BaseEmeraldValue) BuiltInMethodSet() BuiltInMethodSet {
@@ -162,4 +180,35 @@ func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom Emer
 	return nil, NewStandardError(
 		fmt.Sprintf("undefined method %s for %s:%s", name, target.Inspect(), target.ParentClass().(*Class).Name),
 	)
+}
+
+func (val *BaseEmeraldValue) InstanceVariableGet(isStatic bool, name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue {
+	set := val.getInstanceVariables(isStatic)
+
+	value, ok := set[name]
+	if ok {
+		return value
+	}
+
+	superClass := extractFrom.ParentClass().(*Class)
+
+	if superClass != nil {
+		return superClass.InstanceVariableGet(isStatic, name, superClass, target)
+	}
+
+	return NULL
+}
+
+func (val *BaseEmeraldValue) InstanceVariableSet(isStatic bool, name string, value EmeraldValue) {
+	set := val.getInstanceVariables(isStatic)
+
+	set[name] = value
+}
+
+func (val *BaseEmeraldValue) getInstanceVariables(isStatic bool) map[string]EmeraldValue {
+	if isStatic {
+		return val.StaticInstanceVariables()
+	} else {
+		return val.InstanceVariables()
+	}
 }

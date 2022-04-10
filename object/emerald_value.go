@@ -37,6 +37,8 @@ type (
 			block *Block,
 			args ...EmeraldValue,
 		) EmeraldValue
+		InstanceVariableGet(isStatic bool, name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue
+		InstanceVariableSet(isStatic bool, name string, value EmeraldValue)
 	}
 )
 

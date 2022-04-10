@@ -53,6 +53,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.DEF, p.parseMethodLiteral)
 	p.registerPrefix(lexer.CLASS, p.parseClassLiteral)
 	p.registerPrefix(lexer.COLON, p.parseSymbolLiteral)
+	p.registerPrefix(lexer.INSTANCE_VAR, p.parseInstanceVariable)
 
 	p.infixParseFns = make(map[lexer.TokenType]infixParseFn)
 	p.registerInfix(lexer.PLUS, p.parseInfixExpression)
@@ -195,8 +196,6 @@ func (p *Parser) parseIdentifierExpression() ast.Expression {
 	node := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 
 	if p.peekTokenIs(lexer.ASSIGN) {
-		p.nextToken()
-
 		return p.parseAssignmentExpression(node)
 	}
 
@@ -272,15 +271,11 @@ func (p *Parser) parseNullExpression() ast.Expression {
 }
 
 func (p *Parser) parseAssignmentExpression(left ast.Expression) ast.Expression {
-	node := &ast.AssignmentExpression{}
+	p.nextToken()
 
-	if left, ok := left.(*ast.IdentifierExpression); !ok {
-		p.addError(fmt.Sprintf("cannot assign to expression of type %T", left))
-		return nil
-	} else {
-		node.Name = left
-		node.Token = left.Token
-	}
+	node := &ast.AssignmentExpression{Token: p.curToken}
+
+	node.Name = left
 
 	p.nextToken()
 
@@ -555,6 +550,16 @@ func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
 	block.Body = p.parseBlockStatement(endToken)
 
 	return block
+}
+
+func (p *Parser) parseInstanceVariable() ast.Expression {
+	node := &ast.InstanceVariable{IdentifierExpression: &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
+
+	if p.peekTokenIs(lexer.ASSIGN) {
+		return p.parseAssignmentExpression(node)
+	}
+
+	return node
 }
 
 func (p *Parser) curTokenIs(t lexer.TokenType) bool {

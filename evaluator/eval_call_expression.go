@@ -3,13 +3,11 @@ package evaluator
 import (
 	"emerald/ast"
 	"emerald/object"
-	"fmt"
 )
 
 func evalCallExpression(executionContext object.ExecutionContext, target object.EmeraldValue, node *ast.CallExpression, env object.Environment) object.EmeraldValue {
 	method, err := target.ExtractMethod(node.Method.(*ast.IdentifierExpression).Value, target, target)
 	if err != nil {
-		fmt.Printf("%#v\n", env)
 		return err
 	}
 

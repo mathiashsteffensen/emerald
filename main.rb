@@ -25,8 +25,19 @@ class Logger
     end
 
     class << self
+        @instances = 0
+
         def instance
-            new
+            if @instance == nil
+                @instances = @instances + 1
+                @instance = new
+            end
+
+            @instance
+        end
+
+        def log_instances
+            instance.info("You have created " + @instances.to_s + " instances of Logger")
         end
     end
 end
@@ -38,6 +49,8 @@ if x < y
         Logger.instance.debug("debug msg")
 
         ["this", "is", "an", "array"].each { |msg| Logger.instance.warn(msg) }
+
+        Logger.log_instances
     end
 else
     y

@@ -28,7 +28,14 @@ func Eval(executionContext object.ExecutionContext, node ast.Node, env object.En
 			return val
 		}
 
-		env.Set(node.Name.Value, val)
+		switch name := node.Name.(type) {
+		case *ast.IdentifierExpression:
+			env.Set(name.Value, val)
+		case *ast.InstanceVariable:
+			executionContext.Target.InstanceVariableSet(executionContext.IsStatic, name.Value, val)
+		default:
+			return newError("cannot assign to expression of type %T", node.Name)
+		}
 
 		return val
 	case *ast.ClassLiteral:
@@ -85,6 +92,15 @@ func Eval(executionContext object.ExecutionContext, node ast.Node, env object.En
 		}
 
 		return ident
+	case *ast.InstanceVariable:
+		return executionContext.
+			Target.
+			InstanceVariableGet(
+				executionContext.IsStatic,
+				node.Value,
+				executionContext.Target,
+				executionContext.Target,
+			)
 	case *ast.MethodCall:
 		target := Eval(executionContext, node.Left, env)
 		if isError(target) {
@@ -203,7 +219,6 @@ func evalIdentifier(
 
 	method, err := executionContext.Target.ExtractMethod(node.Value, executionContext.Target, executionContext.Target)
 	if err != nil {
-		fmt.Printf("%#v\n", env)
 		return err
 	}
 
@@ -249,7 +264,8 @@ func evalBlock(executionContext object.ExecutionContext, target object.EmeraldVa
 	switch block := block.(type) {
 	case *object.Block:
 		extendedEnv := object.ExtendBlockEnv(block.Env, block.Parameters, args)
-		evaluated := Eval(object.ExecutionContext{Target: target}, block.Body, extendedEnv)
+		context := object.ExecutionContext{Target: target, IsStatic: target.Type() == object.CLASS_VALUE}
+		evaluated := Eval(context, block.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.WrappedBuiltInMethod:
 		return block.Method(target, givenBlock, Yield(executionContext), args...)

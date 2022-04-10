@@ -144,6 +144,17 @@ func (l *Lexer) Run() {
 			case '"':
 				tok.Type = STRING
 				tok.Literal = l.readString()
+			case '@':
+				tok.Type = INSTANCE_VAR
+
+				char := l.currentChar
+
+				l.readChar()
+
+				tok.Literal = string(char) + l.readIdentifier()
+
+				l.sendToken(tok)
+				continue
 			case 0:
 				tok.Literal = ""
 				tok.Type = EOF

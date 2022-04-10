@@ -14,7 +14,9 @@ func TestNextToken(t *testing.T) {
 		end
 	end
 
-	result = add(five, ten);
+	@result = add(five, ten);
+
+	@result.method
 
 	print(result)
 	!-/*5;
@@ -71,7 +73,7 @@ func TestNextToken(t *testing.T) {
 		{IDENT, "y"},
 		{END, "end"},
 		{END, "end"},
-		{IDENT, "result"},
+		{INSTANCE_VAR, "@result"},
 		{ASSIGN, "="},
 		{IDENT, "add"},
 		{LPAREN, "("},
@@ -80,6 +82,9 @@ func TestNextToken(t *testing.T) {
 		{IDENT, "ten"},
 		{RPAREN, ")"},
 		{SEMICOLON, ";"},
+		{INSTANCE_VAR, "@result"},
+		{DOT, "."},
+		{IDENT, "method"},
 		{IDENT, "print"},
 		{LPAREN, "("},
 		{IDENT, "result"},

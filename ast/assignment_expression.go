@@ -7,7 +7,7 @@ import (
 
 type AssignmentExpression struct {
 	Token lexer.Token // the lexer.IDENT token
-	Name  *IdentifierExpression
+	Name  Expression
 	Value Expression
 }
 

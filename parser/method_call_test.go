@@ -7,14 +7,15 @@ import (
 
 func TestMethodCallParsing(t *testing.T) {
 	input := `
-		1.add(2, 3, 4 + 5) { |num, next| num + next }.first
+		1.add(2, 3, 4 + 5) { |num, next| num + @var.method }.first
 		Logger.info(msg)
+		@var.method
 	`
 
 	program := testParseAST(t, input)
 
-	if len(program.Statements) != 2 {
-		t.Fatalf("program.Statements does not contain 2 statements. got=%d (%+v)\n", len(program.Statements), program.Statements)
+	if len(program.Statements) != 3 {
+		t.Fatalf("program.Statements does not contain 3 statements. got=%d (%+v)\n", len(program.Statements), program.Statements)
 	}
 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 	if !ok {

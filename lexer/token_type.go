@@ -7,9 +7,10 @@ const (
 	EOF     TokenType = "EOF"
 
 	// Identifiers + literals
-	IDENT  TokenType = "IDENT"
-	INT    TokenType = "INT"
-	STRING TokenType = "STRING"
+	IDENT        TokenType = "IDENT"
+	INT          TokenType = "INT"
+	STRING       TokenType = "STRING"
+	INSTANCE_VAR TokenType = "INSTANCE_VAR"
 
 	// Operators
 	ASSIGN   TokenType = "="
