@@ -1,10 +1,11 @@
 package main
 
 import (
-	"emerald/evaluator"
+	"emerald/compiler"
 	"emerald/lexer"
 	"emerald/object"
 	"emerald/parser"
+	"emerald/vm"
 	"fmt"
 	"io"
 	"os"
@@ -27,9 +28,15 @@ func main() {
 		return
 	}
 
-	env := object.NewEnvironment()
-	ctx := object.ExecutionContext{Target: object.Object, IsStatic: true}
-	evaluated := evaluator.Eval(ctx, program, env)
+	c := compiler.New()
+
+	if err := c.Compile(program); err != nil {
+		fmt.Printf("Compilation failed: %s", err)
+	}
+
+	machine := vm.New(c.Bytecode())
+
+	evaluated := machine.LastPoppedStackElem()
 
 	if evaluated != nil {
 		if evaluated.RespondsTo("to_s", evaluated) {
@@ -37,8 +44,9 @@ func main() {
 				os.Stdout,
 				evaluated.
 					SEND(
-						evaluator.Eval,
-						evaluator.Yield(ctx),
+						func(block *object.Block, args ...object.EmeraldValue) object.EmeraldValue {
+							return object.NULL
+						},
 						"to_s",
 						evaluated,
 						nil,

@@ -1,7 +1,6 @@
 package object
 
 import (
-	"emerald/ast"
 	"fmt"
 )
 
@@ -85,7 +84,6 @@ func (val *BaseEmeraldValue) RespondsTo(name string, target EmeraldValue) bool {
 }
 
 func (val *BaseEmeraldValue) SEND(
-	eval func(executionContext ExecutionContext, node ast.Node, env Environment) EmeraldValue,
 	yield YieldFunc,
 	name string,
 	target EmeraldValue,
@@ -100,10 +98,6 @@ func (val *BaseEmeraldValue) SEND(
 	switch method := method.(type) {
 	case *WrappedBuiltInMethod:
 		return method.Method(target, block, yield, args...)
-	case *Block:
-		env := ExtendBlockEnv(method.Env, method.Parameters, args)
-		evaluated := eval(ExecutionContext{Target: target}, method.Body, env)
-		return unwrapReturnValue(evaluated)
 	}
 
 	return nil

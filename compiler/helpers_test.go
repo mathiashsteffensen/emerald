@@ -9,32 +9,41 @@ import (
 	"testing"
 )
 
+type compilerTestCase struct {
+	name                 string
+	input                string
+	expectedConstants    []interface{}
+	expectedInstructions []Instructions
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 
 	for _, tt := range tests {
-		program := parse(tt.input)
+		t.Run(tt.name, func(t *testing.T) {
+			program := parse(tt.input)
 
-		compiler := New()
+			compiler := New()
 
-		err := compiler.Compile(program)
+			err := compiler.Compile(program)
 
-		if err != nil {
-			t.Fatalf("compiler error: %s", err)
-		}
+			if err != nil {
+				t.Fatalf("compiler error: %s", err)
+			}
 
-		bytecode := compiler.Bytecode()
+			bytecode := compiler.Bytecode()
 
-		err = testInstructions(tt.expectedInstructions, bytecode.Instructions)
-		if err != nil {
-			t.Fatalf("testInstructions failed: %s", err)
-		}
+			err = testInstructions(tt.expectedInstructions, bytecode.Instructions)
+			if err != nil {
+				t.Fatalf("testInstructions failed: %s", err)
+			}
 
-		err = testConstants(t, tt.expectedConstants, bytecode.Constants)
+			err = testConstants(t, tt.expectedConstants, bytecode.Constants)
 
-		if err != nil {
-			t.Fatalf("testConstants failed: %s", err)
-		}
+			if err != nil {
+				t.Fatalf("testConstants failed: %s", err)
+			}
+		})
 	}
 }
 
@@ -49,7 +58,7 @@ func testInstructions(
 	actual Instructions,
 ) error {
 	concatted := concatInstructions(expected)
-	
+
 	if len(actual) != len(concatted) {
 		return fmt.Errorf("wrong instructions length.\nwant=%q\ngot=%q", concatted, actual)
 	}

@@ -28,9 +28,9 @@ func TestBooleanExpression(t *testing.T) {
 				program.Statements[0])
 		}
 
-		boolean, ok := stmt.Expression.(*ast.BooleanExpression)
+		boolean, ok := stmt.Expression.(*ast.BooleanLiteral)
 		if !ok {
-			t.Fatalf("exp not *ast.BooleanExpression. got=%T", stmt.Expression)
+			t.Fatalf("exp not *ast.BooleanLiteral. got=%T", stmt.Expression)
 		}
 		if boolean.Value != tt.expectedBoolean {
 			t.Errorf("boolean.Value not %t. got=%t", tt.expectedBoolean,

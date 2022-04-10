@@ -32,6 +32,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+
+		c.emit(OpPop)
 	case *ast.InfixExpression:
 		err := c.Compile(node.Left)
 		if err != nil {
@@ -46,12 +48,24 @@ func (c *Compiler) Compile(node ast.Node) error {
 		switch node.Operator {
 		case "+":
 			c.emit(OpAdd)
+		case "-":
+			c.emit(OpSub)
+		case "*":
+			c.emit(OpMul)
+		case "/":
+			c.emit(OpDiv)
 		default:
 			return fmt.Errorf("unknown operator %s", node.Operator)
 		}
 	case *ast.IntegerLiteral:
 		integer := object.NewInteger(node.Value)
 		c.emit(OpPushConstant, c.addConstant(integer))
+	case *ast.BooleanLiteral:
+		if node.Value {
+			c.emit(OpTrue)
+		} else {
+			c.emit(OpFalse)
+		}
 	}
 	return nil
 }

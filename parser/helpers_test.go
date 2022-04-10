@@ -103,9 +103,9 @@ func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 }
 
 func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
-	bo, ok := exp.(*ast.BooleanExpression)
+	bo, ok := exp.(*ast.BooleanLiteral)
 	if !ok {
-		t.Errorf("exp not *ast.BooleanExpression. got=%T", exp)
+		t.Errorf("exp not *ast.BooleanLiteral. got=%T", exp)
 		return false
 	}
 

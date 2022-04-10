@@ -11,6 +11,7 @@ import (
 )
 
 type vmTestCase struct {
+	name     string
 	input    string
 	expected interface{}
 }
@@ -19,23 +20,25 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 
 	for _, tt := range tests {
-		program := parse(tt.input)
-		comp := compiler.New()
+		t.Run(tt.name, func(t *testing.T) {
+			program := parse(tt.input)
+			comp := compiler.New()
 
-		err := comp.Compile(program)
-		if err != nil {
-			t.Fatalf("compiler error: %s", err)
-		}
+			err := comp.Compile(program)
+			if err != nil {
+				t.Fatalf("compiler error: %s", err)
+			}
 
-		vm := New(comp.Bytecode())
+			vm := New(comp.Bytecode())
 
-		err = vm.Run()
-		if err != nil {
-			t.Fatalf("vm error: %s", err)
-		}
+			err = vm.Run()
+			if err != nil {
+				t.Fatalf("vm error: %s", err)
+			}
 
-		stackElem := vm.StackTop()
-		testExpectedObject(t, tt.expected, stackElem)
+			stackElem := vm.LastPoppedStackElem()
+			testExpectedObject(t, tt.expected, stackElem)
+		})
 	}
 }
 
@@ -50,6 +53,11 @@ func testExpectedObject(
 		err := testIntegerObject(int64(expected), actual)
 		if err != nil {
 			t.Errorf("testIntegerObject failed: %s", err)
+		}
+	case bool:
+		err := testBooleanObject(bool(expected), actual)
+		if err != nil {
+			t.Errorf("testBooleanObject failed: %s", err)
 		}
 	}
 }
@@ -67,6 +75,17 @@ func testIntegerObject(expected int64, actual object.EmeraldValue) error {
 	}
 	if result.Value != expected {
 		return fmt.Errorf("object has wrong value. got=%d, want=%d", result.Value, expected)
+	}
+	return nil
+}
+
+func testBooleanObject(expected bool, actual object.EmeraldValue) error {
+	if actual != object.TRUE && actual != object.FALSE {
+		return fmt.Errorf("object is not Boolean. got=%T (%+v)", actual, actual)
+	}
+
+	if (actual == object.TRUE) != expected {
+		return fmt.Errorf("object has wrong value. got=%t, want=%t", actual == object.TRUE, expected)
 	}
 	return nil
 }

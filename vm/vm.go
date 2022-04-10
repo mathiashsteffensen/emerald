@@ -30,13 +30,40 @@ func (vm *VM) Run() error {
 	for ip := 0; ip < len(vm.instructions); ip++ {
 		op := compiler.Opcode(vm.instructions[ip])
 		switch op {
-		case compiler.OpAdd:
+		case compiler.OpPop:
+			vm.pop()
+		case compiler.OpAdd, compiler.OpSub, compiler.OpDiv, compiler.OpMul:
 			right := vm.pop()
 			left := vm.pop()
 
-			result := left.(*object.IntegerInstance).Value + right.(*object.IntegerInstance).Value
+			var operator string
 
-			err := vm.push(object.NewInteger(result))
+			switch op {
+			case compiler.OpAdd:
+				operator = "+"
+			case compiler.OpSub:
+				operator = "-"
+			case compiler.OpDiv:
+				operator = "/"
+			case compiler.OpMul:
+				operator = "*"
+			}
+
+			result := left.SEND(func(block *object.Block, args ...object.EmeraldValue) object.EmeraldValue {
+				return object.NULL
+			}, operator, left, nil, right)
+
+			err := vm.push(result)
+			if err != nil {
+				return err
+			}
+		case compiler.OpTrue:
+			err := vm.push(object.TRUE)
+			if err != nil {
+				return err
+			}
+		case compiler.OpFalse:
+			err := vm.push(object.FALSE)
 			if err != nil {
 				return err
 			}
@@ -61,6 +88,10 @@ func (vm *VM) StackTop() object.EmeraldValue {
 	}
 
 	return vm.stack[vm.sp-1]
+}
+
+func (vm *VM) LastPoppedStackElem() object.EmeraldValue {
+	return vm.stack[vm.sp]
 }
 
 // push an obj on to the stack

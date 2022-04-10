@@ -1,9 +1,5 @@
 package object
 
-import (
-	"emerald/ast"
-)
-
 type (
 	// BuiltInMethod - The type signature of an Emerald method defined in Go compiler
 	BuiltInMethod func(target EmeraldValue, block *Block, yield YieldFunc, args ...EmeraldValue) EmeraldValue
@@ -30,7 +26,6 @@ type (
 		ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, EmeraldValue)
 		RespondsTo(name string, target EmeraldValue) bool
 		SEND(
-			eval func(executionContext ExecutionContext, node ast.Node, env Environment) EmeraldValue,
 			yield YieldFunc,
 			name string,
 			target EmeraldValue,
@@ -52,13 +47,6 @@ const (
 func (method *WrappedBuiltInMethod) Inspect() string           { return "obscure Go compiler" }
 func (method *WrappedBuiltInMethod) Type() EmeraldValueType    { return BLOCK_VALUE }
 func (method *WrappedBuiltInMethod) ParentClass() EmeraldValue { return nil }
-
-func unwrapReturnValue(obj EmeraldValue) EmeraldValue {
-	if returnValue, ok := obj.(*ReturnValue); ok {
-		return returnValue.Value
-	}
-	return obj
-}
 
 func nativeBoolToBooleanObject(input bool) EmeraldValue {
 	if input {

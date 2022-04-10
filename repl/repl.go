@@ -2,10 +2,11 @@ package repl
 
 import (
 	"bufio"
-	"emerald/evaluator"
+	"emerald/compiler"
 	"emerald/lexer"
 	"emerald/object"
 	"emerald/parser"
+	"emerald/vm"
 	"fmt"
 	"io"
 )
@@ -14,10 +15,9 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
-	env := object.NewEnvironment()
 
 	for {
-		fmt.Print(PROMPT)
+		fmt.Fprint(out, PROMPT)
 
 		scanned := scanner.Scan()
 		if !scanned {
@@ -26,11 +26,7 @@ func Start(in io.Reader, out io.Writer) {
 
 		line := scanner.Text()
 
-		if line == "quit" {
-			return
-		}
-
-		l := lexer.New(lexer.NewInput("interactive.rb", line))
+		l := lexer.New(lexer.NewInput("repl.rb", line))
 		p := parser.New(l)
 		program := p.ParseAST()
 
@@ -39,9 +35,23 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		ctx := object.ExecutionContext{Target: object.Object, IsStatic: true}
+		comp := compiler.New()
 
-		evaluated := evaluator.Eval(ctx, program, env)
+		err := comp.Compile(program)
+		if err != nil {
+			fmt.Fprintf(out, "Woops! Compilation failed:\n %s\n", err)
+			continue
+		}
+
+		machine := vm.New(comp.Bytecode())
+
+		err = machine.Run()
+		if err != nil {
+			fmt.Fprintf(out, "Woops! Executing bytecode failed:\n %s\n", err)
+			continue
+		}
+
+		evaluated := machine.LastPoppedStackElem()
 
 		if evaluated != nil {
 			if evaluated.RespondsTo("to_s", evaluated) {
@@ -49,8 +59,9 @@ func Start(in io.Reader, out io.Writer) {
 					out,
 					evaluated.
 						SEND(
-							evaluator.Eval,
-							evaluator.Yield(ctx),
+							func(block *object.Block, args ...object.EmeraldValue) object.EmeraldValue {
+								return object.NULL
+							},
 							"to_s",
 							evaluated,
 							nil,
