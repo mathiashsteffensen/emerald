@@ -31,15 +31,13 @@ class Logger
     end
 end
 
-instance = Logger.new
-
 if x < y
     if true
         Logger.instance.info("Hello World!")
 
-        instance.debug("debug msg")
+        Logger.instance.debug("debug msg")
 
-        ["this", "is", "an", "array"].each { |msg| instance.warn(msg) }
+        ["this", "is", "an", "array"].each { |msg| Logger.instance.warn(msg) }
     end
 else
     y

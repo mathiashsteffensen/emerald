@@ -248,7 +248,7 @@ func isTruthy(obj object.EmeraldValue) bool {
 func evalBlock(executionContext object.ExecutionContext, target object.EmeraldValue, name string, block object.EmeraldValue, givenBlock *object.Block, args []object.EmeraldValue) object.EmeraldValue {
 	switch block := block.(type) {
 	case *object.Block:
-		extendedEnv := extendBlockEnv(block.Env, block.Parameters, args)
+		extendedEnv := object.ExtendBlockEnv(block.Env, block.Parameters, args)
 		evaluated := Eval(object.ExecutionContext{Target: target}, block.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.WrappedBuiltInMethod:
@@ -256,18 +256,6 @@ func evalBlock(executionContext object.ExecutionContext, target object.EmeraldVa
 	default:
 		return newError("not a method: %s %T", name, block)
 	}
-}
-
-func extendBlockEnv(
-	env object.Environment,
-	params []ast.Expression,
-	args []object.EmeraldValue,
-) object.Environment {
-	env = object.NewEnclosedEnvironment(env)
-	for paramIdx, param := range params {
-		env.Set(param.(*ast.IdentifierExpression).Value, args[paramIdx])
-	}
-	return env
 }
 
 func unwrapReturnValue(obj object.EmeraldValue) object.EmeraldValue {

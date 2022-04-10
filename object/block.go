@@ -40,3 +40,15 @@ func NewBlock(params []ast.Expression, body *ast.BlockStatement, env Environment
 		Env:        env,
 	}
 }
+
+func ExtendBlockEnv(
+	env Environment,
+	params []ast.Expression,
+	args []EmeraldValue,
+) Environment {
+	env = NewEnclosedEnvironment(env)
+	for paramIdx, param := range params {
+		env.Set(param.(*ast.IdentifierExpression).Value, args[paramIdx])
+	}
+	return env
+}
