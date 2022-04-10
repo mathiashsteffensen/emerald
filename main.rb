@@ -25,10 +25,12 @@ class Logger
     end
 
     class << self
-        @instances = 0
-
         def instance
             if @instance == nil
+                if @instances == nil
+                    @instances = 0
+                end
+
                 @instances = @instances + 1
                 @instance = new
             end

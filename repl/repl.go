@@ -17,7 +17,7 @@ func Start(in io.Reader, out io.Writer) {
 	env := object.NewEnvironment()
 
 	for {
-		fmt.Printf(PROMPT)
+		fmt.Print(PROMPT)
 
 		scanned := scanner.Scan()
 		if !scanned {
@@ -39,7 +39,9 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(object.Object, program, env)
+		ctx := object.ExecutionContext{Target: object.Object, IsStatic: true}
+
+		evaluated := evaluator.Eval(ctx, program, env)
 
 		if evaluated != nil {
 			if evaluated.RespondsTo("to_s", evaluated) {
@@ -48,7 +50,7 @@ func Start(in io.Reader, out io.Writer) {
 					evaluated.
 						SEND(
 							evaluator.Eval,
-							env,
+							evaluator.Yield(ctx),
 							"to_s",
 							evaluated,
 							nil,

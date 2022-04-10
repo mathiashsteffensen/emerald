@@ -12,7 +12,7 @@ func init() {
 			"methods": func(target EmeraldValue, block *Block, yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				methods := []EmeraldValue{}
 
-				for key, _ := range target.(*Instance).DefinedMethodSet() {
+				for key := range target.(*Instance).DefinedMethodSet() {
 					methods = append(methods, NewString(key))
 				}
 

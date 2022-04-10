@@ -5,7 +5,7 @@ import (
 )
 
 type (
-	// BuiltInMethod - The type signature of an Emerald method defined in Go code
+	// BuiltInMethod - The type signature of an Emerald method defined in Go compiler
 	BuiltInMethod func(target EmeraldValue, block *Block, yield YieldFunc, args ...EmeraldValue) EmeraldValue
 
 	// WrappedBuiltInMethod -  Wraps a built-in method so that it conforms to the EmeraldValue interface
@@ -49,7 +49,7 @@ const (
 	RETURN_VALUE
 )
 
-func (method *WrappedBuiltInMethod) Inspect() string           { return "obscure Go code" }
+func (method *WrappedBuiltInMethod) Inspect() string           { return "obscure Go compiler" }
 func (method *WrappedBuiltInMethod) Type() EmeraldValueType    { return BLOCK_VALUE }
 func (method *WrappedBuiltInMethod) ParentClass() EmeraldValue { return nil }
 
