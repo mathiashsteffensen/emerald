@@ -97,6 +97,12 @@ func testConstants(
 				return fmt.Errorf("constant %d - testIntegerObject failed: %s",
 					i, err)
 			}
+		case string:
+			err := testStringObject(constant, actual[i])
+			if err != nil {
+				return fmt.Errorf("constant %d - testStringObject failed: %s",
+					i, err)
+			}
 		}
 	}
 	return nil
@@ -109,6 +115,17 @@ func testIntegerObject(expected int64, actual object.EmeraldValue) error {
 	}
 	if result.Value != expected {
 		return fmt.Errorf("object has wrong value. got=%d, want=%d", result.Value, expected)
+	}
+	return nil
+}
+
+func testStringObject(expected string, actual object.EmeraldValue) error {
+	result, ok := actual.(*object.StringInstance)
+	if !ok {
+		return fmt.Errorf("object is not String. got=%T (%+v)", actual, actual)
+	}
+	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. got=%q, want=%q", result.Value, expected)
 	}
 	return nil
 }

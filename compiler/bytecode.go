@@ -29,19 +29,43 @@ const (
 	OpSub
 	OpMul
 	OpDiv
+	OpEqual
+	OpNotEqual
+	OpGreaterThan
+	OpLessThan
 	OpTrue
 	OpFalse
+	OpNull
+	OpArray
+	OpMinus
+	OpBang
+	OpJump
+	OpJumpNotTruthy
+	OpGetGlobal
+	OpSetGlobal
 )
 
 var definitions = map[Opcode]*Definition{
-	OpPushConstant: {"OpPushConstant", []int{2}},
-	OpAdd:          {"OpAdd", []int{}},
-	OpPop:          {"OpPop", []int{}},
-	OpSub:          {"OpSub", []int{}},
-	OpMul:          {"OpMul", []int{}},
-	OpDiv:          {"OpDiv", []int{}},
-	OpTrue:         {"OpTrue", []int{}},
-	OpFalse:        {"OpFalse", []int{}},
+	OpPushConstant:  {"OpPushConstant", []int{2}},
+	OpAdd:           {"OpAdd", []int{}},
+	OpPop:           {"OpPop", []int{}},
+	OpSub:           {"OpSub", []int{}},
+	OpMul:           {"OpMul", []int{}},
+	OpDiv:           {"OpDiv", []int{}},
+	OpEqual:         {"OpEqual", []int{}},
+	OpNotEqual:      {"OpNotEqual", []int{}},
+	OpGreaterThan:   {"OpGreaterThan", []int{}},
+	OpLessThan:      {"OpLessThan", []int{}},
+	OpTrue:          {"OpTrue", []int{}},
+	OpFalse:         {"OpFalse", []int{}},
+	OpMinus:         {"OpMinus", []int{}},
+	OpBang:          {"OpBang", []int{}},
+	OpJump:          {"OpJump", []int{2}},
+	OpJumpNotTruthy: {"OpJumpNotTruthy", []int{2}},
+	OpNull:          {"OpNull", []int{}},
+	OpGetGlobal:     {"OpGetGlobal", []int{2}},
+	OpSetGlobal:     {"OpSetGlobal", []int{2}},
+	OpArray:         {"OpArray", []int{2}},
 }
 
 func Lookup(op byte) (*Definition, error) {

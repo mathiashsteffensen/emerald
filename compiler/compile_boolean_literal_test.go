@@ -2,7 +2,7 @@ package compiler
 
 import "testing"
 
-func TestBooleanLiteral(t *testing.T) {
+func TestCompileBooleanLiteral(t *testing.T) {
 	tests := []compilerTestCase{
 		{
 			name:              "true",
