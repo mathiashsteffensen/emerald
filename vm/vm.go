@@ -128,21 +128,24 @@ func (vm *VM) Run() error {
 
 			err = vm.push(returnValue)
 		case compiler.OpDefineMethod:
-			name := vm.pop().(*object.SymbolInstance)
 			block := vm.pop().(*object.Block)
 
-			result := vm.ec.Target.DefineMethod(vm.ec.IsStatic, block, name)
-
-			err = vm.push(result)
+			vm.ec.Target.DefineMethod(vm.ec.IsStatic, block, vm.stack[vm.sp-1].(*object.SymbolInstance))
 		case compiler.OpSend:
 			numArgs := compiler.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 			err = vm.callFunction(int(numArgs))
 		default:
-			if isInfixOperator(op) {
-				left, operator, right := vm.decodeInfixOperator(op)
+			if opString, ok := infixOperators[op]; ok {
+				right := vm.pop()
+				left := vm.pop()
 
-				err = vm.executeInfixOperator(operator, left, right)
+				result := left.SEND(nil, opString, left, nil, right)
+
+				err = vm.push(result)
+				if err != nil {
+					return err
+				}
 			}
 		}
 

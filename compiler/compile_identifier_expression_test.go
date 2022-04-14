@@ -13,11 +13,11 @@ func TestCompileIdentifierExpression(t *testing.T) {
 			`,
 			expectedConstants: []interface{}{
 				24,
+				":no_arg",
 				[]Instructions{
 					Make(OpPushConstant, 0), // The literal "24"
 					Make(OpReturnValue),
 				},
-				":no_arg",
 				":no_arg",
 			},
 			expectedInstructions: []Instructions{

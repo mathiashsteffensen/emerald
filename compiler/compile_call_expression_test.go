@@ -10,11 +10,11 @@ func TestCompileCallExpression(t *testing.T) {
 			one_arg(24)
 			`,
 			expectedConstants: []interface{}{
+				":one_arg",
 				[]Instructions{
 					Make(OpGetLocal, 0),
 					Make(OpReturnValue),
 				},
-				":one_arg",
 				":one_arg",
 				24,
 			},
@@ -35,6 +35,7 @@ func TestCompileCallExpression(t *testing.T) {
 			many_arg(24, 25, 26)
 			`,
 			expectedConstants: []interface{}{
+				":many_arg",
 				[]Instructions{
 					Make(OpGetLocal, 0),
 					Make(OpPop),
@@ -43,7 +44,6 @@ func TestCompileCallExpression(t *testing.T) {
 					Make(OpGetLocal, 2),
 					Make(OpReturnValue),
 				},
-				":many_arg",
 				":many_arg",
 				24,
 				25,

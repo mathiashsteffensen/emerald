@@ -174,6 +174,23 @@ func TestMethodCall(t *testing.T) {
 			outer`,
 			expected: 10,
 		},
+		{
+			input: `
+			global_num = 10
+
+			def sum(a, b)
+				c = a + b
+				c + global_num
+			end
+
+			def outer
+				sum(1, 2) + sum(3, 4) + global_num
+			end
+
+			outer + global_num;
+			`,
+			expected: 50,
+		},
 	}
 
 	runVmTests(t, tests)

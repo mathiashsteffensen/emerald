@@ -22,7 +22,7 @@ type (
 		Type() EmeraldValueType
 		Inspect() string
 		ParentClass() EmeraldValue
-		DefineMethod(isStatic bool, block *Block, args ...EmeraldValue) EmeraldValue
+		DefineMethod(isStatic bool, block *Block, args ...EmeraldValue)
 		ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, EmeraldValue)
 		RespondsTo(name string, target EmeraldValue) bool
 		SEND(

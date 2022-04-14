@@ -2,7 +2,7 @@ package compiler
 
 import "testing"
 
-func TestAssignments(t *testing.T) {
+func TestCompileAssignment(t *testing.T) {
 	tests := []compilerTestCase{
 		{
 			input: `
@@ -71,11 +71,11 @@ func TestAssignments(t *testing.T) {
 			`,
 			expectedConstants: []interface{}{
 				55,
+				":method",
 				[]Instructions{
 					Make(OpGetGlobal, 0),
 					Make(OpReturnValue),
 				},
-				":method",
 			},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
@@ -96,13 +96,13 @@ func TestAssignments(t *testing.T) {
 			`,
 			expectedConstants: []interface{}{
 				55,
+				":method",
 				[]Instructions{
 					Make(OpPushConstant, 0),
 					Make(OpSetLocal, 0),
 					Make(OpGetLocal, 0),
 					Make(OpReturnValue),
 				},
-				":method",
 			},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 1),
@@ -122,6 +122,7 @@ func TestAssignments(t *testing.T) {
 			expectedConstants: []interface{}{
 				55,
 				77,
+				":method",
 				[]Instructions{
 					Make(OpPushConstant, 0),
 					Make(OpSetLocal, 0),
@@ -136,7 +137,6 @@ func TestAssignments(t *testing.T) {
 					Make(OpAdd),
 					Make(OpReturnValue),
 				},
-				":method",
 			},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 2),

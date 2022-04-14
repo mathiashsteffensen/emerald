@@ -32,8 +32,8 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
 	symbol := object.NewSymbol(node.Name.(*ast.IdentifierExpression).Value)
 	block := object.NewBlock([]ast.Expression{}, instructions, numLocals)
 
-	c.emit(OpPushConstant, c.addConstant(block))
 	c.emit(OpPushConstant, c.addConstant(symbol))
+	c.emit(OpPushConstant, c.addConstant(block))
 	c.emit(OpDefineMethod)
 
 	return nil

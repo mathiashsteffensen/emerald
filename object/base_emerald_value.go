@@ -61,7 +61,7 @@ func (val *BaseEmeraldValue) DefinedMethodSet() DefinedMethodSet {
 	return val.definedMethodSet
 }
 
-func (val *BaseEmeraldValue) DefineMethod(isStatic bool, block *Block, args ...EmeraldValue) EmeraldValue {
+func (val *BaseEmeraldValue) DefineMethod(isStatic bool, block *Block, args ...EmeraldValue) {
 	name := args[0].Inspect()[1:]
 
 	var set DefinedMethodSet
@@ -73,8 +73,6 @@ func (val *BaseEmeraldValue) DefineMethod(isStatic bool, block *Block, args ...E
 	}
 
 	set[name] = block
-
-	return NewSymbol(name)
 }
 
 func (val *BaseEmeraldValue) RespondsTo(name string, target EmeraldValue) bool {

@@ -11,13 +11,13 @@ func TestCompileMethodLiteral(t *testing.T) {
 			expectedConstants: []interface{}{
 				5,
 				10,
+				":method",
 				[]Instructions{
 					Make(OpPushConstant, 0),
 					Make(OpPushConstant, 1),
 					Make(OpAdd),
 					Make(OpReturnValue),
 				},
-				":method",
 			},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 2),
@@ -33,13 +33,13 @@ func TestCompileMethodLiteral(t *testing.T) {
 			expectedConstants: []interface{}{
 				5,
 				10,
+				":method",
 				[]Instructions{
 					Make(OpPushConstant, 0),
 					Make(OpPushConstant, 1),
 					Make(OpAdd),
 					Make(OpReturnValue),
 				},
-				":method",
 			},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 2),
@@ -56,13 +56,13 @@ func TestCompileMethodLiteral(t *testing.T) {
 			expectedConstants: []interface{}{
 				5,
 				10,
+				":method",
 				[]Instructions{
 					Make(OpPushConstant, 0),
 					Make(OpPop),
 					Make(OpPushConstant, 1),
 					Make(OpReturnValue),
 				},
-				":method",
 			},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 2),
@@ -74,10 +74,10 @@ func TestCompileMethodLiteral(t *testing.T) {
 		{
 			input: `def method; end`,
 			expectedConstants: []interface{}{
+				":method",
 				[]Instructions{
 					Make(OpReturn),
 				},
-				":method",
 			},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),

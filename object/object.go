@@ -36,7 +36,9 @@ func init() {
 				return target.(*Class).New()
 			},
 			"define_method": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
-				return target.DefineMethod(false, block, args...)
+				target.DefineMethod(false, block, args...)
+
+				return args[0]
 			},
 			"puts": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
 				strings := []any{}

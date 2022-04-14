@@ -29,17 +29,13 @@ func main() {
 
 	c := compiler.New()
 
-	if err := c.Compile(program); err != nil {
-		fmt.Printf("Compilation failed: %s", err)
-	}
+	err = c.Compile(program)
+	checkError("Compilation failed", err)
 
 	machine := vm.New(c.Bytecode())
 
 	err = machine.Run()
-	if err != nil {
-		fmt.Printf("VM failed to execute bytecode %s\n", err)
-		return
-	}
+	checkError("VM failed to execute bytecode", err)
 
 	evaluated := machine.LastPoppedStackElem()
 
