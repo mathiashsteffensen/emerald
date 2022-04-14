@@ -16,14 +16,14 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) error {
 		return err
 	}
 
-	if c.lastInstructionIsPop() {
+	if c.lastInstructionIs(OpPop) {
 		c.removeLastPop()
 	}
 
 	// Emit an `OpJump` with a bogus value
 	jumpPos := c.emit(OpJump, 9999)
 
-	afterConsequencePos := len(c.instructions)
+	afterConsequencePos := len(c.currentInstructions())
 	c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
 
 	if node.Alternative == nil {
@@ -33,12 +33,12 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) error {
 		if err != nil {
 			return err
 		}
-		if c.lastInstructionIsPop() {
+		if c.lastInstructionIs(OpPop) {
 			c.removeLastPop()
 		}
 	}
 
-	afterAlternativePos := len(c.instructions)
+	afterAlternativePos := len(c.currentInstructions())
 	c.changeOperand(jumpPos, afterAlternativePos)
 
 	return nil

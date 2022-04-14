@@ -5,12 +5,14 @@ import "testing"
 func TestInstructionsString(t *testing.T) {
 	instructions := []Instructions{
 		Make(OpAdd),
+		Make(OpGetLocal, 1),
 		Make(OpPushConstant, 2),
 		Make(OpPushConstant, 65535),
 	}
 	expected := `0000 OpAdd
-0001 OpPushConstant 2
-0004 OpPushConstant 65535
+0001 OpGetLocal 1
+0003 OpPushConstant 2
+0006 OpPushConstant 65535
 `
 	concatted := Instructions{}
 	for _, ins := range instructions {

@@ -61,23 +61,7 @@ func Start(in io.Reader, out io.Writer) {
 		evaluated := machine.LastPoppedStackElem()
 
 		if evaluated != nil {
-			if evaluated.RespondsTo("to_s", evaluated) {
-				io.WriteString(
-					out,
-					evaluated.
-						SEND(
-							func(block *object.Block, args ...object.EmeraldValue) object.EmeraldValue {
-								return object.NULL
-							},
-							"to_s",
-							evaluated,
-							nil,
-						).
-						Inspect(),
-				)
-			} else {
-				io.WriteString(out, evaluated.Inspect())
-			}
+			io.WriteString(out, evaluated.Inspect())
 
 			io.WriteString(out, "\n")
 		}

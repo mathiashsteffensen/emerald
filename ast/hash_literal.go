@@ -6,7 +6,7 @@ import (
 )
 
 type HashLiteral struct {
-	Value map[string]Expression
+	Value map[Expression]Expression
 	Token lexer.Token // The { Token
 }
 
@@ -18,7 +18,7 @@ func (hl *HashLiteral) String() string {
 	out.WriteString("{\n")
 
 	for key, value := range hl.Value {
-		out.WriteString("  " + key + ": " + value.String() + ",\n")
+		out.WriteString("  " + key.String() + ": " + value.String() + ",\n")
 	}
 
 	out.WriteString("}")

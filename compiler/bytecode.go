@@ -37,12 +37,19 @@ const (
 	OpFalse
 	OpNull
 	OpArray
+	OpHash
 	OpMinus
 	OpBang
 	OpJump
 	OpJumpNotTruthy
 	OpGetGlobal
 	OpSetGlobal
+	OpGetLocal
+	OpSetLocal
+	OpReturn
+	OpReturnValue
+	OpDefineMethod
+	OpSend
 )
 
 var definitions = map[Opcode]*Definition{
@@ -58,14 +65,21 @@ var definitions = map[Opcode]*Definition{
 	OpLessThan:      {"OpLessThan", []int{}},
 	OpTrue:          {"OpTrue", []int{}},
 	OpFalse:         {"OpFalse", []int{}},
+	OpNull:          {"OpNull", []int{}},
+	OpArray:         {"OpArray", []int{2}},
+	OpHash:          {"OpHash", []int{2}},
 	OpMinus:         {"OpMinus", []int{}},
 	OpBang:          {"OpBang", []int{}},
 	OpJump:          {"OpJump", []int{2}},
 	OpJumpNotTruthy: {"OpJumpNotTruthy", []int{2}},
-	OpNull:          {"OpNull", []int{}},
 	OpGetGlobal:     {"OpGetGlobal", []int{2}},
 	OpSetGlobal:     {"OpSetGlobal", []int{2}},
-	OpArray:         {"OpArray", []int{2}},
+	OpGetLocal:      {"OpGetLocal", []int{1}},
+	OpSetLocal:      {"OpSetLocal", []int{1}},
+	OpReturn:        {"OpReturn", []int{}},
+	OpReturnValue:   {"OpReturnValue", []int{}},
+	OpDefineMethod:  {"OpDefineMethod", []int{}},
+	OpSend:          {"OpSend", []int{1}},
 }
 
 func Lookup(op byte) (*Definition, error) {

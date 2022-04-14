@@ -395,7 +395,7 @@ func (p *Parser) parseExpressionList(delim lexer.TokenType) []ast.Expression {
 }
 
 func (p *Parser) parseHashLiteral() ast.Expression {
-	value := make(map[string]ast.Expression)
+	value := make(map[ast.Expression]ast.Expression)
 
 	for p.curToken.Type != lexer.RBRACE {
 		if p.peekTokenIs(lexer.RBRACE) {
@@ -403,11 +403,9 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 			break
 		}
 
-		if !p.expectPeekMultiple(lexer.IDENT, lexer.STRING, lexer.INT) {
-			return nil
-		}
+		p.nextToken()
 
-		key := p.curToken.Literal
+		key := p.parseExpression(LOWEST)
 
 		if !p.expectPeek(lexer.COLON) {
 			return nil

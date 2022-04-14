@@ -27,6 +27,8 @@ func Make(operator Opcode, operands ...int) Instructions {
 		switch width {
 		case 2: // Operators with a width of 2 are uint16
 			binary.BigEndian.PutUint16(instruction[offset:], uint16(o))
+		case 1: // Width of 1 are simple bytes
+			instruction[offset] = byte(o)
 		}
 		offset += width
 	}

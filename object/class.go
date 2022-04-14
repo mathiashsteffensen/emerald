@@ -15,7 +15,12 @@ func (c *Class) New() *Instance {
 	return &Instance{class: c, BaseEmeraldValue: c.BaseEmeraldValue}
 }
 
-func NewClass(name string, parentClass *Class, builtInMethodSet BuiltInMethodSet, staticBuiltInMethodSet BuiltInMethodSet) *Class {
+func NewClass(
+	name string,
+	parentClass *Class,
+	builtInMethodSet BuiltInMethodSet,
+	staticBuiltInMethodSet BuiltInMethodSet,
+) *Class {
 	class := &Class{
 		Name:        name,
 		parentClass: parentClass,

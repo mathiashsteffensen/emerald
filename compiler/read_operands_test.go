@@ -9,6 +9,7 @@ func TestReadOperands(t *testing.T) {
 		bytesRead int
 	}{
 		{OpPushConstant, []int{65535}, 2},
+		{OpGetLocal, []int{255}, 1},
 	}
 
 	for _, tt := range tests {

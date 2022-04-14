@@ -65,7 +65,15 @@ func testExpectedObject(
 			t.Errorf("testStringObject failed: %s", err)
 		}
 	case []any:
-		testArrayObject(t, expected, actual)
+		err := testArrayObject(t, expected, actual)
+		if err != nil {
+			t.Errorf("testArrayObject failed: %s", err)
+		}
+	case map[object.EmeraldValue]any:
+		err := testHashObject(t, expected, actual)
+		if err != nil {
+			t.Errorf("testHashObject failed: %s", err)
+		}
 	case nil:
 		if actual != object.NULL {
 			t.Errorf("object is not Null: %T (%+v)", actual, actual)
@@ -79,21 +87,43 @@ func parse(input string) *ast.AST {
 	return p.ParseAST()
 }
 
-func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) {
+func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) error {
 	array, ok := actual.(*object.ArrayInstance)
 	if !ok {
-		t.Errorf("object not Array: %T (%+v)", actual, actual)
-		return
+		return fmt.Errorf("object not Array: %T (%+v)", actual, actual)
 	}
 
 	if len(array.Value) != len(expected) {
-		t.Errorf("wrong num of elements. want=%d, got=%d", len(expected), len(array.Value))
-		return
+		return fmt.Errorf("wrong num of elements. want=%d, got=%d", len(expected), len(array.Value))
 	}
 
 	for i, expectedElem := range expected {
 		testExpectedObject(t, expectedElem, array.Value[i])
 	}
+
+	return nil
+}
+
+func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual object.EmeraldValue) error {
+	hash, ok := actual.(*object.HashInstance)
+	if !ok {
+		return fmt.Errorf("object is not Hash. got=%T (%+v)", actual, actual)
+	}
+
+	if len(hash.Value) != len(expected) {
+		return fmt.Errorf("hash has wrong number of Pairs. want=%d, got=%d", len(expected), len(hash.Value))
+	}
+
+	for expectedKey, expectedValue := range expected {
+		pair, ok := hash.Value[expectedKey]
+		if !ok {
+			return fmt.Errorf("no pair for given key in Pairs")
+		}
+
+		testExpectedObject(t, expectedValue, pair)
+	}
+
+	return nil
 }
 
 func testIntegerObject(expected int64, actual object.EmeraldValue) error {

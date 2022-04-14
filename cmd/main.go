@@ -3,7 +3,6 @@ package main
 import (
 	"emerald/compiler"
 	"emerald/lexer"
-	"emerald/object"
 	"emerald/parser"
 	"emerald/vm"
 	"fmt"
@@ -36,27 +35,16 @@ func main() {
 
 	machine := vm.New(c.Bytecode())
 
+	err = machine.Run()
+	if err != nil {
+		fmt.Printf("VM failed to execute bytecode %s\n", err)
+		return
+	}
+
 	evaluated := machine.LastPoppedStackElem()
 
 	if evaluated != nil {
-		if evaluated.RespondsTo("to_s", evaluated) {
-			io.WriteString(
-				os.Stdout,
-				evaluated.
-					SEND(
-						func(block *object.Block, args ...object.EmeraldValue) object.EmeraldValue {
-							return object.NULL
-						},
-						"to_s",
-						evaluated,
-						nil,
-					).
-					Inspect(),
-			)
-		} else {
-			io.WriteString(os.Stdout, evaluated.Inspect())
-		}
-
+		io.WriteString(os.Stdout, evaluated.Inspect())
 		io.WriteString(os.Stdout, "\n")
 	}
 }

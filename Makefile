@@ -6,7 +6,7 @@ build:
 	go build -o ./tmp/iem ./main.go
 
 test:
-	go test ./lexer ./parser ./compiler/ ./vm/
+	go test ./lexer ./parser ./compiler/ ./vm/ -cover
 
 lint:
 	staticcheck ./...

@@ -6,6 +6,7 @@ import (
 	"emerald/object"
 	"emerald/parser"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -98,9 +99,27 @@ func testConstants(
 					i, err)
 			}
 		case string:
-			err := testStringObject(constant, actual[i])
+			var err error
+
+			if strings.HasPrefix(constant, ":") {
+				err = testSymbolObject(constant, actual[i])
+			} else {
+				err = testStringObject(constant, actual[i])
+			}
+
 			if err != nil {
 				return fmt.Errorf("constant %d - testStringObject failed: %s",
+					i, err)
+			}
+		case []Instructions:
+			fn, ok := actual[i].(*object.Block)
+			if !ok {
+				return fmt.Errorf("constant %d - not a function: %T",
+					i, actual[i])
+			}
+			err := testInstructions(constant, fn.Instructions)
+			if err != nil {
+				return fmt.Errorf("constant %d - testInstructions failed: %s",
 					i, err)
 			}
 		}
@@ -125,6 +144,17 @@ func testStringObject(expected string, actual object.EmeraldValue) error {
 		return fmt.Errorf("object is not String. got=%T (%+v)", actual, actual)
 	}
 	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. got=%q, want=%q", result.Value, expected)
+	}
+	return nil
+}
+
+func testSymbolObject(expected string, actual object.EmeraldValue) error {
+	result, ok := actual.(*object.SymbolInstance)
+	if !ok {
+		return fmt.Errorf("object is not Symbol. got=%T (%+v)", actual, actual)
+	}
+	if result.Value != expected[1:] {
 		return fmt.Errorf("object has wrong value. got=%q, want=%q", result.Value, expected)
 	}
 	return nil
