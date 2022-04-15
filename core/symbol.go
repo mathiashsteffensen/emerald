@@ -27,5 +27,30 @@ type SymbolInstance struct {
 func (s *SymbolInstance) Inspect() string { return ":" + s.Value }
 
 func NewSymbol(val string) object.EmeraldValue {
-	return &SymbolInstance{Symbol.New(), val}
+	return GlobalSymbolInternStore.ResolveOrDefine(val)
+}
+
+type SymbolInternStore map[string]object.EmeraldValue
+
+var GlobalSymbolInternStore = SymbolInternStore{}
+
+func (s SymbolInternStore) Resolve(val string) (object.EmeraldValue, bool) {
+	sym, ok := s[val]
+	return sym, ok
+}
+
+func (s SymbolInternStore) Define(val string) object.EmeraldValue {
+	sym := &SymbolInstance{Value: val, Instance: Symbol.New()}
+
+	s[val] = sym
+
+	return sym
+}
+
+func (s SymbolInternStore) ResolveOrDefine(val string) object.EmeraldValue {
+	if sym, ok := s.Resolve(val); ok {
+		return sym
+	} else {
+		return s.Define(val)
+	}
 }

@@ -106,6 +106,11 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value >= otherVal.Value)
 	},
+	"to_s": func(target object.EmeraldValue, block *object.Block, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		val := target.(*IntegerInstance).Value
+
+		return NewString(strconv.Itoa(int(val)))
+	},
 }
 
 func requireOneIntegerArg(method string, args []object.EmeraldValue) (*IntegerInstance, object.EmeraldValue /* StandardError or nil */) {

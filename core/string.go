@@ -28,7 +28,7 @@ func init() {
 				return target
 			},
 			"to_sym": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return NewSymbol(target.(*StringInstance).Value)
+				return NewSymbol(target.Inspect())
 			},
 			"+": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				targetString := target.(*StringInstance)
