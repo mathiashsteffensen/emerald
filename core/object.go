@@ -29,10 +29,10 @@ func init() {
 				return NewString(target.Inspect())
 			},
 			"==": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return nativeBoolToBooleanObject(target.Inspect() == args[0].Inspect())
+				return NativeBoolToBooleanObject(target.Inspect() == args[0].Inspect())
 			},
 			"!=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return nativeBoolToBooleanObject(target.Inspect() != args[0].Inspect())
+				return NativeBoolToBooleanObject(target.Inspect() != args[0].Inspect())
 			},
 		},
 		object.BuiltInMethodSet{

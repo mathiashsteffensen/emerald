@@ -1,6 +1,6 @@
 package object
 
-type ExecutionContext struct {
+type Context struct {
 	Target   EmeraldValue
 	IsStatic bool
 }

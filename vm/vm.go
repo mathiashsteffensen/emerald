@@ -15,7 +15,8 @@ const (
 
 // VM is our virtual machine responsible for the fetch, decode, execute cycle
 type VM struct {
-	ec          object.ExecutionContext
+	ec          *object.Context // The execution context
+	dc          *object.Context // The definition context
 	constants   []object.EmeraldValue
 	stack       []object.EmeraldValue
 	sp          int // Always points to the next value. Top of stack is stack[sp-1]
@@ -32,7 +33,8 @@ func New(bytecode *compiler.Bytecode) *VM {
 	frames[0] = mainFrame
 
 	return &VM{
-		ec:          object.ExecutionContext{Target: core.Object, IsStatic: true},
+		dc:          &object.Context{Target: core.Object, IsStatic: true},
+		ec:          &object.Context{Target: core.Object, IsStatic: true},
 		constants:   bytecode.Constants,
 		stack:       make([]object.EmeraldValue, StackSize),
 		sp:          0,
@@ -94,7 +96,7 @@ func (vm *VM) Run() error {
 		case compiler.OpSetGlobal:
 			globalIndex := compiler.ReadUint16(ins[ip+1:])
 			vm.currentFrame().ip += 2
-			vm.globals[globalIndex] = vm.pop()
+			vm.globals[globalIndex] = vm.StackTop()
 		case compiler.OpGetLocal:
 			localIndex := compiler.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
@@ -104,7 +106,7 @@ func (vm *VM) Run() error {
 			localIndex := compiler.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 			frame := vm.currentFrame()
-			vm.stack[frame.basePointer+int(localIndex)] = vm.pop()
+			vm.stack[frame.basePointer+int(localIndex)] = vm.StackTop()
 		case compiler.OpArray:
 			numElements := int(compiler.ReadUint16(ins[ip+1:]))
 			vm.currentFrame().ip += 2
@@ -131,11 +133,42 @@ func (vm *VM) Run() error {
 		case compiler.OpDefineMethod:
 			block := vm.pop().(*object.Block)
 
-			vm.ec.Target.DefineMethod(vm.ec.IsStatic, block, vm.stack[vm.sp-1].(*core.SymbolInstance))
+			vm.dc.Target.DefineMethod(vm.dc.IsStatic, block, vm.stack[vm.sp-1].(*core.SymbolInstance))
 		case compiler.OpSend:
 			numArgs := compiler.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 			err = vm.callFunction(int(numArgs))
+		case compiler.OpOpenClass:
+			oldTarget := vm.ec.Target
+			newTarget := vm.stack[vm.sp-1]
+
+			vm.ec.Target = newTarget
+			vm.dc.Target = newTarget
+			vm.dc.IsStatic = false
+
+			vm.stack[vm.sp-1] = oldTarget
+		case compiler.OpCloseClass:
+			val := vm.pop()
+			vm.ec.Target = vm.pop()
+			vm.dc.Target = vm.ec.Target
+			vm.dc.IsStatic = true
+
+			err = vm.push(val)
+		case compiler.OpSetExecutionContext:
+			oldTarget := vm.ec.Target
+			newTarget := vm.stack[vm.sp-1]
+
+			vm.ec.Target = newTarget
+			vm.ec.IsStatic = newTarget.Type() == object.CLASS_VALUE
+
+			vm.stack[vm.sp-1] = oldTarget
+		case compiler.OpResetExecutionContext:
+			val := vm.pop()
+			target := vm.pop()
+			vm.ec.Target = target
+			vm.ec.IsStatic = target.Type() == object.CLASS_VALUE
+
+			err = vm.push(val)
 		default:
 			if opString, ok := infixOperators[op]; ok {
 				left := vm.pop()
@@ -178,7 +211,10 @@ func (vm *VM) callFunction(numArgs int) (err error) {
 			vm.pushFrame(frame)
 			vm.sp = frame.basePointer + method.NumLocals
 		case *object.WrappedBuiltInMethod:
-			method.Method(target, nil, nil, vm.stack[vm.sp-numArgs:vm.sp]...)
+			result := method.Method(target, nil, nil, vm.stack[vm.sp-numArgs:vm.sp]...)
+			vm.sp -= numArgs
+			vm.pop()
+			return vm.push(result)
 		}
 	}
 
@@ -212,7 +248,7 @@ func (vm *VM) push(obj object.EmeraldValue) error {
 
 // pop an obj from the top of the stack
 func (vm *VM) pop() object.EmeraldValue {
-	o := vm.stack[vm.sp-1]
+	o := vm.StackTop()
 	vm.sp--
 	return o
 }
@@ -231,7 +267,7 @@ func isTruthy(obj object.EmeraldValue) bool {
 	switch obj {
 	case core.FALSE, core.NULL:
 		return false
+	default:
+		return true
 	}
-
-	return true
 }

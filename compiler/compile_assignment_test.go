@@ -13,11 +13,9 @@ func TestCompileAssignment(t *testing.T) {
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpSetGlobal, 0),
-				Make(OpGetGlobal, 0),
 				Make(OpPop),
 				Make(OpPushConstant, 1),
 				Make(OpSetGlobal, 1),
-				Make(OpGetGlobal, 1),
 				Make(OpPop),
 			},
 		},
@@ -29,7 +27,6 @@ func TestCompileAssignment(t *testing.T) {
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpSetGlobal, 0),
-				Make(OpGetGlobal, 0),
 				Make(OpPop),
 			},
 		},
@@ -42,11 +39,9 @@ func TestCompileAssignment(t *testing.T) {
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpSetGlobal, 0),
-				Make(OpGetGlobal, 0),
 				Make(OpPop),
 				Make(OpGetGlobal, 0),
 				Make(OpSetGlobal, 1),
-				Make(OpGetGlobal, 1),
 				Make(OpPop),
 			},
 		},
@@ -58,9 +53,7 @@ func TestCompileAssignment(t *testing.T) {
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpSetGlobal, 0),
-				Make(OpGetGlobal, 0),
 				Make(OpSetGlobal, 1),
-				Make(OpGetGlobal, 1),
 				Make(OpPop),
 			},
 		},
@@ -80,7 +73,6 @@ func TestCompileAssignment(t *testing.T) {
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpSetGlobal, 0),
-				Make(OpGetGlobal, 0),
 				Make(OpPop),
 				Make(OpPushConstant, 1),
 				Make(OpPushConstant, 2),
@@ -100,7 +92,6 @@ func TestCompileAssignment(t *testing.T) {
 				[]Instructions{
 					Make(OpPushConstant, 0),
 					Make(OpSetLocal, 0),
-					Make(OpGetLocal, 0),
 					Make(OpReturnValue),
 				},
 			},
@@ -126,11 +117,9 @@ func TestCompileAssignment(t *testing.T) {
 				[]Instructions{
 					Make(OpPushConstant, 0),
 					Make(OpSetLocal, 0),
-					Make(OpGetLocal, 0),
 					Make(OpPop),
 					Make(OpPushConstant, 1),
 					Make(OpSetLocal, 1),
-					Make(OpGetLocal, 1),
 					Make(OpPop),
 					Make(OpGetLocal, 1),
 					Make(OpGetLocal, 0),

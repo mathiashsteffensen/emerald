@@ -9,10 +9,10 @@ var TRUE object.EmeraldValue
 func init() {
 	TrueClass = object.NewClass("TrueClass", Object, object.BuiltInMethodSet{
 		"==": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-			return nativeBoolToBooleanObject(target == args[0])
+			return NativeBoolToBooleanObject(target == args[0])
 		},
 		"!=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-			return nativeBoolToBooleanObject(target != args[0])
+			return NativeBoolToBooleanObject(target != args[0])
 		},
 	}, object.BuiltInMethodSet{})
 

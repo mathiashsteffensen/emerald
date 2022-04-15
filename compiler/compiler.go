@@ -45,6 +45,20 @@ func NewWithState(s *SymbolTable, constants []object.EmeraldValue) *Compiler {
 	return compiler
 }
 
+func NewWithBuiltIns() *Compiler {
+	c := New()
+
+	for key, value := range core.BuiltIns {
+		symbol := c.symbolTable.Define(key)
+
+		c.emit(OpPushConstant, c.addConstant(value))
+		c.emit(OpSetGlobal, symbol.Index)
+		c.emit(OpPop)
+	}
+
+	return c
+}
+
 func (c *Compiler) Compile(node ast.Node) error {
 	switch node := node.(type) {
 	case *ast.AST:
@@ -92,6 +106,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+	case *ast.MethodCall:
+		err := c.compileMethodCall(node)
+		if err != nil {
+			return err
+		}
 	case *ast.InfixExpression:
 		err := c.compileInfixExpression(node)
 		if err != nil {
@@ -126,6 +145,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 	case *ast.MethodLiteral:
 		err := c.compileMethodLiteral(node)
+		if err != nil {
+			return err
+		}
+	case *ast.ClassLiteral:
+		err := c.compileClassLiteral(node)
 		if err != nil {
 			return err
 		}

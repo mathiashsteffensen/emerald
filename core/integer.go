@@ -64,7 +64,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 			return err
 		}
 
-		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value < otherVal.Value)
+		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value < otherVal.Value)
 	},
 	">": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg(">", args)
@@ -72,7 +72,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 			return err
 		}
 
-		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value > otherVal.Value)
+		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value > otherVal.Value)
 	},
 	"==": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("==", args)
@@ -80,7 +80,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 			return err
 		}
 
-		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value == otherVal.Value)
+		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value == otherVal.Value)
 	},
 	"!=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
@@ -88,7 +88,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 			return err
 		}
 
-		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value != otherVal.Value)
+		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value != otherVal.Value)
 	},
 	"<=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
@@ -96,7 +96,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 			return err
 		}
 
-		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value <= otherVal.Value)
+		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value <= otherVal.Value)
 	},
 	">=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
@@ -104,7 +104,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 			return err
 		}
 
-		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value >= otherVal.Value)
+		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value >= otherVal.Value)
 	},
 }
 

@@ -8,6 +8,7 @@ import (
 	"emerald/object"
 	"emerald/parser"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -23,7 +24,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			program := parse(tt.input)
-			comp := compiler.New()
+			comp := compiler.NewWithBuiltIns()
 
 			err := comp.Compile(program)
 			if err != nil {
@@ -61,9 +62,16 @@ func testExpectedObject(
 			t.Errorf("testBooleanObject failed: %s", err)
 		}
 	case string:
-		err := testStringObject(expected, actual)
-		if err != nil {
-			t.Errorf("testStringObject failed: %s", err)
+		if strings.HasPrefix(expected, ":") {
+			err := testSymbolObject(expected[1:], actual)
+			if err != nil {
+				t.Errorf("testSymbolObject failed: %s", err)
+			}
+		} else {
+			err := testStringObject(expected, actual)
+			if err != nil {
+				t.Errorf("testStringObject failed: %s", err)
+			}
 		}
 	case []any:
 		err := testArrayObject(t, expected, actual)
@@ -153,6 +161,19 @@ func testStringObject(expected string, actual object.EmeraldValue) error {
 	result, ok := actual.(*core.StringInstance)
 	if !ok {
 		return fmt.Errorf("object is not String. got=%T (%+v)",
+			actual, actual)
+	}
+	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. got=%q, want=%q",
+			result.Value, expected)
+	}
+	return nil
+}
+
+func testSymbolObject(expected string, actual object.EmeraldValue) error {
+	result, ok := actual.(*core.SymbolInstance)
+	if !ok {
+		return fmt.Errorf("object is not Symbol. got=%T (%+v)",
 			actual, actual)
 	}
 	if result.Value != expected {

@@ -105,7 +105,11 @@ func testConstants(
 			if strings.HasPrefix(constant, ":") {
 				err = testSymbolObject(constant, actual[i])
 			} else {
-				err = testStringObject(constant, actual[i])
+				if strings.HasPrefix(constant, "class:") {
+					err = testClassObject(constant[6:], actual[i])
+				} else {
+					err = testStringObject(constant, actual[i])
+				}
 			}
 
 			if err != nil {
@@ -158,5 +162,18 @@ func testSymbolObject(expected string, actual object.EmeraldValue) error {
 	if result.Value != expected[1:] {
 		return fmt.Errorf("object has wrong value. got=%q, want=%q", result.Value, expected)
 	}
+	return nil
+}
+
+func testClassObject(expected string, actual object.EmeraldValue) error {
+	class, ok := actual.(*object.Class)
+	if !ok {
+		return fmt.Errorf("object is not Class. got=%T (%+v)", actual, actual)
+	}
+
+	if class.Name != expected {
+		return fmt.Errorf("class had wrong name want=%s, got=%s", expected, class.Name)
+	}
+
 	return nil
 }
