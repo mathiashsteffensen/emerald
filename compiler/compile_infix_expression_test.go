@@ -82,6 +82,17 @@ func TestCompileInfixExpression(t *testing.T) {
 			},
 		},
 		{
+			name:              "greater than or eq",
+			input:             "1 >= 2",
+			expectedConstants: []interface{}{2, 1},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpPushConstant, 1),
+				Make(OpGreaterThanOrEq),
+				Make(OpPop),
+			},
+		},
+		{
 			name:              "less than",
 			input:             "1 < 2",
 			expectedConstants: []interface{}{2, 1},
@@ -89,6 +100,17 @@ func TestCompileInfixExpression(t *testing.T) {
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
 				Make(OpLessThan),
+				Make(OpPop),
+			},
+		},
+		{
+			name:              "less than or eq",
+			input:             "1 <= 2",
+			expectedConstants: []interface{}{2, 1},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpPushConstant, 1),
+				Make(OpLessThanOrEq),
 				Make(OpPop),
 			},
 		},

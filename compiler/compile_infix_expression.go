@@ -27,8 +27,12 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) error {
 		c.emit(OpDiv)
 	case ">":
 		c.emit(OpGreaterThan)
+	case ">=":
+		c.emit(OpGreaterThanOrEq)
 	case "<":
 		c.emit(OpLessThan)
+	case "<=":
+		c.emit(OpLessThanOrEq)
 	case "==":
 		c.emit(OpEqual)
 	case "!=":
