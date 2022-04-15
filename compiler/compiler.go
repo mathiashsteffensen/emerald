@@ -153,6 +153,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+	case *ast.StaticClassLiteral:
+		err := c.compileStaticClassLiteral(node)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

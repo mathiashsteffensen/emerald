@@ -80,6 +80,8 @@ const (
 	// Names should be self-explanatory.
 	OpExecutionStaticTrue
 	OpExecutionStaticFalse
+	OpDefinitionStaticTrue
+	OpDefinitionStaticFalse
 )
 
 var definitions = map[Opcode]*Definition{
@@ -116,6 +118,8 @@ var definitions = map[Opcode]*Definition{
 	OpResetExecutionContext: {"OpResetExecutionContext", []int{}},
 	OpExecutionStaticTrue:   {"OpExecutionStaticTrue", []int{}},
 	OpExecutionStaticFalse:  {"OpExecutionStaticFalse", []int{}},
+	OpDefinitionStaticTrue:  {"OpDefinitionStaticTrue", []int{}},
+	OpDefinitionStaticFalse: {"OpDefinitionStaticFalse", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {

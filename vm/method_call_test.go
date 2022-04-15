@@ -24,6 +24,21 @@ func TestMethodCall(t *testing.T) {
 			`,
 			expected: "hello",
 		},
+		{
+			name: "creating class with static method",
+			input: `
+			class Greeter
+				class << self
+					def hello
+						"hello"
+					end
+				end
+			end
+
+			Greeter.hello
+			`,
+			expected: "hello",
+		},
 	}
 
 	runVmTests(t, tests)

@@ -169,6 +169,10 @@ func (vm *VM) Run() error {
 			vm.ec.IsStatic = target.Type() == object.CLASS_VALUE
 
 			err = vm.push(val)
+		case compiler.OpDefinitionStaticTrue:
+			vm.dc.IsStatic = true
+		case compiler.OpDefinitionStaticFalse:
+			vm.dc.IsStatic = true
 		default:
 			if opString, ok := infixOperators[op]; ok {
 				left := vm.pop()

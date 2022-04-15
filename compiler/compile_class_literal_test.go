@@ -28,6 +28,12 @@ func TestCompileClassLiteral(t *testing.T) {
 				def my_method
 					10
 				end
+
+				class << self
+					def my_method
+						15
+					end
+				end
 			end
 			`,
 			expectedConstants: []any{
@@ -38,6 +44,12 @@ func TestCompileClassLiteral(t *testing.T) {
 					Make(OpPushConstant, 1),
 					Make(OpReturnValue),
 				},
+				15,
+				":my_method",
+				[]Instructions{
+					Make(OpPushConstant, 4),
+					Make(OpReturnValue),
+				},
 			},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
@@ -46,6 +58,12 @@ func TestCompileClassLiteral(t *testing.T) {
 				Make(OpPushConstant, 2),
 				Make(OpPushConstant, 3),
 				Make(OpDefineMethod),
+				Make(OpPop),
+				Make(OpDefinitionStaticTrue),
+				Make(OpPushConstant, 5),
+				Make(OpPushConstant, 6),
+				Make(OpDefineMethod),
+				Make(OpDefinitionStaticFalse),
 				Make(OpCloseClass),
 				Make(OpPop),
 			},

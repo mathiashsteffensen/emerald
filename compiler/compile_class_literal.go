@@ -45,3 +45,22 @@ func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) error {
 
 	return nil
 }
+
+func (c *Compiler) compileStaticClassLiteral(node *ast.StaticClassLiteral) error {
+	c.emit(OpDefinitionStaticTrue)
+
+	err := c.Compile(node.Body)
+	if err != nil {
+		return err
+	}
+
+	if c.lastInstructionIs(OpPop) {
+		lastPos := c.scopes[c.scopeIndex].lastInstruction.Position
+		c.replaceInstruction(lastPos, Make(OpDefinitionStaticFalse))
+		c.scopes[c.scopeIndex].lastInstruction.Opcode = OpDefinitionStaticFalse
+	} else {
+		c.emit(OpDefinitionStaticFalse)
+	}
+
+	return nil
+}
