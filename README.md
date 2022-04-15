@@ -173,7 +173,7 @@ Emerald is a Ruby compiler & Virtual Machine written in Go.
     - [ ] class variables
     - [ ] class methods
     - [ ] instance methods
-    - [ ] method overrides
+    - [x] method overrides
     - [ ] private
     - [ ] protected
     - [ ] public
@@ -181,10 +181,11 @@ Emerald is a Ruby compiler & Virtual Machine written in Go.
     - [ ] constructors
     - [x] new
     - [ ] `self`
-    - [ ] singleton classes (also known as the metaclass or eigenclass) `class << self`
+    - [x] singleton classes (also known as the metaclass or eigenclass) `class << self`
     - [ ] assigment methods
     - [x] self defined classes
     - [ ] self defined classes with inheritance
+    - [ ] super in methods
 - [ ] modules
 - [ ] object main
 - [x] comments '#'
