@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"emerald/ast"
+	"emerald/core"
 	"emerald/lexer"
 	"emerald/object"
 	"emerald/parser"
@@ -128,7 +129,7 @@ func testConstants(
 }
 
 func testIntegerObject(expected int64, actual object.EmeraldValue) error {
-	result, ok := actual.(*object.IntegerInstance)
+	result, ok := actual.(*core.IntegerInstance)
 	if !ok {
 		return fmt.Errorf("object is not IntegerInstance. got=%T (%+v)", actual, actual)
 	}
@@ -139,7 +140,7 @@ func testIntegerObject(expected int64, actual object.EmeraldValue) error {
 }
 
 func testStringObject(expected string, actual object.EmeraldValue) error {
-	result, ok := actual.(*object.StringInstance)
+	result, ok := actual.(*core.StringInstance)
 	if !ok {
 		return fmt.Errorf("object is not String. got=%T (%+v)", actual, actual)
 	}
@@ -150,7 +151,7 @@ func testStringObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testSymbolObject(expected string, actual object.EmeraldValue) error {
-	result, ok := actual.(*object.SymbolInstance)
+	result, ok := actual.(*core.SymbolInstance)
 	if !ok {
 		return fmt.Errorf("object is not Symbol. got=%T (%+v)", actual, actual)
 	}

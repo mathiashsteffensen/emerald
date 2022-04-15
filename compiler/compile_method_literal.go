@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"emerald/ast"
+	"emerald/core"
 	"emerald/object"
 )
 
@@ -29,7 +30,7 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
 
 	numLocals := c.symbolTable.numDefinitions
 	instructions := c.leaveScope()
-	symbol := object.NewSymbol(node.Name.(*ast.IdentifierExpression).Value)
+	symbol := core.NewSymbol(node.Name.(*ast.IdentifierExpression).Value)
 	block := object.NewBlock([]ast.Expression{}, instructions, numLocals)
 
 	c.emit(OpPushConstant, c.addConstant(symbol))

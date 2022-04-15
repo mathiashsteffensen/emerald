@@ -1,6 +1,9 @@
 package vm
 
-import "emerald/object"
+import (
+	"emerald/core"
+	"emerald/object"
+)
 
 func (vm *VM) executeBangOperator() error {
 	operand := vm.pop()
@@ -8,9 +11,9 @@ func (vm *VM) executeBangOperator() error {
 	var result object.EmeraldValue
 
 	if isTruthy(operand) {
-		result = object.FALSE
+		result = core.FALSE
 	} else {
-		result = object.TRUE
+		result = core.TRUE
 	}
 
 	return vm.push(result)

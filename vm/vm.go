@@ -2,6 +2,7 @@ package vm
 
 import (
 	"emerald/compiler"
+	"emerald/core"
 	"emerald/object"
 	"fmt"
 )
@@ -31,7 +32,7 @@ func New(bytecode *compiler.Bytecode) *VM {
 	frames[0] = mainFrame
 
 	return &VM{
-		ec:          object.ExecutionContext{Target: object.Object, IsStatic: true},
+		ec:          object.ExecutionContext{Target: core.Object, IsStatic: true},
 		constants:   bytecode.Constants,
 		stack:       make([]object.EmeraldValue, StackSize),
 		sp:          0,
@@ -66,11 +67,11 @@ func (vm *VM) Run() error {
 		case compiler.OpPop:
 			vm.pop()
 		case compiler.OpTrue:
-			err = vm.push(object.TRUE)
+			err = vm.push(core.TRUE)
 		case compiler.OpFalse:
-			err = vm.push(object.FALSE)
+			err = vm.push(core.FALSE)
 		case compiler.OpNull:
-			err = vm.push(object.NULL)
+			err = vm.push(core.NULL)
 		case compiler.OpPushConstant:
 			constIndex := compiler.ReadUint16(ins[ip+1:])
 			vm.currentFrame().ip += 2
@@ -120,7 +121,7 @@ func (vm *VM) Run() error {
 			frame := vm.popFrame()
 			vm.sp = frame.basePointer - 1
 
-			err = vm.push(object.NULL)
+			err = vm.push(core.NULL)
 		case compiler.OpReturnValue:
 			returnValue := vm.pop()
 			frame := vm.popFrame()
@@ -130,7 +131,7 @@ func (vm *VM) Run() error {
 		case compiler.OpDefineMethod:
 			block := vm.pop().(*object.Block)
 
-			vm.ec.Target.DefineMethod(vm.ec.IsStatic, block, vm.stack[vm.sp-1].(*object.SymbolInstance))
+			vm.ec.Target.DefineMethod(vm.ec.IsStatic, block, vm.stack[vm.sp-1].(*core.SymbolInstance))
 		case compiler.OpSend:
 			numArgs := compiler.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
@@ -139,7 +140,12 @@ func (vm *VM) Run() error {
 			if opString, ok := infixOperators[op]; ok {
 				left := vm.pop()
 
-				vm.stack[vm.sp-1] = left.SEND(nil, opString, left, nil, vm.StackTop())
+				result, sendErr := left.SEND(nil, opString, left, nil, vm.StackTop())
+				if sendErr != nil {
+					vm.stack[vm.sp-1] = core.NewStandardError(sendErr.Error())
+				} else {
+					vm.stack[vm.sp-1] = result
+				}
 			}
 		}
 
@@ -151,13 +157,20 @@ func (vm *VM) Run() error {
 	return nil
 }
 
-func (vm *VM) callFunction(numArgs int) error {
-	name := vm.stack[vm.sp-1-numArgs].(*object.SymbolInstance)
+func (vm *VM) callFunction(numArgs int) (err error) {
+	name := vm.stack[vm.sp-1-numArgs].(*core.SymbolInstance)
 
 	target := vm.ec.Target
 	method, errVal := target.ExtractMethod(name.Value, target, target)
 	if errVal != nil {
-		return vm.push(errVal)
+		method, err = core.Object.ExtractMethod(name.Value, core.Object, core.Object)
+		if err == nil {
+			errVal = nil
+		}
+	}
+
+	if errVal != nil {
+		return vm.push(core.NewStandardError(errVal.Error()))
 	} else {
 		switch method := method.(type) {
 		case *object.Block:
@@ -211,12 +224,12 @@ func (vm *VM) buildArray(startIndex, endIndex int) object.EmeraldValue {
 		elements[i-startIndex] = vm.stack[i]
 	}
 
-	return &object.ArrayInstance{Value: elements}
+	return core.NewArray(elements)
 }
 
 func isTruthy(obj object.EmeraldValue) bool {
 	switch obj {
-	case object.FALSE, object.NULL:
+	case core.FALSE, core.NULL:
 		return false
 	}
 

@@ -23,7 +23,7 @@ type (
 		Inspect() string
 		ParentClass() EmeraldValue
 		DefineMethod(isStatic bool, block *Block, args ...EmeraldValue)
-		ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, EmeraldValue)
+		ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error)
 		RespondsTo(name string, target EmeraldValue) bool
 		SEND(
 			yield YieldFunc,
@@ -31,7 +31,7 @@ type (
 			target EmeraldValue,
 			block *Block,
 			args ...EmeraldValue,
-		) EmeraldValue
+		) (EmeraldValue, error)
 		InstanceVariableGet(isStatic bool, name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue
 		InstanceVariableSet(isStatic bool, name string, value EmeraldValue)
 	}
@@ -47,10 +47,3 @@ const (
 func (method *WrappedBuiltInMethod) Inspect() string           { return "obscure Go compiler" }
 func (method *WrappedBuiltInMethod) Type() EmeraldValueType    { return BLOCK_VALUE }
 func (method *WrappedBuiltInMethod) ParentClass() EmeraldValue { return nil }
-
-func nativeBoolToBooleanObject(input bool) EmeraldValue {
-	if input {
-		return TRUE
-	}
-	return FALSE
-}

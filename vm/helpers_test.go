@@ -3,6 +3,7 @@ package vm
 import (
 	"emerald/ast"
 	"emerald/compiler"
+	"emerald/core"
 	"emerald/lexer"
 	"emerald/object"
 	"emerald/parser"
@@ -75,7 +76,7 @@ func testExpectedObject(
 			t.Errorf("testHashObject failed: %s", err)
 		}
 	case nil:
-		if actual != object.NULL {
+		if actual != core.NULL {
 			t.Errorf("object is not Null: %T (%+v)", actual, actual)
 		}
 	}
@@ -88,7 +89,7 @@ func parse(input string) *ast.AST {
 }
 
 func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) error {
-	array, ok := actual.(*object.ArrayInstance)
+	array, ok := actual.(*core.ArrayInstance)
 	if !ok {
 		return fmt.Errorf("object not Array: %T (%+v)", actual, actual)
 	}
@@ -105,7 +106,7 @@ func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) e
 }
 
 func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual object.EmeraldValue) error {
-	hash, ok := actual.(*object.HashInstance)
+	hash, ok := actual.(*core.HashInstance)
 	if !ok {
 		return fmt.Errorf("object is not Hash. got=%T (%+v)", actual, actual)
 	}
@@ -127,7 +128,7 @@ func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual o
 }
 
 func testIntegerObject(expected int64, actual object.EmeraldValue) error {
-	result, ok := actual.(*object.IntegerInstance)
+	result, ok := actual.(*core.IntegerInstance)
 	if !ok {
 		return fmt.Errorf("object is not IntegerInstance. got=%T (%+v)", actual, actual)
 	}
@@ -138,18 +139,18 @@ func testIntegerObject(expected int64, actual object.EmeraldValue) error {
 }
 
 func testBooleanObject(expected bool, actual object.EmeraldValue) error {
-	if actual != object.TRUE && actual != object.FALSE {
+	if actual != core.TRUE && actual != core.FALSE {
 		return fmt.Errorf("object is not Boolean. got=%T (%+v)", actual, actual)
 	}
 
-	if (actual == object.TRUE) != expected {
-		return fmt.Errorf("object has wrong value. got=%t, want=%t", actual == object.TRUE, expected)
+	if (actual == core.TRUE) != expected {
+		return fmt.Errorf("object has wrong value. got=%t, want=%t", actual == core.TRUE, expected)
 	}
 	return nil
 }
 
 func testStringObject(expected string, actual object.EmeraldValue) error {
-	result, ok := actual.(*object.StringInstance)
+	result, ok := actual.(*core.StringInstance)
 	if !ok {
 		return fmt.Errorf("object is not String. got=%T (%+v)",
 			actual, actual)

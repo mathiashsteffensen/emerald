@@ -2,11 +2,11 @@ package compiler
 
 import (
 	"emerald/ast"
-	"emerald/object"
+	"emerald/core"
 )
 
 func (c *Compiler) compileCallExpression(node *ast.CallExpression) error {
-	method := object.NewSymbol(node.Method.(*ast.IdentifierExpression).Value)
+	method := core.NewSymbol(node.Method.(*ast.IdentifierExpression).Value)
 
 	c.emit(OpPushConstant, c.addConstant(method))
 

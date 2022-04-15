@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"emerald/ast"
+	"emerald/core"
 	"emerald/object"
 )
 
@@ -102,7 +103,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 	case *ast.IntegerLiteral:
-		integer := object.NewInteger(node.Value)
+		integer := core.NewInteger(node.Value)
 		c.emit(OpPushConstant, c.addConstant(integer))
 	case *ast.BooleanLiteral:
 		if node.Value {
@@ -111,7 +112,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(OpFalse)
 		}
 	case *ast.StringLiteral:
-		str := object.NewString(node.Value)
+		str := core.NewString(node.Value)
 		c.emit(OpPushConstant, c.addConstant(str))
 	case *ast.ArrayLiteral:
 		err := c.compileArrayLiteral(node)

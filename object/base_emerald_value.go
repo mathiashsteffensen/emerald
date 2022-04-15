@@ -87,23 +87,23 @@ func (val *BaseEmeraldValue) SEND(
 	target EmeraldValue,
 	block *Block,
 	args ...EmeraldValue,
-) EmeraldValue {
+) (EmeraldValue, error) {
 	method, err := val.ExtractMethod(name, target, target)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	switch method := method.(type) {
 	case *WrappedBuiltInMethod:
-		return method.Method(target, block, yield, args...)
+		return method.Method(target, block, yield, args...), nil
 	}
 
-	return nil
+	return nil, nil
 }
 
-func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, EmeraldValue) {
+func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error) {
 	if val == nil {
-		return nil, NewStandardError(fmt.Sprintf("Invalid method call %s on %#v", name, target))
+		return nil, fmt.Errorf("invalid method call %s on %#v", name, target)
 	}
 
 	if _, ok := target.(*Class); ok {
@@ -113,7 +113,7 @@ func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue
 	}
 }
 
-func (val *BaseEmeraldValue) extractStaticMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, EmeraldValue) {
+func (val *BaseEmeraldValue) extractStaticMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error) {
 	if method, ok := val.StaticDefinedMethodSet()[name]; ok {
 		return method, nil
 	}
@@ -128,20 +128,16 @@ func (val *BaseEmeraldValue) extractStaticMethod(name string, extractFrom Emeral
 		super, err := superClass.extractStaticMethod(name, superClass, target)
 
 		if err != nil {
-			return nil, NewStandardError(
-				fmt.Sprintf("undefined method %s for %s:Class", name, target.Inspect()),
-			)
+			return nil, fmt.Errorf("undefined method %s for %s:Class", name, target.Inspect())
 		}
 
 		return super, nil
 	}
 
-	return nil, NewStandardError(
-		fmt.Sprintf("undefined method %s for %s:Class", name, target.Inspect()),
-	)
+	return nil, fmt.Errorf("undefined method %s for %s:Class", name, target.Inspect())
 }
 
-func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, EmeraldValue) {
+func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error) {
 	if method, ok := val.DefinedMethodSet()[name]; ok {
 		return method, nil
 	}
@@ -156,22 +152,13 @@ func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom Emer
 		super, err := superClass.extractInstanceMethod(name, superClass, target)
 
 		if err != nil {
-			return nil, NewStandardError(
-				fmt.Sprintf("undefined method %s for %s:%s", name, target.Inspect(), superClass.Name),
-			)
+			return nil, fmt.Errorf("undefined method %s for %s", name, target.Inspect())
 		}
 
 		return super, nil
 	}
 
-	// Also check Objects static methods
-	if method, err := Object.extractStaticMethod(name, Object, target); err == nil {
-		return method, nil
-	}
-
-	return nil, NewStandardError(
-		fmt.Sprintf("undefined method %s for %s:%s", name, target.Inspect(), target.ParentClass().(*Class).Name),
-	)
+	return nil, fmt.Errorf("undefined method %s for %s:%s", name, target.Inspect(), target.ParentClass().(*Class).Name)
 }
 
 func (val *BaseEmeraldValue) InstanceVariableGet(isStatic bool, name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue {
@@ -188,7 +175,7 @@ func (val *BaseEmeraldValue) InstanceVariableGet(isStatic bool, name string, ext
 		return superClass.InstanceVariableGet(isStatic, name, superClass, target)
 	}
 
-	return NULL
+	return nil
 }
 
 func (val *BaseEmeraldValue) InstanceVariableSet(isStatic bool, name string, value EmeraldValue) {

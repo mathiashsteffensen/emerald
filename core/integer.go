@@ -1,14 +1,15 @@
-package object
+package core
 
 import (
+	"emerald/object"
 	"fmt"
 	"strconv"
 )
 
-var Integer *Class
+var Integer *object.Class
 
 type IntegerInstance struct {
-	*Instance
+	*object.Instance
 	Value int64
 }
 
@@ -16,12 +17,16 @@ func (i *IntegerInstance) Inspect() string {
 	return strconv.Itoa(int(i.Value))
 }
 
-func NewInteger(val int64) EmeraldValue {
+func NewInteger(val int64) object.EmeraldValue {
 	return &IntegerInstance{Integer.New(), val}
 }
 
-var integerBuiltInMethodSet = BuiltInMethodSet{
-	"+": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+func init() {
+	Integer = object.NewClass("Integer", Object, integerBuiltInMethodSet, object.BuiltInMethodSet{})
+}
+
+var integerBuiltInMethodSet = object.BuiltInMethodSet{
+	"+": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("+", args)
 		if err != nil {
 			return err
@@ -29,7 +34,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value + otherVal.Value)
 	},
-	"-": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+	"-": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("-", args)
 		if err != nil {
 			return err
@@ -37,7 +42,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value - otherVal.Value)
 	},
-	"*": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+	"*": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("*", args)
 		if err != nil {
 			return err
@@ -45,7 +50,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value * otherVal.Value)
 	},
-	"/": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+	"/": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("/", args)
 		if err != nil {
 			return err
@@ -53,7 +58,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value / otherVal.Value)
 	},
-	"<": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+	"<": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("<", args)
 		if err != nil {
 			return err
@@ -61,7 +66,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value < otherVal.Value)
 	},
-	">": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+	">": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg(">", args)
 		if err != nil {
 			return err
@@ -69,7 +74,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value > otherVal.Value)
 	},
-	"==": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+	"==": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("==", args)
 		if err != nil {
 			return err
@@ -77,7 +82,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value == otherVal.Value)
 	},
-	"!=": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+	"!=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -85,7 +90,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value != otherVal.Value)
 	},
-	"<=": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+	"<=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -93,7 +98,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 
 		return nativeBoolToBooleanObject(target.(*IntegerInstance).Value <= otherVal.Value)
 	},
-	">=": func(target EmeraldValue, block *Block, _yield YieldFunc, args ...EmeraldValue) EmeraldValue {
+	">=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -103,7 +108,7 @@ var integerBuiltInMethodSet = BuiltInMethodSet{
 	},
 }
 
-func requireOneIntegerArg(method string, args []EmeraldValue) (*IntegerInstance, EmeraldValue /* StandardError or nil */) {
+func requireOneIntegerArg(method string, args []object.EmeraldValue) (*IntegerInstance, object.EmeraldValue /* StandardError or nil */) {
 	if len(args) != 1 {
 		return nil, NewStandardError(fmt.Sprintf("Integer#%s expects single argument, got %d", method, len(args)))
 	}
