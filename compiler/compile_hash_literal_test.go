@@ -31,7 +31,7 @@ func TestCompileHashLiteral(t *testing.T) {
 		{
 			name:              "with expression values",
 			input:             "{1: 2 + 3, 4: 5 * 6}",
-			expectedConstants: []interface{}{1, 2, 3, 4, 5, 6},
+			expectedConstants: []interface{}{1, 3, 2, 4, 6, 5},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),

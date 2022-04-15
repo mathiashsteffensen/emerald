@@ -6,12 +6,12 @@ import (
 )
 
 func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) error {
-	err := c.Compile(node.Left)
+	err := c.Compile(node.Right)
 	if err != nil {
 		return err
 	}
 
-	err = c.Compile(node.Right)
+	err = c.Compile(node.Left)
 	if err != nil {
 		return err
 	}

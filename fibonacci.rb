@@ -9,5 +9,4 @@ def fib(n)
   fib(n - 1) + fib(n - 2)
 end
 
-puts(fib(23))
-fib(23)
+puts(fib(28))

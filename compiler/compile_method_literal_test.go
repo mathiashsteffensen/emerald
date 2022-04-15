@@ -9,8 +9,8 @@ func TestCompileMethodLiteral(t *testing.T) {
 				return 5 + 10
 			end`,
 			expectedConstants: []interface{}{
-				5,
 				10,
+				5,
 				":method",
 				[]Instructions{
 					Make(OpPushConstant, 0),
@@ -31,8 +31,8 @@ func TestCompileMethodLiteral(t *testing.T) {
 				5 + 10
 			end`,
 			expectedConstants: []interface{}{
-				5,
 				10,
+				5,
 				":method",
 				[]Instructions{
 					Make(OpPushConstant, 0),

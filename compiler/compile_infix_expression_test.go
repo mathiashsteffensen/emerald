@@ -7,7 +7,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "addition",
 			input:             "1 + 2",
-			expectedConstants: []interface{}{1, 2},
+			expectedConstants: []interface{}{2, 1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
@@ -18,7 +18,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "subtracting",
 			input:             "1 - 2",
-			expectedConstants: []interface{}{1, 2},
+			expectedConstants: []interface{}{2, 1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
@@ -29,7 +29,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "multiplying",
 			input:             "1 * 2",
-			expectedConstants: []interface{}{1, 2},
+			expectedConstants: []interface{}{2, 1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
@@ -40,7 +40,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "dividing",
 			input:             "2 / 1",
-			expectedConstants: []interface{}{2, 1},
+			expectedConstants: []interface{}{1, 2},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
@@ -62,7 +62,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "adding strings",
 			input:             `"eme" + "rald"`,
-			expectedConstants: []interface{}{"eme", "rald"},
+			expectedConstants: []interface{}{"rald", "eme"},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
@@ -73,7 +73,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "greater than",
 			input:             "1 > 2",
-			expectedConstants: []interface{}{1, 2},
+			expectedConstants: []interface{}{2, 1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
@@ -84,7 +84,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "less than",
 			input:             "1 < 2",
-			expectedConstants: []interface{}{1, 2},
+			expectedConstants: []interface{}{2, 1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
@@ -95,7 +95,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "integers equals",
 			input:             "1 == 2",
-			expectedConstants: []interface{}{1, 2},
+			expectedConstants: []interface{}{2, 1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
@@ -106,7 +106,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "integers not equals",
 			input:             "1 != 2",
-			expectedConstants: []interface{}{1, 2},
+			expectedConstants: []interface{}{2, 1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
@@ -119,8 +119,8 @@ func TestCompileInfixExpression(t *testing.T) {
 			input:             "true == false",
 			expectedConstants: []interface{}{},
 			expectedInstructions: []Instructions{
-				Make(OpTrue),
 				Make(OpFalse),
+				Make(OpTrue),
 				Make(OpEqual),
 				Make(OpPop),
 			},
@@ -130,8 +130,8 @@ func TestCompileInfixExpression(t *testing.T) {
 			input:             "true != false",
 			expectedConstants: []interface{}{},
 			expectedInstructions: []Instructions{
-				Make(OpTrue),
 				Make(OpFalse),
+				Make(OpTrue),
 				Make(OpNotEqual),
 				Make(OpPop),
 			},

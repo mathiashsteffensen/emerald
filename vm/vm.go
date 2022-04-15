@@ -137,15 +137,9 @@ func (vm *VM) Run() error {
 			err = vm.callFunction(int(numArgs))
 		default:
 			if opString, ok := infixOperators[op]; ok {
-				right := vm.pop()
 				left := vm.pop()
 
-				result := left.SEND(nil, opString, left, nil, right)
-
-				err = vm.push(result)
-				if err != nil {
-					return err
-				}
+				vm.stack[vm.sp-1] = left.SEND(nil, opString, left, nil, vm.StackTop())
 			}
 		}
 
