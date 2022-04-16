@@ -443,7 +443,7 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 }
 
 func (p *Parser) parseMethodLiteral() ast.Expression {
-	method := &ast.MethodLiteral{Token: p.curToken}
+	method := &ast.MethodLiteral{Token: p.curToken, BlockLiteral: &ast.BlockLiteral{}}
 
 	if !p.expectPeek(lexer.IDENT) {
 		return nil

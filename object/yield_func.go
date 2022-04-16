@@ -1,3 +1,3 @@
 package object
 
-type YieldFunc func(block *Block, args ...EmeraldValue) EmeraldValue
+type YieldFunc func(block EmeraldValue, args ...EmeraldValue) EmeraldValue

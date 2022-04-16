@@ -16,6 +16,7 @@ func (c *Compiler) compileIdentifierExpression(node *ast.IdentifierExpression) {
 		}
 	} else {
 		c.emit(OpPushConstant, c.addConstant(core.NewSymbol(node.Value)))
+		c.emit(OpNull)
 		c.emit(OpSend)
 	}
 }

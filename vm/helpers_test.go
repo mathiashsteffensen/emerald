@@ -23,6 +23,8 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			core.Object.ResetDefinedMethodSetForSpec()
+
 			program := parse(tt.input)
 			comp := compiler.NewWithBuiltIns()
 

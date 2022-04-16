@@ -7,6 +7,21 @@ import (
 )
 
 func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
+	block, err := c.compileBlock(node.BlockLiteral)
+	if err != nil {
+		return err
+	}
+
+	symbol := core.NewSymbol(node.Name.(*ast.IdentifierExpression).Value)
+
+	c.emit(OpPushConstant, c.addConstant(symbol))
+	c.emit(OpPushConstant, c.addConstant(block))
+	c.emit(OpDefineMethod)
+
+	return nil
+}
+
+func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, error) {
 	c.enterScope()
 
 	for _, p := range node.Parameters {
@@ -15,7 +30,7 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
 
 	err := c.Compile(node.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if c.lastInstructionIs(OpPop) {
@@ -30,14 +45,8 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
 
 	numLocals := c.symbolTable.numDefinitions
 	instructions := c.leaveScope()
-	symbol := core.NewSymbol(node.Name.(*ast.IdentifierExpression).Value)
-	block := object.NewBlock([]ast.Expression{}, instructions, numLocals)
 
-	c.emit(OpPushConstant, c.addConstant(symbol))
-	c.emit(OpPushConstant, c.addConstant(block))
-	c.emit(OpDefineMethod)
-
-	return nil
+	return object.NewBlock([]ast.Expression{}, instructions, numLocals), nil
 }
 
 func (c *Compiler) replaceLastPopWithReturn() {

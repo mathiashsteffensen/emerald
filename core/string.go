@@ -24,13 +24,13 @@ func init() {
 		"String",
 		Object,
 		object.BuiltInMethodSet{
-			"to_s": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			"to_s": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return target
 			},
-			"to_sym": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			"to_sym": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return NewSymbol(target.Inspect())
 			},
-			"+": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			"+": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				targetString := target.(*StringInstance)
 
 				argString, ok := args[0].(*StringInstance)
@@ -48,7 +48,7 @@ func init() {
 
 				return NewString(targetString.Value + argString.Value)
 			},
-			"upcase": func(target object.EmeraldValue, block *object.Block, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			"upcase": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return NewString(strings.ToUpper(target.(*StringInstance).Value))
 			},
 		},

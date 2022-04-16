@@ -3,6 +3,7 @@ package core
 import (
 	"emerald/object"
 	"fmt"
+	"reflect"
 )
 
 var StandardError *object.Class
@@ -25,6 +26,10 @@ func NewStandardError(msg string) object.EmeraldValue {
 }
 
 func IsStandardError(val object.EmeraldValue) bool {
+	if reflect.ValueOf(val).IsNil() {
+		return false
+	}
+
 	if super, ok := val.(*object.Class); ok && super.Name == "StandardError" {
 		return true
 	}

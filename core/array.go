@@ -1,6 +1,8 @@
 package core
 
-import "emerald/object"
+import (
+	"emerald/object"
+)
 
 var Array *object.Class
 
@@ -25,10 +27,11 @@ var arrayBuiltInMethodSet = object.BuiltInMethodSet{
 	"find_index": arrayFindIndex(),
 	"map":        arrayMap(),
 	"each":       arrayEach(),
+	"sum":        arraySum(),
 }
 
 func arrayFind() object.BuiltInMethod {
-	return func(target object.EmeraldValue, block *object.Block, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := target.(*ArrayInstance)
 
 		for _, val := range arr.Value {
@@ -42,7 +45,7 @@ func arrayFind() object.BuiltInMethod {
 }
 
 func arrayFindIndex() object.BuiltInMethod {
-	return func(target object.EmeraldValue, block *object.Block, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := target.(*ArrayInstance)
 
 		for i, val := range arr.Value {
@@ -56,7 +59,7 @@ func arrayFindIndex() object.BuiltInMethod {
 }
 
 func arrayMap() object.BuiltInMethod {
-	return func(target object.EmeraldValue, block *object.Block, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := target.(*ArrayInstance)
 
 		newArr := make([]object.EmeraldValue, len(arr.Value))
@@ -70,7 +73,7 @@ func arrayMap() object.BuiltInMethod {
 }
 
 func arrayEach() object.BuiltInMethod {
-	return func(target object.EmeraldValue, block *object.Block, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := target.(*ArrayInstance)
 
 		for _, val := range arr.Value {
@@ -78,5 +81,36 @@ func arrayEach() object.BuiltInMethod {
 		}
 
 		return arr
+	}
+}
+
+func arraySum() object.BuiltInMethod {
+	return func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		var err error
+		arr := target.(*ArrayInstance)
+		blockGiven := IsNull(block)
+
+		var accumulated object.EmeraldValue
+		if blockGiven {
+			accumulated = yield(block, arr.Value[0])
+		} else {
+			accumulated = arr.Value[0]
+		}
+
+		for _, value := range arr.Value[1:] {
+			if blockGiven {
+				accumulated, err = accumulated.SEND(nil, "+", accumulated, nil, yield(block, value))
+				if err != nil {
+					return NewStandardError(err.Error())
+				}
+			} else {
+				accumulated, err = accumulated.SEND(nil, "+", accumulated, nil, value)
+				if err != nil {
+					return NewStandardError(err.Error())
+				}
+			}
+		}
+
+		return accumulated
 	}
 }

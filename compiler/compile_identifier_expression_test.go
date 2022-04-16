@@ -26,6 +26,7 @@ func TestCompileIdentifierExpression(t *testing.T) {
 				Make(OpDefineMethod),
 				Make(OpPop),
 				Make(OpPushConstant, 3), // The symbol name of the method
+				Make(OpNull),            // Null block
 				Make(OpSend, 0),
 				Make(OpPop),
 			},

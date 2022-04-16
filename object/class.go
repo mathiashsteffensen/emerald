@@ -30,7 +30,5 @@ func NewClass(
 		},
 	}
 
-	defaultEnvironment.Set(name, class)
-
 	return class
 }

@@ -39,6 +39,37 @@ func TestMethodCall(t *testing.T) {
 			`,
 			expected: "hello",
 		},
+		{
+			name:     "passing a block to a builtin method",
+			input:    "[0,1,2].map { |i| i + 2 }",
+			expected: []any{2, 3, 4},
+		},
+		{
+			name: "calling a top level method within a block passed to a builtin method",
+			input: `
+			def add_two(n); n + 2; end
+			[0,1,2].map { |i| add_two(i) }`,
+			expected: []any{2, 3, 4},
+		},
+		{
+			name: "calling a top level method within a block passed to a builtin method",
+			input: `
+			def add_two(n); n + 2; end
+			[0,1,2].map { |i| add_two(i) }.sum`,
+			expected: 9,
+		},
+		{
+			name: "calling a method with a receiver within a block passed to a builtin method",
+			input: `
+			class Math
+				def add_two(n); n + 2; end
+				class << self
+					def instance; new; end
+				end
+			end
+			[0,1,2].map { |i| Math.instance.add_two(i) }`,
+			expected: []any{2, 3, 4},
+		},
 	}
 
 	runVmTests(t, tests)

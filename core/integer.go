@@ -26,7 +26,7 @@ func init() {
 }
 
 var integerBuiltInMethodSet = object.BuiltInMethodSet{
-	"+": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"+": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("+", args)
 		if err != nil {
 			return err
@@ -34,7 +34,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value + otherVal.Value)
 	},
-	"-": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"-": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("-", args)
 		if err != nil {
 			return err
@@ -42,7 +42,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value - otherVal.Value)
 	},
-	"*": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"*": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("*", args)
 		if err != nil {
 			return err
@@ -50,7 +50,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value * otherVal.Value)
 	},
-	"/": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"/": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("/", args)
 		if err != nil {
 			return err
@@ -58,7 +58,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value / otherVal.Value)
 	},
-	"<": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"<": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("<", args)
 		if err != nil {
 			return err
@@ -66,7 +66,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value < otherVal.Value)
 	},
-	">": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	">": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg(">", args)
 		if err != nil {
 			return err
@@ -74,7 +74,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value > otherVal.Value)
 	},
-	"==": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"==": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("==", args)
 		if err != nil {
 			return err
@@ -82,7 +82,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value == otherVal.Value)
 	},
-	"!=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"!=": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -90,7 +90,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value != otherVal.Value)
 	},
-	"<=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"<=": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -98,7 +98,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value <= otherVal.Value)
 	},
-	">=": func(target object.EmeraldValue, block *object.Block, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	">=": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -106,7 +106,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value >= otherVal.Value)
 	},
-	"to_s": func(target object.EmeraldValue, block *object.Block, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"to_s": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		val := target.(*IntegerInstance).Value
 
 		return NewString(strconv.Itoa(int(val)))
@@ -121,7 +121,7 @@ func requireOneIntegerArg(method string, args []object.EmeraldValue) (*IntegerIn
 	otherVal, ok := args[0].(*IntegerInstance)
 
 	if !ok {
-		return nil, NewStandardError(fmt.Sprintf("Integer#%s can only be passed an integer", method))
+		return nil, NewStandardError(fmt.Sprintf("Integer#%s can only be passed an integer, got=%s", method, args[0].Inspect()))
 	}
 
 	return otherVal, nil

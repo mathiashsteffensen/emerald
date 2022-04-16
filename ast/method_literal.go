@@ -7,10 +7,9 @@ import (
 )
 
 type MethodLiteral struct {
-	Token      lexer.Token // The 'def' token
-	Parameters []Expression
-	Body       *BlockStatement
-	Name       Expression
+	Token lexer.Token // The 'def' token
+	*BlockLiteral
+	Name Expression
 }
 
 func (fl *MethodLiteral) expressionNode()      {}
