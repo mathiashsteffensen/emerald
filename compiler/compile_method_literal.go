@@ -7,7 +7,7 @@ import (
 )
 
 func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
-	block, err := c.compileBlock(node.BlockLiteral)
+	block, _, err := c.compileBlock(node.BlockLiteral)
 	if err != nil {
 		return err
 	}
@@ -21,7 +21,7 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
 	return nil
 }
 
-func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, error) {
+func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int, error) {
 	c.enterScope()
 
 	for _, p := range node.Parameters {
@@ -30,7 +30,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, error) {
 
 	err := c.Compile(node.Body)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if c.lastInstructionIs(OpPop) {
@@ -43,10 +43,15 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, error) {
 		c.emit(OpReturn)
 	}
 
+	freeSymbols := c.symbolTable.FreeSymbols
 	numLocals := c.symbolTable.numDefinitions
 	instructions := c.leaveScope()
 
-	return object.NewBlock([]ast.Expression{}, instructions, numLocals), nil
+	for _, s := range freeSymbols {
+		c.emitSymbol(s)
+	}
+
+	return object.NewBlock(instructions, numLocals), len(freeSymbols), nil
 }
 
 func (c *Compiler) replaceLastPopWithReturn() {

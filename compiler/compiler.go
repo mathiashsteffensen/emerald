@@ -236,6 +236,17 @@ func (c *Compiler) emit(op Opcode, operands ...int) int {
 	return pos
 }
 
+func (c *Compiler) emitSymbol(symbol Symbol) {
+	switch symbol.Scope {
+	case GlobalScope:
+		c.emit(OpGetGlobal, symbol.Index)
+	case LocalScope:
+		c.emit(OpGetLocal, symbol.Index)
+	case FreeScope:
+		c.emit(OpGetFree, symbol.Index)
+	}
+}
+
 // returns the instructions for the current CompilationScope
 func (c *Compiler) currentInstructions() Instructions {
 	return c.scopes[c.scopeIndex].instructions

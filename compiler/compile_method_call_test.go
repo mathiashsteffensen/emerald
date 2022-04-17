@@ -69,7 +69,7 @@ func TestCompileMethodCall(t *testing.T) {
 				Make(OpArray, 1),
 				Make(OpSetExecutionContext),
 				Make(OpPushConstant, 1),
-				Make(OpPushConstant, 3),
+				Make(OpCloseBlock, 3),
 				Make(OpSend, 0),
 				Make(OpResetExecutionContext),
 				Make(OpPop),
@@ -113,8 +113,74 @@ func TestCompileMethodCall(t *testing.T) {
 				Make(OpArray, 1),
 				Make(OpSetExecutionContext),
 				Make(OpPushConstant, 2),
-				Make(OpPushConstant, 5),
+				Make(OpCloseBlock, 5),
 				Make(OpSend, 0),
+				Make(OpResetExecutionContext),
+				Make(OpPop),
+			},
+		},
+		{
+			name: "closure test",
+			input: `
+				class MyClass
+					[:one, :two, :three].each do |lvl|
+						define_method(lvl) do |other_val|
+							lvl
+						end
+					end
+				end
+
+				MyClass.new.one(:two)
+			`,
+			expectedConstants: []any{
+				"class:MyClass",
+				":one",
+				":two",
+				":three",
+				":each",
+				":define_method",
+				[]Instructions{
+					Make(OpGetFree, 0),
+					Make(OpReturnValue),
+				},
+				[]Instructions{
+					Make(OpPushConstant, 5),
+					Make(OpGetLocal, 0),
+					Make(OpCloseBlock, 6, 1),
+					Make(OpGetLocal, 0),
+					Make(OpSend, 1),
+					Make(OpReturnValue),
+				},
+				":new",
+				":one",
+				":two",
+			},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpSetGlobal, 0),
+				Make(OpOpenClass),
+				Make(OpPushConstant, 1),
+				Make(OpPushConstant, 2),
+				Make(OpPushConstant, 3),
+				Make(OpArray, 3),
+				Make(OpSetExecutionContext),
+				Make(OpPushConstant, 4),
+				Make(OpCloseBlock, 7, 0),
+				Make(OpSend),
+				Make(OpResetExecutionContext),
+				Make(OpCloseClass),
+				Make(OpPop),
+				Make(OpGetGlobal, 0),
+				Make(OpSetExecutionContext),
+				Make(OpPushConstant, 8),
+				Make(OpNull),
+				Make(OpSend),
+				Make(OpResetExecutionContext),
+				Make(OpSetExecutionContext),
+				Make(OpPushConstant, 9),
+				Make(OpNull),
+				Make(OpPushConstant, 10),
+				Make(OpSend, 1),
 				Make(OpResetExecutionContext),
 				Make(OpPop),
 			},

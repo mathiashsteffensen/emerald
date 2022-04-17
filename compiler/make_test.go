@@ -29,6 +29,12 @@ func TestMake(t *testing.T) {
 			[]int{255},
 			[]byte{byte(OpGetLocal), 255},
 		},
+		{
+			"OpCloseBlock",
+			OpCloseBlock,
+			[]int{65534, 255},
+			[]byte{byte(OpCloseBlock), 255, 254, 255},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

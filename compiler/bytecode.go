@@ -23,7 +23,12 @@ type (
 )
 
 const (
-	OpPushConstant Opcode = iota
+	_ Opcode = iota
+
+	// OpPushConstant pushes a constant from the constant pool onto the stack
+	OpPushConstant
+
+	// Infix operators
 	OpAdd
 	OpPop
 	OpSub
@@ -35,19 +40,36 @@ const (
 	OpGreaterThanOrEq
 	OpLessThan
 	OpLessThanOrEq
-	OpTrue
-	OpFalse
-	OpNull
-	OpArray
-	OpHash
+
+	// Prefix operators
 	OpMinus
 	OpBang
+
+	// OpTrue pushes core.TRUE onto the stack
+	OpTrue
+	// OpFalse pushes core.FALSE onto the stack
+	OpFalse
+	// OpNull pushes core.NULL onto the stack
+	OpNull
+
+	OpArray
+	OpHash
 	OpJump
 	OpJumpNotTruthy
+
+	// OpGetGlobal resolves a global variable reference
 	OpGetGlobal
+	// OpSetGlobal creates a global variable reference
 	OpSetGlobal
+
+	// OpGetLocal resolves a local variable reference
 	OpGetLocal
+	// OpSetLocal creates a local variable reference
 	OpSetLocal
+
+	// OpGetFree like it's local & global variants resolves a variable reference, but from a blocks free variable pool
+	OpGetFree
+
 	OpReturn
 	OpReturnValue
 	OpDefineMethod
@@ -84,6 +106,12 @@ const (
 	OpExecutionStaticFalse
 	OpDefinitionStaticTrue
 	OpDefinitionStaticFalse
+
+	// OpCloseBlock creates a closure over a Block by fetching its free variables from the stack
+	// and adding them to object.Block#FreeVariables
+	// Has 2 operands, constant index of the block & number of free variables
+	// NOTE: second operand is only 1 byte, so there is a hard limit on 256 free variables
+	OpCloseBlock
 )
 
 var definitions = map[Opcode]*Definition{
@@ -112,6 +140,7 @@ var definitions = map[Opcode]*Definition{
 	OpSetGlobal:             {"OpSetGlobal", []int{2}},
 	OpGetLocal:              {"OpGetLocal", []int{1}},
 	OpSetLocal:              {"OpSetLocal", []int{1}},
+	OpGetFree:               {"OpGetFree", []int{1}},
 	OpReturn:                {"OpReturn", []int{}},
 	OpReturnValue:           {"OpReturnValue", []int{}},
 	OpDefineMethod:          {"OpDefineMethod", []int{}},
@@ -124,6 +153,7 @@ var definitions = map[Opcode]*Definition{
 	OpExecutionStaticFalse:  {"OpExecutionStaticFalse", []int{}},
 	OpDefinitionStaticTrue:  {"OpDefinitionStaticTrue", []int{}},
 	OpDefinitionStaticFalse: {"OpDefinitionStaticFalse", []int{}},
+	OpCloseBlock:            {"OpCloseBlock", []int{2, 1}},
 }
 
 func Lookup(op byte) (*Definition, error) {

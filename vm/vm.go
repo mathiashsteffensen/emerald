@@ -27,7 +27,7 @@ type VM struct {
 }
 
 func New(bytecode *compiler.Bytecode) *VM {
-	mainBlock := &object.Block{Instructions: bytecode.Instructions}
+	mainBlock := &object.ClosedBlock{Block: &object.Block{Instructions: bytecode.Instructions}}
 	mainFrame := NewFrame(mainBlock, 0)
 
 	frames := make([]*Frame, MaxFrames)
@@ -139,6 +139,14 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		vm.currentFrame().ip += 1
 		frame := vm.currentFrame()
 		vm.stack[frame.basePointer+int(localIndex)] = vm.StackTop()
+	case compiler.OpGetFree:
+		freeIndex := compiler.ReadUint8(ins[ip+1:])
+		vm.currentFrame().ip += 1
+
+		err := vm.push(vm.currentFrame().block.FreeVariables[freeIndex])
+		if err != nil {
+			return err
+		}
 	case compiler.OpArray:
 		numElements := int(compiler.ReadUint16(ins[ip+1:]))
 		vm.currentFrame().ip += 2
@@ -185,7 +193,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		block := vm.pop().(*object.Block)
 		name := vm.stack[vm.sp-1].(*core.SymbolInstance)
 
-		vm.dc.Target.DefineMethod(vm.dc.IsStatic, block, name)
+		vm.dc.Target.DefineMethod(vm.dc.IsStatic, object.NewClosedBlock(block, []object.EmeraldValue{}), name)
 	case compiler.OpSend:
 		numArgs := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
@@ -237,6 +245,15 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		if err != nil {
 			return err
 		}
+	case compiler.OpCloseBlock:
+		constIndex := compiler.ReadUint16(ins[ip+1:])
+		numFreeVars := compiler.ReadUint8(ins[ip+3:])
+		vm.currentFrame().ip += 3
+
+		err := vm.closeBlock(int(constIndex), int(numFreeVars))
+		if err != nil {
+			return err
+		}
 	case compiler.OpDefinitionStaticTrue:
 		vm.dc.IsStatic = true
 	case compiler.OpDefinitionStaticFalse:
@@ -257,6 +274,23 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 	return nil
 }
 
+func (vm *VM) closeBlock(constIndex, numFreeVars int) error {
+	constant := vm.constants[constIndex]
+	block, ok := constant.(*object.Block)
+	if !ok {
+		return fmt.Errorf("not a block: %+v", constant)
+	}
+
+	free := make([]object.EmeraldValue, numFreeVars)
+	for i := 0; i < numFreeVars; i++ {
+		free[i] = vm.stack[vm.sp-numFreeVars+i]
+	}
+
+	vm.sp = vm.sp - numFreeVars
+
+	return vm.push(object.NewClosedBlock(block, free))
+}
+
 func (vm *VM) callFunction(numArgs int) (err error) {
 	name := vm.stack[vm.sp-2-numArgs].(*core.SymbolInstance)
 	block := vm.stack[vm.sp-1-numArgs]
@@ -271,7 +305,7 @@ func (vm *VM) callFunction(numArgs int) (err error) {
 	}
 
 	switch method := method.(type) {
-	case *object.Block:
+	case *object.ClosedBlock:
 		frame := NewFrame(method, vm.sp-numArgs)
 		vm.pushFrame(frame)
 		vm.sp = frame.basePointer + method.NumLocals
@@ -304,7 +338,7 @@ func (vm *VM) yieldFunc() object.YieldFunc {
 			}
 		}
 
-		bl := block.(*object.Block)
+		bl := block.(*object.ClosedBlock)
 
 		startFrameIndex := vm.framesIndex
 

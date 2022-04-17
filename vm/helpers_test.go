@@ -42,6 +42,10 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 
 			stackElem := vm.LastPoppedStackElem()
 			testExpectedObject(t, tt.expected, stackElem)
+
+			if vm.sp != 0 {
+				t.Errorf("stack pointer was not reset after running test, this indicates a memory leak in the VM")
+			}
 		})
 	}
 }

@@ -72,7 +72,7 @@ func (val *BaseEmeraldValue) DefineMethod(isStatic bool, block EmeraldValue, arg
 		set = val.DefinedMethodSet()
 	}
 
-	set[name] = block.(*Block)
+	set[name] = block.(*ClosedBlock)
 }
 
 func (val *BaseEmeraldValue) RespondsTo(name string, target EmeraldValue) bool {
@@ -151,11 +151,9 @@ func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom Emer
 	if superClass != nil {
 		super, err := superClass.extractInstanceMethod(name, superClass, target)
 
-		if err != nil {
-			return nil, fmt.Errorf("undefined method %s for %s", name, target.Inspect())
+		if err == nil {
+			return super, nil
 		}
-
-		return super, nil
 	}
 
 	return nil, fmt.Errorf("undefined method %s for %s:%s", name, target.Inspect(), target.ParentClass().(*Class).Name)

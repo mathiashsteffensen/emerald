@@ -67,8 +67,23 @@ func TestMethodCall(t *testing.T) {
 					def instance; new; end
 				end
 			end
-			[0,1,2].map { |i| Math.instance.add_two(i) }`,
-			expected: []any{2, 3, 4},
+			[0,1,2].map { |i| Math.instance.add_two(i) }.sum`,
+			expected: 9,
+		},
+		{
+			name: "closure test",
+			input: `
+				class MyClass
+					[:one, :two, :three].each do |lvl|
+						define_method(lvl) do |other_val|
+							lvl
+						end
+					end
+				end
+
+				MyClass.new.one(:two)
+			`,
+			expected: ":one",
 		},
 	}
 

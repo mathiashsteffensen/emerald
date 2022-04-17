@@ -111,6 +111,13 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NewString(strconv.Itoa(int(val)))
 	},
+	"times": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		for i := int64(0); i < target.(*IntegerInstance).Value; i++ {
+			yield(block, NewInteger(i))
+		}
+
+		return target
+	},
 }
 
 func requireOneIntegerArg(method string, args []object.EmeraldValue) (*IntegerInstance, object.EmeraldValue /* StandardError or nil */) {

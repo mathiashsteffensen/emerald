@@ -11,12 +11,12 @@ func (c *Compiler) compileCallExpression(node *ast.CallExpression) error {
 	c.emit(OpPushConstant, c.addConstant(method))
 
 	if node.Block != nil {
-		block, err := c.compileBlock(node.Block)
+		block, freeSymbolCount, err := c.compileBlock(node.Block)
 		if err != nil {
 			return err
 		}
 
-		c.emit(OpPushConstant, c.addConstant(block))
+		c.emit(OpCloseBlock, c.addConstant(block), freeSymbolCount)
 	} else {
 		c.emit(OpNull)
 	}

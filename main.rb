@@ -4,10 +4,12 @@ y = 7
 LEVELS = [:fatal, :error, :warn, :info, :debug, :trace]
 
 class Logger
-    LEVELS.each do |lvl|
-        define_method(lvl.to_s) do |msg|
-            if should_log(lvl)
-                puts(lvl.to_s.upcase + " | " + msg)
+    100.times do
+        LEVELS.each do |lvl|
+            define_method(lvl) do |msg|
+                if should_log(lvl)
+                    puts(lvl.to_s.upcase + " | " + msg)
+                end
             end
         end
     end
@@ -26,20 +28,7 @@ class Logger
 
     class << self
         def instance
-            if @instance == nil
-                if @instances == nil
-                    @instances = 0
-                end
-
-                @instances = @instances + 1
-                @instance = new
-            end
-
-            @instance
-        end
-
-        def log_instances
-            instance.info("You have created " + @instances.to_s + " instances of Logger")
+            new
         end
     end
 end
@@ -51,8 +40,6 @@ if x < y
         Logger.instance.debug("debug msg")
 
         ["this", "is", "an", "array"].each { |msg| Logger.instance.warn(msg) }
-
-        Logger.log_instances
     end
 else
     y

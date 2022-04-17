@@ -14,7 +14,7 @@ type (
 	BuiltInMethodSet map[string]BuiltInMethod
 
 	// DefinedMethodSet - Stores an objects methods defined by the program
-	DefinedMethodSet map[string]*Block
+	DefinedMethodSet map[string]*ClosedBlock
 
 	EmeraldValueType int
 	// EmeraldValue - All Emerald objects must implement this interface
