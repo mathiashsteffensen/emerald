@@ -112,6 +112,13 @@ const (
 	// Has 2 operands, constant index of the block & number of free variables
 	// NOTE: second operand is only 1 byte, so there is a hard limit on 256 free variables
 	OpCloseBlock
+
+	// Setter and getter operators for instance variables,
+	// both take a single operand that's a reference to a constant in the constant pool
+	// which is a symbol referencing the name.
+	// Set operation sets value to top of the stack
+	OpInstanceVarSet
+	OpInstanceVarGet
 )
 
 var definitions = map[Opcode]*Definition{
@@ -154,6 +161,8 @@ var definitions = map[Opcode]*Definition{
 	OpDefinitionStaticTrue:  {"OpDefinitionStaticTrue", []int{}},
 	OpDefinitionStaticFalse: {"OpDefinitionStaticFalse", []int{}},
 	OpCloseBlock:            {"OpCloseBlock", []int{2, 1}},
+	OpInstanceVarSet:        {"OpInstanceVarSet", []int{2}},
+	OpInstanceVarGet:        {"OpInstanceVarGet", []int{2}},
 }
 
 func Lookup(op byte) (*Definition, error) {

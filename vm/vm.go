@@ -147,6 +147,28 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		if err != nil {
 			return err
 		}
+	case compiler.OpInstanceVarGet:
+		constIndex := compiler.ReadUint16(ins[ip+1:])
+		vm.currentFrame().ip += 2
+
+		name := vm.constants[constIndex]
+		target := vm.ec.Target
+
+		val := target.InstanceVariableGet(vm.ec.IsStatic, name.(*core.SymbolInstance).Value, target, target)
+
+		err := vm.push(val)
+		if err != nil {
+			return err
+		}
+	case compiler.OpInstanceVarSet:
+		constIndex := compiler.ReadUint16(ins[ip+1:])
+		vm.currentFrame().ip += 2
+
+		name := vm.constants[constIndex]
+		val := vm.StackTop()
+		target := vm.ec.Target
+
+		target.InstanceVariableSet(vm.ec.IsStatic, name.(*core.SymbolInstance).Value, val)
 	case compiler.OpArray:
 		numElements := int(compiler.ReadUint16(ins[ip+1:]))
 		vm.currentFrame().ip += 2
