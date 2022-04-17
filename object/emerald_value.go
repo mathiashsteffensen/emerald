@@ -29,7 +29,7 @@ type (
 			yield YieldFunc,
 			name string,
 			target EmeraldValue,
-			block *Block,
+			block *ClosedBlock,
 			args ...EmeraldValue,
 		) (EmeraldValue, error)
 		InstanceVariableGet(isStatic bool, name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue

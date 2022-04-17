@@ -7,6 +7,8 @@ import (
 
 var Object *object.Class
 
+var MainObject *object.Instance
+
 func init() {
 	Object = object.NewClass(
 		"Object",
@@ -44,11 +46,16 @@ func init() {
 
 				return args[0]
 			},
-			"puts": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			"puts": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				strings := []any{}
 
 				for _, arg := range args {
-					strings = append(strings, arg.Inspect())
+					val, err := arg.SEND(yield, "to_s", arg, nil)
+					if err != nil {
+						return NewStandardError(err.Error())
+					}
+
+					strings = append(strings, val.Inspect())
 				}
 
 				fmt.Println(strings...)
@@ -57,4 +64,9 @@ func init() {
 			},
 		},
 	)
+
+	MainObject = Object.New()
+	MainObject.BuiltInMethodSet()["to_s"] = func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString("main:Object")
+	}
 }

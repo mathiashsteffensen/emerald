@@ -85,7 +85,7 @@ func (val *BaseEmeraldValue) SEND(
 	yield YieldFunc,
 	name string,
 	target EmeraldValue,
-	block *Block,
+	block *ClosedBlock,
 	args ...EmeraldValue,
 ) (EmeraldValue, error) {
 	method, err := val.ExtractMethod(name, target, target)

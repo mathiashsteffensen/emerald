@@ -34,8 +34,8 @@ func New(bytecode *compiler.Bytecode) *VM {
 	frames[0] = mainFrame
 
 	return &VM{
-		dc:          &object.Context{Target: core.Object, IsStatic: true},
-		ec:          &object.Context{Target: core.Object, IsStatic: true},
+		dc:          &object.Context{Target: core.MainObject, IsStatic: false},
+		ec:          &object.Context{Target: core.MainObject, IsStatic: true},
 		constants:   bytecode.Constants,
 		stack:       make([]object.EmeraldValue, StackSize),
 		sp:          0,

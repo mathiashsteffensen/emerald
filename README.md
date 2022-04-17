@@ -12,6 +12,7 @@ Emerald is a Ruby compiler & Virtual Machine written in Go.
 - [x] methods
     - [x] with parens
     - [x] without parens
+    - [ ] without parens with args
     - [x] return keyword
     - [ ] default values for parameters
     - [ ] keyword arguments
@@ -20,7 +21,7 @@ Emerald is a Ruby compiler & Virtual Machine written in Go.
 - [x] method calls
     - [x] with parens
     - [x] without parens
-    - [ ] with block arguments
+    - [x] with block arguments
 - [ ] conditionals
     - [x] if
     - [x] if/else
@@ -187,5 +188,5 @@ Emerald is a Ruby compiler & Virtual Machine written in Go.
     - [ ] self defined classes with inheritance
     - [ ] super in methods
 - [ ] modules
-- [ ] object main
+- [x] object main
 - [x] comments '#'
