@@ -153,6 +153,10 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 
 		val := target.InstanceVariableGet(vm.ec.IsStatic, name.(*core.SymbolInstance).Value, target, target)
 
+		if val == nil {
+			val = core.NULL
+		}
+
 		err := vm.push(val)
 		if err != nil {
 			return err
@@ -337,59 +341,6 @@ func (vm *VM) callFunction(numArgs int) (err error) {
 	return nil
 }
 
-func (vm *VM) yieldFunc() object.YieldFunc {
-	return func(block object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		var err error
-
-		err = vm.push(core.NULL)
-		if err != nil {
-			return core.NewStandardError(err.Error())
-		}
-		err = vm.push(core.NULL)
-		if err != nil {
-			return core.NewStandardError(err.Error())
-		}
-
-		for _, arg := range args {
-			err := vm.push(arg)
-			if err != nil {
-				return core.NewStandardError(err.Error())
-			}
-		}
-
-		bl := block.(*object.ClosedBlock)
-
-		startFrameIndex := vm.framesIndex
-
-		frame := NewFrame(bl, vm.sp-len(args))
-		vm.pushFrame(frame)
-		vm.sp = frame.basePointer + bl.NumLocals
-
-		var (
-			ip  int
-			ins compiler.Instructions
-			op  compiler.Opcode
-		)
-
-		return vm.withExecutionContextForBlock(func() object.EmeraldValue {
-			for vm.framesIndex > startFrameIndex {
-				vm.currentFrame().ip++
-
-				ip = vm.currentFrame().ip
-				ins = vm.currentFrame().Instructions()
-				op = compiler.Opcode(ins[ip])
-
-				err = vm.execute(ip, ins, op)
-				if err != nil {
-					return core.NewStandardError(err.Error())
-				}
-			}
-
-			return vm.pop()
-		})
-	}
-}
-
 // StackTop fetches the object at the top of the stack
 func (vm *VM) StackTop() object.EmeraldValue {
 	if vm.sp == 0 {
@@ -401,21 +352,6 @@ func (vm *VM) StackTop() object.EmeraldValue {
 
 func (vm *VM) LastPoppedStackElem() object.EmeraldValue {
 	return vm.stack[vm.sp]
-}
-
-func (vm *VM) withExecutionContextForBlock(cb func() object.EmeraldValue) object.EmeraldValue {
-	oldExecTarget := vm.ec.Target
-	oldExecIsStatic := vm.ec.IsStatic
-
-	vm.ec.Target = vm.dc.Target
-	vm.ec.IsStatic = vm.dc.IsStatic
-
-	val := cb()
-
-	vm.ec.Target = oldExecTarget
-	vm.ec.IsStatic = oldExecIsStatic
-
-	return val
 }
 
 // push an obj on to the stack
@@ -448,11 +384,11 @@ func (vm *VM) buildArray(startIndex, endIndex int) object.EmeraldValue {
 }
 
 func (vm *VM) conditionalJump(condition bool, ins compiler.Instructions, ip int) {
-	pos := int(compiler.ReadUint16(ins[ip+1:]))
 	vm.currentFrame().ip += 2
 
 	if condition {
-		vm.currentFrame().ip = pos - 1
+		newPosition := int(compiler.ReadUint16(ins[ip+1:]))
+		vm.currentFrame().ip = newPosition - 1
 		vm.sp--
 	}
 }

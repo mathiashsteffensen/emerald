@@ -23,12 +23,12 @@ class Logger
     end
 
     def current_level
-        :info
+        @current_level ||= :info
     end
 
     class << self
         def instance
-            new
+            @instance ||= new
         end
     end
 end

@@ -63,7 +63,7 @@ func testExpectedObject(
 			t.Errorf("testIntegerObject failed: %s", err)
 		}
 	case bool:
-		err := testBooleanObject(bool(expected), actual)
+		err := testBooleanObject(expected, actual)
 		if err != nil {
 			t.Errorf("testBooleanObject failed: %s", err)
 		}
@@ -74,9 +74,23 @@ func testExpectedObject(
 				t.Errorf("testSymbolObject failed: %s", err)
 			}
 		} else {
-			err := testStringObject(expected, actual)
-			if err != nil {
-				t.Errorf("testStringObject failed: %s", err)
+			if strings.HasPrefix(expected, "class:") {
+				err := testClassObject(expected[6:], actual)
+				if err != nil {
+					t.Errorf("testClassObject failed: %s", err)
+				}
+			} else {
+				if strings.HasPrefix(expected, "instance:") {
+					err := testInstanceObject(expected[9:], actual)
+					if err != nil {
+						t.Errorf("testInstanceObject failed: %s", err)
+					}
+				} else {
+					err := testStringObject(expected, actual)
+					if err != nil {
+						t.Errorf("testStringObject failed: %s", err)
+					}
+				}
 			}
 		}
 	case []any:
@@ -186,5 +200,38 @@ func testSymbolObject(expected string, actual object.EmeraldValue) error {
 		return fmt.Errorf("object has wrong value. got=%q, want=%q",
 			result.Value, expected)
 	}
+	return nil
+}
+
+func testClassObject(expected string, actual object.EmeraldValue) error {
+	expectedClass, ok := object.GetClassByName(expected)
+	if !ok {
+		return fmt.Errorf("undefined class %s", expected)
+	}
+
+	actualClass, ok := actual.(*object.Class)
+	if !ok {
+		return fmt.Errorf("expected class got=%T", actual)
+	}
+
+	if expectedClass.Name != actualClass.Name {
+		return fmt.Errorf("expectedClass was expected to be %s, got=%s", expectedClass.Name, actualClass.Name)
+	}
+
+	return nil
+}
+
+func testInstanceObject(expected string, actual object.EmeraldValue) error {
+	actualInstance, ok := actual.(*object.Instance)
+	if !ok {
+		return fmt.Errorf("expected instance got=%T", actual)
+	}
+
+	class := actualInstance.ParentClass().(*object.Class)
+
+	if class.Name != expected {
+		return fmt.Errorf("expected instance to be instance of %s, but is instance of %s", expected, class.Name)
+	}
+
 	return nil
 }

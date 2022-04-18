@@ -146,6 +146,13 @@ func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom Emer
 		return &WrappedBuiltInMethod{Method: method}, nil
 	}
 
+	if targetInstance, ok := target.(*Instance); ok {
+		method, ok := targetInstance.BuiltInSingletonMethods[name]
+		if ok {
+			return &WrappedBuiltInMethod{Method: method}, nil
+		}
+	}
+
 	superClass := extractFrom.ParentClass().(*Class)
 
 	if superClass != nil {

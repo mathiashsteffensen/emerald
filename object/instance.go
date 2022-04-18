@@ -7,7 +7,8 @@ import (
 
 type Instance struct {
 	*BaseEmeraldValue
-	class *Class
+	class                   *Class
+	BuiltInSingletonMethods BuiltInMethodSet
 }
 
 func (i *Instance) Type() EmeraldValueType    { return INSTANCE_VALUE }

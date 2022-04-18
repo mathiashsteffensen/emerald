@@ -66,7 +66,7 @@ func init() {
 	)
 
 	MainObject = Object.New()
-	MainObject.BuiltInMethodSet()["to_s"] = func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	MainObject.BuiltInSingletonMethods["to_s"] = func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString("main:Object")
 	}
 }

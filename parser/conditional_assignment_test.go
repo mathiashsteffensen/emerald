@@ -24,6 +24,18 @@ func TestConditionalAssignment(t *testing.T) {
 			operator:   "||",
 			val:        false,
 		},
+		{
+			input:      "@var &&= false",
+			identifier: "@var",
+			operator:   "&&",
+			val:        false,
+		},
+		{
+			input:      "@var ||= false",
+			identifier: "@var",
+			operator:   "||",
+			val:        false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -45,14 +57,19 @@ func TestConditionalAssignment(t *testing.T) {
 				t.Errorf("wrong operator want=%s, got=%s", tt.operator, infix.Operator)
 			}
 
-			testIdentifier(t, infix.Left, tt.identifier)
+			if infix.Left.String() != tt.identifier {
+				t.Errorf("expected variable name to be %s, got=%s", tt.identifier, infix.Left)
+			}
 
 			assignment, ok := infix.Right.(*ast.AssignmentExpression)
 			if !ok {
 				t.Fatalf("expected right side of infix to be *ast.AssignmentExpression, got=%T", infix.Right)
 			}
 
-			testIdentifier(t, assignment.Name, tt.identifier)
+			if assignment.Name.String() != tt.identifier {
+				t.Errorf("expected variable name to be %s, got=%s", tt.identifier, assignment.Name)
+			}
+
 			testLiteralExpression(t, assignment.Value, tt.val)
 		})
 	}

@@ -185,6 +185,67 @@ func TestCompileMethodCall(t *testing.T) {
 				Make(OpPop),
 			},
 		},
+		{
+			name: "setting an instance var on custom class with boolean or",
+			input: `
+				class MyClass
+					class << self
+						def instance; @instance ||= new; end
+					end
+				end
+
+				MyClass.instance
+				MyClass.instance
+			`,
+			expectedConstants: []any{
+				"class:MyClass",
+				":@instance",
+				":@instance",
+				":new",
+				":@instance",
+				":instance",
+				[]Instructions{
+					Make(OpInstanceVarGet, 1),
+					Make(OpJumpNotTruthy, 13),
+					Make(OpPop),
+					Make(OpInstanceVarGet, 2),
+					Make(OpJump, 22),
+					Make(OpPushConstant, 3),
+					Make(OpNull),
+					Make(OpSend, 0),
+					Make(OpInstanceVarSet, 4),
+					Make(OpReturnValue),
+				},
+				":instance",
+				":instance",
+			},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpSetGlobal, 0),
+				Make(OpOpenClass),
+				Make(OpDefinitionStaticTrue),
+				Make(OpPushConstant, 5),
+				Make(OpPushConstant, 6),
+				Make(OpDefineMethod),
+				Make(OpDefinitionStaticFalse),
+				Make(OpCloseClass),
+				Make(OpPop),
+				Make(OpGetGlobal, 0),
+				Make(OpSetExecutionContext),
+				Make(OpPushConstant, 7),
+				Make(OpNull),
+				Make(OpSend, 0),
+				Make(OpResetExecutionContext),
+				Make(OpPop),
+				Make(OpGetGlobal, 0),
+				Make(OpSetExecutionContext),
+				Make(OpPushConstant, 8),
+				Make(OpNull),
+				Make(OpSend, 0),
+				Make(OpResetExecutionContext),
+				Make(OpPop),
+			},
+		},
 	}
 	runCompilerTests(t, tests)
 }

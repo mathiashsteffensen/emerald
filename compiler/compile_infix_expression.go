@@ -30,9 +30,17 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) error {
 	case "!=":
 		op = OpNotEqual
 	case "&&":
-		return c.compileBooleanAndOperator(node)
+		return c.compileIfExpression(&ast.IfExpression{
+			Condition:   node.Left,
+			Consequence: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Right}}},
+			Alternative: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Left}}},
+		})
 	case "||":
-		return c.compileBooleanOrOperator(node)
+		return c.compileIfExpression(&ast.IfExpression{
+			Condition:   node.Left,
+			Consequence: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Left}}},
+			Alternative: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Right}}},
+		})
 	default:
 		return fmt.Errorf("unknown infix operator %s", node.Operator)
 	}
@@ -48,48 +56,6 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) error {
 	}
 
 	c.emit(op)
-
-	return nil
-}
-
-func (c *Compiler) compileBooleanAndOperator(node *ast.InfixExpression) error {
-	err := c.Compile(node.Left)
-	if err != nil {
-		return err
-	}
-
-	// Emit an `OpJumpNotTruthy` with a bogus value
-	jumpNotTruthyPos := c.emit(OpJumpNotTruthy, 9999)
-	c.emit(OpPop)
-
-	err = c.Compile(node.Right)
-	if err != nil {
-		return err
-	}
-
-	afterConsequencePos := len(c.currentInstructions()) + 1
-	c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
-
-	return nil
-}
-
-func (c *Compiler) compileBooleanOrOperator(node *ast.InfixExpression) error {
-	err := c.Compile(node.Left)
-	if err != nil {
-		return err
-	}
-
-	// Emit an `OpJumpTruthy` with a bogus value
-	jumpTruthyPos := c.emit(OpJumpTruthy, 9999)
-	c.emit(OpPop)
-
-	err = c.Compile(node.Right)
-	if err != nil {
-		return err
-	}
-
-	afterConsequencePos := len(c.currentInstructions()) + 1
-	c.changeOperand(jumpTruthyPos, afterConsequencePos)
 
 	return nil
 }

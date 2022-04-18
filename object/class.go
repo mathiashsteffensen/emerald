@@ -6,13 +6,15 @@ type Class struct {
 	parentClass EmeraldValue
 }
 
+var classes = map[string]*Class{}
+
 func (c *Class) Type() EmeraldValueType { return CLASS_VALUE }
 func (c *Class) Inspect() string {
 	return c.Name
 }
 func (c *Class) ParentClass() EmeraldValue { return c.parentClass }
 func (c *Class) New() *Instance {
-	return &Instance{class: c, BaseEmeraldValue: c.BaseEmeraldValue}
+	return &Instance{class: c, BaseEmeraldValue: c.BaseEmeraldValue, BuiltInSingletonMethods: BuiltInMethodSet{}}
 }
 
 func NewClass(
@@ -30,5 +32,15 @@ func NewClass(
 		},
 	}
 
+	if name != "" {
+		classes[name] = class
+	}
+
 	return class
+}
+
+func GetClassByName(name string) (*Class, bool) {
+	class, ok := classes[name]
+
+	return class, ok
 }

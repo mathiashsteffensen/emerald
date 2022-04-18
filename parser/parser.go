@@ -568,13 +568,26 @@ func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
 func (p *Parser) parseInstanceVariable() ast.Expression {
 	node := &ast.InstanceVariable{IdentifierExpression: &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
 
-	if p.peekTokenIs(lexer.ASSIGN) {
+	switch p.peekToken.Type {
+	case lexer.ASSIGN:
 		p.nextToken()
 
 		return p.parseAssignmentExpression(node)
-	}
+	case lexer.BOOL_AND_ASSIGN, lexer.BOOL_OR_ASSIGN:
+		p.nextToken()
 
-	return node
+		infix := &ast.InfixExpression{
+			Token:    p.curToken,
+			Operator: p.curToken.Literal[:len(p.curToken.Literal)-1],
+			Left:     node,
+		}
+
+		infix.Right = p.parseAssignmentExpression(node)
+
+		return infix
+	default:
+		return node
+	}
 }
 
 func (p *Parser) curTokenIs(t lexer.TokenType) bool {
