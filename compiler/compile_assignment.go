@@ -13,7 +13,13 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) error {
 
 	switch name := node.Name.(type) {
 	case *ast.IdentifierExpression:
-		symbol := c.symbolTable.Define(name.String())
+		stringName := name.String()
+
+		symbol, ok := c.symbolTable.Resolve(stringName)
+		if !ok {
+			symbol = c.symbolTable.Define(stringName)
+		}
+
 		switch symbol.Scope {
 		case GlobalScope:
 			c.emit(OpSetGlobal, symbol.Index)

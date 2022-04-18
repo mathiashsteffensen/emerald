@@ -146,7 +146,14 @@ func (l *Lexer) Run() {
 				if l.peekChar() == '&' {
 					char := l.currentChar
 					l.readChar()
-					tok = Token{Type: BOOL_AND, Literal: string(char) + string(l.currentChar)}
+
+					if l.peekChar() == '=' {
+						secondChar := l.currentChar
+						l.readChar()
+						tok = Token{Type: BOOL_AND_ASSIGN, Literal: string(char) + string(secondChar) + string(l.currentChar)}
+					} else {
+						tok = Token{Type: BOOL_AND, Literal: string(char) + string(l.currentChar)}
+					}
 				} else {
 					tok = l.newToken(BIT_AND, l.currentChar)
 				}
@@ -154,7 +161,14 @@ func (l *Lexer) Run() {
 				if l.peekChar() == '|' {
 					char := l.currentChar
 					l.readChar()
-					tok = Token{Type: BOOL_OR, Literal: string(char) + string(l.currentChar)}
+
+					if l.peekChar() == '=' {
+						secondChar := l.currentChar
+						l.readChar()
+						tok = Token{Type: BOOL_OR_ASSIGN, Literal: string(char) + string(secondChar) + string(l.currentChar)}
+					} else {
+						tok = Token{Type: BOOL_OR, Literal: string(char) + string(l.currentChar)}
+					}
 				} else {
 					tok = l.newToken(BIT_OR, l.currentChar)
 				}

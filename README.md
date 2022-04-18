@@ -5,7 +5,7 @@ Emerald is a Ruby compiler & Virtual Machine written in Go.
 ### Supported language features
 The below is a list of the features on the roadmap and the ones that have already been implemented.
 
-- [ ] everything is an object
+- [x] everything is an object
     - [x] allow method calls on everything
     - [x] operators are method calls
 - [ ] full UTF8 support
@@ -32,8 +32,8 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] unless
     - [ ] unless/else
     - [ ] case
-    - [ ] `||`
-    - [ ] `&&`
+    - [x] `||`
+    - [x] `&&`
 - [ ] control flow
     - [ ] for loop
     - [ ] while loop
@@ -161,8 +161,8 @@ The below is a list of the features on the roadmap and the ones that have alread
         - [ ] `^=`
         - [ ] `<<=`
         - [ ] `>>=`
-        - [ ] `||=`
-        - [ ] `&&=`
+        - [x] `||=`
+        - [x] `&&=`
 - [ ] error handling
     - [ ] begin/rescue
     - [ ] ensure

@@ -47,7 +47,7 @@ func TestNextToken(t *testing.T) {
 	obj.hello.world
 	obj["hello"][0][value]
 	[0, 1]
-	nil`
+	nil &&= ||=`
 
 	tests := []struct {
 		expectedType    TokenType
@@ -201,6 +201,8 @@ func TestNextToken(t *testing.T) {
 		{INT, "1"},
 		{RBRACKET, "]"},
 		{NULL, "nil"},
+		{BOOL_AND_ASSIGN, "&&="},
+		{BOOL_OR_ASSIGN, "||="},
 		{EOF, ""},
 	}
 

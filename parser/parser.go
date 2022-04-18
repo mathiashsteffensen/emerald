@@ -197,11 +197,26 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 func (p *Parser) parseIdentifierExpression() ast.Expression {
 	node := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 
-	if p.peekTokenIs(lexer.ASSIGN) {
-		return p.parseAssignmentExpression(node)
-	}
+	switch p.peekToken.Type {
+	case lexer.ASSIGN:
+		p.nextToken()
 
-	return node
+		return p.parseAssignmentExpression(node)
+	case lexer.BOOL_AND_ASSIGN, lexer.BOOL_OR_ASSIGN:
+		p.nextToken()
+
+		infix := &ast.InfixExpression{
+			Token:    p.curToken,
+			Operator: p.curToken.Literal[:len(p.curToken.Literal)-1],
+			Left:     node,
+		}
+
+		infix.Right = p.parseAssignmentExpression(node)
+
+		return infix
+	default:
+		return node
+	}
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
@@ -273,8 +288,6 @@ func (p *Parser) parseNullExpression() ast.Expression {
 }
 
 func (p *Parser) parseAssignmentExpression(left ast.Expression) ast.Expression {
-	p.nextToken()
-
 	node := &ast.AssignmentExpression{Token: p.curToken}
 
 	node.Name = left
@@ -556,6 +569,8 @@ func (p *Parser) parseInstanceVariable() ast.Expression {
 	node := &ast.InstanceVariable{IdentifierExpression: &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
 
 	if p.peekTokenIs(lexer.ASSIGN) {
+		p.nextToken()
+
 		return p.parseAssignmentExpression(node)
 	}
 
