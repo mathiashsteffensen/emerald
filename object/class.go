@@ -6,7 +6,7 @@ type Class struct {
 	parentClass EmeraldValue
 }
 
-var classes = map[string]*Class{}
+var Classes = map[string]*Class{}
 
 func (c *Class) Type() EmeraldValueType { return CLASS_VALUE }
 func (c *Class) Inspect() string {
@@ -33,14 +33,14 @@ func NewClass(
 	}
 
 	if name != "" {
-		classes[name] = class
+		Classes[name] = class
 	}
 
 	return class
 }
 
 func GetClassByName(name string) (*Class, bool) {
-	class, ok := classes[name]
+	class, ok := Classes[name]
 
 	return class, ok
 }

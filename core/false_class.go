@@ -14,6 +14,9 @@ func init() {
 		"!=": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 			return NativeBoolToBooleanObject(target != args[0])
 		},
+		"to_s": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			return NewString("false")
+		},
 	}, object.BuiltInMethodSet{})
 
 	FALSE = FalseClass.New()

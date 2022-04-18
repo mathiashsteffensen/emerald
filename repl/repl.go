@@ -3,6 +3,7 @@ package repl
 import (
 	"bufio"
 	"emerald/compiler"
+	"emerald/core"
 	"emerald/lexer"
 	"emerald/object"
 	"emerald/parser"
@@ -39,7 +40,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		comp := compiler.NewWithState(symbolTable, constants)
+		comp := compiler.New(compiler.WithState(symbolTable, constants), compiler.WithBuiltIns())
 
 		err := comp.Compile(program)
 		if err != nil {
@@ -50,7 +51,7 @@ func Start(in io.Reader, out io.Writer) {
 		code := comp.Bytecode()
 		constants = code.Constants
 
-		machine := vm.NewWithGlobalsStore(code, globals)
+		machine := vm.New(code, vm.WithGlobalsStore(globals))
 
 		err = machine.Run()
 		if err != nil {
@@ -61,8 +62,14 @@ func Start(in io.Reader, out io.Writer) {
 		evaluated := machine.LastPoppedStackElem()
 
 		if evaluated != nil {
-			io.WriteString(out, evaluated.Inspect())
+			if evaluated.RespondsTo("to_s", evaluated) {
+				evaluated, err = evaluated.SEND(nil, "to_s", evaluated, nil)
+				if err != nil {
+					evaluated = core.NewStandardError(err.Error())
+				}
+			}
 
+			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
 		}
 	}

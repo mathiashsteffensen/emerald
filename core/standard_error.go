@@ -34,7 +34,7 @@ func IsStandardError(val object.EmeraldValue) bool {
 		return false
 	}
 
-	if super, ok := val.(*object.Class); ok && super.Name == "StandardError" {
+	if super, ok := val.(*object.Instance); ok && super.ParentClass().(*object.Class).Name == "StandardError" {
 		return true
 	}
 

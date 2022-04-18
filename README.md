@@ -20,6 +20,7 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] keyword arguments
     - [ ] block arguments
     - [ ] hash as last argument without braces
+    - [ ] yield
 - [x] method calls
     - [x] with parens
     - [x] without parens
@@ -28,7 +29,7 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [x] if
     - [x] if/else
     - [ ] if/elif/else
-    - [ ] tenary `? : `
+    - [ ] ternary `? : `
     - [ ] unless
     - [ ] unless/else
     - [ ] case

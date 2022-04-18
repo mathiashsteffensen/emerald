@@ -21,14 +21,16 @@ type Compiler struct {
 	scopeIndex          int
 }
 
-func New() *Compiler {
+type ConstructorOption func(c *Compiler)
+
+func New(options ...ConstructorOption) *Compiler {
 	mainScope := CompilationScope{
 		instructions:        Instructions{},
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
 	}
 
-	return &Compiler{
+	c := &Compiler{
 		instructions:        Instructions{},
 		constants:           []object.EmeraldValue{},
 		symbolTable:         NewSymbolTable(),
@@ -36,27 +38,34 @@ func New() *Compiler {
 		previousInstruction: EmittedInstruction{},
 		scopes:              []CompilationScope{mainScope},
 	}
-}
 
-func NewWithState(s *SymbolTable, constants []object.EmeraldValue) *Compiler {
-	compiler := New()
-	compiler.symbolTable = s
-	compiler.constants = constants
-	return compiler
-}
-
-func NewWithBuiltIns() *Compiler {
-	c := New()
-
-	for key, value := range core.BuiltIns {
-		symbol := c.symbolTable.Define(key)
-
-		c.emit(OpPushConstant, c.addConstant(value))
-		c.emit(OpSetGlobal, symbol.Index)
-		c.emit(OpPop)
+	for _, option := range options {
+		option(c)
 	}
 
 	return c
+}
+
+func WithState(s *SymbolTable, constants []object.EmeraldValue) ConstructorOption {
+	return func(c *Compiler) {
+		c.symbolTable = s
+		c.constants = constants
+	}
+}
+
+func WithBuiltIns() ConstructorOption {
+	return func(c *Compiler) {
+		for key, value := range object.Classes {
+			symbol, ok := c.symbolTable.Resolve(key)
+			if !ok {
+				symbol = c.symbolTable.Define(key)
+
+				c.emit(OpPushConstant, c.addConstant(value))
+				c.emit(OpSetGlobal, symbol.Index)
+				c.emit(OpPop)
+			}
+		}
+	}
 }
 
 func (c *Compiler) Compile(node ast.Node) error {

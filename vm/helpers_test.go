@@ -26,7 +26,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 			core.Object.ResetDefinedMethodSetForSpec()
 
 			program := parse(tt.input)
-			comp := compiler.NewWithBuiltIns()
+			comp := compiler.New(compiler.WithBuiltIns())
 
 			err := comp.Compile(program)
 			if err != nil {

@@ -26,14 +26,16 @@ type VM struct {
 	framesIndex int
 }
 
-func New(bytecode *compiler.Bytecode) *VM {
+type ConstructorOption func(vm *VM)
+
+func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
 	mainBlock := &object.ClosedBlock{Block: &object.Block{Instructions: bytecode.Instructions}}
 	mainFrame := NewFrame(mainBlock, 0)
 
 	frames := make([]*Frame, MaxFrames)
 	frames[0] = mainFrame
 
-	return &VM{
+	vm := &VM{
 		dc:          &object.Context{Target: core.MainObject, IsStatic: false},
 		ec:          &object.Context{Target: core.MainObject, IsStatic: true},
 		constants:   bytecode.Constants,
@@ -43,12 +45,18 @@ func New(bytecode *compiler.Bytecode) *VM {
 		frames:      frames,
 		framesIndex: 1,
 	}
+
+	for _, option := range options {
+		option(vm)
+	}
+
+	return vm
 }
 
-func NewWithGlobalsStore(bytecode *compiler.Bytecode, s []object.EmeraldValue) *VM {
-	vm := New(bytecode)
-	vm.globals = s
-	return vm
+func WithGlobalsStore(s []object.EmeraldValue) ConstructorOption {
+	return func(vm *VM) {
+		vm.globals = s
+	}
 }
 
 func (vm *VM) Run() error {

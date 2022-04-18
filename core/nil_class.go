@@ -7,7 +7,7 @@ import (
 
 var NilClass *object.Class
 
-var NULL object.EmeraldValue
+var NULL *object.Instance
 
 func init() {
 	NilClass = object.NewClass("NilClass", Object, object.BuiltInMethodSet{
@@ -19,6 +19,9 @@ func init() {
 		},
 	}, object.BuiltInMethodSet{})
 	NULL = NilClass.New()
+	NULL.BuiltInSingletonMethods["to_s"] = func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString("nil")
+	}
 }
 
 func IsNull(obj object.EmeraldValue) bool {

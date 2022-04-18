@@ -85,6 +85,10 @@ func TestMethodCall(t *testing.T) {
 			`,
 			expected: ":one",
 		},
+		{
+			input:    "Object.new",
+			expected: "instance:Object",
+		},
 	}
 
 	runVmTests(t, tests)
