@@ -8,6 +8,8 @@ const (
 	_ int = iota
 	LOWEST
 	MODIFIER    // val = 10 if true
+	BOOL_OR     // ||
+	BOOL_AND    // &&
 	EQUALS      // ==
 	LESSGREATER // > or <
 	SUM         // +
@@ -19,6 +21,8 @@ const (
 
 var precedences = map[lexer.TokenType]int{
 	lexer.IF:       MODIFIER,
+	lexer.BOOL_OR:  BOOL_OR,
+	lexer.BOOL_AND: BOOL_AND,
 	lexer.EQ:       EQUALS,
 	lexer.NOT_EQ:   EQUALS,
 	lexer.LT:       LESSGREATER,

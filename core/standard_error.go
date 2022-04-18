@@ -26,7 +26,11 @@ func NewStandardError(msg string) object.EmeraldValue {
 }
 
 func IsStandardError(val object.EmeraldValue) bool {
-	if reflect.ValueOf(val).IsNil() {
+	reflected := reflect.ValueOf(val)
+	if !reflected.IsValid() {
+		return false
+	}
+	if reflected.IsNil() {
 		return false
 	}
 

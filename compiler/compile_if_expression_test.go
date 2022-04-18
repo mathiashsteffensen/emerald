@@ -2,7 +2,7 @@ package compiler
 
 import "testing"
 
-func TestConditionals(t *testing.T) {
+func TestCompileIfExpression(t *testing.T) {
 	tests := []compilerTestCase{
 		{
 			input: `
@@ -11,23 +11,16 @@ func TestConditionals(t *testing.T) {
 			end
 			3333
 			`,
-			expectedConstants: []interface{}{10, 3333},
+			expectedConstants: []any{10, 3333},
 			expectedInstructions: []Instructions{
-				// 0000
 				Make(OpTrue),
-				// 0001
-				Make(OpJumpNotTruthy, 10),
-				// 0004
-				Make(OpPushConstant, 0),
-				// 0007
-				Make(OpJump, 11),
-				// 0010
-				Make(OpNull),
-				// 0011
+				Make(OpJumpNotTruthy, 11),
 				Make(OpPop),
-				// 0012
+				Make(OpPushConstant, 0),
+				Make(OpJump, 12),
+				Make(OpNull),
+				Make(OpPop),
 				Make(OpPushConstant, 1),
-				// 0015
 				Make(OpPop),
 			},
 		},
@@ -40,23 +33,31 @@ func TestConditionals(t *testing.T) {
 			end
 			3333
 			`,
-			expectedConstants: []interface{}{10, 20, 3333},
+			expectedConstants: []any{10, 20, 3333},
 			expectedInstructions: []Instructions{
-				// 0000
 				Make(OpTrue),
-				// 0001
-				Make(OpJumpNotTruthy, 10),
-				// 0004
-				Make(OpPushConstant, 0),
-				// 0007
-				Make(OpJump, 13),
-				// 0010
-				Make(OpPushConstant, 1),
-				// 0013
+				Make(OpJumpNotTruthy, 11),
 				Make(OpPop),
-				// 0014
+				Make(OpPushConstant, 0),
+				Make(OpJump, 14),
+				Make(OpPushConstant, 1),
+				Make(OpPop),
 				Make(OpPushConstant, 2),
-				// 0017
+				Make(OpPop),
+			},
+		},
+		{
+			name:              "negate if expression resolving to nil",
+			input:             "!(if false; 5; end)",
+			expectedConstants: []any{5},
+			expectedInstructions: []Instructions{
+				Make(OpFalse),
+				Make(OpJumpNotTruthy, 11),
+				Make(OpPop),
+				Make(OpPushConstant, 0),
+				Make(OpJump, 12),
+				Make(OpNull),
+				Make(OpBang),
 				Make(OpPop),
 			},
 		},

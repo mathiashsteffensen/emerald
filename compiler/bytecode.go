@@ -55,6 +55,7 @@ const (
 	OpArray
 	OpHash
 	OpJump
+	OpJumpTruthy
 	OpJumpNotTruthy
 
 	// OpGetGlobal resolves a global variable reference
@@ -142,6 +143,7 @@ var definitions = map[Opcode]*Definition{
 	OpMinus:                 {"OpMinus", []int{}},
 	OpBang:                  {"OpBang", []int{}},
 	OpJump:                  {"OpJump", []int{2}},
+	OpJumpTruthy:            {"OpJumpTruthy", []int{2}},
 	OpJumpNotTruthy:         {"OpJumpNotTruthy", []int{2}},
 	OpGetGlobal:             {"OpGetGlobal", []int{2}},
 	OpSetGlobal:             {"OpSetGlobal", []int{2}},

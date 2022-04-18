@@ -109,12 +109,9 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		pos := int(compiler.ReadUint16(ins[ip+1:]))
 		vm.currentFrame().ip = pos - 1
 	case compiler.OpJumpNotTruthy:
-		pos := int(compiler.ReadUint16(ins[ip+1:]))
-		vm.currentFrame().ip += 2
-		condition := vm.pop()
-		if !isTruthy(condition) {
-			vm.currentFrame().ip = pos - 1
-		}
+		vm.conditionalJump(!isTruthy(vm.StackTop()), ins, ip)
+	case compiler.OpJumpTruthy:
+		vm.conditionalJump(isTruthy(vm.StackTop()), ins, ip)
 	case compiler.OpGetGlobal:
 		globalIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
@@ -448,6 +445,16 @@ func (vm *VM) buildArray(startIndex, endIndex int) object.EmeraldValue {
 	}
 
 	return core.NewArray(elements)
+}
+
+func (vm *VM) conditionalJump(condition bool, ins compiler.Instructions, ip int) {
+	pos := int(compiler.ReadUint16(ins[ip+1:]))
+	vm.currentFrame().ip += 2
+
+	if condition {
+		vm.currentFrame().ip = pos - 1
+		vm.sp--
+	}
 }
 
 func isTruthy(obj object.EmeraldValue) bool {

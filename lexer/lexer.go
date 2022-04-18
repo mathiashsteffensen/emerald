@@ -135,8 +135,6 @@ func (l *Lexer) Run() {
 				tok = l.newToken(LBRACKET, l.currentChar)
 			case ']':
 				tok = l.newToken(RBRACKET, l.currentChar)
-			case '|':
-				tok = l.newToken(LINE, l.currentChar)
 			case ':':
 				tok = l.newToken(COLON, l.currentChar)
 			case '.':
@@ -144,6 +142,22 @@ func (l *Lexer) Run() {
 			case '"':
 				tok.Type = STRING
 				tok.Literal = l.readString()
+			case '&':
+				if l.peekChar() == '&' {
+					char := l.currentChar
+					l.readChar()
+					tok = Token{Type: BOOL_AND, Literal: string(char) + string(l.currentChar)}
+				} else {
+					tok = l.newToken(BIT_AND, l.currentChar)
+				}
+			case '|':
+				if l.peekChar() == '|' {
+					char := l.currentChar
+					l.readChar()
+					tok = Token{Type: BOOL_OR, Literal: string(char) + string(l.currentChar)}
+				} else {
+					tok = l.newToken(BIT_OR, l.currentChar)
+				}
 			case '@':
 				tok.Type = INSTANCE_VAR
 

@@ -27,6 +27,10 @@ const (
 	GT_OR_EQ TokenType = ">="
 	APPEND   TokenType = "<<"
 	DOT      TokenType = "."
+	BIT_AND  TokenType = "&"
+	BOOL_AND TokenType = "&&"
+	BIT_OR   TokenType = "|"
+	BOOL_OR  TokenType = "||"
 
 	// Delimiters
 	COMMA     TokenType = ","
@@ -38,7 +42,6 @@ const (
 	RBRACE    TokenType = "}"
 	LBRACKET  TokenType = "["
 	RBRACKET  TokenType = "]"
-	LINE      TokenType = "|"
 
 	// Keywords
 	CLASS  TokenType = "CLASS"

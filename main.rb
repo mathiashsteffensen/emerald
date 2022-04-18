@@ -33,7 +33,7 @@ class Logger
     end
 end
 
-if x < y
+if x < y && true
     if true
         Logger.instance.info("Hello World!")
 

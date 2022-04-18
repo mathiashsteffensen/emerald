@@ -66,6 +66,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.GT, p.parseInfixExpression)
 	p.registerInfix(lexer.LT_OR_EQ, p.parseInfixExpression)
 	p.registerInfix(lexer.GT_OR_EQ, p.parseInfixExpression)
+	p.registerInfix(lexer.BOOL_AND, p.parseInfixExpression)
+	p.registerInfix(lexer.BOOL_OR, p.parseInfixExpression)
 	p.registerInfix(lexer.LPAREN, p.parseCallExpression)
 	p.registerInfix(lexer.DOT, p.parseMethodCall)
 
@@ -525,24 +527,24 @@ func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
 }
 
 func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
-	if !p.peekTokenIs(lexer.LBRACE) && !p.peekTokenIs(lexer.DO) {
-		return nil
-	}
-
 	var endToken lexer.TokenType
 	if p.peekTokenIs(lexer.LBRACE) {
 		endToken = lexer.RBRACE
 	} else {
-		endToken = lexer.END
+		if p.peekTokenIs(lexer.DO) {
+			endToken = lexer.END
+		} else {
+			return nil
+		}
 	}
 
 	p.nextToken()
 
 	block := &ast.BlockLiteral{Body: &ast.BlockStatement{}, Token: p.curToken}
 
-	if p.peekTokenIs(lexer.LINE) {
+	if p.peekTokenIs(lexer.BIT_OR) {
 		p.nextToken()
-		block.Parameters = p.parseExpressionList(lexer.LINE)
+		block.Parameters = p.parseExpressionList(lexer.BIT_OR)
 	}
 
 	block.Body = p.parseBlockStatement(endToken)

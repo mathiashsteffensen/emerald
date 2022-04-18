@@ -39,7 +39,7 @@ func TestNextToken(t *testing.T) {
 	10 == 10;
 	10 != 9;
 	10 >= 9
-	9 <= 10
+	9 <= 10 & 4 && 4 | 4 || 4
 	"foobar"
 	"foo bar"
 	{hello: "world"}
@@ -110,9 +110,9 @@ func TestNextToken(t *testing.T) {
 		{DOT, "."},
 		{IDENT, "each"},
 		{LBRACE, "{"},
-		{LINE, "|"},
+		{BIT_OR, "|"},
 		{IDENT, "w"},
-		{LINE, "|"},
+		{BIT_OR, "|"},
 		{IDENT, "do_stuff"},
 		{LPAREN, "("},
 		{IDENT, "w"},
@@ -123,9 +123,9 @@ func TestNextToken(t *testing.T) {
 		{DOT, "."},
 		{IDENT, "each"},
 		{DO, "do"},
-		{LINE, "|"},
+		{BIT_OR, "|"},
 		{IDENT, "w"},
-		{LINE, "|"},
+		{BIT_OR, "|"},
 		{IDENT, "do_stuff"},
 		{LPAREN, "("},
 		{IDENT, "w"},
@@ -159,6 +159,14 @@ func TestNextToken(t *testing.T) {
 		{INT, "9"},
 		{LT_OR_EQ, "<="},
 		{INT, "10"},
+		{BIT_AND, "&"},
+		{INT, "4"},
+		{BOOL_AND, "&&"},
+		{INT, "4"},
+		{BIT_OR, "|"},
+		{INT, "4"},
+		{BOOL_OR, "||"},
+		{INT, "4"},
 		{STRING, "foobar"},
 		{STRING, "foo bar"},
 		{LBRACE, "{"},

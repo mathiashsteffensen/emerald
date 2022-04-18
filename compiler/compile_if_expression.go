@@ -10,6 +10,7 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) error {
 
 	// Emit an `OpJumpNotTruthy` with a bogus value
 	jumpNotTruthyPos := c.emit(OpJumpNotTruthy, 9999)
+	c.emit(OpPop)
 
 	err = c.Compile(node.Consequence)
 	if err != nil {
