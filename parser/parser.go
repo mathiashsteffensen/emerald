@@ -520,11 +520,9 @@ func (p *Parser) parseStaticClassLiteral() ast.Expression {
 func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
 	node := &ast.MethodCall{Token: p.curToken, Left: left, CallExpression: &ast.CallExpression{}}
 
-	if !p.expectPeekMultiple(lexer.IDENT, lexer.CLASS) {
-		return nil
-	}
+	p.nextToken()
 
-	node.Method = p.parseIdentifierExpression()
+	node.Method = &ast.IdentifierExpression{Value: p.curToken.Literal, Token: p.curToken}
 
 	if p.peekTokenIs(lexer.LPAREN) {
 		p.nextToken()

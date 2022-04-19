@@ -106,7 +106,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value >= otherVal.Value)
 	},
-	"to_s": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"to_s": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		val := target.(*IntegerInstance).Value
 
 		return NewString(strconv.Itoa(int(val)))

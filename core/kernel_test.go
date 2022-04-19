@@ -2,6 +2,17 @@ package core_test
 
 import "testing"
 
+func TestKernel_class(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "Object.new.class",
+			expected: "class:Object",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestKernel_puts(t *testing.T) {
 	tests := []coreTestCase{
 		{
@@ -38,6 +49,19 @@ func TestKernel_include(t *testing.T) {
 			end
 			include(MyMod)
 			hello`,
+			expected: "Hello",
+		},
+		{
+			name: "in custom class",
+			input: `module MyMod
+				def hello; "Hello"; end
+			end
+			
+			class MyClass
+				include(MyMod)
+			end
+
+			MyClass.new.hello`,
 			expected: "Hello",
 		},
 	}
