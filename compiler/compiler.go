@@ -65,6 +65,16 @@ func WithBuiltIns() ConstructorOption {
 				c.emit(OpPop)
 			}
 		}
+		for key, value := range object.Modules {
+			symbol, ok := c.symbolTable.Resolve(key)
+			if !ok {
+				symbol = c.symbolTable.Define(key)
+
+				c.emit(OpPushConstant, c.addConstant(value))
+				c.emit(OpSetGlobal, symbol.Index)
+				c.emit(OpPop)
+			}
+		}
 	}
 }
 
@@ -141,6 +151,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 		} else {
 			c.emit(OpFalse)
 		}
+	case *ast.NullExpression:
+		c.emit(OpNull)
 	case *ast.StringLiteral:
 		str := core.NewString(node.Value)
 		c.emit(OpPushConstant, c.addConstant(str))
