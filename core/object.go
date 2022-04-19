@@ -12,7 +12,7 @@ var MainObject *object.Instance
 func init() {
 	Object = object.NewClass(
 		"Object",
-		nil,
+		BasicObject,
 		object.BuiltInMethodSet{
 			// Uncomment when 'Object' has been moved to core
 			"methods": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
@@ -38,6 +38,9 @@ func init() {
 			},
 		},
 		object.BuiltInMethodSet{
+			"ancestors": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+				return NewArray(target.Ancestors())
+			},
 			"new": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return target.(*object.Class).New()
 			},
@@ -61,6 +64,9 @@ func init() {
 				fmt.Println(strings...)
 
 				return NULL
+			},
+			"to_s": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+				return NewString(target.Inspect())
 			},
 		},
 	)

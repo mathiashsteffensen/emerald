@@ -13,6 +13,7 @@ type Instance struct {
 
 func (i *Instance) Type() EmeraldValueType    { return INSTANCE_VALUE }
 func (i *Instance) ParentClass() EmeraldValue { return i.class }
+func (i *Instance) Ancestors() []EmeraldValue { return i.class.Ancestors() }
 func (i *Instance) Inspect() string {
 	var out bytes.Buffer
 

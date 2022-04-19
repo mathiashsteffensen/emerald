@@ -12,9 +12,10 @@ import (
 	"io"
 )
 
-const PROMPT = ">> "
+const PROMPT_FMT = "iem(main):%03d:0> "
 
 func Start(in io.Reader, out io.Writer) {
+	lineCount := 0
 	scanner := bufio.NewScanner(in)
 
 	constants := []object.EmeraldValue{}
@@ -22,7 +23,9 @@ func Start(in io.Reader, out io.Writer) {
 	symbolTable := compiler.NewSymbolTable()
 
 	for {
-		fmt.Fprint(out, PROMPT)
+		lineCount++
+
+		fmt.Fprintf(out, PROMPT_FMT, lineCount)
 
 		scanned := scanner.Scan()
 		if !scanned {
@@ -30,6 +33,10 @@ func Start(in io.Reader, out io.Writer) {
 		}
 
 		line := scanner.Text()
+		if line == "quit" {
+			fmt.Fprintf(out, "See you next time!\n")
+			return
+		}
 
 		l := lexer.New(lexer.NewInput("repl.rb", line))
 		p := parser.New(l)

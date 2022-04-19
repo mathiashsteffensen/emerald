@@ -11,6 +11,7 @@ type Block struct {
 }
 
 func (b *Block) ParentClass() EmeraldValue { return nil }
+func (b *Block) Ancestors() []EmeraldValue { return []EmeraldValue{} }
 func (*Block) Type() EmeraldValueType      { return BLOCK_VALUE }
 func (b *Block) Inspect() string           { return fmt.Sprintf("#<Block:%p>", b) }
 

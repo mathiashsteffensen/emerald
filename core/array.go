@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"emerald/object"
 )
 
@@ -28,6 +29,7 @@ var arrayBuiltInMethodSet = object.BuiltInMethodSet{
 	"map":        arrayMap(),
 	"each":       arrayEach(),
 	"sum":        arraySum(),
+	"to_s":       arrayToS(),
 }
 
 func arrayFind() object.BuiltInMethod {
@@ -112,5 +114,35 @@ func arraySum() object.BuiltInMethod {
 		}
 
 		return accumulated
+	}
+}
+
+func arrayToS() object.BuiltInMethod {
+	return func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		var out bytes.Buffer
+
+		out.WriteString("[")
+
+		values := target.(*ArrayInstance).Value
+		for i, value := range values {
+			if value.RespondsTo("to_s", value) {
+				str, err := value.SEND(yield, "to_s", value, nil)
+				if err != nil {
+					return NewStandardError(err.Error())
+				}
+
+				out.WriteString(str.Inspect())
+			} else {
+				out.WriteString(value.Inspect())
+			}
+
+			if i != len(values)-1 {
+				out.WriteString(", ")
+			}
+		}
+
+		out.WriteString("]")
+
+		return NewString(out.String())
 	}
 }

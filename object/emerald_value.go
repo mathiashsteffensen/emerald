@@ -22,6 +22,7 @@ type (
 		Type() EmeraldValueType
 		Inspect() string
 		ParentClass() EmeraldValue
+		Ancestors() []EmeraldValue
 		DefineMethod(isStatic bool, block EmeraldValue, args ...EmeraldValue)
 		ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error)
 		RespondsTo(name string, target EmeraldValue) bool
@@ -47,3 +48,4 @@ const (
 func (method *WrappedBuiltInMethod) Inspect() string           { return "obscure Go compiler" }
 func (method *WrappedBuiltInMethod) Type() EmeraldValueType    { return BLOCK_VALUE }
 func (method *WrappedBuiltInMethod) ParentClass() EmeraldValue { return nil }
+func (method *WrappedBuiltInMethod) Ancestors() []EmeraldValue { return []EmeraldValue{} }

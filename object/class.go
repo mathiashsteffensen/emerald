@@ -1,5 +1,7 @@
 package object
 
+import "reflect"
+
 type Class struct {
 	*BaseEmeraldValue
 	Name        string
@@ -13,6 +15,18 @@ func (c *Class) Inspect() string {
 	return c.Name
 }
 func (c *Class) ParentClass() EmeraldValue { return c.parentClass }
+
+func (c *Class) Ancestors() []EmeraldValue {
+	ancestors := []EmeraldValue{c}
+
+	super := c.ParentClass()
+	if super != nil && reflect.ValueOf(super).IsValid() && !reflect.ValueOf(super).IsNil() {
+		ancestors = append(ancestors, super.Ancestors()...)
+	}
+
+	return ancestors
+}
+
 func (c *Class) New() *Instance {
 	return &Instance{class: c, BaseEmeraldValue: c.BaseEmeraldValue, BuiltInSingletonMethods: BuiltInMethodSet{}}
 }
