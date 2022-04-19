@@ -26,6 +26,16 @@ func TestClassLiteral(t *testing.T) {
 			end`,
 			expected: 69,
 		},
+		{
+			name: "class with included module",
+			input: `
+			module MyMod; end
+
+			class MyClass
+				include(MyMod)
+			end`,
+			expected: "class:MyClass",
+		},
 	}
 
 	runVmTests(t, tests)

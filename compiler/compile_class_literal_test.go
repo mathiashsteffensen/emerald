@@ -5,10 +5,8 @@ import "testing"
 func TestCompileClassLiteral(t *testing.T) {
 	tests := []compilerTestCase{
 		{
-			name: "defining a new class",
-			input: `
-			class MyClass; end
-			`,
+			name:  "defining a new class",
+			input: "class MyClass; end",
 			expectedConstants: []any{
 				"class:MyClass",
 			},

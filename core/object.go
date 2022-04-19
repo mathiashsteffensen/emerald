@@ -2,7 +2,6 @@ package core
 
 import (
 	"emerald/object"
-	"fmt"
 )
 
 var Object *object.Class
@@ -14,7 +13,6 @@ func init() {
 		"Object",
 		BasicObject,
 		object.BuiltInMethodSet{
-			// Uncomment when 'Object' has been moved to core
 			"methods": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				methods := []object.EmeraldValue{}
 
@@ -23,9 +21,6 @@ func init() {
 				}
 
 				return NewArray(methods)
-			},
-			"class": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return target.ParentClass()
 			},
 			"to_s": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return NewString(target.Inspect())
@@ -49,26 +44,11 @@ func init() {
 
 				return args[0]
 			},
-			"puts": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				strings := []any{}
-
-				for _, arg := range args {
-					val, err := arg.SEND(yield, "to_s", arg, nil)
-					if err != nil {
-						return NewStandardError(err.Error())
-					}
-
-					strings = append(strings, val.Inspect())
-				}
-
-				fmt.Println(strings...)
-
-				return NULL
-			},
 			"to_s": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return NewString(target.Inspect())
 			},
 		},
+		Kernel,
 	)
 
 	MainObject = Object.New()

@@ -7,7 +7,6 @@ import (
 	"emerald/parser"
 	"emerald/vm"
 	"fmt"
-	"io"
 	"os"
 )
 
@@ -40,16 +39,8 @@ func main() {
 
 	evaluated := machine.LastPoppedStackElem()
 
-	if evaluated != nil {
-		if evaluated.RespondsTo("to_s", evaluated) {
-			evaluated, err = evaluated.SEND(nil, "to_s", evaluated, nil)
-			if err != nil {
-				evaluated = core.NewStandardError(err.Error())
-			}
-		}
-
-		io.WriteString(os.Stdout, evaluated.Inspect())
-		io.WriteString(os.Stdout, "\n")
+	if core.IsStandardError(evaluated) {
+		fmt.Println(evaluated.Inspect())
 	}
 }
 

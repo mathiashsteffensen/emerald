@@ -54,6 +54,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.CLASS, p.parseClassLiteral)
 	p.registerPrefix(lexer.COLON, p.parseSymbolLiteral)
 	p.registerPrefix(lexer.INSTANCE_VAR, p.parseInstanceVariable)
+	p.registerPrefix(lexer.MODULE, p.parseModuleLiteral)
 
 	p.infixParseFns = make(map[lexer.TokenType]infixParseFn)
 	p.registerInfix(lexer.PLUS, p.parseInfixExpression)
@@ -519,7 +520,7 @@ func (p *Parser) parseStaticClassLiteral() ast.Expression {
 func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
 	node := &ast.MethodCall{Token: p.curToken, Left: left, CallExpression: &ast.CallExpression{}}
 
-	if !p.expectPeek(lexer.IDENT) {
+	if !p.expectPeekMultiple(lexer.IDENT, lexer.CLASS) {
 		return nil
 	}
 

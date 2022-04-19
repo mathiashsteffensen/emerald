@@ -2,6 +2,7 @@ package object
 
 import (
 	"fmt"
+	"reflect"
 )
 
 type BaseEmeraldValue struct {
@@ -11,6 +12,13 @@ type BaseEmeraldValue struct {
 	builtInMethodSet        BuiltInMethodSet
 	definedMethodSet        DefinedMethodSet
 	instanceVariables       map[string]EmeraldValue
+	includedModules         []EmeraldValue
+}
+
+func (val *BaseEmeraldValue) IncludedModules() []EmeraldValue { return val.includedModules }
+
+func (val *BaseEmeraldValue) Include(mod EmeraldValue) {
+	val.includedModules = append(val.includedModules, mod)
 }
 
 func (val *BaseEmeraldValue) StaticBuiltInMethodSet() BuiltInMethodSet {
@@ -109,7 +117,10 @@ func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue
 	if _, ok := target.(*Class); ok {
 		return val.extractStaticMethod(name, extractFrom, target)
 	} else {
-		return val.extractInstanceMethod(name, extractFrom, target)
+		if target.ParentClass() != nil {
+			return val.extractInstanceMethod(name, extractFrom, target)
+		}
+		return nil, fmt.Errorf("invalid method call %s on %#v", name, target)
 	}
 }
 
@@ -122,22 +133,37 @@ func (val *BaseEmeraldValue) extractStaticMethod(name string, extractFrom Emeral
 		return &WrappedBuiltInMethod{Method: method}, nil
 	}
 
-	superClass := extractFrom.ParentClass().(*Class)
+	for _, mod := range val.IncludedModules() {
+		if method, err := mod.ExtractMethod(name, mod, target); err == nil {
+			return method, nil
+		}
+	}
 
-	if superClass != nil {
-		super, err := superClass.extractStaticMethod(name, superClass, target)
+	super := extractFrom.ParentClass()
+	reflected := reflect.ValueOf(super)
+
+	if super != nil && reflected.IsValid() && !reflected.IsNil() {
+		superClass := super.(*Class)
+		superMethod, err := superClass.extractStaticMethod(name, superClass, target)
 
 		if err != nil {
 			return nil, fmt.Errorf("undefined method %s for %s:Class", name, target.Inspect())
 		}
 
-		return super, nil
+		return superMethod, nil
 	}
 
 	return nil, fmt.Errorf("undefined method %s for %s:Class", name, target.Inspect())
 }
 
 func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error) {
+	if targetInstance, ok := target.(*Instance); ok {
+		method, ok := targetInstance.BuiltInSingletonMethods[name]
+		if ok {
+			return &WrappedBuiltInMethod{Method: method}, nil
+		}
+	}
+
 	if method, ok := val.DefinedMethodSet()[name]; ok {
 		return method, nil
 	}
@@ -146,20 +172,21 @@ func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom Emer
 		return &WrappedBuiltInMethod{Method: method}, nil
 	}
 
-	if targetInstance, ok := target.(*Instance); ok {
-		method, ok := targetInstance.BuiltInSingletonMethods[name]
-		if ok {
-			return &WrappedBuiltInMethod{Method: method}, nil
+	for _, mod := range val.IncludedModules() {
+		if method, err := mod.ExtractMethod(name, mod, target); err == nil {
+			return method, nil
 		}
 	}
 
-	superClass := extractFrom.ParentClass().(*Class)
+	super := extractFrom.ParentClass()
+	reflected := reflect.ValueOf(super)
 
-	if superClass != nil {
-		super, err := superClass.extractInstanceMethod(name, superClass, target)
+	if super != nil && reflected.IsValid() && !reflected.IsNil() {
+		superClass := super.(*Class)
+		superMethod, err := superClass.extractInstanceMethod(name, superClass, target)
 
 		if err == nil {
-			return super, nil
+			return superMethod, nil
 		}
 	}
 

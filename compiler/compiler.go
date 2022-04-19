@@ -172,6 +172,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+	case *ast.ModuleLiteral:
+		err := c.compileModuleLiteral(node)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

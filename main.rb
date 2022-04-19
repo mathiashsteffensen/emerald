@@ -35,8 +35,7 @@ end
 
 if x < y && true
     if true
-        name = "Emerald"
-        Logger.instance.info("Hello World from #{name}!")
+        Logger.instance.info("Hello World!")
 
         Logger.instance.debug("debug msg")
 

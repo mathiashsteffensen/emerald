@@ -40,7 +40,7 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 				t.Errorf("testInstructions failed: %s", err)
 			}
 
-			err = testConstants(t, tt.expectedConstants, bytecode.Constants)
+			err = testConstants(tt.expectedConstants, bytecode.Constants)
 
 			if err != nil {
 				t.Errorf("testConstants failed: %s", err)
@@ -83,7 +83,6 @@ func concatInstructions(s []Instructions) Instructions {
 }
 
 func testConstants(
-	t *testing.T,
 	expected []interface{},
 	actual []object.EmeraldValue,
 ) error {
@@ -108,7 +107,11 @@ func testConstants(
 				if strings.HasPrefix(constant, "class:") {
 					err = testClassObject(constant[6:], actual[i])
 				} else {
-					err = testStringObject(constant, actual[i])
+					if strings.HasPrefix(constant, "module:") {
+						err = testModuleObject(constant[7:], actual[i])
+					} else {
+						err = testStringObject(constant, actual[i])
+					}
 				}
 			}
 
@@ -167,6 +170,19 @@ func testSymbolObject(expected string, actual object.EmeraldValue) error {
 
 func testClassObject(expected string, actual object.EmeraldValue) error {
 	class, ok := actual.(*object.Class)
+	if !ok {
+		return fmt.Errorf("object is not Class. got=%T (%+v)", actual, actual)
+	}
+
+	if class.Name != expected {
+		return fmt.Errorf("class had wrong name want=%s, got=%s", expected, class.Name)
+	}
+
+	return nil
+}
+
+func testModuleObject(expected string, actual object.EmeraldValue) error {
+	class, ok := actual.(*object.Module)
 	if !ok {
 		return fmt.Errorf("object is not Class. got=%T (%+v)", actual, actual)
 	}

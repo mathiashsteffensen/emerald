@@ -23,6 +23,8 @@ type (
 		Inspect() string
 		ParentClass() EmeraldValue
 		Ancestors() []EmeraldValue
+		IncludedModules() []EmeraldValue
+		Include(mod EmeraldValue)
 		DefineMethod(isStatic bool, block EmeraldValue, args ...EmeraldValue)
 		ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error)
 		RespondsTo(name string, target EmeraldValue) bool
@@ -39,7 +41,9 @@ type (
 )
 
 const (
-	CLASS_VALUE EmeraldValueType = iota
+	_ EmeraldValueType = iota
+	CLASS_VALUE
+	MODULE_VALUE
 	INSTANCE_VALUE
 	BLOCK_VALUE
 	RETURN_VALUE

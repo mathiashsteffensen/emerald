@@ -14,7 +14,6 @@ The below is a list of the features on the roadmap and the ones that have alread
 - [x] methods
     - [x] with parens
     - [x] without parens
-    - [ ] without parens with args
     - [x] return keyword
     - [ ] default values for parameters
     - [ ] keyword arguments
@@ -24,13 +23,16 @@ The below is a list of the features on the roadmap and the ones that have alread
 - [x] method calls
     - [x] with parens
     - [x] without parens
+    - [ ] without parens with args
     - [x] with block arguments
 - [ ] conditionals
     - [x] if
+    - [ ] if modifier
     - [x] if/else
     - [ ] if/elif/else
     - [ ] ternary `? : `
     - [ ] unless
+    - [ ] unless modifier
     - [ ] unless/else
     - [ ] case
     - [x] `||`
@@ -186,10 +188,11 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [x] new
     - [ ] `self`
     - [x] singleton classes (also known as the metaclass or eigenclass) `class << self`
+    - [ ] singleton methods `def self.method`
     - [ ] assigment methods
     - [x] self defined classes
     - [ ] self defined classes with inheritance
     - [ ] super in methods
-- [ ] modules
+- [x] modules
 - [x] object main
 - [x] comments '#'

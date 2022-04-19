@@ -89,6 +89,21 @@ func TestMethodCall(t *testing.T) {
 			input:    "Object.new",
 			expected: "instance:Object",
 		},
+		{
+			input: `
+			module MyMod
+				def hello
+					"Hello"
+				end
+			end
+
+			class MyClass
+				include(MyMod)
+			end
+
+			MyClass.new.hello`,
+			expected: "Hello",
+		},
 	}
 
 	runVmTests(t, tests)

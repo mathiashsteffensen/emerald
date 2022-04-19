@@ -15,12 +15,13 @@ func (c *Class) Inspect() string {
 	return c.Name
 }
 func (c *Class) ParentClass() EmeraldValue { return c.parentClass }
-
 func (c *Class) Ancestors() []EmeraldValue {
 	ancestors := []EmeraldValue{c}
+	ancestors = append(ancestors, c.IncludedModules()...)
 
 	super := c.ParentClass()
-	if super != nil && reflect.ValueOf(super).IsValid() && !reflect.ValueOf(super).IsNil() {
+	reflected := reflect.ValueOf(super)
+	if super != nil && reflected.IsValid() && !reflected.IsNil() {
 		ancestors = append(ancestors, super.Ancestors()...)
 	}
 
@@ -36,6 +37,7 @@ func NewClass(
 	parentClass *Class,
 	builtInMethodSet BuiltInMethodSet,
 	staticBuiltInMethodSet BuiltInMethodSet,
+	modules ...EmeraldValue,
 ) *Class {
 	class := &Class{
 		Name:        name,
@@ -43,6 +45,7 @@ func NewClass(
 		BaseEmeraldValue: &BaseEmeraldValue{
 			builtInMethodSet:       builtInMethodSet,
 			staticBuiltInMethodSet: staticBuiltInMethodSet,
+			includedModules:        modules,
 		},
 	}
 
