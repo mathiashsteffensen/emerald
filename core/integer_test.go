@@ -130,6 +130,14 @@ func TestInteger_times(t *testing.T) {
 			`,
 			expected: 1000,
 		},
+		{
+			input: `
+			count = 0
+			5.times { |i| count = count + i }
+			count
+			`,
+			expected: 10,
+		},
 	}
 
 	runCoreTests(t, tests)
