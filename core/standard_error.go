@@ -3,7 +3,6 @@ package core
 import (
 	"emerald/object"
 	"fmt"
-	"reflect"
 )
 
 var StandardError *object.Class
@@ -12,29 +11,25 @@ func init() {
 	StandardError = object.NewClass("StandardError", Object, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 }
 
-type standardError struct {
+type StandardErrorInstance struct {
 	*object.Instance
-	Message string
+	message string
 }
 
-func (err *standardError) Inspect() string {
-	return fmt.Sprintf("#<%s: %s>", err.ParentClass().(*object.Class).Name, err.Message)
+func (err *StandardErrorInstance) Inspect() string {
+	return fmt.Sprintf("#<%s: %s>", err.ParentClass().(*object.Class).Name, err.message)
+}
+
+func (err *StandardErrorInstance) Message() string {
+	return err.message
 }
 
 func NewStandardError(msg string) object.EmeraldValue {
-	return &standardError{StandardError.New(), msg}
+	return &StandardErrorInstance{StandardError.New(), msg}
 }
 
 func IsStandardError(val object.EmeraldValue) bool {
-	reflected := reflect.ValueOf(val)
-	if !reflected.IsValid() {
-		return false
-	}
-	if reflected.IsNil() {
-		return false
-	}
-
-	if super, ok := val.(*object.Instance); ok && super.ParentClass().(*object.Class).Name == "StandardError" {
+	if _, ok := val.(*StandardErrorInstance); ok {
 		return true
 	}
 

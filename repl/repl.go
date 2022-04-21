@@ -3,7 +3,6 @@ package repl
 import (
 	"bufio"
 	"emerald/compiler"
-	"emerald/core"
 	"emerald/lexer"
 	"emerald/object"
 	"emerald/parser"
@@ -69,13 +68,6 @@ func Start(in io.Reader, out io.Writer) {
 		evaluated := machine.LastPoppedStackElem()
 
 		if evaluated != nil {
-			if evaluated.RespondsTo("to_s", evaluated) {
-				evaluated, err = evaluated.SEND(nil, "to_s", evaluated, nil)
-				if err != nil {
-					evaluated = core.NewStandardError(err.Error())
-				}
-			}
-
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
 		}

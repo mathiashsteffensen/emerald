@@ -4,8 +4,8 @@ import (
 	"emerald/compiler"
 	"emerald/core"
 	"emerald/object"
-	"errors"
 	"fmt"
+	"strconv"
 )
 
 const (
@@ -86,10 +86,7 @@ func (vm *VM) Run() error {
 func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) error {
 	switch op {
 	case compiler.OpPop:
-		val := vm.pop()
-		if isError(val) {
-			return errors.New(val.Inspect())
-		}
+		vm.pop()
 	case compiler.OpTrue:
 		err := vm.push(core.TRUE)
 		if err != nil {
@@ -209,9 +206,6 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		}
 	case compiler.OpReturnValue:
 		returnValue := vm.pop()
-		if isError(returnValue) {
-			return errors.New(returnValue.Inspect())
-		}
 
 		frame := vm.popFrame()
 		vm.sp = frame.basePointer - 2
@@ -230,7 +224,10 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		vm.currentFrame().ip += 1
 		err := vm.callFunction(int(numArgs))
 		if err != nil {
-			return err
+			err := vm.push(err)
+			if err != nil {
+				return err
+			}
 		}
 	case compiler.OpOpenClass:
 		oldTarget := vm.ec.Target
@@ -254,9 +251,6 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 	case compiler.OpSetExecutionContext:
 		oldTarget := vm.ec.Target
 		newTarget := vm.stack[vm.sp-1]
-		if isError(newTarget) {
-			return errors.New(newTarget.Inspect())
-		}
 
 		vm.ec.Target = newTarget
 		vm.ec.IsStatic = newTarget.Type() == object.CLASS_VALUE
@@ -264,9 +258,6 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		vm.stack[vm.sp-1] = oldTarget
 	case compiler.OpResetExecutionContext:
 		val := vm.pop()
-		if isError(val) {
-			return errors.New(val.Inspect())
-		}
 
 		target := vm.pop()
 		vm.ec.Target = target
@@ -322,28 +313,38 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) error {
 	return vm.push(object.NewClosedBlock(block, free))
 }
 
-func (vm *VM) callFunction(numArgs int) (err error) {
+func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 	name := vm.stack[vm.sp-2-numArgs].(*core.SymbolInstance)
 	block := vm.stack[vm.sp-1-numArgs]
 
 	target := vm.ec.Target
 	method, errVal := target.ExtractMethod(name.Value, target, target)
 	if errVal != nil {
-		method, err = core.Object.ExtractMethod(name.Value, core.Object, core.Object)
-		if err != nil {
-			return errVal
+		var otherErr error
+
+		method, otherErr = core.Object.ExtractMethod(name.Value, core.Object, core.Object)
+		if otherErr != nil {
+			return core.NewStandardError(errVal.Error())
 		}
 	}
 
 	switch method := method.(type) {
 	case *object.ClosedBlock:
+		if numArgs != method.NumArgs {
+			return core.NewArgumentError(strconv.Itoa(numArgs), strconv.Itoa(method.NumArgs))
+		}
+
 		frame := NewFrame(method, vm.sp-numArgs)
 		vm.pushFrame(frame)
 		vm.sp = frame.basePointer + method.NumLocals
 	case *object.WrappedBuiltInMethod:
 		result := method.Method(target, block, vm.yieldFunc(), vm.stack[vm.sp-numArgs:vm.sp]...)
 		vm.sp -= numArgs + 2
-		return vm.push(result)
+		err := vm.push(result)
+
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return nil
@@ -408,8 +409,4 @@ func isTruthy(obj object.EmeraldValue) bool {
 	default:
 		return true
 	}
-}
-
-func isError(obj object.EmeraldValue) bool {
-	return core.IsStandardError(obj)
 }

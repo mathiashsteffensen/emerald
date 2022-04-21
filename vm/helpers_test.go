@@ -44,6 +44,10 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 			testExpectedObject(t, tt.expected, stackElem)
 
 			if vm.sp != 0 {
+				if str, ok := tt.expected.(string); ok && strings.HasPrefix(str, "error:") {
+					return
+				}
+
 				t.Errorf("stack pointer was not reset after running test, this indicates a memory leak in the VM, was %d", vm.sp)
 			}
 		})
@@ -86,9 +90,16 @@ func testExpectedObject(
 						t.Errorf("testInstanceObject failed: %s", err)
 					}
 				} else {
-					err := testStringObject(expected, actual)
-					if err != nil {
-						t.Errorf("testStringObject failed: %s", err)
+					if strings.HasPrefix(expected, "error:") {
+						err := testErrorObject(expected[6:], actual)
+						if err != nil {
+							t.Errorf("testErrorObject failed: %s", err)
+						}
+					} else {
+						err := testStringObject(expected, actual)
+						if err != nil {
+							t.Errorf("testStringObject failed: %s", err)
+						}
 					}
 				}
 			}
@@ -231,6 +242,19 @@ func testInstanceObject(expected string, actual object.EmeraldValue) error {
 
 	if class.Name != expected {
 		return fmt.Errorf("expected instance to be instance of %s, but is instance of %s", expected, class.Name)
+	}
+
+	return nil
+}
+
+func testErrorObject(expected string, actual object.EmeraldValue) error {
+	actualInstance, ok := actual.(object.EmeraldError)
+	if !ok {
+		return fmt.Errorf("expected StandardErrorInstance got=%T", actual)
+	}
+
+	if actualInstance.Message() != expected {
+		return fmt.Errorf("expected error to have message %s, got=%s", expected, actualInstance.Message())
 	}
 
 	return nil

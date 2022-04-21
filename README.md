@@ -3,6 +3,7 @@
 Emerald is a Ruby compiler & Virtual Machine written in Go.
 
 ### Supported language features
+This is still quite far away from being a real implementation.
 The below is a list of the features on the roadmap and the ones that have already been implemented.
 
 - [x] everything is an object

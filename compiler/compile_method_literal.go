@@ -24,6 +24,7 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
 func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int, error) {
 	c.enterScope()
 
+	numParams := len(node.Parameters)
 	for _, p := range node.Parameters {
 		c.symbolTable.Define(p.(*ast.IdentifierExpression).Value)
 	}
@@ -51,7 +52,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int, err
 		c.emitSymbol(s)
 	}
 
-	return object.NewBlock(instructions, numLocals), len(freeSymbols), nil
+	return object.NewBlock(instructions, numLocals, numParams), len(freeSymbols), nil
 }
 
 func (c *Compiler) replaceLastPopWithReturn() {

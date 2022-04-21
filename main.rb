@@ -3,7 +3,7 @@ y = 7
 
 LEVELS = [:fatal, :error, :warn, :info, :debug, :trace]
 
-class Logger
+module BaseLogger
     100.times do
         LEVELS.each do |lvl|
             define_method(lvl) do |msg|
@@ -25,6 +25,10 @@ class Logger
     def current_level
         @current_level ||= :info
     end
+end
+
+class Logger
+    include(BaseLogger)
 
     class << self
         def instance
