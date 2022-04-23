@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"emerald/ast"
+	"emerald/core"
 	"emerald/object"
 )
 
@@ -17,7 +18,7 @@ func (c *Compiler) compileModuleLiteral(node *ast.ModuleLiteral) error {
 		c.emit(OpGetGlobal, symbol.Index)
 	} else {
 		symbol = c.symbolTable.Define(name)
-		class := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+		class := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{}, core.Object.StaticClass)
 
 		c.emit(OpPushConstant, c.addConstant(class.StaticModule))
 		c.emit(OpSetGlobal, symbol.Index)

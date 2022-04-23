@@ -31,6 +31,8 @@ class Logger
     include(BaseLogger)
 
     class << self
+        include(BaseLogger)
+
         def instance
             @instance ||= new
         end
@@ -43,7 +45,7 @@ if x < y && true
 
         Logger.instance.debug("debug msg")
 
-        ["this", "is", "an", "array"].each { |msg| Logger.instance.warn(msg) }
+        ["this", "is", "an", "array"].each { |msg| Logger.warn(msg) }
     end
 else
     y

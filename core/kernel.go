@@ -7,7 +7,7 @@ import (
 
 var Kernel *object.Module
 
-func init() {
+func InitKernel() {
 	Kernel = object.NewModule(
 		"Kernel",
 		object.BuiltInMethodSet{
@@ -17,6 +17,7 @@ func init() {
 			"puts":    kernelPuts(),
 			"include": kernelInclude(),
 		},
+		nil,
 	)
 }
 

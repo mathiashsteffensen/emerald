@@ -9,7 +9,7 @@ var NilClass *object.Class
 
 var NULL *object.Instance
 
-func init() {
+func InitNilClass() {
 	NilClass = object.NewClass("NilClass", Object, object.BuiltInMethodSet{
 		"==": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 			return NativeBoolToBooleanObject(target == args[0])

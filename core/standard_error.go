@@ -7,7 +7,7 @@ import (
 
 var StandardError *object.Class
 
-func init() {
+func InitStandardError() {
 	StandardError = object.NewClass(
 		"StandardError",
 		Exception,

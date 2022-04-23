@@ -4,7 +4,7 @@ import "emerald/object"
 
 var Symbol *object.Class
 
-func init() {
+func InitSymbol() {
 	Symbol = object.NewClass(
 		"Symbol",
 		Object,

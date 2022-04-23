@@ -6,7 +6,7 @@ var TrueClass *object.Class
 
 var TRUE object.EmeraldValue
 
-func init() {
+func InitTrueClass() {
 	TrueClass = object.NewClass("TrueClass", Object, object.BuiltInMethodSet{
 		"==": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 			return NativeBoolToBooleanObject(target == args[0])

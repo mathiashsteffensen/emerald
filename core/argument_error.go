@@ -14,7 +14,11 @@ type ArgumentErrorInstance struct {
 
 func (err *ArgumentErrorInstance) Message() string { return err.message }
 
-func init() {
+func (err *ArgumentErrorInstance) Inspect() string {
+	return fmt.Sprintf("#<%s: %s>", ArgumentError.Name, err.message)
+}
+
+func InitArgumentError() {
 	ArgumentError = object.NewClass(
 		"ArgumentError",
 		StandardError,

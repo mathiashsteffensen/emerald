@@ -27,6 +27,7 @@ type (
 		Include(mod EmeraldValue)
 		DefineMethod(block EmeraldValue, args ...EmeraldValue)
 		ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error)
+		Methods(target EmeraldValue) []string
 		RespondsTo(name string, target EmeraldValue) bool
 		SEND(
 			ctx *Context,

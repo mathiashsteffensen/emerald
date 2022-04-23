@@ -8,20 +8,11 @@ var Object *object.Class
 
 var MainObject *object.Instance
 
-func init() {
+func InitObject() {
 	Object = object.NewClass(
 		"Object",
 		BasicObject,
 		object.BuiltInMethodSet{
-			"methods": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				methods := []object.EmeraldValue{}
-
-				for key := range target.(*object.Instance).DefinedMethodSet() {
-					methods = append(methods, NewString(key))
-				}
-
-				return NewArray(methods)
-			},
 			"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return NewString(target.Inspect())
 			},
@@ -31,19 +22,17 @@ func init() {
 			"!=": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return NativeBoolToBooleanObject(target.Inspect() != args[0].Inspect())
 			},
+			"methods": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+				methods := []object.EmeraldValue{}
+
+				for _, method := range target.Methods(target) {
+					methods = append(methods, NewSymbol(method))
+				}
+
+				return NewArray(methods)
+			},
 		},
 		object.BuiltInMethodSet{
-			"ancestors": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return NewArray(target.Ancestors())
-			},
-			"new": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return target.(*object.StaticClass).Class.(*object.Class).New()
-			},
-			"define_method": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				ctx.DefinitionTarget.DefineMethod(block, args...)
-
-				return args[0]
-			},
 			"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return NewString(target.Inspect())
 			},

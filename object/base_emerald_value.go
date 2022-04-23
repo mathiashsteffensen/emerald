@@ -48,6 +48,31 @@ func (val *BaseEmeraldValue) DefineMethod(block EmeraldValue, args ...EmeraldVal
 	val.DefinedMethodSet()[name] = block.(*ClosedBlock)
 }
 
+func (val *BaseEmeraldValue) Methods(target EmeraldValue) []string {
+	methods := []string{}
+
+	for key := range val.BuiltInMethodSet() {
+		methods = append(methods, key)
+	}
+
+	for key := range val.DefinedMethodSet() {
+		methods = append(methods, key)
+	}
+
+	for _, mod := range val.IncludedModules() {
+		methods = append(methods, mod.Methods(mod)...)
+	}
+
+	super := target.ParentClass()
+	reflected := reflect.ValueOf(super)
+
+	if super != nil && reflected.IsValid() && !reflected.IsNil() {
+		methods = append(methods, super.Methods(super)...)
+	}
+
+	return methods
+}
+
 func (val *BaseEmeraldValue) RespondsTo(name string, target EmeraldValue) bool {
 	_, err := val.ExtractMethod(name, target, target)
 
@@ -113,11 +138,16 @@ func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue
 	}
 
 	var parentName string
-	switch parent := target.ParentClass().(type) {
-	case *Class:
-		parentName = parent.Name
-	case *StaticClass:
-		parentName = parent.Name
+	super = target.ParentClass()
+	reflected = reflect.ValueOf(super)
+
+	if super != nil && reflected.IsValid() && !reflected.IsNil() {
+		switch super := super.(type) {
+		case *Class:
+			parentName = super.Name
+		case *StaticClass:
+			parentName = super.Name
+		}
 	}
 
 	return nil, fmt.Errorf("undefined method %s for %s:%s", name, target.Inspect(), parentName)

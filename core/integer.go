@@ -21,7 +21,7 @@ func NewInteger(val int64) object.EmeraldValue {
 	return &IntegerInstance{Integer.New(), val}
 }
 
-func init() {
+func InitInteger() {
 	Integer = object.NewClass("Integer", Object, integerBuiltInMethodSet, object.BuiltInMethodSet{})
 }
 

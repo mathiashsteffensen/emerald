@@ -35,7 +35,7 @@ func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
 	frames[0] = mainFrame
 
 	vm := &VM{
-		ctx:         &object.Context{DefinitionTarget: core.MainObject, ExecutionTarget: core.Object.StaticClass},
+		ctx:         &object.Context{DefinitionTarget: core.MainObject, ExecutionTarget: core.Object},
 		constants:   bytecode.Constants,
 		stack:       make([]object.EmeraldValue, StackSize),
 		sp:          0,
@@ -308,7 +308,7 @@ func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 	if errVal != nil {
 		var otherErr error
 
-		method, otherErr = core.Object.ExtractMethod(name.Value, core.Object, target)
+		method, otherErr = core.Object.StaticClass.ExtractMethod(name.Value, core.Object.StaticClass, core.Object.StaticClass)
 		if otherErr != nil {
 			return core.NewStandardError(errVal.Error())
 		}
@@ -334,6 +334,10 @@ func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 	}
 
 	return nil
+}
+
+func (vm *VM) Context() *object.Context {
+	return vm.ctx
 }
 
 // StackTop fetches the object at the top of the stack

@@ -19,7 +19,7 @@ func NewString(val string) object.EmeraldValue {
 	return &StringInstance{String.New(), val}
 }
 
-func init() {
+func InitString() {
 	String = object.NewClass(
 		"String",
 		Object,

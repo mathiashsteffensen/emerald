@@ -24,7 +24,15 @@ func runCoreTests(t *testing.T, tests []coreTestCase) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core.Object.ResetDefinedMethodSetForSpec()
+			for _, class := range object.Classes {
+				class.ResetDefinedMethodSetForSpec()
+				class.StaticClass.ResetDefinedMethodSetForSpec()
+			}
+
+			for _, module := range object.Modules {
+				module.ResetDefinedMethodSetForSpec()
+				module.StaticModule.ResetDefinedMethodSetForSpec()
+			}
 
 			program := parse(tt.input)
 			comp := compiler.New(compiler.WithBuiltIns())

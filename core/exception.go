@@ -11,11 +11,15 @@ type ExceptionInstance struct {
 
 func (err *ExceptionInstance) Message() string { return err.message }
 
-func init() {
+func InitException() {
 	Exception = object.NewClass(
 		"Exception",
 		Object,
-		object.BuiltInMethodSet{},
+		object.BuiltInMethodSet{
+			"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+				return NewString(target.(object.EmeraldError).Inspect())
+			},
+		},
 		object.BuiltInMethodSet{
 			"new": exceptionNew(NewException),
 		},

@@ -30,7 +30,7 @@ func (c *Module) Ancestors() []EmeraldValue {
 	return ancestors
 }
 
-func NewModule(name string, builtInMethodSet, staticBuiltInMethodSet BuiltInMethodSet, modules ...EmeraldValue) *Module {
+func NewModule(name string, builtInMethodSet, staticBuiltInMethodSet BuiltInMethodSet, parentClass *StaticClass, modules ...EmeraldValue) *Module {
 	mod := &Module{
 		BaseEmeraldValue: &BaseEmeraldValue{
 			builtInMethodSet: builtInMethodSet,
@@ -39,7 +39,7 @@ func NewModule(name string, builtInMethodSet, staticBuiltInMethodSet BuiltInMeth
 		Name: name,
 	}
 
-	mod.StaticModule = NewStaticClass(name, mod, staticBuiltInMethodSet, nil)
+	mod.StaticModule = NewStaticClass(name, mod, staticBuiltInMethodSet, parentClass)
 
 	if name != "" {
 		Modules[name] = mod

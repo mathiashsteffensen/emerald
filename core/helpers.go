@@ -12,15 +12,7 @@ func NativeBoolToBooleanObject(input bool) object.EmeraldValue {
 }
 
 func IsError(obj object.EmeraldValue) bool {
-	for _, value := range obj.Ancestors() {
-		if value != nil {
-			if class, ok := value.(*object.Class); ok {
-				if class.Name == StandardError.Name {
-					return true
-				}
-			}
-		}
-	}
+	_, ok := obj.(object.EmeraldError)
 
-	return false
+	return ok
 }

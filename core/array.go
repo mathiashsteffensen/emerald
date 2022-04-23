@@ -12,7 +12,7 @@ type ArrayInstance struct {
 	Value []object.EmeraldValue
 }
 
-func init() {
+func InitArray() {
 	Array = object.NewClass("Array", Object, arrayBuiltInMethodSet, object.BuiltInMethodSet{})
 }
 
@@ -125,16 +125,7 @@ func arrayToS() object.BuiltInMethod {
 
 		values := target.(*ArrayInstance).Value
 		for i, value := range values {
-			if value.RespondsTo("to_s", value) {
-				str, err := value.SEND(ctx, yield, "to_s", value, nil)
-				if err != nil {
-					return NewStandardError(err.Error())
-				}
-
-				out.WriteString(str.Inspect())
-			} else {
-				out.WriteString(value.Inspect())
-			}
+			out.WriteString(value.Inspect())
 
 			if i != len(values)-1 {
 				out.WriteString(", ")
