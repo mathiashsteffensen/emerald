@@ -11,15 +11,15 @@ var NULL *object.Instance
 
 func init() {
 	NilClass = object.NewClass("NilClass", Object, object.BuiltInMethodSet{
-		"==": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		"==": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 			return NativeBoolToBooleanObject(target == args[0])
 		},
-		"!=": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		"!=": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 			return NativeBoolToBooleanObject(target != args[0])
 		},
 	}, object.BuiltInMethodSet{})
 	NULL = NilClass.New()
-	NULL.BuiltInSingletonMethods["to_s"] = func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	NULL.BuiltInSingletonMethods["to_s"] = func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString("nil")
 	}
 }

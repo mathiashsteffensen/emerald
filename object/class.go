@@ -1,10 +1,13 @@
 package object
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type Class struct {
 	*BaseEmeraldValue
 	Name        string
+	StaticClass *StaticClass
 	parentClass EmeraldValue
 }
 
@@ -35,18 +38,29 @@ func (c *Class) New() *Instance {
 func NewClass(
 	name string,
 	parentClass *Class,
-	builtInMethodSet BuiltInMethodSet,
+	builtInMethodSet,
 	staticBuiltInMethodSet BuiltInMethodSet,
 	modules ...EmeraldValue,
 ) *Class {
+	var staticParent *StaticClass
+
+	if parentClass != nil {
+		staticParent = parentClass.StaticClass
+	}
+
 	class := &Class{
 		Name:        name,
 		parentClass: parentClass,
 		BaseEmeraldValue: &BaseEmeraldValue{
-			builtInMethodSet:       builtInMethodSet,
-			staticBuiltInMethodSet: staticBuiltInMethodSet,
-			includedModules:        modules,
+			builtInMethodSet: builtInMethodSet,
+			includedModules:  modules,
 		},
+	}
+
+	class.StaticClass = NewStaticClass(name, class, staticBuiltInMethodSet, staticParent)
+
+	for _, module := range modules {
+		class.StaticClass.Include(module.(*Module).StaticModule)
 	}
 
 	if name != "" {

@@ -8,14 +8,14 @@ func (c *Compiler) compileMethodCall(node *ast.MethodCall) error {
 		return err
 	}
 
-	c.emit(OpSetExecutionContext)
+	c.emit(OpSetExecutionTarget)
 
 	err = c.compileCallExpression(node.CallExpression)
 	if err != nil {
 		return err
 	}
 
-	c.emit(OpResetExecutionContext)
+	c.emit(OpResetExecutionTarget)
 
 	return nil
 }

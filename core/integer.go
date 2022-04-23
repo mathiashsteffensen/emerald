@@ -26,7 +26,7 @@ func init() {
 }
 
 var integerBuiltInMethodSet = object.BuiltInMethodSet{
-	"+": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"+": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("+", args)
 		if err != nil {
 			return err
@@ -34,7 +34,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value + otherVal.Value)
 	},
-	"-": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"-": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("-", args)
 		if err != nil {
 			return err
@@ -42,7 +42,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value - otherVal.Value)
 	},
-	"*": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"*": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("*", args)
 		if err != nil {
 			return err
@@ -50,7 +50,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value * otherVal.Value)
 	},
-	"/": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"/": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("/", args)
 		if err != nil {
 			return err
@@ -58,7 +58,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NewInteger(target.(*IntegerInstance).Value / otherVal.Value)
 	},
-	"<": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"<": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("<", args)
 		if err != nil {
 			return err
@@ -66,7 +66,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value < otherVal.Value)
 	},
-	">": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	">": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg(">", args)
 		if err != nil {
 			return err
@@ -74,7 +74,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value > otherVal.Value)
 	},
-	"==": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"==": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("==", args)
 		if err != nil {
 			return err
@@ -82,7 +82,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value == otherVal.Value)
 	},
-	"!=": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"!=": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -90,7 +90,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value != otherVal.Value)
 	},
-	"<=": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"<=": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -98,7 +98,7 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value <= otherVal.Value)
 	},
-	">=": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	">=": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("!=", args)
 		if err != nil {
 			return err
@@ -106,12 +106,12 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 
 		return NativeBoolToBooleanObject(target.(*IntegerInstance).Value >= otherVal.Value)
 	},
-	"to_s": func(target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		val := target.(*IntegerInstance).Value
 
 		return NewString(strconv.Itoa(int(val)))
 	},
-	"times": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	"times": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		for i := int64(0); i < target.(*IntegerInstance).Value; i++ {
 			yield(block, NewInteger(i))
 		}

@@ -19,7 +19,7 @@ func (c *Compiler) compileModuleLiteral(node *ast.ModuleLiteral) error {
 		symbol = c.symbolTable.Define(name)
 		class := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-		c.emit(OpPushConstant, c.addConstant(class))
+		c.emit(OpPushConstant, c.addConstant(class.StaticModule))
 		c.emit(OpSetGlobal, symbol.Index)
 	}
 

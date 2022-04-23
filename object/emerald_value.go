@@ -2,7 +2,7 @@ package object
 
 type (
 	// BuiltInMethod - The type signature of an Emerald method defined in Go compiler
-	BuiltInMethod func(target EmeraldValue, block EmeraldValue, yield YieldFunc, args ...EmeraldValue) EmeraldValue
+	BuiltInMethod func(ctx *Context, target EmeraldValue, block EmeraldValue, yield YieldFunc, args ...EmeraldValue) EmeraldValue
 
 	// WrappedBuiltInMethod -  Wraps a built-in method so that it conforms to the EmeraldValue interface
 	WrappedBuiltInMethod struct {
@@ -25,24 +25,26 @@ type (
 		Ancestors() []EmeraldValue
 		IncludedModules() []EmeraldValue
 		Include(mod EmeraldValue)
-		DefineMethod(isStatic bool, block EmeraldValue, args ...EmeraldValue)
+		DefineMethod(block EmeraldValue, args ...EmeraldValue)
 		ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error)
 		RespondsTo(name string, target EmeraldValue) bool
 		SEND(
+			ctx *Context,
 			yield YieldFunc,
 			name string,
 			target EmeraldValue,
 			block *ClosedBlock,
 			args ...EmeraldValue,
 		) (EmeraldValue, error)
-		InstanceVariableGet(isStatic bool, name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue
-		InstanceVariableSet(isStatic bool, name string, value EmeraldValue)
+		InstanceVariableGet(name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue
+		InstanceVariableSet(name string, value EmeraldValue)
 	}
 )
 
 const (
 	_ EmeraldValueType = iota
 	CLASS_VALUE
+	STATIC_CLASS_VALUE
 	MODULE_VALUE
 	INSTANCE_VALUE
 	BLOCK_VALUE

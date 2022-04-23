@@ -1,10 +1,13 @@
 package object
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type Module struct {
 	*BaseEmeraldValue
-	Name string
+	Name         string
+	StaticModule *StaticClass
 }
 
 var Modules = map[string]*Module{}
@@ -30,12 +33,13 @@ func (c *Module) Ancestors() []EmeraldValue {
 func NewModule(name string, builtInMethodSet, staticBuiltInMethodSet BuiltInMethodSet, modules ...EmeraldValue) *Module {
 	mod := &Module{
 		BaseEmeraldValue: &BaseEmeraldValue{
-			staticBuiltInMethodSet: staticBuiltInMethodSet,
-			builtInMethodSet:       builtInMethodSet,
-			includedModules:        modules,
+			builtInMethodSet: builtInMethodSet,
+			includedModules:  modules,
 		},
 		Name: name,
 	}
+
+	mod.StaticModule = NewStaticClass(name, mod, staticBuiltInMethodSet, nil)
 
 	if name != "" {
 		Modules[name] = mod

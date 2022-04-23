@@ -169,7 +169,7 @@ func testSymbolObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testClassObject(expected string, actual object.EmeraldValue) error {
-	class, ok := actual.(*object.Class)
+	class, ok := actual.(*object.StaticClass)
 	if !ok {
 		return fmt.Errorf("object is not Class. got=%T (%+v)", actual, actual)
 	}
@@ -182,7 +182,7 @@ func testClassObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testModuleObject(expected string, actual object.EmeraldValue) error {
-	class, ok := actual.(*object.Module)
+	class, ok := actual.(*object.StaticClass)
 	if !ok {
 		return fmt.Errorf("object is not Class. got=%T (%+v)", actual, actual)
 	}

@@ -64,6 +64,21 @@ func TestKernel_include(t *testing.T) {
 			MyClass.new.hello`,
 			expected: "Hello",
 		},
+		{
+			name: "in custom static class",
+			input: `module MyMod
+				def hello; "Hello"; end
+			end
+			
+			class MyClass
+				class << self
+					include(MyMod)
+				end
+			end
+
+			MyClass.hello`,
+			expected: "Hello",
+		},
 	}
 
 	runCoreTests(t, tests)

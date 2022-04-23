@@ -6,43 +6,16 @@ import (
 )
 
 type BaseEmeraldValue struct {
-	staticBuiltInMethodSet  BuiltInMethodSet
-	staticDefinedMethodSet  DefinedMethodSet
-	staticInstanceVariables map[string]EmeraldValue
-	builtInMethodSet        BuiltInMethodSet
-	definedMethodSet        DefinedMethodSet
-	instanceVariables       map[string]EmeraldValue
-	includedModules         []EmeraldValue
+	builtInMethodSet  BuiltInMethodSet
+	definedMethodSet  DefinedMethodSet
+	instanceVariables map[string]EmeraldValue
+	includedModules   []EmeraldValue
 }
 
 func (val *BaseEmeraldValue) IncludedModules() []EmeraldValue { return val.includedModules }
 
 func (val *BaseEmeraldValue) Include(mod EmeraldValue) {
 	val.includedModules = append(val.includedModules, mod)
-}
-
-func (val *BaseEmeraldValue) StaticBuiltInMethodSet() BuiltInMethodSet {
-	if val.staticBuiltInMethodSet == nil {
-		val.staticBuiltInMethodSet = BuiltInMethodSet{}
-	}
-
-	return val.staticBuiltInMethodSet
-}
-
-func (val *BaseEmeraldValue) StaticDefinedMethodSet() DefinedMethodSet {
-	if val.staticDefinedMethodSet == nil {
-		val.staticDefinedMethodSet = DefinedMethodSet{}
-	}
-
-	return val.staticDefinedMethodSet
-}
-
-func (val *BaseEmeraldValue) StaticInstanceVariables() map[string]EmeraldValue {
-	if val.staticInstanceVariables == nil {
-		val.staticInstanceVariables = map[string]EmeraldValue{}
-	}
-
-	return val.staticInstanceVariables
 }
 
 func (val *BaseEmeraldValue) InstanceVariables() map[string]EmeraldValue {
@@ -69,18 +42,10 @@ func (val *BaseEmeraldValue) DefinedMethodSet() DefinedMethodSet {
 	return val.definedMethodSet
 }
 
-func (val *BaseEmeraldValue) DefineMethod(isStatic bool, block EmeraldValue, args ...EmeraldValue) {
+func (val *BaseEmeraldValue) DefineMethod(block EmeraldValue, args ...EmeraldValue) {
 	name := args[0].Inspect()[1:]
 
-	var set DefinedMethodSet
-
-	if isStatic {
-		set = val.StaticDefinedMethodSet()
-	} else {
-		set = val.DefinedMethodSet()
-	}
-
-	set[name] = block.(*ClosedBlock)
+	val.DefinedMethodSet()[name] = block.(*ClosedBlock)
 }
 
 func (val *BaseEmeraldValue) RespondsTo(name string, target EmeraldValue) bool {
@@ -90,6 +55,7 @@ func (val *BaseEmeraldValue) RespondsTo(name string, target EmeraldValue) bool {
 }
 
 func (val *BaseEmeraldValue) SEND(
+	ctx *Context,
 	yield YieldFunc,
 	name string,
 	target EmeraldValue,
@@ -103,7 +69,7 @@ func (val *BaseEmeraldValue) SEND(
 
 	switch method := method.(type) {
 	case *WrappedBuiltInMethod:
-		return method.Method(target, block, yield, args...), nil
+		return method.Method(ctx, target, block, yield, args...), nil
 	}
 
 	return nil, nil
@@ -114,49 +80,6 @@ func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue
 		return nil, fmt.Errorf("invalid method call %s on %#v", name, target)
 	}
 
-	if _, ok := target.(*Class); ok {
-		return val.extractStaticMethod(name, extractFrom, target)
-	} else {
-		if target.ParentClass() != nil {
-			return val.extractInstanceMethod(name, extractFrom, target)
-		}
-		return nil, fmt.Errorf("invalid method call %s on %#v", name, target)
-	}
-}
-
-func (val *BaseEmeraldValue) extractStaticMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error) {
-	if method, ok := val.StaticDefinedMethodSet()[name]; ok {
-		return method, nil
-	}
-
-	if method, ok := val.StaticBuiltInMethodSet()[name]; ok {
-		return &WrappedBuiltInMethod{Method: method}, nil
-	}
-
-	for _, mod := range val.IncludedModules() {
-		if method, err := mod.ExtractMethod(name, mod, target); err == nil {
-			return method, nil
-		}
-	}
-
-	super := extractFrom.ParentClass()
-	reflected := reflect.ValueOf(super)
-
-	if super != nil && reflected.IsValid() && !reflected.IsNil() {
-		superClass := super.(*Class)
-		superMethod, err := superClass.extractStaticMethod(name, superClass, target)
-
-		if err != nil {
-			return nil, fmt.Errorf("undefined method %s for %s:Class", name, target.Inspect())
-		}
-
-		return superMethod, nil
-	}
-
-	return nil, fmt.Errorf("undefined method %s for %s:Class", name, target.Inspect())
-}
-
-func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error) {
 	if targetInstance, ok := target.(*Instance); ok {
 		method, ok := targetInstance.BuiltInSingletonMethods[name]
 		if ok {
@@ -182,49 +105,43 @@ func (val *BaseEmeraldValue) extractInstanceMethod(name string, extractFrom Emer
 	reflected := reflect.ValueOf(super)
 
 	if super != nil && reflected.IsValid() && !reflected.IsNil() {
-		superClass := super.(*Class)
-		superMethod, err := superClass.extractInstanceMethod(name, superClass, target)
+		superMethod, err := super.ExtractMethod(name, super, target)
 
 		if err == nil {
 			return superMethod, nil
 		}
 	}
 
-	return nil, fmt.Errorf("undefined method %s for %s:%s", name, target.Inspect(), target.ParentClass().(*Class).Name)
+	var parentName string
+	switch parent := target.ParentClass().(type) {
+	case *Class:
+		parentName = parent.Name
+	case *StaticClass:
+		parentName = parent.Name
+	}
+
+	return nil, fmt.Errorf("undefined method %s for %s:%s", name, target.Inspect(), parentName)
 }
 
-func (val *BaseEmeraldValue) InstanceVariableGet(isStatic bool, name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue {
-	set := val.getInstanceVariables(isStatic)
-
-	value, ok := set[name]
+func (val *BaseEmeraldValue) InstanceVariableGet(name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue {
+	value, ok := val.instanceVariables[name]
 	if ok {
 		return value
 	}
 
-	superClass := extractFrom.ParentClass().(*Class)
-
-	if superClass != nil {
-		return superClass.InstanceVariableGet(isStatic, name, superClass, target)
+	superClass := extractFrom.ParentClass()
+	reflected := reflect.ValueOf(superClass)
+	if superClass != nil && reflected.IsValid() && !reflected.IsNil() {
+		return superClass.InstanceVariableGet(name, superClass, target)
 	}
 
 	return nil
 }
 
-func (val *BaseEmeraldValue) InstanceVariableSet(isStatic bool, name string, value EmeraldValue) {
-	set := val.getInstanceVariables(isStatic)
-
-	set[name] = value
-}
-
-func (val *BaseEmeraldValue) getInstanceVariables(isStatic bool) map[string]EmeraldValue {
-	if isStatic {
-		return val.StaticInstanceVariables()
-	} else {
-		return val.InstanceVariables()
-	}
+func (val *BaseEmeraldValue) InstanceVariableSet(name string, value EmeraldValue) {
+	val.InstanceVariables()[name] = value
 }
 
 func (val *BaseEmeraldValue) ResetDefinedMethodSetForSpec() {
 	val.definedMethodSet = DefinedMethodSet{}
-	val.staticDefinedMethodSet = DefinedMethodSet{}
 }

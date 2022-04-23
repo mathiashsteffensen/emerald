@@ -81,24 +81,21 @@ const (
 	// the next object on the stack is the symbol representing the name of the method to invoke
 	OpSend
 
-	// OpSetExecutionContext takes the value at the top of the stack
-	// and sets it as execution context target, IsStatic is set to true if target.Type() == object.CLASS_VALUE
+	// OpSetExecutionTarget takes the value at the top of the stack
+	// and sets it as execution target
 	// While replacing it in the stack with the previous target
 	// so the previous target is the top of the stack
-	OpSetExecutionContext
+	OpSetExecutionTarget
 
-	// OpResetExecutionContext takes the value at the second-most top of the stack
-	// and sets it as execution context target, IsStatic is set to true if target.Type() == object.CLASS_VALUE
-	OpResetExecutionContext
+	// OpResetExecutionTarget takes the value at the second-most top of the stack
+	// and sets it as execution target
+	OpResetExecutionTarget
 
 	// OpOpenClass takes the value at the top of the stack
-	// and sets it as execution AND definition context target, with the execution context being static.
-	// While replacing it in the stack with the previous target
-	// so the previous target is the top of the stack
+	// and sets it as definition context while setting its StaticClass as execution context.
 	OpOpenClass
 
-	// OpCloseClass takes the value at the second-most top of the stack
-	// and sets it as execution context target & definition context target.
+	// OpCloseClass resets the execution context to its outer context
 	OpCloseClass
 
 	// Modifies whether execution/definition contexts are static.
@@ -156,8 +153,8 @@ var definitions = map[Opcode]*Definition{
 	OpSend:                  {"OpSend", []int{1}},
 	OpOpenClass:             {"OpOpenClass", []int{}},
 	OpCloseClass:            {"OpCloseClass", []int{}},
-	OpSetExecutionContext:   {"OpSetExecutionContext", []int{}},
-	OpResetExecutionContext: {"OpResetExecutionContext", []int{}},
+	OpSetExecutionTarget:    {"OpSetExecutionTarget", []int{}},
+	OpResetExecutionTarget:  {"OpResetExecutionTarget", []int{}},
 	OpExecutionStaticTrue:   {"OpExecutionStaticTrue", []int{}},
 	OpExecutionStaticFalse:  {"OpExecutionStaticFalse", []int{}},
 	OpDefinitionStaticTrue:  {"OpDefinitionStaticTrue", []int{}},

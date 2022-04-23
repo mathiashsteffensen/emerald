@@ -222,7 +222,7 @@ func testClassObject(expected string, actual object.EmeraldValue) error {
 
 	actualClass, ok := actual.(*object.Class)
 	if !ok {
-		return fmt.Errorf("expected class got=%T", actual)
+		return fmt.Errorf("expected class got=%T (%+v)", actual, actual)
 	}
 
 	if expectedClass.Name != actualClass.Name {

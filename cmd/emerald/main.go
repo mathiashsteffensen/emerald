@@ -27,7 +27,7 @@ func main() {
 		return
 	}
 
-	c := compiler.New()
+	c := compiler.New(compiler.WithBuiltIns())
 
 	err = c.Compile(program)
 	checkError("Compilation failed", err)
@@ -39,7 +39,7 @@ func main() {
 
 	evaluated := machine.LastPoppedStackElem()
 
-	if core.IsStandardError(evaluated) {
+	if core.IsError(evaluated) {
 		fmt.Println(evaluated.Inspect())
 	}
 }

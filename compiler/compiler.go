@@ -60,7 +60,7 @@ func WithBuiltIns() ConstructorOption {
 			if !ok {
 				symbol = c.symbolTable.Define(key)
 
-				c.emit(OpPushConstant, c.addConstant(value))
+				c.emit(OpPushConstant, c.addConstant(value.StaticClass))
 				c.emit(OpSetGlobal, symbol.Index)
 				c.emit(OpPop)
 			}
@@ -70,7 +70,7 @@ func WithBuiltIns() ConstructorOption {
 			if !ok {
 				symbol = c.symbolTable.Define(key)
 
-				c.emit(OpPushConstant, c.addConstant(value))
+				c.emit(OpPushConstant, c.addConstant(value.StaticModule))
 				c.emit(OpSetGlobal, symbol.Index)
 				c.emit(OpPop)
 			}

@@ -60,16 +60,13 @@ func (vm *VM) yieldFunc() object.YieldFunc {
 }
 
 func (vm *VM) withExecutionContextForBlock(cb func() object.EmeraldValue) object.EmeraldValue {
-	oldExecTarget := vm.ec.Target
-	oldExecIsStatic := vm.ec.IsStatic
+	oldCtx := vm.ctx
 
-	vm.ec.Target = vm.dc.Target
-	vm.ec.IsStatic = vm.dc.IsStatic
+	vm.ctx = vm.ctx.Outer
 
 	val := cb()
 
-	vm.ec.Target = oldExecTarget
-	vm.ec.IsStatic = oldExecIsStatic
+	vm.ctx = oldCtx
 
 	return val
 }

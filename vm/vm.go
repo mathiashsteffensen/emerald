@@ -16,8 +16,7 @@ const (
 
 // VM is our virtual machine responsible for the fetch, decode, execute cycle
 type VM struct {
-	ec          *object.Context // The execution context
-	dc          *object.Context // The definition context
+	ctx         *object.Context
 	constants   []object.EmeraldValue
 	stack       []object.EmeraldValue
 	sp          int // Always points to the next value. Top of stack is stack[sp-1]
@@ -36,8 +35,7 @@ func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
 	frames[0] = mainFrame
 
 	vm := &VM{
-		dc:          &object.Context{Target: core.MainObject, IsStatic: false},
-		ec:          &object.Context{Target: core.MainObject, IsStatic: true},
+		ctx:         &object.Context{DefinitionTarget: core.MainObject, ExecutionTarget: core.Object.StaticClass},
 		constants:   bytecode.Constants,
 		stack:       make([]object.EmeraldValue, StackSize),
 		sp:          0,
@@ -154,9 +152,9 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		vm.currentFrame().ip += 2
 
 		name := vm.constants[constIndex]
-		target := vm.ec.Target
+		target := vm.ctx.ExecutionTarget
 
-		val := target.InstanceVariableGet(vm.ec.IsStatic, name.(*core.SymbolInstance).Value, target, target)
+		val := target.InstanceVariableGet(name.(*core.SymbolInstance).Value, target, target)
 
 		if val == nil {
 			val = core.NULL
@@ -172,9 +170,9 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 
 		name := vm.constants[constIndex]
 		val := vm.StackTop()
-		target := vm.ec.Target
+		target := vm.ctx.ExecutionTarget
 
-		target.InstanceVariableSet(vm.ec.IsStatic, name.(*core.SymbolInstance).Value, val)
+		target.InstanceVariableSet(name.(*core.SymbolInstance).Value, val)
 	case compiler.OpArray:
 		numElements := int(compiler.ReadUint16(ins[ip+1:]))
 		vm.currentFrame().ip += 2
@@ -218,7 +216,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		block := vm.pop().(*object.Block)
 		name := vm.stack[vm.sp-1].(*core.SymbolInstance)
 
-		vm.dc.Target.DefineMethod(vm.dc.IsStatic, object.NewClosedBlock(block, []object.EmeraldValue{}), name)
+		vm.ctx.DefinitionTarget.DefineMethod(object.NewClosedBlock(block, []object.EmeraldValue{}), name)
 	case compiler.OpSend:
 		numArgs := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
@@ -230,43 +228,29 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 			}
 		}
 	case compiler.OpOpenClass:
-		oldTarget := vm.ec.Target
-		newTarget := vm.stack[vm.sp-1]
+		outerCtx := vm.ctx
+		newTarget := vm.pop().(*object.StaticClass)
 
-		vm.ec.Target = newTarget
-		vm.dc.Target = newTarget
-		vm.dc.IsStatic = false
-
-		vm.stack[vm.sp-1] = oldTarget
+		vm.ctx = &object.Context{
+			Outer:            outerCtx,
+			ExecutionTarget:  newTarget,
+			DefinitionTarget: newTarget.Class,
+		}
 	case compiler.OpCloseClass:
-		val := vm.pop()
-		vm.ec.Target = vm.pop()
-		vm.dc.Target = vm.ec.Target
-		vm.dc.IsStatic = true
+		to := vm.ctx.Outer
 
-		err := vm.push(val)
-		if err != nil {
-			return err
+		vm.ctx = to
+	case compiler.OpSetExecutionTarget:
+		oldContext := vm.ctx
+		newTarget := vm.pop()
+
+		vm.ctx = &object.Context{
+			Outer:            oldContext,
+			ExecutionTarget:  newTarget,
+			DefinitionTarget: oldContext.DefinitionTarget,
 		}
-	case compiler.OpSetExecutionContext:
-		oldTarget := vm.ec.Target
-		newTarget := vm.stack[vm.sp-1]
-
-		vm.ec.Target = newTarget
-		vm.ec.IsStatic = newTarget.Type() == object.CLASS_VALUE
-
-		vm.stack[vm.sp-1] = oldTarget
-	case compiler.OpResetExecutionContext:
-		val := vm.pop()
-
-		target := vm.pop()
-		vm.ec.Target = target
-		vm.ec.IsStatic = target.Type() == object.CLASS_VALUE
-
-		err := vm.push(val)
-		if err != nil {
-			return err
-		}
+	case compiler.OpResetExecutionTarget:
+		vm.ctx = vm.ctx.Outer
 	case compiler.OpCloseBlock:
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		numFreeVars := compiler.ReadUint8(ins[ip+3:])
@@ -276,15 +260,17 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		if err != nil {
 			return err
 		}
+	case compiler.OpExecutionStaticTrue:
+		vm.ctx.ExecutionTarget = vm.ctx.ExecutionTarget.(*object.Class).StaticClass
 	case compiler.OpDefinitionStaticTrue:
-		vm.dc.IsStatic = true
+		vm.ctx.DefinitionTarget = vm.ctx.DefinitionTarget.(*object.Class).StaticClass
 	case compiler.OpDefinitionStaticFalse:
-		vm.dc.IsStatic = true
+		vm.ctx.DefinitionTarget = vm.ctx.DefinitionTarget.(*object.StaticClass).Class
 	default:
 		if opString, ok := infixOperators[op]; ok {
 			left := vm.pop()
 
-			result, sendErr := left.SEND(nil, opString, left, nil, vm.StackTop())
+			result, sendErr := left.SEND(vm.ctx, nil, opString, left, nil, vm.StackTop())
 			if sendErr != nil {
 				vm.stack[vm.sp-1] = core.NewStandardError(sendErr.Error())
 			} else {
@@ -317,12 +303,12 @@ func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 	name := vm.stack[vm.sp-2-numArgs].(*core.SymbolInstance)
 	block := vm.stack[vm.sp-1-numArgs]
 
-	target := vm.ec.Target
+	target := vm.ctx.ExecutionTarget
 	method, errVal := target.ExtractMethod(name.Value, target, target)
 	if errVal != nil {
 		var otherErr error
 
-		method, otherErr = core.Object.ExtractMethod(name.Value, core.Object, core.Object)
+		method, otherErr = core.Object.ExtractMethod(name.Value, core.Object, target)
 		if otherErr != nil {
 			return core.NewStandardError(errVal.Error())
 		}
@@ -338,7 +324,7 @@ func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 		vm.pushFrame(frame)
 		vm.sp = frame.basePointer + method.NumLocals
 	case *object.WrappedBuiltInMethod:
-		result := method.Method(target, block, vm.yieldFunc(), vm.stack[vm.sp-numArgs:vm.sp]...)
+		result := method.Method(vm.ctx, target, block, vm.yieldFunc(), vm.stack[vm.sp-numArgs:vm.sp]...)
 		vm.sp -= numArgs + 2
 		err := vm.push(result)
 

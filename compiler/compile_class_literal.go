@@ -20,7 +20,7 @@ func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) error {
 		symbol = c.symbolTable.Define(name)
 		class := object.NewClass(name, core.Object, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-		c.emit(OpPushConstant, c.addConstant(class))
+		c.emit(OpPushConstant, c.addConstant(class.StaticClass))
 		c.emit(OpSetGlobal, symbol.Index)
 	}
 

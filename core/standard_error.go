@@ -8,7 +8,14 @@ import (
 var StandardError *object.Class
 
 func init() {
-	StandardError = object.NewClass("StandardError", Object, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	StandardError = object.NewClass(
+		"StandardError",
+		Exception,
+		object.BuiltInMethodSet{},
+		object.BuiltInMethodSet{
+			"new": exceptionNew(NewStandardError),
+		},
+	)
 }
 
 type StandardErrorInstance struct {
@@ -24,14 +31,6 @@ func (err *StandardErrorInstance) Message() string {
 	return err.message
 }
 
-func NewStandardError(msg string) object.EmeraldValue {
+func NewStandardError(msg string) object.EmeraldError {
 	return &StandardErrorInstance{StandardError.New(), msg}
-}
-
-func IsStandardError(val object.EmeraldValue) bool {
-	if _, ok := val.(*StandardErrorInstance); ok {
-		return true
-	}
-
-	return false
 }

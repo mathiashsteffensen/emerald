@@ -1,6 +1,7 @@
 package object
 
 type Context struct {
-	Target   EmeraldValue
-	IsStatic bool
+	Outer            *Context
+	ExecutionTarget  EmeraldValue
+	DefinitionTarget EmeraldValue
 }
