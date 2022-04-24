@@ -272,7 +272,7 @@ func (l *Lexer) eatWhitespace() {
 
 func (l *Lexer) readNumber() string {
 	position := l.position
-	for isDigit(l.currentChar) {
+	for isDigit(l.currentChar) || l.currentChar == '_' {
 		l.readChar()
 	}
 	return l.currentInput.content[position:l.position]

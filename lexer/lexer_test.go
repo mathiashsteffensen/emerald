@@ -6,7 +6,7 @@ import (
 
 func TestNextToken(t *testing.T) {
 	input := `five = 5;
-	ten = 10;
+	ten = 1_0;
 
 	class Integer
 		def add_num(y)
@@ -60,7 +60,7 @@ func TestNextToken(t *testing.T) {
 		{SEMICOLON, ";"},
 		{IDENT, "ten"},
 		{ASSIGN, "="},
-		{INT, "10"},
+		{INT, "1_0"},
 		{SEMICOLON, ";"},
 		{CLASS, "class"},
 		{IDENT, "Integer"},
