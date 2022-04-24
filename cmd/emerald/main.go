@@ -27,7 +27,7 @@ func main() {
 		return
 	}
 
-	c := compiler.New()
+	c := compiler.New(compiler.WithBuiltIns())
 
 	err = c.Compile(program)
 	checkError("Compilation failed", err)

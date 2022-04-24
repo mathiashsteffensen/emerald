@@ -1,4 +1,9 @@
 # JetBrains IDE files
 .idea
 
+# Executables
+emerald
+iem
+
+# tmp files
 tmp
