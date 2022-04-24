@@ -199,8 +199,16 @@ func (l *Lexer) Run() {
 					tok.Pos = l.position
 					tok.Column = l.Column
 					tok.Line = l.Line
-					tok.Type = INT
 					tok.Literal = l.readNumber()
+
+					if l.currentChar == '.' && isDigit(l.peekChar()) {
+						l.readChar()
+						tok.Literal = tok.Literal + "." + l.readNumber()
+						tok.Type = FLOAT
+					} else {
+						tok.Type = INT
+					}
+
 					l.sendToken(tok)
 					continue
 				} else {

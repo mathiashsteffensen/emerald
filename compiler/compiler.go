@@ -145,6 +145,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.IntegerLiteral:
 		integer := core.NewInteger(node.Value)
 		c.emit(OpPushConstant, c.addConstant(integer))
+	case *ast.FloatLiteral:
+		float := core.NewFloat(node.Value)
+		c.emit(OpPushConstant, c.addConstant(float))
 	case *ast.BooleanLiteral:
 		if node.Value {
 			c.emit(OpTrue)

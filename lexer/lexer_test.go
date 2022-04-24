@@ -5,7 +5,7 @@ import (
 )
 
 func TestNextToken(t *testing.T) {
-	input := `five = 5;
+	input := `five = 5.0;
 	ten = 1_0;
 
 	class Integer
@@ -56,7 +56,7 @@ func TestNextToken(t *testing.T) {
 	}{
 		{IDENT, "five"},
 		{ASSIGN, "="},
-		{INT, "5"},
+		{FLOAT, "5.0"},
 		{SEMICOLON, ";"},
 		{IDENT, "ten"},
 		{ASSIGN, "="},

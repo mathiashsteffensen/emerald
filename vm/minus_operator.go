@@ -2,19 +2,18 @@ package vm
 
 import (
 	"emerald/core"
-	"emerald/object"
 	"fmt"
 )
 
 func (vm *VM) executeMinusOperator() error {
 	operand := vm.pop()
 
-	typ := operand.Class().Super().(*object.Class).Name
-	if typ != core.Integer.Name {
-		return fmt.Errorf("unsupported type for negation: %s", typ)
+	switch operand := operand.(type) {
+	case *core.IntegerInstance:
+		return vm.push(core.NewInteger(-operand.Value))
+	case *core.FloatInstance:
+		return vm.push(core.NewFloat(-operand.Value))
+	default:
+		return fmt.Errorf("unsupported type for negation: %s", operand.Class().Super())
 	}
-
-	value := operand.(*core.IntegerInstance).Value
-
-	return vm.push(core.NewInteger(-value))
 }

@@ -35,7 +35,7 @@ func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
 	frames[0] = mainFrame
 
 	vm := &VM{
-		ctx:         &object.Context{DefinitionTarget: core.MainObject.Class(), ExecutionTarget: core.MainObject},
+		ctx:         &object.Context{DefinitionTarget: core.Object, ExecutionTarget: core.MainObject},
 		constants:   bytecode.Constants,
 		stack:       make([]object.EmeraldValue, StackSize),
 		sp:          0,

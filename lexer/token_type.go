@@ -9,6 +9,7 @@ const (
 	// Identifiers + literals
 	IDENT        TokenType = "IDENT"
 	INT          TokenType = "INT"
+	FLOAT        TokenType = "FLOAT"
 	STRING       TokenType = "STRING"
 	INSTANCE_VAR TokenType = "INSTANCE_VAR"
 

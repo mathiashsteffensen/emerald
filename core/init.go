@@ -13,6 +13,7 @@ func init() {
 	InitFalseClass()
 	InitNilClass()
 	InitInteger()
+	InitFloat()
 	InitString()
 	InitSymbol()
 
@@ -24,4 +25,5 @@ func init() {
 	InitException()
 	InitStandardError()
 	InitArgumentError()
+	InitTypeError()
 }

@@ -6,8 +6,8 @@ func TestCompileInfixExpression(t *testing.T) {
 	tests := []compilerTestCase{
 		{
 			name:              "addition",
-			input:             "1 + 2",
-			expectedConstants: []any{2, 1},
+			input:             "1.0 + 2",
+			expectedConstants: []any{2, 1.0},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
