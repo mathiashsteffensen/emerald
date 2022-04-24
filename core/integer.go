@@ -22,7 +22,7 @@ func NewInteger(val int64) object.EmeraldValue {
 }
 
 func InitInteger() {
-	Integer = object.NewClass("Integer", Object, integerBuiltInMethodSet, object.BuiltInMethodSet{})
+	Integer = object.NewClass("Integer", Object, Object.Class(), integerBuiltInMethodSet, object.BuiltInMethodSet{})
 }
 
 var integerBuiltInMethodSet = object.BuiltInMethodSet{

@@ -7,7 +7,7 @@ var FalseClass *object.Class
 var FALSE object.EmeraldValue
 
 func InitFalseClass() {
-	FalseClass = object.NewClass("FalseClass", Object, object.BuiltInMethodSet{
+	FalseClass = object.NewClass("FalseClass", Object, Object.Class(), object.BuiltInMethodSet{
 		"==": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 			return NativeBoolToBooleanObject(target == args[0])
 		},

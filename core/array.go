@@ -13,7 +13,7 @@ type ArrayInstance struct {
 }
 
 func InitArray() {
-	Array = object.NewClass("Array", Object, arrayBuiltInMethodSet, object.BuiltInMethodSet{})
+	Array = object.NewClass("Array", Object, Object.Class(), arrayBuiltInMethodSet, object.BuiltInMethodSet{})
 }
 
 func NewArray(val []object.EmeraldValue) *ArrayInstance {

@@ -23,6 +23,7 @@ func InitString() {
 	String = object.NewClass(
 		"String",
 		Object,
+		Object.Class(),
 		object.BuiltInMethodSet{
 			"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return target
@@ -40,7 +41,7 @@ func InitString() {
 					if args[0].Type() == object.CLASS_VALUE {
 						typ = args[0].(*object.Class).Name
 					} else {
-						typ = args[0].ParentClass().(*object.Class).Name
+						typ = args[0].Class().Super().(*object.Class).Name
 					}
 
 					return NewStandardError(fmt.Sprintf("no implicit conversion of %s to String", typ))

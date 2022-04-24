@@ -15,6 +15,7 @@ func InitException() {
 	Exception = object.NewClass(
 		"Exception",
 		Object,
+		Object.Class(),
 		object.BuiltInMethodSet{
 			"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return NewString(target.(object.EmeraldError).Inspect())

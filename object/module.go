@@ -1,36 +1,27 @@
 package object
 
-import (
-	"reflect"
-)
-
 type Module struct {
 	*BaseEmeraldValue
-	Name         string
-	StaticModule *StaticClass
+	Name  string
+	class EmeraldValue
 }
 
 var Modules = map[string]*Module{}
 
-func (c *Module) Type() EmeraldValueType { return MODULE_VALUE }
-func (c *Module) Inspect() string {
-	return c.Name
+func (m *Module) Type() EmeraldValueType { return MODULE_VALUE }
+func (m *Module) Inspect() string {
+	return m.Name
 }
-func (c *Module) ParentClass() EmeraldValue { return nil }
-func (c *Module) Ancestors() []EmeraldValue {
-	ancestors := []EmeraldValue{c}
-	ancestors = append(ancestors, c.IncludedModules()...)
-
-	super := c.ParentClass()
-	reflected := reflect.ValueOf(super)
-	if super != nil && reflected.IsValid() && !reflected.IsNil() {
-		ancestors = append(ancestors, super.Ancestors()...)
-	}
+func (m *Module) Class() EmeraldValue { return m.class }
+func (m *Module) Super() EmeraldValue { return nil }
+func (m *Module) Ancestors() []EmeraldValue {
+	ancestors := []EmeraldValue{m}
+	ancestors = append(ancestors, m.IncludedModules()...)
 
 	return ancestors
 }
 
-func NewModule(name string, builtInMethodSet, staticBuiltInMethodSet BuiltInMethodSet, parentClass *StaticClass, modules ...EmeraldValue) *Module {
+func NewModule(name string, builtInMethodSet, staticBuiltInMethodSet BuiltInMethodSet, parentClass EmeraldValue, modules ...EmeraldValue) *Module {
 	mod := &Module{
 		BaseEmeraldValue: &BaseEmeraldValue{
 			builtInMethodSet: builtInMethodSet,
@@ -39,7 +30,7 @@ func NewModule(name string, builtInMethodSet, staticBuiltInMethodSet BuiltInMeth
 		Name: name,
 	}
 
-	mod.StaticModule = NewStaticClass(name, mod, staticBuiltInMethodSet, parentClass)
+	mod.class = NewSingletonClass(mod, staticBuiltInMethodSet, parentClass)
 
 	if name != "" {
 		Modules[name] = mod

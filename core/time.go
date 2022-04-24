@@ -20,12 +20,12 @@ func NewTime(val time.Time) *TimeInstance {
 }
 
 func init() {
-	var timeNew object.BuiltInMethod = func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	var timeNew object.BuiltInMethod = func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewTime(time.Now())
 	}
 
-	Time = object.NewClass("Time", Object, object.BuiltInMethodSet{
-		"-": func(target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	Time = object.NewClass("Time", Object, Object.Class(), object.BuiltInMethodSet{
+		"-": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 			newVal := target.(*TimeInstance).Value.Sub(args[0].(*TimeInstance).Value)
 
 			return NewInteger(newVal.Milliseconds())

@@ -11,13 +11,12 @@ func InitKernel() {
 	Kernel = object.NewModule(
 		"Kernel",
 		object.BuiltInMethodSet{
-			"class": kernelClass(),
-		},
-		object.BuiltInMethodSet{
+			"class":   kernelClass(),
 			"puts":    kernelPuts(),
 			"include": kernelInclude(),
 		},
-		nil,
+		object.BuiltInMethodSet{},
+		Module,
 	)
 }
 
@@ -25,7 +24,15 @@ func InitKernel() {
 
 func kernelClass() object.BuiltInMethod {
 	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return target.ParentClass()
+		class := target.Class()
+		typ := class.Type()
+
+		for typ != object.CLASS_VALUE {
+			class = class.Super()
+			typ = class.Type()
+		}
+
+		return class
 	}
 }
 
@@ -61,14 +68,9 @@ func kernelInclude() object.BuiltInMethod {
 				continue
 			}
 
-			static, ok := arg.(*object.StaticClass)
+			mod, ok := arg.(*object.Module)
 			if !ok {
-				return NewStandardError(fmt.Sprintf("wrong argument type %s (expected Module)", arg))
-			}
-
-			mod, ok := static.Class.(*object.Module)
-			if !ok {
-				return NewStandardError(fmt.Sprintf("wrong argument type %s (expected Module)", static.Name))
+				return NewStandardError(fmt.Sprintf("wrong argument type %s (expected Module)", arg.Inspect()))
 			}
 
 			ctx.DefinitionTarget.Include(mod)

@@ -50,6 +50,9 @@ const (
 	MODULE TokenType = "MODULE"
 	DEF    TokenType = "DEF"
 	DO     TokenType = "DO"
+	BEGIN  TokenType = "BEGIN"
+	RESCUE TokenType = "RESCUE"
+	ENSURE TokenType = "ENSURE"
 	END    TokenType = "END"
 	TRUE   TokenType = "TRUE"
 	FALSE  TokenType = "FALSE"
@@ -65,6 +68,9 @@ var keywords = map[string]TokenType{
 	"module": MODULE,
 	"def":    DEF,
 	"do":     DO,
+	"begin":  BEGIN,
+	"rescue": RESCUE,
+	"ensure": ENSURE,
 	"true":   TRUE,
 	"false":  FALSE,
 	"self":   SELF,

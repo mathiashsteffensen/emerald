@@ -2,7 +2,7 @@ package core_test
 
 import "testing"
 
-func TestBasicObject_define_method(t *testing.T) {
+func TestModule_define_method(t *testing.T) {
 	tests := []coreTestCase{
 		{
 			name: "defining an instance method",

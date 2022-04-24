@@ -9,7 +9,7 @@ import (
 func (vm *VM) executeMinusOperator() error {
 	operand := vm.pop()
 
-	typ := operand.ParentClass().(*object.Class).Name
+	typ := operand.Class().Super().(*object.Class).Name
 	if typ != core.Integer.Name {
 		return fmt.Errorf("unsupported type for negation: %s", typ)
 	}

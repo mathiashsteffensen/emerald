@@ -8,6 +8,7 @@ func InitSymbol() {
 	Symbol = object.NewClass(
 		"Symbol",
 		Object,
+		Object.Class(),
 		object.BuiltInMethodSet{
 			"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				val := target.Inspect()

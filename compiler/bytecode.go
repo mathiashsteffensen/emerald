@@ -92,7 +92,7 @@ const (
 	OpResetExecutionTarget
 
 	// OpOpenClass takes the value at the top of the stack
-	// and sets it as definition context while setting its StaticClass as execution context.
+	// and sets it as definition context while setting its SingletonClass as execution context.
 	OpOpenClass
 
 	// OpCloseClass resets the execution context to its outer context

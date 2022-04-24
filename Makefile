@@ -1,10 +1,10 @@
 default:
 	make lint test build
 
-emerald: ./**/*
+emerald: ./**/*.go
 	go build -o ./emerald ./cmd/emerald/main.go
 
-iem: ./**/*
+iem: ./**/*.go
 	go build -o ./iem ./cmd/iem/main.go
 
 build: emerald iem

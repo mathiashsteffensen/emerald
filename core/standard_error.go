@@ -11,6 +11,7 @@ func InitStandardError() {
 	StandardError = object.NewClass(
 		"StandardError",
 		Exception,
+		Exception.Class(),
 		object.BuiltInMethodSet{},
 		object.BuiltInMethodSet{
 			"new": exceptionNew(NewStandardError),
@@ -24,7 +25,7 @@ type StandardErrorInstance struct {
 }
 
 func (err *StandardErrorInstance) Inspect() string {
-	return fmt.Sprintf("#<%s: %s>", err.ParentClass().(*object.Class).Name, err.message)
+	return fmt.Sprintf("#<StandardError: %s>", err.message)
 }
 
 func (err *StandardErrorInstance) Message() string {

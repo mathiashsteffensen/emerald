@@ -21,10 +21,13 @@ type (
 	EmeraldValue interface {
 		Type() EmeraldValueType
 		Inspect() string
-		ParentClass() EmeraldValue
+		Class() EmeraldValue
+		Super() EmeraldValue
 		Ancestors() []EmeraldValue
 		IncludedModules() []EmeraldValue
 		Include(mod EmeraldValue)
+		BuiltInMethodSet() BuiltInMethodSet
+		DefinedMethodSet() DefinedMethodSet
 		DefineMethod(block EmeraldValue, args ...EmeraldValue)
 		ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error)
 		Methods(target EmeraldValue) []string
@@ -54,5 +57,6 @@ const (
 
 func (method *WrappedBuiltInMethod) Inspect() string           { return "obscure Go compiler" }
 func (method *WrappedBuiltInMethod) Type() EmeraldValueType    { return BLOCK_VALUE }
-func (method *WrappedBuiltInMethod) ParentClass() EmeraldValue { return nil }
+func (method *WrappedBuiltInMethod) Class() EmeraldValue       { return nil }
+func (method *WrappedBuiltInMethod) Super() EmeraldValue       { return nil }
 func (method *WrappedBuiltInMethod) Ancestors() []EmeraldValue { return []EmeraldValue{} }

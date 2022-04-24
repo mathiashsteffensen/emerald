@@ -30,11 +30,6 @@ func TestKernel_puts(t *testing.T) {
 			input:    `puts(nil)`,
 			expected: nil,
 		},
-		{
-			name:     "with explicit module receiver",
-			input:    `Kernel.puts(nil)`,
-			expected: nil,
-		},
 	}
 
 	runCoreTests(t, tests)

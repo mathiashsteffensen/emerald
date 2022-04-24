@@ -22,6 +22,7 @@ func InitArgumentError() {
 	ArgumentError = object.NewClass(
 		"ArgumentError",
 		StandardError,
+		StandardError.Class(),
 		object.BuiltInMethodSet{},
 		object.BuiltInMethodSet{
 			"new": exceptionNew(func(msg string) object.EmeraldError {

@@ -235,10 +235,10 @@ func testClassObject(expected string, actual object.EmeraldValue) error {
 func testInstanceObject(expected string, actual object.EmeraldValue) error {
 	actualInstance, ok := actual.(*object.Instance)
 	if !ok {
-		return fmt.Errorf("expected instance got=%T", actual)
+		return fmt.Errorf("expected instance got=%#v", actual)
 	}
 
-	class := actualInstance.ParentClass().(*object.Class)
+	class := actualInstance.Class().Super().(*object.Class)
 
 	if class.Name != expected {
 		return fmt.Errorf("expected instance to be instance of %s, but is instance of %s", expected, class.Name)

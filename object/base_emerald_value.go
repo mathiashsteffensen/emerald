@@ -63,7 +63,7 @@ func (val *BaseEmeraldValue) Methods(target EmeraldValue) []string {
 		methods = append(methods, mod.Methods(mod)...)
 	}
 
-	super := target.ParentClass()
+	super := target.Super()
 	reflected := reflect.ValueOf(super)
 
 	if super != nil && reflected.IsValid() && !reflected.IsNil() {
@@ -87,7 +87,7 @@ func (val *BaseEmeraldValue) SEND(
 	block *ClosedBlock,
 	args ...EmeraldValue,
 ) (EmeraldValue, error) {
-	method, err := val.ExtractMethod(name, target, target)
+	method, err := target.Class().ExtractMethod(name, target, target)
 	if err != nil {
 		return nil, err
 	}
@@ -105,47 +105,23 @@ func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue
 		return nil, fmt.Errorf("invalid method call %s on %#v", name, target)
 	}
 
-	if targetInstance, ok := target.(*Instance); ok {
-		method, ok := targetInstance.BuiltInSingletonMethods[name]
-		if ok {
+	for _, ancestor := range extractFrom.Ancestors() {
+		if method, ok := ancestor.DefinedMethodSet()[name]; ok {
+			return method, nil
+		}
+
+		if method, ok := ancestor.BuiltInMethodSet()[name]; ok {
 			return &WrappedBuiltInMethod{Method: method}, nil
 		}
 	}
 
-	if method, ok := val.DefinedMethodSet()[name]; ok {
-		return method, nil
-	}
-
-	if method, ok := val.BuiltInMethodSet()[name]; ok {
-		return &WrappedBuiltInMethod{Method: method}, nil
-	}
-
-	for _, mod := range val.IncludedModules() {
-		if method, err := mod.ExtractMethod(name, mod, target); err == nil {
-			return method, nil
-		}
-	}
-
-	super := extractFrom.ParentClass()
-	reflected := reflect.ValueOf(super)
-
-	if super != nil && reflected.IsValid() && !reflected.IsNil() {
-		superMethod, err := super.ExtractMethod(name, super, target)
-
-		if err == nil {
-			return superMethod, nil
-		}
-	}
-
 	var parentName string
-	super = target.ParentClass()
-	reflected = reflect.ValueOf(super)
+	super := target.Super()
+	reflected := reflect.ValueOf(super)
 
 	if super != nil && reflected.IsValid() && !reflected.IsNil() {
 		switch super := super.(type) {
 		case *Class:
-			parentName = super.Name
-		case *StaticClass:
 			parentName = super.Name
 		}
 	}
@@ -159,7 +135,7 @@ func (val *BaseEmeraldValue) InstanceVariableGet(name string, extractFrom Emeral
 		return value
 	}
 
-	superClass := extractFrom.ParentClass()
+	superClass := extractFrom.Super()
 	reflected := reflect.ValueOf(superClass)
 	if superClass != nil && reflected.IsValid() && !reflected.IsNil() {
 		return superClass.InstanceVariableGet(name, superClass, target)

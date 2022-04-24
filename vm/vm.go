@@ -35,7 +35,7 @@ func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
 	frames[0] = mainFrame
 
 	vm := &VM{
-		ctx:         &object.Context{DefinitionTarget: core.MainObject, ExecutionTarget: core.Object},
+		ctx:         &object.Context{DefinitionTarget: core.MainObject.Class(), ExecutionTarget: core.MainObject},
 		constants:   bytecode.Constants,
 		stack:       make([]object.EmeraldValue, StackSize),
 		sp:          0,
@@ -78,7 +78,7 @@ func (vm *VM) Run() error {
 		}
 	}
 
-	return nil
+	return err
 }
 
 func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) error {
@@ -229,12 +229,12 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		}
 	case compiler.OpOpenClass:
 		outerCtx := vm.ctx
-		newTarget := vm.pop().(*object.StaticClass)
+		newTarget := vm.pop()
 
 		vm.ctx = &object.Context{
 			Outer:            outerCtx,
 			ExecutionTarget:  newTarget,
-			DefinitionTarget: newTarget.Class,
+			DefinitionTarget: newTarget,
 		}
 	case compiler.OpCloseClass:
 		to := vm.ctx.Outer
@@ -260,12 +260,10 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		if err != nil {
 			return err
 		}
-	case compiler.OpExecutionStaticTrue:
-		vm.ctx.ExecutionTarget = vm.ctx.ExecutionTarget.(*object.Class).StaticClass
 	case compiler.OpDefinitionStaticTrue:
-		vm.ctx.DefinitionTarget = vm.ctx.DefinitionTarget.(*object.Class).StaticClass
+		vm.ctx.DefinitionTarget = vm.ctx.DefinitionTarget.Class()
 	case compiler.OpDefinitionStaticFalse:
-		vm.ctx.DefinitionTarget = vm.ctx.DefinitionTarget.(*object.StaticClass).Class
+		vm.ctx.DefinitionTarget = vm.ctx.DefinitionTarget.(*object.SingletonClass).Instance
 	default:
 		if opString, ok := infixOperators[op]; ok {
 			left := vm.pop()
@@ -304,14 +302,9 @@ func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 	block := vm.stack[vm.sp-1-numArgs]
 
 	target := vm.ctx.ExecutionTarget
-	method, errVal := target.ExtractMethod(name.Value, target, target)
+	method, errVal := target.Class().ExtractMethod(name.Value, target.Class(), target)
 	if errVal != nil {
-		var otherErr error
-
-		method, otherErr = core.Object.StaticClass.ExtractMethod(name.Value, core.Object.StaticClass, core.Object.StaticClass)
-		if otherErr != nil {
-			return core.NewStandardError(errVal.Error())
-		}
+		return core.NewStandardError(errVal.Error())
 	}
 
 	switch method := method.(type) {

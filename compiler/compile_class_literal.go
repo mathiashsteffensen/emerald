@@ -18,9 +18,9 @@ func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) error {
 		c.emit(OpGetGlobal, symbol.Index)
 	} else {
 		symbol = c.symbolTable.Define(name)
-		class := object.NewClass(name, core.Object, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+		class := object.NewClass(name, core.Object, core.Object.Class(), object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-		c.emit(OpPushConstant, c.addConstant(class.StaticClass))
+		c.emit(OpPushConstant, c.addConstant(class))
 		c.emit(OpSetGlobal, symbol.Index)
 	}
 

@@ -26,12 +26,12 @@ func runCoreTests(t *testing.T, tests []coreTestCase) {
 		t.Run(tt.name, func(t *testing.T) {
 			for _, class := range object.Classes {
 				class.ResetDefinedMethodSetForSpec()
-				class.StaticClass.ResetDefinedMethodSetForSpec()
+				class.Class().(*object.SingletonClass).ResetDefinedMethodSetForSpec()
 			}
 
 			for _, module := range object.Modules {
 				module.ResetDefinedMethodSetForSpec()
-				module.StaticModule.ResetDefinedMethodSetForSpec()
+				module.Class().(*object.SingletonClass).ResetDefinedMethodSetForSpec()
 			}
 
 			program := parse(tt.input)
@@ -232,7 +232,7 @@ func testInstanceObject(expected string, actual object.EmeraldValue) error {
 		return fmt.Errorf("expected instance got=%T", actual)
 	}
 
-	class := actualInstance.ParentClass().(*object.Class)
+	class := actualInstance.Class().Super().(*object.Class)
 
 	if class.Name != expected {
 		return fmt.Errorf("expected instance to be instance of %s, but is instance of %s", expected, class.Name)

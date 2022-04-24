@@ -12,6 +12,7 @@ func InitObject() {
 	Object = object.NewClass(
 		"Object",
 		BasicObject,
+		BasicObject.Class(),
 		object.BuiltInMethodSet{
 			"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return NewString(target.Inspect())
@@ -41,7 +42,7 @@ func InitObject() {
 	)
 
 	MainObject = Object.New()
-	MainObject.BuiltInSingletonMethods["to_s"] = func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	MainObject.Class().BuiltInMethodSet()["to_s"] = func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString("main:Object")
 	}
 }

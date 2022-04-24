@@ -6,9 +6,9 @@ import (
 
 type Class struct {
 	*BaseEmeraldValue
-	Name        string
-	StaticClass *StaticClass
-	parentClass EmeraldValue
+	Name  string
+	class EmeraldValue
+	super EmeraldValue
 }
 
 var Classes = map[string]*Class{}
@@ -17,12 +17,14 @@ func (c *Class) Type() EmeraldValueType { return CLASS_VALUE }
 func (c *Class) Inspect() string {
 	return c.Name
 }
-func (c *Class) ParentClass() EmeraldValue { return c.parentClass }
+func (c *Class) Class() EmeraldValue       { return c.class }
+func (c *Class) Super() EmeraldValue       { return c.super }
+func (c *Class) SetSuper(val EmeraldValue) { c.super = val }
 func (c *Class) Ancestors() []EmeraldValue {
 	ancestors := []EmeraldValue{c}
 	ancestors = append(ancestors, c.IncludedModules()...)
 
-	super := c.ParentClass()
+	super := c.Super()
 	reflected := reflect.ValueOf(super)
 	if super != nil && reflected.IsValid() && !reflected.IsNil() {
 		ancestors = append(ancestors, super.Ancestors()...)
@@ -32,36 +34,34 @@ func (c *Class) Ancestors() []EmeraldValue {
 }
 
 func (c *Class) New() *Instance {
-	return &Instance{class: c, BaseEmeraldValue: c.BaseEmeraldValue, BuiltInSingletonMethods: BuiltInMethodSet{}}
+	instance := &Instance{}
+
+	singleton := NewSingletonClass(instance, BuiltInMethodSet{}, c)
+
+	instance.class = singleton
+	instance.BaseEmeraldValue = singleton.BaseEmeraldValue
+
+	return instance
 }
 
 func NewClass(
 	name string,
-	parentClass *Class,
+	super *Class,
+	staticParent EmeraldValue,
 	builtInMethodSet,
 	staticBuiltInMethodSet BuiltInMethodSet,
 	modules ...EmeraldValue,
 ) *Class {
-	var staticParent *StaticClass
-
-	if parentClass != nil {
-		staticParent = parentClass.StaticClass
-	}
-
 	class := &Class{
-		Name:        name,
-		parentClass: parentClass,
+		Name:  name,
+		super: super,
 		BaseEmeraldValue: &BaseEmeraldValue{
 			builtInMethodSet: builtInMethodSet,
 			includedModules:  modules,
 		},
 	}
 
-	class.StaticClass = NewStaticClass(name, class, staticBuiltInMethodSet, staticParent)
-
-	for _, module := range modules {
-		class.StaticClass.Include(module.(*Module).StaticModule)
-	}
+	class.class = NewSingletonClass(class, staticBuiltInMethodSet, staticParent)
 
 	if name != "" {
 		Classes[name] = class
