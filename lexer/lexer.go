@@ -183,6 +183,26 @@ func (l *Lexer) Run() {
 
 				l.sendToken(tok)
 				continue
+			case '$':
+				tok.Type = GLOBAL_IDENT
+
+				char := l.currentChar
+
+				l.readChar()
+
+				var ident string
+
+				if l.currentChar == ':' {
+					ident = string(char) + string(l.currentChar)
+					l.readChar()
+				} else {
+					ident = string(char) + l.readIdentifier()
+				}
+
+				tok.Literal = ident
+
+				l.sendToken(tok)
+				continue
 			case 0:
 				tok.Literal = ""
 				tok.Type = EOF

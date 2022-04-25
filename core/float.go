@@ -1,6 +1,9 @@
 package core
 
-import "emerald/object"
+import (
+	"emerald/object"
+	"strconv"
+)
 
 var Float *object.Class
 
@@ -61,6 +64,9 @@ func InitFloat() {
 			}
 
 			return NewFloat(newValue)
+		},
+		"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			return NewString(strconv.FormatFloat(target.(*FloatInstance).Value, 'f', -1, 64))
 		},
 	}, object.BuiltInMethodSet{})
 }

@@ -6,12 +6,15 @@ const (
 	ILLEGAL TokenType = "ILLEGAL"
 	EOF     TokenType = "EOF"
 
-	// Identifiers + literals
+	// Identifiers
 	IDENT        TokenType = "IDENT"
-	INT          TokenType = "INT"
-	FLOAT        TokenType = "FLOAT"
-	STRING       TokenType = "STRING"
+	GLOBAL_IDENT TokenType = "GLOBAL_IDENT"
 	INSTANCE_VAR TokenType = "INSTANCE_VAR"
+
+	// Literals
+	INT    TokenType = "INT"
+	FLOAT  TokenType = "FLOAT"
+	STRING TokenType = "STRING"
 
 	// Operators
 	ASSIGN          TokenType = "="

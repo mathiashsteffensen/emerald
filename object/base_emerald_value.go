@@ -115,18 +115,7 @@ func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue
 		}
 	}
 
-	var parentName string
-	super := target.Super()
-	reflected := reflect.ValueOf(super)
-
-	if super != nil && reflected.IsValid() && !reflected.IsNil() {
-		switch super := super.(type) {
-		case *Class:
-			parentName = super.Name
-		}
-	}
-
-	return nil, fmt.Errorf("undefined method %s for %s:%s", name, target.Inspect(), parentName)
+	return nil, fmt.Errorf("undefined method %s for %s", name, target.Inspect())
 }
 
 func (val *BaseEmeraldValue) InstanceVariableGet(name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue {

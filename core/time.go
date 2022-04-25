@@ -30,6 +30,9 @@ func init() {
 
 			return NewInteger(newVal.Milliseconds())
 		},
+		"to_f": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			return NewFloat(float64(target.(*TimeInstance).Value.UnixMilli()) / 1000.0)
+		},
 	}, object.BuiltInMethodSet{
 		"now": timeNew,
 		"new": timeNew,

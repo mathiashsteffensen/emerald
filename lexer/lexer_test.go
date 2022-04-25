@@ -48,7 +48,8 @@ func TestNextToken(t *testing.T) {
 	obj["hello"][0][value]
 	[0, 1]
 	nil &&= ||= module
-	begin rescue ensure`
+	begin rescue ensure
+	$: $LOAD_PATH`
 
 	tests := []struct {
 		expectedType    TokenType
@@ -208,6 +209,8 @@ func TestNextToken(t *testing.T) {
 		{BEGIN, "begin"},
 		{RESCUE, "rescue"},
 		{ENSURE, "ensure"},
+		{GLOBAL_IDENT, "$:"},
+		{GLOBAL_IDENT, "$LOAD_PATH"},
 		{EOF, ""},
 	}
 
