@@ -4,12 +4,13 @@ import "testing"
 
 func TestDefine(t *testing.T) {
 	expected := map[string]Symbol{
-		"a": {Name: "a", Scope: GlobalScope, Index: 0},
-		"b": {Name: "b", Scope: GlobalScope, Index: 1},
-		"c": {Name: "c", Scope: LocalScope, Index: 0},
-		"d": {Name: "d", Scope: LocalScope, Index: 1},
-		"e": {Name: "e", Scope: LocalScope, Index: 0},
-		"f": {Name: "f", Scope: LocalScope, Index: 1},
+		"a":  {Name: "a", Scope: GlobalScope, Index: 0},
+		"b":  {Name: "b", Scope: GlobalScope, Index: 1},
+		"$:": {Name: "$:", Scope: GlobalScope, Index: 2},
+		"c":  {Name: "c", Scope: LocalScope, Index: 0},
+		"d":  {Name: "d", Scope: LocalScope, Index: 1},
+		"e":  {Name: "e", Scope: LocalScope, Index: 0},
+		"f":  {Name: "f", Scope: LocalScope, Index: 1},
 	}
 
 	global := NewSymbolTable()
@@ -44,6 +45,11 @@ func TestDefine(t *testing.T) {
 	f := secondLocal.Define("f")
 	if f != expected["f"] {
 		t.Errorf("expected f=%+v, got=%+v", expected["f"], f)
+	}
+
+	globalVar := secondLocal.DefineGlobal("$:")
+	if globalVar != expected["$:"] {
+		t.Errorf("expected f=%+v, got=%+v", expected["$:"], globalVar)
 	}
 }
 

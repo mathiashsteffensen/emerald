@@ -60,6 +60,17 @@ func (s *SymbolTable) Define(name string) Symbol {
 	return symbol
 }
 
+func (s *SymbolTable) DefineGlobal(name string) Symbol {
+	inner := s
+	outer := s.Outer
+	for outer != nil {
+		inner = outer
+		outer = outer.Outer
+	}
+
+	return inner.Define(name)
+}
+
 func (s *SymbolTable) Resolve(name string) (Symbol, bool) {
 	obj, ok := s.store[name]
 	if !ok && s.Outer != nil {

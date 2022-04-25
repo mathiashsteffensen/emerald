@@ -68,9 +68,7 @@ func (vm *VM) Run() error {
 	for vm.currentFrame().ip < len(vm.currentFrame().Instructions())-1 {
 		vm.currentFrame().ip++
 
-		ip = vm.currentFrame().ip
-		ins = vm.currentFrame().Instructions()
-		op = compiler.Opcode(ins[ip])
+		ip, ins, op = vm.fetch()
 
 		err = vm.execute(ip, ins, op)
 		if err != nil {
@@ -79,6 +77,12 @@ func (vm *VM) Run() error {
 	}
 
 	return err
+}
+
+func (vm *VM) fetch() (int, compiler.Instructions, compiler.Opcode) {
+	ip := vm.currentFrame().ip
+	ins := vm.currentFrame().Instructions()
+	return ip, ins, compiler.Opcode(ins[ip])
 }
 
 func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) error {
@@ -268,7 +272,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		if opString, ok := infixOperators[op]; ok {
 			left := vm.pop()
 
-			result, sendErr := left.SEND(vm.ctx, nil, opString, left, nil, vm.StackTop())
+			result, sendErr := left.SEND(vm.ctx, vm.evalBlock, opString, left, nil, vm.StackTop())
 			if sendErr != nil {
 				vm.stack[vm.sp-1] = core.NewStandardError(sendErr.Error())
 			} else {
@@ -317,7 +321,7 @@ func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 		vm.pushFrame(frame)
 		vm.sp = frame.basePointer + method.NumLocals
 	case *object.WrappedBuiltInMethod:
-		result := method.Method(vm.ctx, target, block, vm.yieldFunc(), vm.stack[vm.sp-numArgs:vm.sp]...)
+		result := method.Method(vm.ctx, target, block, vm.evalBlock, vm.stack[vm.sp-numArgs:vm.sp]...)
 		vm.sp -= numArgs + 2
 		err := vm.push(result)
 

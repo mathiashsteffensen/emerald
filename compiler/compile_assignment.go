@@ -28,6 +28,13 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) error {
 		}
 	case *ast.InstanceVariable:
 		c.emit(OpInstanceVarSet, c.addConstant(core.NewSymbol(name.Value)))
+	case *ast.GlobalVariable:
+		symbol, ok := c.symbolTable.Resolve(name.Value)
+		if !ok {
+			symbol = c.symbolTable.DefineGlobal(name.Value)
+		}
+
+		c.emit(OpSetGlobal, symbol.Index)
 	}
 
 	return nil

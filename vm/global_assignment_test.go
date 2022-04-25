@@ -16,6 +16,18 @@ func TestGlobalAssignment(t *testing.T) {
 		{"", "one = false; one ||= 15", 15},
 		{"", "one = false; one &&= 15", false},
 		{"", "one = true; one ||= 15", true},
+		{
+			input: `
+				def method
+					$var = "hello"
+				end
+
+				method
+
+				$var
+			`,
+			expected: "hello",
+		},
 	}
 	runVmTests(t, tests)
 }

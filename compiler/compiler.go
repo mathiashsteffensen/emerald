@@ -122,6 +122,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.compileIdentifierExpression(node)
 	case *ast.InstanceVariable:
 		c.compileIdentifierExpression(node)
+	case *ast.GlobalVariable:
+		c.compileIdentifierExpression(node)
 	case *ast.CallExpression:
 		err := c.compileCallExpression(node)
 		if err != nil {

@@ -93,6 +93,8 @@ func (val *BaseEmeraldValue) SEND(
 	}
 
 	switch method := method.(type) {
+	case *ClosedBlock:
+		return yield(method, args...), nil
 	case *WrappedBuiltInMethod:
 		return method.Method(ctx, target, block, yield, args...), nil
 	}

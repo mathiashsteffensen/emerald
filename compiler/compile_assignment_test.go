@@ -268,6 +268,16 @@ func TestCompileAssignment(t *testing.T) {
 				Make(OpPop),
 			},
 		},
+		{
+			name:              "assigning to global var",
+			input:             "$foo = 5",
+			expectedConstants: []any{5},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant),
+				Make(OpSetGlobal, 0),
+				Make(OpPop),
+			},
+		},
 	}
 	runCompilerTests(t, tests)
 }

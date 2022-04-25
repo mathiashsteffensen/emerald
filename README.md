@@ -127,10 +127,10 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] `..` inclusive
     - [ ] `...` exclusive
 - [ ] procs `->`
-- [ ] variables
+- [x] variables
     - [x] variable assignments
     - [x] globals
-    - [ ] Ruby globals ($ notation)
+    - [x] Ruby globals ($ notation)
 - [ ] operators
     - [x] `+`
     - [x] `-`

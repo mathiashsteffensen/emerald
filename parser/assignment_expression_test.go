@@ -24,6 +24,12 @@ func TestAssignmentExpression(t *testing.T) {
 			"@foobar",
 			"5",
 		},
+		{
+			"assignment to global var",
+			"$foobar = 5",
+			"$foobar",
+			"5",
+		},
 	}
 
 	for _, tt := range tests {

@@ -55,6 +55,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.CLASS, p.parseClassLiteral)
 	p.registerPrefix(lexer.COLON, p.parseSymbolLiteral)
 	p.registerPrefix(lexer.INSTANCE_VAR, p.parseInstanceVariable)
+	p.registerPrefix(lexer.GLOBAL_IDENT, p.parseGlobalVariable)
 	p.registerPrefix(lexer.MODULE, p.parseModuleLiteral)
 
 	p.infixParseFns = make(map[lexer.TokenType]infixParseFn)
@@ -194,31 +195,6 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 
 	return leftExp
-}
-
-func (p *Parser) parseIdentifierExpression() ast.Expression {
-	node := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
-
-	switch p.peekToken.Type {
-	case lexer.ASSIGN:
-		p.nextToken()
-
-		return p.parseAssignmentExpression(node)
-	case lexer.BOOL_AND_ASSIGN, lexer.BOOL_OR_ASSIGN:
-		p.nextToken()
-
-		infix := &ast.InfixExpression{
-			Token:    p.curToken,
-			Operator: p.curToken.Literal[:len(p.curToken.Literal)-1],
-			Left:     node,
-		}
-
-		infix.Right = p.parseAssignmentExpression(node)
-
-		return infix
-	default:
-		return node
-	}
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
@@ -578,31 +554,6 @@ func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
 	block.Body = p.parseBlockStatement(endToken)
 
 	return block
-}
-
-func (p *Parser) parseInstanceVariable() ast.Expression {
-	node := &ast.InstanceVariable{IdentifierExpression: &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
-
-	switch p.peekToken.Type {
-	case lexer.ASSIGN:
-		p.nextToken()
-
-		return p.parseAssignmentExpression(node)
-	case lexer.BOOL_AND_ASSIGN, lexer.BOOL_OR_ASSIGN:
-		p.nextToken()
-
-		infix := &ast.InfixExpression{
-			Token:    p.curToken,
-			Operator: p.curToken.Literal[:len(p.curToken.Literal)-1],
-			Left:     node,
-		}
-
-		infix.Right = p.parseAssignmentExpression(node)
-
-		return infix
-	default:
-		return node
-	}
 }
 
 func (p *Parser) curTokenIs(t lexer.TokenType) bool {
