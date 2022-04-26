@@ -73,6 +73,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.BOOL_OR, p.parseInfixExpression)
 	p.registerInfix(lexer.LPAREN, p.parseCallExpression)
 	p.registerInfix(lexer.DOT, p.parseMethodCall)
+	p.registerInfix(lexer.LBRACKET, p.parseIndexAccessor)
 
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
@@ -143,8 +144,29 @@ func (p *Parser) ParseAST() *ast.AST {
 	return program
 }
 
+func (p *Parser) parseBlockStatement(endToken lexer.TokenType) *ast.BlockStatement {
+	block := &ast.BlockStatement{Token: p.curToken}
+	block.Statements = []ast.Statement{}
+
+	p.nextToken()
+
+	for !p.curTokenIs(endToken) && !p.curTokenIs(lexer.EOF) {
+		stmt := p.parseStatement()
+
+		if stmt != nil {
+			block.Statements = append(block.Statements, stmt)
+		}
+
+		p.nextToken()
+	}
+
+	return block
+}
+
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
+	case lexer.NEWLINE:
+		return nil
 	case lexer.RETURN:
 		return p.parseReturnStatement()
 	default:
@@ -159,9 +181,7 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 	stmt.ReturnValue = p.parseExpression(LOWEST)
 
-	if p.peekTokenIs(lexer.SEMICOLON) {
-		p.nextToken()
-	}
+	p.nextIfSemicolonOrNewline()
 
 	return stmt
 }
@@ -169,9 +189,7 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 	stmt.Expression = p.parseExpression(LOWEST)
-	if p.peekTokenIs(lexer.SEMICOLON) {
-		p.nextToken()
-	}
+	p.nextIfSemicolonOrNewline()
 	return stmt
 }
 
@@ -185,7 +203,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	leftExp := prefix()
 
-	for !p.peekTokenIs(lexer.SEMICOLON) && precedence < p.peekPrecedence() {
+	for !p.peekTokenIs(lexer.SEMICOLON) && !p.peekTokenIs(lexer.NEWLINE) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
@@ -310,9 +328,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	expression.Condition = p.parseExpression(MODIFIER)
 
-	if p.peekTokenIs(lexer.SEMICOLON) {
-		p.nextToken()
-	}
+	p.nextIfSemicolonOrNewline()
 
 	expression.Consequence = &ast.BlockStatement{Token: p.curToken}
 	expression.Consequence.Statements = []ast.Statement{}
@@ -330,37 +346,14 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	}
 
 	if p.curTokenIs(lexer.ELSE) {
-		if p.peekTokenIs(lexer.SEMICOLON) {
-			p.nextToken()
-		}
+		p.nextIfSemicolonOrNewline()
 
 		expression.Alternative = p.parseBlockStatement(lexer.END)
 	}
 
-	if p.peekTokenIs(lexer.SEMICOLON) {
-		p.nextToken()
-	}
+	p.nextIfSemicolonOrNewline()
 
 	return expression
-}
-
-func (p *Parser) parseBlockStatement(endToken lexer.TokenType) *ast.BlockStatement {
-	block := &ast.BlockStatement{Token: p.curToken}
-	block.Statements = []ast.Statement{}
-
-	p.nextToken()
-
-	for !p.curTokenIs(endToken) && !p.curTokenIs(lexer.EOF) {
-		stmt := p.parseStatement()
-
-		if stmt != nil {
-			block.Statements = append(block.Statements, stmt)
-		}
-
-		p.nextToken()
-	}
-
-	return block
 }
 
 func (p *Parser) parseCallExpression(method ast.Expression) ast.Expression {
@@ -405,6 +398,8 @@ func (p *Parser) parseExpressionList(delim lexer.TokenType) []ast.Expression {
 func (p *Parser) parseHashLiteral() ast.Expression {
 	value := make(map[ast.Expression]ast.Expression)
 
+	p.nextIfNewline()
+
 	for p.curToken.Type != lexer.RBRACE {
 		if p.peekTokenIs(lexer.RBRACE) {
 			p.nextToken()
@@ -424,11 +419,13 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 		value[key] = p.parseExpression(LOWEST)
 
 		if !p.peekTokenIs(lexer.COMMA) {
+			p.nextIfNewline()
 			if !p.expectPeek(lexer.RBRACE) {
 				return nil
 			}
 		} else {
 			p.nextToken()
+			p.nextIfNewline()
 		}
 	}
 
@@ -467,9 +464,7 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 		method.Parameters = make([]ast.Expression, 0)
 	}
 
-	if p.peekTokenIs(lexer.SEMICOLON) {
-		p.nextToken()
-	}
+	p.nextIfSemicolonOrNewline()
 
 	method.Body = p.parseBlockStatement(lexer.END)
 
@@ -486,9 +481,8 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 	p.nextToken()
 
 	class.Name = p.parseIdentifierExpression().(*ast.IdentifierExpression)
-	if p.peekTokenIs(lexer.SEMICOLON) {
-		p.nextToken()
-	}
+
+	p.nextIfSemicolonOrNewline()
 
 	class.Body = p.parseBlockStatement(lexer.END)
 
@@ -526,6 +520,17 @@ func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
 	if p.curTokenIs(lexer.DOT) {
 		return p.parseMethodCall(node)
 	}
+
+	return node
+}
+
+func (p *Parser) parseIndexAccessor(left ast.Expression) ast.Expression {
+	node := &ast.MethodCall{Token: p.curToken, Left: left, CallExpression: &ast.CallExpression{}}
+	node.Method = &ast.IdentifierExpression{Value: "[]"}
+
+	node.Arguments = p.parseExpressionList(lexer.RBRACKET)
+
+	p.nextToken()
 
 	return node
 }
@@ -584,4 +589,16 @@ func (p *Parser) expectPeekMultiple(types ...lexer.TokenType) bool {
 
 	p.peekErrorMultiple(types...)
 	return false
+}
+
+func (p *Parser) nextIfSemicolonOrNewline() {
+	if p.peekTokenIs(lexer.SEMICOLON) || p.peekTokenIs(lexer.NEWLINE) {
+		p.nextToken()
+	}
+}
+
+func (p *Parser) nextIfNewline() {
+	if p.peekTokenIs(lexer.NEWLINE) {
+		p.nextToken()
+	}
 }

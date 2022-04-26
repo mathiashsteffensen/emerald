@@ -68,6 +68,10 @@ func (l *Lexer) Run() {
 			l.eatWhitespace()
 
 			switch l.currentChar {
+			case '\n':
+				l.Column = 1
+				l.Line += 1
+				tok = l.newToken(NEWLINE, l.currentChar)
 			case '#':
 				for l.currentChar != '\n' {
 					l.readChar()
@@ -286,15 +290,8 @@ func (l *Lexer) peekChar() byte {
 }
 
 func (l *Lexer) eatWhitespace() {
-	for l.currentChar == ' ' || l.currentChar == '\t' || l.currentChar == '\n' || l.currentChar == '\r' {
-		isNewLine := l.currentChar == '\n'
-
+	for l.currentChar == ' ' || l.currentChar == '\t' || l.currentChar == '\r' {
 		l.readChar()
-
-		if isNewLine {
-			l.Column = 1
-			l.Line += 1
-		}
 	}
 }
 

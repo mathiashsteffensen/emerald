@@ -34,8 +34,8 @@ var precedences = map[lexer.TokenType]int{
 	lexer.SLASH:    PRODUCT,
 	lexer.ASTERISK: PRODUCT,
 	lexer.LPAREN:   CALL,
+	lexer.LBRACKET: CALL,
 	lexer.DOT:      ACCESSOR,
-	lexer.LBRACKET: ACCESSOR,
 }
 
 func (p *Parser) peekPrecedence() int {

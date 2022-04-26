@@ -119,7 +119,7 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] `:"symbol"` with interpolation
     - [ ] `:'symbol'`
     - [ ] `%s{symbol}`
-    - [ ] singleton symbols
+    - [x] singleton symbols
 - [ ] regexp
     - [ ] `/regex/`
     - [ ] `%r{regex}`
