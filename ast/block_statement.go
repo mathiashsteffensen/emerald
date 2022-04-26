@@ -17,6 +17,7 @@ func (bs *BlockStatement) String() string {
 
 	for _, s := range bs.Statements {
 		out.WriteString(s.String())
+		out.WriteString("\n")
 	}
 
 	return out.String()

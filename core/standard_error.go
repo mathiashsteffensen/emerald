@@ -32,6 +32,10 @@ func (err *StandardErrorInstance) Message() string {
 	return err.message
 }
 
+func (err *StandardErrorInstance) ClassName() string {
+	return StandardError.Name
+}
+
 func NewStandardError(msg string) object.EmeraldError {
 	return &StandardErrorInstance{StandardError.New(), msg}
 }

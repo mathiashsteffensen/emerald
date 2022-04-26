@@ -24,6 +24,22 @@ func NewArray(val []object.EmeraldValue) *ArrayInstance {
 }
 
 var arrayBuiltInMethodSet = object.BuiltInMethodSet{
+	"[]": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := target.(*ArrayInstance).Value
+
+		intArg, ok := args[0].(*IntegerInstance)
+		if !ok {
+			return NewTypeError("Integer", args[0].Class().Super().(*object.Class).Name)
+		}
+
+		index := intArg.Value
+
+		if index >= int64(len(arr)) {
+			return NULL
+		}
+
+		return arr[index]
+	},
 	"find":       arrayFind(),
 	"find_index": arrayFindIndex(),
 	"map":        arrayMap(),

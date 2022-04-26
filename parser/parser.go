@@ -447,30 +447,6 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 	return arr
 }
 
-func (p *Parser) parseMethodLiteral() ast.Expression {
-	method := &ast.MethodLiteral{Token: p.curToken, BlockLiteral: &ast.BlockLiteral{}}
-
-	if !p.expectPeek(lexer.IDENT) {
-		return nil
-	}
-
-	method.Name = p.parseIdentifierExpression()
-
-	if p.peekTokenIs(lexer.LPAREN) {
-		p.nextToken()
-
-		method.Parameters = p.parseCallArguments()
-	} else {
-		method.Parameters = make([]ast.Expression, 0)
-	}
-
-	p.nextIfSemicolonOrNewline()
-
-	method.Body = p.parseBlockStatement(lexer.END)
-
-	return method
-}
-
 func (p *Parser) parseClassLiteral() ast.Expression {
 	if p.peekTokenIs(lexer.APPEND) {
 		return p.parseStaticClassLiteral()
@@ -533,32 +509,6 @@ func (p *Parser) parseIndexAccessor(left ast.Expression) ast.Expression {
 	p.nextToken()
 
 	return node
-}
-
-func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
-	var endToken lexer.TokenType
-	if p.peekTokenIs(lexer.LBRACE) {
-		endToken = lexer.RBRACE
-	} else {
-		if p.peekTokenIs(lexer.DO) {
-			endToken = lexer.END
-		} else {
-			return nil
-		}
-	}
-
-	p.nextToken()
-
-	block := &ast.BlockLiteral{Body: &ast.BlockStatement{}, Token: p.curToken}
-
-	if p.peekTokenIs(lexer.BIT_OR) {
-		p.nextToken()
-		block.Parameters = p.parseExpressionList(lexer.BIT_OR)
-	}
-
-	block.Body = p.parseBlockStatement(endToken)
-
-	return block
 }
 
 func (p *Parser) curTokenIs(t lexer.TokenType) bool {

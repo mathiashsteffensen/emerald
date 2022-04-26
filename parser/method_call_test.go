@@ -7,7 +7,12 @@ import (
 
 func TestMethodCallParsing(t *testing.T) {
 	input := `
-		1.add(2, 3, 4 + 5) { |num, next| num + @var.method }.first
+		1.add(2, 3, 4 + 5) do |num, next|
+			num + @var.method
+		rescue
+			puts("Adding is hard :(")
+		end.first
+
 		Logger.info(msg)
 		@var.method
 	`
@@ -49,6 +54,14 @@ func TestMethodCallParsing(t *testing.T) {
 
 	if exp.Block == nil {
 		t.Fatalf("method call was not passed a block")
+	}
+
+	if len(exp.Block.RescueBlocks) == 0 {
+		t.Fatalf("block was not passed a rescue clause")
+	}
+
+	if len(exp.Block.RescueBlocks[0].Body.Statements) != 1 {
+		t.Fatalf("rescue block did not have 1 statement got=%d", len(exp.Block.RescueBlocks[0].Body.Statements))
 	}
 
 	stmt, ok = program.Statements[1].(*ast.ExpressionStatement)

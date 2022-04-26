@@ -48,6 +48,58 @@ func TestMethodLiteralExpression(t *testing.T) {
 			"method",
 			[]string{"fmt", "val"},
 		},
+		{
+			"with a rescue block",
+			`
+			def method
+				puts("Hello")
+			rescue
+				puts("An error occurred")
+			end
+			`,
+			"method",
+			[]string{},
+		},
+		{
+			"with multiple rescue blocks",
+			`
+			def method
+				puts("Hello")
+			rescue
+				puts("An error occurred")
+			rescue
+				puts("other error occurred")
+			end
+			`,
+			"method",
+			[]string{},
+		},
+		{
+			"with an ensure block",
+			`
+			def method
+				puts("Hello")
+			ensure
+				puts(" World!")
+			end
+			`,
+			"method",
+			[]string{},
+		},
+		{
+			"with a rescue & an ensure block",
+			`
+			def method
+				puts("Hello")
+			rescue
+				puts(" Goodbye cruel")
+			ensure
+				puts(" World!")
+			end
+			`,
+			"method",
+			[]string{},
+		},
 	}
 
 	for _, tt := range tests {

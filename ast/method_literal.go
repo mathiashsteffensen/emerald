@@ -9,7 +9,9 @@ import (
 type MethodLiteral struct {
 	Token lexer.Token // The 'def' token
 	*BlockLiteral
-	Name Expression
+	Name         Expression
+	RescueBlocks []*RescueBlock
+	EnsureBlock  *EnsureBlock
 }
 
 func (fl *MethodLiteral) expressionNode()      {}
@@ -28,6 +30,9 @@ func (fl *MethodLiteral) String() string {
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") ")
 	out.WriteString(fl.Body.String())
+	for _, block := range fl.RescueBlocks {
+		out.WriteString(block.String())
+	}
 
 	return out.String()
 }

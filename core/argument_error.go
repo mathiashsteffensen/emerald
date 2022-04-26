@@ -12,7 +12,8 @@ type ArgumentErrorInstance struct {
 	message string
 }
 
-func (err *ArgumentErrorInstance) Message() string { return err.message }
+func (err *ArgumentErrorInstance) Message() string   { return err.message }
+func (err *ArgumentErrorInstance) ClassName() string { return ArgumentError.Name }
 
 func (err *ArgumentErrorInstance) Inspect() string {
 	return fmt.Sprintf("#<%s: %s>", ArgumentError.Name, err.message)

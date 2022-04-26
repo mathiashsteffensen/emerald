@@ -78,25 +78,36 @@ func testExpectedObject(
 			if err != nil {
 				t.Errorf("testSymbolObject failed: %s", err)
 			}
-		} else {
-			if strings.HasPrefix(expected, "class:") {
-				err := testClassObject(expected[6:], actual)
-				if err != nil {
-					t.Errorf("testClassObject failed: %s", err)
-				}
-			} else {
-				if strings.HasPrefix(expected, "instance:") {
-					err := testInstanceObject(expected[9:], actual)
-					if err != nil {
-						t.Errorf("testInstanceObject failed: %s", err)
-					}
-				} else {
-					err := testStringObject(expected, actual)
-					if err != nil {
-						t.Errorf("testStringObject failed: %s", err)
-					}
-				}
+			return
+		}
+
+		if strings.HasPrefix(expected, "class:") {
+			err := testClassObject(expected[6:], actual)
+			if err != nil {
+				t.Errorf("testClassObject failed: %s", err)
 			}
+			return
+		}
+
+		if strings.HasPrefix(expected, "instance:") {
+			err := testInstanceObject(expected[9:], actual)
+			if err != nil {
+				t.Errorf("testInstanceObject failed: %s", err)
+			}
+			return
+		}
+
+		if strings.HasPrefix(expected, "error:") {
+			err := testErrorObject(expected[6:], actual)
+			if err != nil {
+				t.Errorf("testErrorObject failed: %s", err)
+			}
+			return
+		}
+
+		err := testStringObject(expected, actual)
+		if err != nil {
+			t.Errorf("testStringObject failed: %s", err)
 		}
 	case []any:
 		err := testArrayObject(t, expected, actual)
@@ -236,6 +247,27 @@ func testInstanceObject(expected string, actual object.EmeraldValue) error {
 
 	if class.Name != expected {
 		return fmt.Errorf("expected instance to be instance of %s, but is instance of %s", expected, class.Name)
+	}
+
+	return nil
+}
+
+func testErrorObject(expected string, actual object.EmeraldValue) error {
+	split := strings.Split(expected, ":")
+	className := split[0]
+	msg := split[1]
+
+	emeraldError, ok := actual.(object.EmeraldError)
+	if !ok {
+		return fmt.Errorf("object was not EmeraldError, got=%#v", actual)
+	}
+
+	if emeraldError.ClassName() != className {
+		return fmt.Errorf("unexpected error class \nwant=%s\ngot=%s", className, emeraldError.ClassName())
+	}
+
+	if emeraldError.Message() != msg {
+		return fmt.Errorf("unexpected error msg \nwant=%s\ngot=%s", msg, emeraldError.Message())
 	}
 
 	return nil

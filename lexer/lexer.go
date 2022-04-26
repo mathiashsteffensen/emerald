@@ -83,7 +83,13 @@ func (l *Lexer) Run() {
 					l.readChar()
 					tok = Token{Type: EQ, Literal: string(char) + string(l.currentChar)}
 				} else {
-					tok = l.newToken(ASSIGN, l.currentChar)
+					if l.peekChar() == '>' {
+						char := l.currentChar
+						l.readChar()
+						tok = Token{Type: ARROW, Literal: string(char) + string(l.currentChar)}
+					} else {
+						tok = l.newToken(ASSIGN, l.currentChar)
+					}
 				}
 			case '!':
 				if l.peekChar() == '=' {

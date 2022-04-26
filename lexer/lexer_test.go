@@ -43,7 +43,7 @@ func TestNextToken(t *testing.T) {
 	"foobar"
 	"foo bar"
 	{hello: "world"}
-	{hello: "world",}
+	{hello => "world",}
 	obj.hello.world
 	obj["hello"][0][value]
 	[0, 1]
@@ -216,7 +216,7 @@ func TestNextToken(t *testing.T) {
 		{NEWLINE, "\n"},
 		{LBRACE, "{"},
 		{IDENT, "hello"},
-		{COLON, ":"},
+		{ARROW, "=>"},
 		{STRING, "world"},
 		{COMMA, ","},
 		{RBRACE, "}"},

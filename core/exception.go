@@ -9,7 +9,8 @@ type ExceptionInstance struct {
 	message string
 }
 
-func (err *ExceptionInstance) Message() string { return err.message }
+func (err *ExceptionInstance) Message() string   { return err.message }
+func (err *ExceptionInstance) ClassName() string { return Exception.Name }
 
 func InitException() {
 	Exception = object.NewClass(
