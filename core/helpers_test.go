@@ -25,16 +25,16 @@ func runCoreTests(t *testing.T, tests []coreTestCase) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			for _, class := range object.Classes {
-				class.ResetDefinedMethodSetForSpec()
-				class.Class().(*object.SingletonClass).ResetDefinedMethodSetForSpec()
+				class.ResetForSpec()
+				class.Class().(*object.SingletonClass).ResetForSpec()
 			}
 
 			for _, module := range object.Modules {
-				module.ResetDefinedMethodSetForSpec()
-				module.Class().(*object.SingletonClass).ResetDefinedMethodSetForSpec()
+				module.ResetForSpec()
+				module.Class().(*object.SingletonClass).ResetForSpec()
 			}
 
-			program := parse(tt.input)
+			program := parse(t, tt.input)
 			comp := compiler.New(compiler.WithBuiltIns())
 
 			err := comp.Compile(program)
@@ -126,10 +126,20 @@ func testExpectedObject(
 	}
 }
 
-func parse(input string) *ast.AST {
+func parse(t *testing.T, input string) *ast.AST {
+	t.Helper()
+
 	l := lexer.New(lexer.NewInput("test.rb", input))
 	p := parser.New(l)
-	return p.ParseAST()
+	program := p.ParseAST()
+
+	if len(p.Errors()) != 0 {
+		for _, err := range p.Errors() {
+			t.Errorf("parser error: %s\n", err)
+		}
+	}
+
+	return program
 }
 
 func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) error {

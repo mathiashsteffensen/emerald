@@ -5,7 +5,6 @@ import (
 	"emerald/core"
 	"emerald/object"
 	"fmt"
-	"strconv"
 )
 
 const (
@@ -314,7 +313,7 @@ func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 	switch method := method.(type) {
 	case *object.ClosedBlock:
 		if numArgs != method.NumArgs {
-			return core.NewArgumentError(strconv.Itoa(numArgs), strconv.Itoa(method.NumArgs))
+			return core.NewArgumentError(numArgs, method.NumArgs)
 		}
 
 		frame := NewFrame(method, vm.sp-numArgs)

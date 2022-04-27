@@ -139,6 +139,6 @@ func (val *BaseEmeraldValue) InstanceVariableSet(name string, value EmeraldValue
 	val.InstanceVariables()[name] = value
 }
 
-func (val *BaseEmeraldValue) ResetDefinedMethodSetForSpec() {
+func (val *BaseEmeraldValue) ResetForSpec() {
 	val.definedMethodSet = DefinedMethodSet{}
 }

@@ -36,9 +36,9 @@ func InitArgumentError() {
 	)
 }
 
-func NewArgumentError(given string, expected string) object.EmeraldError {
+func NewArgumentError(given int, expected int) object.EmeraldError {
 	return &ArgumentErrorInstance{
 		Instance: ArgumentError.New(),
-		message:  fmt.Sprintf("wrong number of arguments (given %s, expected %s)", given, expected),
+		message:  fmt.Sprintf("wrong number of arguments (given %d, expected %d)", given, expected),
 	}
 }

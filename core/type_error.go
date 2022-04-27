@@ -28,9 +28,13 @@ func (err *TypeErrorInstance) ClassName() string {
 	return TypeError.Name
 }
 
-func NewTypeError(expected string, actual string) object.EmeraldError {
+func NewNoConversionTypeError(expected string, actual string) object.EmeraldError {
+	return NewTypeError(fmt.Sprintf("no implicit conversion of %s into %s", actual, expected))
+}
+
+func NewTypeError(msg string) object.EmeraldError {
 	return &TypeErrorInstance{
 		Instance: TypeError.New(),
-		message:  fmt.Sprintf("no implicit conversion of %s into %s", actual, expected),
+		message:  msg,
 	}
 }

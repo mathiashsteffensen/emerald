@@ -29,7 +29,7 @@ var arrayBuiltInMethodSet = object.BuiltInMethodSet{
 
 		intArg, ok := args[0].(*IntegerInstance)
 		if !ok {
-			return NewTypeError("Integer", args[0].Class().Super().(*object.Class).Name)
+			return NewNoConversionTypeError("Integer", args[0].Class().Super().(*object.Class).Name)
 		}
 
 		index := intArg.Value

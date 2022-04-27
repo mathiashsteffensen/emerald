@@ -11,16 +11,16 @@ func InitKernel() {
 	Kernel = object.NewModule(
 		"Kernel",
 		object.BuiltInMethodSet{
-			"class":   kernelClass(),
-			"puts":    kernelPuts(),
-			"include": kernelInclude(),
+			"class":    kernelClass(),
+			"kind_of?": kernelKindOf(),
+			"is_a?":    kernelKindOf(),
+			"puts":     kernelPuts(),
+			"include":  kernelInclude(),
 		},
 		object.BuiltInMethodSet{},
 		Module,
 	)
 }
-
-/*** Instance methods ***/
 
 func kernelClass() object.BuiltInMethod {
 	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
@@ -36,7 +36,27 @@ func kernelClass() object.BuiltInMethod {
 	}
 }
 
-/*** Static methods ***/
+func kernelKindOf() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		if len(args) != 1 {
+			return NewArgumentError(len(args), 1)
+		}
+
+		class := args[0]
+
+		if class.Type() != object.CLASS_VALUE && class.Type() != object.MODULE_VALUE {
+			return NewTypeError("class or module required")
+		}
+
+		for _, ancestor := range ctx.ExecutionTarget.Class().Ancestors() {
+			if ancestor == args[0] {
+				return TRUE
+			}
+		}
+
+		return FALSE
+	}
+}
 
 func kernelPuts() object.BuiltInMethod {
 	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {

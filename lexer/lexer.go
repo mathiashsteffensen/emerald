@@ -329,6 +329,11 @@ func (l *Lexer) readIdentifier() string {
 	for isLetter(l.currentChar) {
 		l.readChar()
 	}
+
+	if l.currentChar == '?' || l.currentChar == '!' {
+		l.readChar()
+	}
+
 	return l.currentInput.content[position:l.position]
 }
 

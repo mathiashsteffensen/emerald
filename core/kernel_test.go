@@ -13,6 +13,51 @@ func TestKernel_class(t *testing.T) {
 	runCoreTests(t, tests)
 }
 
+func TestKernel_kind_of(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			name:     "when target is instance of class",
+			input:    "Object.new.kind_of?(Object)",
+			expected: true,
+		},
+		{
+			name:     "when target is instance of subclass",
+			input:    "String.new.kind_of?(Object)",
+			expected: true,
+		},
+		{
+			name:     "singleton is instance of Class",
+			input:    "String.kind_of?(Class)",
+			expected: true,
+		},
+		{
+			name: "when passed a not included module",
+			input: `
+			module MyMod; end
+			class MyClass; end
+			MyClass.new.kind_of?(MyMod)`,
+			expected: false,
+		},
+		{
+			name: "when passed an included module",
+			input: `
+			module MyMod; end
+			class MyClass
+				include(MyMod)
+			end
+			MyClass.new.kind_of?(MyMod)`,
+			expected: true,
+		},
+		{
+			name:     "when passed wrong type of arg",
+			input:    "String.kind_of?(23)",
+			expected: "error:TypeError:class or module required",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestKernel_puts(t *testing.T) {
 	tests := []coreTestCase{
 		{
