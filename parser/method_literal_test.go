@@ -100,6 +100,20 @@ func TestMethodLiteralExpression(t *testing.T) {
 			"method",
 			[]string{},
 		},
+		{
+			"with multiple rescue blocks with error classes",
+			`
+			def method
+				puts("Hello")
+			rescue StandardError
+				puts("An error occurred")
+			rescue SystemError, NoMemoryError => e
+				puts("other error occurred - " + e.inspect)
+			end
+			`,
+			"method",
+			[]string{},
+		},
 	}
 
 	for _, tt := range tests {

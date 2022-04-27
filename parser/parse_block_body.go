@@ -47,6 +47,15 @@ func (p *Parser) parseBlockMainBodyPart() []ast.Statement {
 func (p *Parser) parseBlockRescueParts() []*ast.RescueBlock {
 	rescues := []*ast.RescueBlock{{Body: &ast.BlockStatement{}}}
 
+	rescues[0].CaughtErrorClasses = p.parseRescueBlockErrorClasses()
+
+	if p.peekTokenIs(lexer.ARROW) {
+		p.nextToken()
+		p.nextToken()
+		rescues[0].ErrorVarName = p.parseIdentifierExpression()
+		p.nextToken()
+	}
+
 	rescues[0].Body.Statements = p.parseBlockMainBodyPart()
 
 	if p.curTokenIs(lexer.RESCUE) {
@@ -56,4 +65,23 @@ func (p *Parser) parseBlockRescueParts() []*ast.RescueBlock {
 	}
 
 	return rescues
+}
+
+func (p *Parser) parseRescueBlockErrorClasses() []ast.Expression {
+	errorClasses := []ast.Expression{}
+
+	if p.curTokenIs(lexer.ARROW) || p.curTokenIs(lexer.NEWLINE) {
+		p.nextToken()
+		return errorClasses
+	}
+
+	errorClasses = append(errorClasses, p.parseExpression(LOWEST))
+
+	for p.peekTokenIs(lexer.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		errorClasses = append(errorClasses, p.parseExpression(LOWEST))
+	}
+
+	return errorClasses
 }

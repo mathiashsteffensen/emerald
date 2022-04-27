@@ -9,8 +9,12 @@ func TestMethodCallParsing(t *testing.T) {
 	input := `
 		1.add(2, 3, 4 + 5) do |num, next|
 			num + @var.method
-		rescue
+		rescue NoMemoryError, SystemError => e
+			puts("we done fucked up this time")
+		rescue Exception => e
 			puts("Adding is hard :(")
+		ensure
+			puts("This will always run")
 		end.first
 
 		Logger.info(msg)
@@ -56,12 +60,30 @@ func TestMethodCallParsing(t *testing.T) {
 		t.Fatalf("method call was not passed a block")
 	}
 
-	if len(exp.Block.RescueBlocks) == 0 {
-		t.Fatalf("block was not passed a rescue clause")
+	if len(exp.Block.RescueBlocks) != 2 {
+		t.Fatalf("block was not passed 2 rescue clauses, got=%d", len(exp.Block.RescueBlocks))
 	}
 
-	if len(exp.Block.RescueBlocks[0].Body.Statements) != 1 {
-		t.Fatalf("rescue block did not have 1 statement got=%d", len(exp.Block.RescueBlocks[0].Body.Statements))
+	rescue := exp.Block.RescueBlocks[0]
+
+	err := testRescueBlock(rescue, 1, "e", "NoMemoryError", "SystemError")
+	if err != nil {
+		t.Errorf("first rescue failed: %s", err)
+	}
+
+	rescue = exp.Block.RescueBlocks[1]
+
+	err = testRescueBlock(rescue, 1, "e", "Exception")
+	if err != nil {
+		t.Errorf("first rescue failed: %s", err)
+	}
+
+	if exp.Block.EnsureBlock == nil {
+		t.Fatalf("block was not passed an ensure clause")
+	}
+
+	if len(exp.Block.EnsureBlock.Body.Statements) != 1 {
+		t.Fatalf("rescue block did not have 1 statement got=%d", len(exp.Block.EnsureBlock.Body.Statements))
 	}
 
 	stmt, ok = program.Statements[1].(*ast.ExpressionStatement)

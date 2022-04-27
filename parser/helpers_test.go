@@ -123,6 +123,40 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 	return true
 }
 
+func testRescueBlock(actual *ast.RescueBlock, expStmts int, expErrVarName string, expErrClasses ...string) error {
+	if len(actual.CaughtErrorClasses) != len(expErrClasses) {
+		return fmt.Errorf(
+			"rescue block caught wrong amount of error classes \nwant=%d\ngot=%d",
+			len(expErrClasses),
+			len(actual.CaughtErrorClasses),
+		)
+	}
+
+	for i, class := range actual.CaughtErrorClasses {
+		if class.String() != expErrClasses[i] {
+			return fmt.Errorf("CaughtErrorClasses[%d] failed \nwant=%s\ngot=%s", i, expErrClasses[i], class)
+		}
+	}
+
+	if actual.ErrorVarName.String() != expErrVarName {
+		return fmt.Errorf(
+			"wrong rescue block error var name \nwant='%s'\ngot='%s'",
+			expErrVarName,
+			actual.ErrorVarName,
+		)
+	}
+
+	if len(actual.Body.Statements) != expStmts {
+		return fmt.Errorf(
+			"rescue block had wrong amount of statements \nwant=%d\ngot=%d",
+			expStmts,
+			len(actual.Body.Statements),
+		)
+	}
+
+	return nil
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {

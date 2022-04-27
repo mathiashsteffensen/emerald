@@ -6,8 +6,10 @@ import (
 )
 
 type RescueBlock struct {
-	Token lexer.Token // The 'rescue' token
-	Body  *BlockStatement
+	Token              lexer.Token // The 'rescue' token
+	Body               *BlockStatement
+	CaughtErrorClasses []Expression
+	ErrorVarName       Expression
 }
 
 func (rb *RescueBlock) TokenLiteral() string { return rb.Token.Literal }

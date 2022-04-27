@@ -86,7 +86,7 @@ func (l *Lexer) Run() {
 					if l.peekChar() == '>' {
 						char := l.currentChar
 						l.readChar()
-						tok = Token{Type: ARROW, Literal: string(char) + string(l.currentChar)}
+						tok = Token{Type: ARROW, Literal: string(char) + string(l.currentChar), Line: l.Line, Column: l.Column, Pos: l.position}
 					} else {
 						tok = l.newToken(ASSIGN, l.currentChar)
 					}
