@@ -27,10 +27,10 @@ const (
 
 	// OpPushConstant pushes a constant from the constant pool onto the stack
 	OpPushConstant
+	OpPop
 
 	// Infix operators
 	OpAdd
-	OpPop
 	OpSub
 	OpMul
 	OpDiv

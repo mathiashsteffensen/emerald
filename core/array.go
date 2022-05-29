@@ -46,6 +46,7 @@ var arrayBuiltInMethodSet = object.BuiltInMethodSet{
 	"each":       arrayEach(),
 	"sum":        arraySum(),
 	"to_s":       arrayToS(),
+	"inspect":    arrayToS(),
 }
 
 func arrayFind() object.BuiltInMethod {

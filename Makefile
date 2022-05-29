@@ -1,19 +1,48 @@
+SHELL:=/bin/bash
+
+define print =
+	@echo "--- $(1)"
+endef
+
+define println =
+	$(call print,$(1))
+	@echo ""
+endef
+
+define get_timestamp
+	$(shell date +%s%N)
+endef
+
+define benchmark_build_time =
+	$(eval START:=$(get_timestamp))
+	@echo ""
+	$(call print, "Building $@ executable...")
+	@go build -o ./$@ ./cmd/$@/main.go
+	$(call println, "Completed building $@ executable in $$(((($(get_timestamp) - $(START))/1000)))μs")
+endef
+
 default:
-	make lint test build
+	make lint test-rust build-rust
 
 emerald: ./**/*.go
-	go build -o ./emerald ./cmd/emerald/main.go
+	$(benchmark_build_time)
 
 iem: ./**/*.go
-	go build -o ./iem ./cmd/iem/main.go
+	$(benchmark_build_time)
 
 build: emerald iem
 
 test:
 	go test ./lexer ./parser ./compiler/ ./vm/ ./core/ -cover
 
+test-rust:
+	cargo tarpaulin --out Html --output-dir target/tarpaulin --ignore-tests
+
+build-rust:
+	cargo build --release && cp target/release/emerald tmp/emerald-rust
+
 lint:
-	staticcheck ./...
+	cargo fmt
 
 install:
 	go mod download && \

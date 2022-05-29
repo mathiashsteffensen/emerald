@@ -89,6 +89,14 @@ func testExpectedObject(
 			return
 		}
 
+		if strings.HasPrefix(expected, "module:") {
+			err := testModuleObject(expected[7:], actual)
+			if err != nil {
+				t.Errorf("testModuleObject failed: %s", err)
+			}
+			return
+		}
+
 		if strings.HasPrefix(expected, "instance:") {
 			err := testInstanceObject(expected[9:], actual)
 			if err != nil {
@@ -135,7 +143,7 @@ func parse(t *testing.T, input string) *ast.AST {
 
 	if len(p.Errors()) != 0 {
 		for _, err := range p.Errors() {
-			t.Errorf("parser error: %s\n", err)
+			t.Errorf("parser_test error: %s\n", err)
 		}
 	}
 
@@ -230,7 +238,7 @@ func testSymbolObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testClassObject(expected string, actual object.EmeraldValue) error {
-	expectedClass, ok := object.GetClassByName(expected)
+	expectedClass, ok := object.Classes[expected]
 	if !ok {
 		return fmt.Errorf("undefined class %s", expected)
 	}
@@ -247,10 +255,40 @@ func testClassObject(expected string, actual object.EmeraldValue) error {
 	return nil
 }
 
-func testInstanceObject(expected string, actual object.EmeraldValue) error {
-	actualInstance, ok := actual.(*object.Instance)
+func testModuleObject(expected string, actual object.EmeraldValue) error {
+	expectedClass, ok := object.Modules[expected]
 	if !ok {
-		return fmt.Errorf("expected instance got=%T", actual)
+		return fmt.Errorf("undefined module %s", expected)
+	}
+
+	actualClass, ok := actual.(*object.Module)
+	if !ok {
+		return fmt.Errorf("expected module got=%T", actual)
+	}
+
+	if expectedClass.Name != actualClass.Name {
+		return fmt.Errorf("expected module was expected to be %s, got=%s", expectedClass.Name, actualClass.Name)
+	}
+
+	return nil
+}
+
+func testInstanceObject(expected string, actual object.EmeraldValue) error {
+	var (
+		actualInstance *object.Instance
+		ok             bool
+	)
+
+	if expected == "Class" {
+		actualInstance, ok = actual.(*object.Class).Class().Super().(*object.Instance)
+		if !ok {
+			return fmt.Errorf("expected instance got=%T", actual)
+		}
+	} else {
+		actualInstance, ok = actual.(*object.Instance)
+		if !ok {
+			return fmt.Errorf("expected instance got=%T", actual)
+		}
 	}
 
 	class := actualInstance.Class().Super().(*object.Class)

@@ -16,7 +16,12 @@ type Lexer struct {
 }
 
 func New(input *Input) *Lexer {
-	l := &Lexer{inputChan: make(chan *Input, 100), outputChan: make(chan Token, 100), Line: 1, Column: -1}
+	l := &Lexer{
+		inputChan:  make(chan *Input, 100),
+		outputChan: make(chan Token, 100),
+		Line:       1,
+		Column:     -1,
+	}
 
 	l.Feed(input)
 

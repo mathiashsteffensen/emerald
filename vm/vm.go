@@ -271,7 +271,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		if opString, ok := infixOperators[op]; ok {
 			left := vm.pop()
 
-			result, sendErr := left.SEND(vm.ctx, vm.evalBlock, opString, left, nil, vm.StackTop())
+			result, sendErr := left.SEND(vm.ctx, vm.EvalBlock, opString, left, nil, vm.StackTop())
 			if sendErr != nil {
 				vm.stack[vm.sp-1] = core.NewStandardError(sendErr.Error())
 			} else {
@@ -320,7 +320,7 @@ func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 		vm.pushFrame(frame)
 		vm.sp = frame.basePointer + method.NumLocals
 	case *object.WrappedBuiltInMethod:
-		result := method.Method(vm.ctx, target, block, vm.evalBlock, vm.stack[vm.sp-numArgs:vm.sp]...)
+		result := method.Method(vm.ctx, target, block, vm.EvalBlock, vm.stack[vm.sp-numArgs:vm.sp]...)
 		vm.sp -= numArgs + 2
 		err := vm.push(result)
 

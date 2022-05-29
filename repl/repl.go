@@ -68,6 +68,7 @@ func Start(in io.Reader, out io.Writer) {
 		evaluated := machine.LastPoppedStackElem()
 
 		if evaluated != nil {
+			evaluated, _ = evaluated.SEND(machine.Context(), machine.EvalBlock, "inspect", evaluated, nil)
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
 		}

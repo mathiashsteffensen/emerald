@@ -474,6 +474,8 @@ func (p *Parser) parseStaticClassLiteral() ast.Expression {
 		return nil
 	}
 
+	p.nextIfSemicolonOrNewline()
+
 	class.Body = p.parseBlockStatement(lexer.END)
 
 	return class

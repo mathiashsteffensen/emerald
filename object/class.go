@@ -61,7 +61,11 @@ func NewClass(
 		},
 	}
 
-	class.class = NewSingletonClass(class, staticBuiltInMethodSet, staticParent)
+	if _, ok := Classes["Class"]; ok {
+		class.class = NewSingletonClass(class, staticBuiltInMethodSet, Classes["Class"].New())
+	} else {
+		class.class = NewSingletonClass(class, staticBuiltInMethodSet, staticParent)
+	}
 
 	if name != "" {
 		Classes[name] = class

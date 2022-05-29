@@ -6,7 +6,7 @@ import (
 	"emerald/object"
 )
 
-func (vm *VM) evalBlock(block object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+func (vm *VM) EvalBlock(block object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 	bl := block.(*object.ClosedBlock)
 
 	var err error

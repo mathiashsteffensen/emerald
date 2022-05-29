@@ -14,8 +14,11 @@ func InitKernel() {
 			"class":    kernelClass(),
 			"kind_of?": kernelKindOf(),
 			"is_a?":    kernelKindOf(),
-			"puts":     kernelPuts(),
 			"include":  kernelInclude(),
+			"inspect":  kernelInspect(),
+
+			// Should be made private when that function has been implemented
+			"puts": kernelPuts(),
 		},
 		object.BuiltInMethodSet{},
 		Module,
@@ -97,5 +100,11 @@ func kernelInclude() object.BuiltInMethod {
 		}
 
 		return ctx.DefinitionTarget
+	}
+}
+
+func kernelInspect() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(target.Inspect())
 	}
 }

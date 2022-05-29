@@ -26,6 +26,10 @@ func InitClass() {
 				return ctx.ExecutionTarget.(*object.Class).New()
 			},
 		},
-		object.BuiltInMethodSet{},
+		object.BuiltInMethodSet{
+			"new": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+				return object.NewClass("", Object, Object.Class(), object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+			},
+		},
 	)
 }
