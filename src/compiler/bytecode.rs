@@ -7,7 +7,7 @@ pub trait Stringable {
     fn to_string(&self) -> String;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Opcode {
     // OpPush pushes a constant from the constant pool onto the stack
     OpPush { index: ConstantIndex },
@@ -42,6 +42,10 @@ impl Stringable for Opcode {
 }
 
 pub type Bytecode = Vec<Opcode>;
+
+trait MyClone {
+    fn clone(&self) -> Self;
+}
 
 impl Stringable for Bytecode {
     fn to_string(&self) -> String {

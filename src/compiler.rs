@@ -8,7 +8,9 @@ use crate::object::EmeraldObject;
 
 use crate::core;
 
-use crate::compiler::bytecode::Opcode::{OpAdd, OpPop, OpPush, OpReturn, OpReturnValue, OpSub};
+use crate::compiler::bytecode::Opcode::{
+    OpAdd, OpMul, OpPop, OpPush, OpReturn, OpReturnValue, OpSub,
+};
 use crate::compiler::bytecode::{Bytecode, ConstantIndex, Opcode};
 
 pub mod bytecode;
@@ -76,6 +78,7 @@ impl Compiler {
         match op.as_str() {
             "+" => self.emit(OpAdd),
             "-" => self.emit(OpSub),
+            "*" => self.emit(OpMul),
             _ => panic!("Unknown operator {:?}", op),
         }
     }
@@ -104,7 +107,7 @@ impl Compiler {
         })
     }
 
-    fn get_built_in(&mut self, name: &str) -> Rc<EmeraldObject> {
+    pub fn get_built_in(&self, name: &str) -> Rc<EmeraldObject> {
         Rc::clone(self.built_ins.get(name).unwrap())
     }
 }

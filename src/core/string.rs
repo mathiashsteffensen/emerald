@@ -6,7 +6,7 @@ use crate::object::{EmeraldObject, UnderlyingValueType};
 pub const NAME: &str = "String";
 
 pub fn em_class() -> Rc<EmeraldObject> {
-    object::class::new_class(NAME)
+    object::class::new(NAME, Default::default())
 }
 
 pub fn em_instance(class: Rc<EmeraldObject>, val: String) -> Rc<EmeraldObject> {

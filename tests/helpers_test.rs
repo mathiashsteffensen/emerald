@@ -149,3 +149,38 @@ pub mod compiler {
         c
     }
 }
+
+pub mod vm {
+    use emerald::object::{EmeraldObject, UnderlyingValueType};
+    use emerald::vm::VM;
+    use std::rc::Rc;
+
+    use super::compiler;
+
+    pub struct VMTestCase<'a> {
+        pub input: &'a str,
+        pub expected: UnderlyingValueType,
+    }
+
+    pub fn run_vm_tests(cases: Vec<VMTestCase>) {
+        for case in cases {
+            let result = VM::interpret("test.rb".to_string(), case.input.to_string());
+
+            match result {
+                Ok((_, mut vm)) => {
+                    assert_eq!(vm.sp, 0, "Stack pointer was not reset after test");
+
+                    let actual = vm.last_popped_stack_object();
+
+                    match case.expected {
+                        UnderlyingValueType::Integer(expected) => {
+                            compiler::test_integer_object(expected, actual)
+                        }
+                        _ => assert_eq!(0, 1, "Unknown expected object type"),
+                    }
+                }
+                Err(err) => assert_eq!(0, 1, "VM test failed with error {}", err),
+            }
+        }
+    }
+}

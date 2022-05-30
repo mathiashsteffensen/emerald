@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use emerald;
 use emerald::compiler::bytecode::Bytecode;
-use emerald::compiler::bytecode::Opcode::{OpAdd, OpPop, OpPush, OpSub};
+use emerald::compiler::bytecode::Opcode::{OpAdd, OpMul, OpPop, OpPush, OpSub};
 use emerald::compiler::Compiler;
 use emerald::object::{EmeraldObject, UnderlyingValueType};
 
@@ -27,6 +27,14 @@ fn test_compile_infix_expression() {
                 UnderlyingValueType::Integer(2),
             ]),
             expected_bytecode: Vec::from([OpPush { index: 0 }, OpPush { index: 1 }, OpSub, OpPop]),
+        },
+        CompilerTestCase {
+            input: "1 * 2",
+            expected_constants: Vec::from([
+                UnderlyingValueType::Integer(1),
+                UnderlyingValueType::Integer(2),
+            ]),
+            expected_bytecode: Vec::from([OpPush { index: 0 }, OpPush { index: 1 }, OpMul, OpPop]),
         },
     ]);
 
