@@ -36,6 +36,18 @@ impl EmeraldObject {
         })
     }
 
+    pub fn new_instance_with_underlying_value(
+        class_name: &str,
+        val: UnderlyingValueType,
+    ) -> Arc<EmeraldObject> {
+        Arc::from(EmeraldObject {
+            class: Some(core::em_get_class(class_name).unwrap()),
+            q_super: None,
+            built_in_method_set: Default::default(),
+            underlying_value: val,
+        })
+    }
+
     pub fn new_class(
         name: &str,
         q_super: Option<Arc<EmeraldObject>>,

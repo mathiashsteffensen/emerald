@@ -163,6 +163,20 @@ pub mod compiler {
         }
     }
 
+    pub fn test_boolean_object(expected: bool, actual: Arc<EmeraldObject>) {
+        if expected {
+            match &actual.underlying_value {
+                UnderlyingValueType::True => {}
+                _ => assert!(false, "expression was not true, got={:?}", actual),
+            }
+        } else {
+            match &actual.underlying_value {
+                UnderlyingValueType::False => {}
+                _ => assert!(false, "expression was not false, got={:?}", actual),
+            }
+        }
+    }
+
     pub fn compile(input: &str) -> Compiler {
         let mut c = Compiler::new();
 
@@ -202,6 +216,8 @@ pub mod vm {
                         UnderlyingValueType::String(expected) => {
                             compiler::test_string_object(expected, actual)
                         }
+                        UnderlyingValueType::True => compiler::test_boolean_object(true, actual),
+                        UnderlyingValueType::False => compiler::test_boolean_object(false, actual),
                         _ => assert_eq!(0, 1, "Unknown expected object type"),
                     }
                 }

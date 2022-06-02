@@ -4,10 +4,10 @@ use std::sync::Arc;
 use crate::core;
 use crate::object::{EmeraldObject, UnderlyingValueType};
 
-const NAME: &str = "TrueClass";
+const NAME: &str = "FalseClass";
 
 lazy_static! {
-    pub static ref EM_TRUE: Arc<EmeraldObject> = em_instance();
+    pub static ref EM_FALSE: Arc<EmeraldObject> = em_instance();
 }
 
 pub fn em_init_class() {
@@ -20,5 +20,5 @@ pub fn em_init_class() {
 }
 
 pub fn em_instance() -> Arc<EmeraldObject> {
-    EmeraldObject::new_instance_with_underlying_value(NAME, UnderlyingValueType::True)
+    EmeraldObject::new_instance_with_underlying_value(NAME, UnderlyingValueType::False)
 }

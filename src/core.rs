@@ -6,6 +6,7 @@ use crate::object::{EmeraldObject, UnderlyingValueType};
 
 pub mod all;
 pub mod basic_object;
+pub mod false_class;
 pub mod integer;
 pub mod object;
 pub mod string;

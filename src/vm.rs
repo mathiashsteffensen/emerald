@@ -15,7 +15,7 @@ pub struct VM {
     stack: Vec<Arc<EmeraldObject>>,
     pub sp: u16, // Always points to the next value. Top of stack is stack[sp-1]
     bytecode: Bytecode,
-    cp: i64,
+    cp: i64, // Code pointer, always points to index of next Opcode to fetch
 }
 
 impl VM {
@@ -67,6 +67,8 @@ impl VM {
                 Opcode::OpPop => {
                     self.pop();
                 }
+                Opcode::OpTrue => self.push(Arc::clone(&core::true_class::EM_TRUE)),
+                Opcode::OpFalse => self.push(Arc::clone(&core::false_class::EM_FALSE)),
                 Opcode::OpSend { index } => {
                     let receiver = self.pop();
                     let method = self.constants.get(index as usize).cloned().unwrap();

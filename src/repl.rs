@@ -17,9 +17,7 @@ impl REPL {
     pub fn run(&mut self) {
         let reader = Interface::new("iem").unwrap();
 
-        if let Err(e) = reader.set_prompt(PREFIX) {
-            panic!("Error initializing REPL: {}", e);
-        };
+        reader.set_prompt(PREFIX).unwrap();
 
         while let ReadResult::Input(line) = reader.read_line().unwrap() {
             if line.as_str() == "quit" {
@@ -39,9 +37,11 @@ impl REPL {
                     .unwrap();
 
                 match &stringified.underlying_value {
-                    UnderlyingValueType::String(str) => println!("{}", str),
-                    _ => println!("{:?}#to_s did not return a string", result),
+                    UnderlyingValueType::String(str) => println!("=> {}", str),
+                    _ => println!("{:?}#inspect did not return a string", result),
                 }
+            } else {
+                println!("(Object does not support inspect)\n=>")
             }
         }
     }

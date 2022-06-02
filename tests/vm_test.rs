@@ -6,7 +6,7 @@ use emerald::object::UnderlyingValueType;
 use helpers_test::vm::*;
 
 #[test]
-fn test_integer_literal() {
+fn test_literals() {
     let tests = Vec::from([
         VMTestCase {
             input: "12",
@@ -15,6 +15,14 @@ fn test_integer_literal() {
         VMTestCase {
             input: "1_2",
             expected: UnderlyingValueType::Integer(12),
+        },
+        VMTestCase {
+            input: "true",
+            expected: UnderlyingValueType::True,
+        },
+        VMTestCase {
+            input: "false",
+            expected: UnderlyingValueType::False,
         },
     ]);
 
