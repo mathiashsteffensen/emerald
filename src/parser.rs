@@ -132,6 +132,7 @@ impl Parser {
             token::Token::GreaterThanOrEquals(data) => self.parse_infix_expression(data, left),
             token::Token::Equals(data) => self.parse_infix_expression(data, left),
             token::Token::NotEquals(data) => self.parse_infix_expression(data, left),
+            token::Token::Dot(_data) => self.parse_method_call_with_receiver(left),
             _ => None,
         };
 
@@ -150,6 +151,9 @@ impl Parser {
             token::Token::Int(data) => self.parse_integer_literal(data),
             token::Token::Float(data) => self.parse_float_literal(data),
             token::Token::String(data) => self.parse_string_literal(data),
+            token::Token::True(data) => self.parse_true_literal(data),
+            token::Token::False(data) => self.parse_false_literal(data),
+            token::Token::Nil(data) => self.parse_nil_literal(data),
             token::Token::LeftParen(_data) => self.parse_grouped_expression(),
             _ => {
                 self.add_error(&*format!(
@@ -196,7 +200,8 @@ impl Parser {
 
         match self.peek_token.clone() {
             token::Token::Assign(data) => self.parse_assignment_expression(ident, data),
-            token::Token::LeftParen(_data) => self.parse_method_call(ident),
+            token::Token::LeftParen(_data) => self.parse_method_call_without_receiver(ident),
+            token::Token::Dot(_data) => self.parse_method_call_with_receiver(ident),
             _ => Some(ident),
         }
     }
@@ -221,7 +226,7 @@ impl Parser {
         }
     }
 
-    fn parse_method_call(&mut self, ident: Expression) -> Option<Expression> {
+    fn parse_method_call_without_receiver(&mut self, ident: Expression) -> Option<Expression> {
         let args = if let Some(expr) = self.parse_paren_delimited_expression_list() {
             expr
         } else {
@@ -232,13 +237,62 @@ impl Parser {
         self.next_token();
 
         Some(Expression::MethodCall(node::MethodCallData {
+            receiver: None,
             ident: Box::new(ident),
             block: Block::new(Vec::new(), Vec::new()),
             args,
         }))
     }
 
-    fn parse_string_literal(&mut self, data: token::TokenData) -> Option<Expression> {
+    fn parse_method_call_with_receiver(&mut self, receiver: Expression) -> Option<Expression> {
+        self.next_token();
+
+        let ident = match &self.peek_token {
+            token::Token::Ident(data) => {
+                if let Some(expr) = self.parse_identifier_expression(data.clone()) {
+                    expr
+                } else {
+                    return None;
+                }
+            }
+            _ => {
+                self.add_syntax_error(self.peek_token.data(), "ident");
+                return None;
+            }
+        };
+
+        self.next_token();
+
+        let args = if let Some(expr) = self.parse_paren_delimited_expression_list() {
+            expr
+        } else {
+            return None;
+        };
+
+        self.next_token();
+        self.next_token();
+
+        Some(Expression::MethodCall(node::MethodCallData {
+            receiver: Some(Box::new(receiver)),
+            ident: Box::new(ident),
+            block: Block::new(Vec::new(), Vec::new()),
+            args,
+        }))
+    }
+
+    fn parse_true_literal(&self, data: token::TokenData) -> Option<Expression> {
+        Some(Expression::TrueLiteral(data))
+    }
+
+    fn parse_false_literal(&self, data: token::TokenData) -> Option<Expression> {
+        Some(Expression::FalseLiteral(data))
+    }
+
+    fn parse_nil_literal(&self, data: token::TokenData) -> Option<Expression> {
+        Some(Expression::NilLiteral(data))
+    }
+
+    fn parse_string_literal(&self, data: token::TokenData) -> Option<Expression> {
         Some(Expression::StringLiteral(data))
     }
 

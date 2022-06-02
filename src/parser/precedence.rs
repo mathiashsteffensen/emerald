@@ -21,6 +21,7 @@ pub fn precedence_for(token: lexer::token::Token) -> i16 {
         lexer::token::Token::Minus(_data) => SUM,
         lexer::token::Token::Slash(_data) => PRODUCT,
         lexer::token::Token::Asterisk(_data) => PRODUCT,
+        lexer::token::Token::Dot(_data) => ACCESSOR,
         _ => LOWEST,
     }
 }

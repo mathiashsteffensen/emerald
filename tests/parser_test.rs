@@ -48,15 +48,41 @@ fn test_parse_return_statement() {
 }
 
 #[test]
+fn test_parse_true_literal() {
+    let ast = parse("true;");
+
+    assert_eq!(ast.statements.len(), 1);
+    assert_eq!(ast.statements[0].token_literal(), "true");
+    assert_eq!(ast.statements[0].to_string(), "true;");
+
+    test_expression_stmt(ast.statements[0].clone(), |expr| {
+        test_boolean_object(expr, true)
+    });
+}
+
+#[test]
+fn test_parse_false_literal() {
+    let ast = parse("false;");
+
+    assert_eq!(ast.statements.len(), 1);
+    assert_eq!(ast.statements[0].token_literal(), "false");
+    assert_eq!(ast.statements[0].to_string(), "false;");
+
+    test_expression_stmt(ast.statements[0].clone(), |expr| {
+        test_boolean_object(expr, false)
+    });
+}
+
+#[test]
 fn test_parse_integer_expression_statement() {
     let ast = parse("1_5;");
 
     assert_eq!(ast.statements.len(), 1);
     assert_eq!(ast.statements[0].token_literal(), "1_5");
-    assert_eq!(ast.statements[0].to_string(), "1_5");
+    assert_eq!(ast.statements[0].to_string(), "1_5;");
 
-    test_expression_stmt(ast.statements[0].clone(), {
-        |expr| test_integer_object(expr, 15)
+    test_expression_stmt(ast.statements[0].clone(), |expr| {
+        test_integer_object(expr, 15)
     });
 }
 
@@ -66,10 +92,10 @@ fn test_parse_float_expression_statement() {
 
     assert_eq!(ast.statements.len(), 1);
     assert_eq!(ast.statements[0].token_literal(), "15.78");
-    assert_eq!(ast.statements[0].to_string(), "15.78");
+    assert_eq!(ast.statements[0].to_string(), "15.78;");
 
-    test_expression_stmt(ast.statements[0].clone(), {
-        |expr| test_float_object(expr, 15.78)
+    test_expression_stmt(ast.statements[0].clone(), |expr| {
+        test_float_object(expr, 15.78)
     });
 }
 
@@ -79,10 +105,10 @@ fn test_parse_string_expression_statement() {
 
     assert_eq!(ast.statements.len(), 1);
     assert_eq!(ast.statements[0].token_literal(), "This is a string");
-    assert_eq!(ast.statements[0].to_string(), "This is a string");
+    assert_eq!(ast.statements[0].to_string(), "\"This is a string\";");
 
-    test_expression_stmt(ast.statements[0].clone(), {
-        |expr| test_string_object(expr, "This is a string")
+    test_expression_stmt(ast.statements[0].clone(), |expr| {
+        test_string_object(expr, "This is a string")
     });
 }
 
@@ -94,46 +120,46 @@ fn test_parse_assignment_expression() {
     assert_eq!(ast.statements[0].token_literal(), "=");
     assert_eq!(ast.statements[0].to_string(), "var = 25;");
 
-    test_expression_stmt(ast.statements[0].clone(), {
-        |expr| match expr {
-            emerald::ast::node::Expression::AssignmentExpression(name, _data, value) => {
-                test_identifier_object(*name, "var");
-                test_integer_object(*value, 25);
-            }
-            _ => assert_eq!(
-                0, 1,
-                "expression is not assignment expression \ngot={:?}",
-                ast.statements[0]
-            ),
+    test_expression_stmt(ast.statements[0].clone(), |expr| match expr {
+        emerald::ast::node::Expression::AssignmentExpression(name, _data, value) => {
+            test_identifier_object(*name, "var");
+            test_integer_object(*value, 25);
         }
+        _ => assert_eq!(
+            0, 1,
+            "expression is not assignment expression \ngot={:?}",
+            ast.statements[0]
+        ),
     });
 }
 
 #[test]
 fn test_parse_method_call() {
-    let input = "puts(1, 6.56, \"Hello World!\")";
+    let input = "Kernel.puts(1, 6.56, \"Hello World!\")";
 
     let ast = parse(input);
 
     assert_eq!(ast.statements.len(), 1);
 
-    test_expression_stmt(ast.statements[0].clone(), {
-        |expr| match expr {
-            emerald::ast::node::Expression::MethodCall(data) => {
-                test_identifier_object(*data.ident, "puts");
-
-                assert_eq!(data.args.len(), 3);
-
-                test_integer_object(data.args[0].clone(), 1);
-                test_float_object(data.args[1].clone(), 6.56);
-                test_string_object(data.args[2].clone(), "Hello World!");
+    test_expression_stmt(ast.statements[0].clone(), |expr| match expr {
+        emerald::ast::node::Expression::MethodCall(data) => {
+            match data.receiver {
+                Some(ident) => test_identifier_object(*ident, "Kernel"),
+                None => assert!(false, "Method call did not have receiver"),
             }
-            _ => assert_eq!(
-                0, 1,
-                "expression is not method call \ngot={:?}",
-                ast.statements[0]
-            ),
+            test_identifier_object(*data.ident, "puts");
+
+            assert_eq!(data.args.len(), 3);
+
+            test_integer_object(data.args[0].clone(), 1);
+            test_float_object(data.args[1].clone(), 6.56);
+            test_string_object(data.args[2].clone(), "Hello World!");
         }
+        _ => assert_eq!(
+            0, 1,
+            "expression is not method call \ngot={:?}",
+            ast.statements[0]
+        ),
     });
 }
 
@@ -204,30 +230,28 @@ fn test_method_literal() {
 
         assert_eq!(ast.statements.len(), 1);
 
-        test_expression_stmt(ast.statements[0].clone(), {
-            |expr| match expr {
-                emerald::ast::node::Expression::MethodLiteral(_data, name, args, body) => {
-                    test_identifier_object(*name, &*test.name);
+        test_expression_stmt(ast.statements[0].clone(), |expr| match expr {
+            emerald::ast::node::Expression::MethodLiteral(_data, name, args, body) => {
+                test_identifier_object(*name, &*test.name);
 
-                    assert_eq!(args.len(), test.args.len());
+                assert_eq!(args.len(), test.args.len());
 
-                    for (i, arg) in args.iter().enumerate() {
-                        test_identifier_object(arg.clone(), &*test.args[i])
-                    }
-
-                    assert_eq!(
-                        body.len(),
-                        test.num_stmts as usize,
-                        "wrong num statements, got={:?}",
-                        body
-                    )
+                for (i, arg) in args.iter().enumerate() {
+                    test_identifier_object(arg.clone(), &*test.args[i])
                 }
-                _ => assert_eq!(
-                    0, 1,
-                    "expression is not method literal \ngot={:?}",
-                    ast.statements[0]
-                ),
+
+                assert_eq!(
+                    body.len(),
+                    test.num_stmts as usize,
+                    "wrong num statements, got={:?}",
+                    body
+                )
             }
+            _ => assert_eq!(
+                0, 1,
+                "expression is not method literal \ngot={:?}",
+                ast.statements[0]
+            ),
         });
     }
 }
@@ -244,40 +268,38 @@ fn test_class_literal() {
 
     assert_eq!(ast.statements.len(), 1);
 
-    test_expression_stmt(ast.statements[0].clone(), {
-        |expr| match expr {
-            emerald::ast::node::Expression::ClassLiteral(_data, name, body) => {
-                test_identifier_object(*name, "MyClass");
-                assert_eq!(body.len(), 1);
-            }
-            _ => assert_eq!(
-                0, 1,
-                "expression is not class literal \ngot={:?}",
-                ast.statements[0]
-            ),
+    test_expression_stmt(ast.statements[0].clone(), |expr| match expr {
+        emerald::ast::node::Expression::ClassLiteral(_data, name, body) => {
+            test_identifier_object(*name, "MyClass");
+            assert_eq!(body.len(), 1);
         }
+        _ => assert_eq!(
+            0, 1,
+            "expression is not class literal \ngot={:?}",
+            ast.statements[0]
+        ),
     })
 }
 
 #[test]
 fn test_operator_precedence_parsing() {
     let tests = Vec::from([
-        ["-a * b", "((-a) * b)"],
-        ["!-a", "(!(-a))"],
-        ["a + b + c", "((a + b) + c)"],
-        ["a + b - c", "((a + b) - c)"],
-        ["a * b * c", "((a * b) * c)"],
-        ["a * b / c", "((a * b) / c)"],
-        ["a + b / c", "(a + (b / c))"],
-        ["a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"],
-        ["3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"],
-        ["5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"],
-        ["5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"],
+        ["-a * b", "((-a) * b);"],
+        ["!-a", "(!(-a));"],
+        ["a + b + c", "((a + b) + c);"],
+        ["a + b - c", "((a + b) - c);"],
+        ["a * b * c", "((a * b) * c);"],
+        ["a * b / c", "((a * b) / c);"],
+        ["a + b / c", "(a + (b / c));"],
+        ["a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f);"],
+        ["3 + 4; -5 * 5", "(3 + 4);((-5) * 5);"],
+        ["5 > 4 == 3 < 4", "((5 > 4) == (3 < 4));"],
+        ["5 < 4 != 3 > 4", "((5 < 4) != (3 > 4));"],
         [
             "3 + 4 * 5 == 3 * 1 + 4 * 5",
-            "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+            "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)));",
         ],
-        ["(5 + 5) * 2 * (5 + 5)", "(((5 + 5) * 2) * (5 + 5))"],
+        ["(5 + 5) * 2 * (5 + 5)", "(((5 + 5) * 2) * (5 + 5));"],
     ]);
 
     for test in tests {

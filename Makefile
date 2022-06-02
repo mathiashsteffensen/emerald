@@ -36,7 +36,7 @@ test:
 	go test ./lexer ./parser ./compiler/ ./vm/ ./core/ -cover
 
 test-rust:
-	cargo tarpaulin --out Html --output-dir target/tarpaulin --ignore-tests
+	cargo llvm-cov --html
 
 build-rust:
 	cargo build --release && cp target/release/emerald tmp/emerald-rust

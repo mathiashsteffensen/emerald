@@ -1,18 +1,18 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::compiler::bytecode::{Bytecode, Opcode};
-use crate::object::ExecutionContext;
-use crate::{compiler, lexer, object, parser};
+use crate::object::{EmeraldObject, ExecutionContext, UnderlyingValueType};
+use crate::{compiler, core, lexer, parser};
 
 const STACK_SIZE: u16 = 2048;
 const GLOBALS_SIZE: u16 = u16::MAX;
 // const MAX_FRAMES: u16 = STACK_SIZE / 2;
 
 pub struct VM {
-    execution_context: Rc<ExecutionContext>,
-    constants: Vec<Rc<object::EmeraldObject>>,
-    globals: Vec<Rc<object::EmeraldObject>>,
-    stack: Vec<Rc<object::EmeraldObject>>,
+    execution_context: Arc<ExecutionContext>,
+    constants: Vec<Arc<EmeraldObject>>,
+    globals: Vec<Arc<EmeraldObject>>,
+    stack: Vec<Arc<EmeraldObject>>,
     pub sp: u16, // Always points to the next value. Top of stack is stack[sp-1]
     bytecode: Bytecode,
     cp: i64,
@@ -21,9 +21,8 @@ pub struct VM {
 impl VM {
     pub fn new(c: &compiler::Compiler) -> VM {
         VM {
-            execution_context: Rc::from(ExecutionContext::new(
-                c.get_built_in("String"),
-                c.built_ins.clone(),
+            execution_context: Arc::from(ExecutionContext::new(
+                core::em_get_class("String").unwrap(),
             )),
             constants: c.constant_pool.clone(),
             globals: Vec::with_capacity(GLOBALS_SIZE as usize),
@@ -68,9 +67,24 @@ impl VM {
                 Opcode::OpPop => {
                     self.pop();
                 }
+                Opcode::OpSend { index } => {
+                    let receiver = self.pop();
+                    let method = self.constants.get(index as usize).cloned().unwrap();
+
+                    match &method.underlying_value {
+                        UnderlyingValueType::Symbol(method_name) => {
+                            self.execute_method_call(receiver, method_name.as_str(), Vec::new())
+                        }
+                        _ => panic!(
+                            "Method name was not symbol, got={:?}",
+                            method.underlying_value
+                        ),
+                    }
+                }
                 Opcode::OpAdd => self.execute_infix_operator("+"),
                 Opcode::OpSub => self.execute_infix_operator("-"),
                 Opcode::OpMul => self.execute_infix_operator("*"),
+                Opcode::OpDiv => self.execute_infix_operator("/"),
                 _ => return Err(format!("Opcode not yet implemented {:?}", op)),
             }
         }
@@ -82,14 +96,26 @@ impl VM {
         let right = self.pop();
         let left = self.pop();
 
-        let method = right.method(op);
+        self.execute_method_call(left, op, Vec::from([right]));
+    }
+
+    fn execute_method_call(
+        &mut self,
+        receiver: Arc<EmeraldObject>,
+        method_name: &str,
+        args: Vec<Arc<EmeraldObject>>,
+    ) {
+        let method = receiver.method(method_name);
 
         let result = match method {
             Some(method) => method(
-                Rc::from(ExecutionContext::with_outer(left, self.get_ec())),
-                Vec::from([right]),
+                Arc::from(ExecutionContext::with_outer(receiver, self.get_ec())),
+                args,
             ),
-            None => panic!("TODO! handle NoMethodError for {} on {:?}", op, right),
+            None => panic!(
+                "TODO! handle NoMethodError for {} on {:?}",
+                method_name, receiver
+            ),
         };
 
         self.push(result);
@@ -100,19 +126,15 @@ impl VM {
 
         self.cp += 1;
 
-        if let Some(raw_op) = op {
-            Some(raw_op.clone())
-        } else {
-            None
-        }
+        op.cloned()
     }
 
-    fn push(&mut self, obj: Rc<object::EmeraldObject>) {
+    fn push(&mut self, obj: Arc<EmeraldObject>) {
         self.stack.insert(self.sp as usize, obj);
         self.sp += 1;
     }
 
-    fn pop(&mut self) -> Rc<object::EmeraldObject> {
+    fn pop(&mut self) -> Arc<EmeraldObject> {
         let obj = self.stack_top();
 
         self.sp -= 1;
@@ -121,16 +143,16 @@ impl VM {
     }
 
     // fetches the object at the top of the stack
-    pub fn stack_top(&self) -> Rc<object::EmeraldObject> {
-        Rc::clone(self.stack.get((self.sp - 1) as usize).unwrap())
+    pub fn stack_top(&self) -> Arc<EmeraldObject> {
+        Arc::clone(self.stack.get((self.sp - 1) as usize).unwrap())
     }
 
     // fetches the last object that was popped off the stack
-    pub fn last_popped_stack_object(&mut self) -> Rc<object::EmeraldObject> {
-        Rc::clone(self.stack.get(self.sp as usize).unwrap())
+    pub fn last_popped_stack_object(&mut self) -> Arc<EmeraldObject> {
+        Arc::clone(self.stack.get(self.sp as usize).unwrap())
     }
 
-    pub fn get_ec(&self) -> Rc<ExecutionContext> {
-        Rc::clone(&self.execution_context)
+    pub fn get_ec(&self) -> Arc<ExecutionContext> {
+        Arc::clone(&self.execution_context)
     }
 }

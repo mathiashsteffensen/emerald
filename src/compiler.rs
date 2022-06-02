@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::ast;
 use crate::ast::node;
@@ -9,7 +8,8 @@ use crate::object::EmeraldObject;
 use crate::core;
 
 use crate::compiler::bytecode::Opcode::{
-    OpAdd, OpMul, OpPop, OpPush, OpReturn, OpReturnValue, OpSub,
+    OpAdd, OpDiv, OpFalse, OpMul, OpNil, OpPop, OpPush, OpReturn, OpReturnValue, OpSend, OpSub,
+    OpTrue,
 };
 use crate::compiler::bytecode::{Bytecode, ConstantIndex, Opcode};
 
@@ -18,8 +18,7 @@ mod symbol_table;
 
 pub struct Compiler {
     pub bytecode: Bytecode,
-    pub constant_pool: Vec<Rc<EmeraldObject>>,
-    pub built_ins: HashMap<String, Rc<EmeraldObject>>,
+    pub constant_pool: Vec<Arc<EmeraldObject>>,
 }
 
 impl Compiler {
@@ -27,11 +26,12 @@ impl Compiler {
         Compiler {
             bytecode: Vec::new(),
             constant_pool: Vec::with_capacity(u16::MAX as usize),
-            built_ins: core::all::map(),
         }
     }
 
     pub fn compile(&mut self, node: ast::AST) {
+        core::all::init();
+
         for stmt in node.statements {
             self.compile_statement(stmt);
         }
@@ -57,12 +57,35 @@ impl Compiler {
 
     fn compile_expression(&mut self, node: node::Expression) {
         match node {
+            node::Expression::MethodCall(data) => self.compile_method_call(data),
             node::Expression::InfixExpression(left, data, right) => {
                 self.compile_infix_expression(*left, data.literal, *right)
             }
             node::Expression::IntegerLiteral(_data, val) => self.compile_integer_literal(val),
             node::Expression::StringLiteral(data) => self.compile_string_literal(data.literal),
-            _ => {}
+            node::Expression::TrueLiteral(_data) => self.emit(OpTrue),
+            node::Expression::FalseLiteral(_data) => self.emit(OpFalse),
+            node::Expression::NilLiteral(_data) => self.emit(OpNil),
+            _ => panic!(
+                "Compiler#compile_expression - no match arm defined for {:?}",
+                node
+            ),
+        }
+    }
+
+    fn compile_method_call(&mut self, data: node::MethodCallData) {
+        if let Some(receiver) = data.receiver {
+            self.compile_expression(*receiver);
+        };
+
+        match *data.ident {
+            node::Expression::IdentifierExpression(data) => {
+                let symbol = core::symbol::em_instance(data.literal);
+                let index = self.push_constant(symbol);
+
+                self.emit(OpSend { index })
+            }
+            _ => panic!("Method call ident was, well, not an ident ..."),
         }
     }
 
@@ -79,18 +102,19 @@ impl Compiler {
             "+" => self.emit(OpAdd),
             "-" => self.emit(OpSub),
             "*" => self.emit(OpMul),
+            "/" => self.emit(OpDiv),
             _ => panic!("Unknown operator {:?}", op),
         }
     }
 
     fn compile_string_literal(&mut self, val: String) {
-        let obj = core::string::em_instance(self.get_built_in(core::string::NAME), val);
+        let obj = core::string::em_instance(val);
 
         self.emit_constant(obj)
     }
 
     fn compile_integer_literal(&mut self, val: i64) {
-        let obj = core::integer::em_instance(self.get_built_in(core::integer::NAME), val);
+        let obj = core::integer::em_instance(val);
 
         self.emit_constant(obj)
     }
@@ -99,15 +123,15 @@ impl Compiler {
         self.bytecode.push(op);
     }
 
-    fn emit_constant(&mut self, constant: Rc<EmeraldObject>) {
+    fn push_constant(&mut self, constant: Arc<EmeraldObject>) -> ConstantIndex {
         self.constant_pool.push(constant);
 
-        self.emit(OpPush {
-            index: (self.constant_pool.len() - 1) as ConstantIndex,
-        })
+        (self.constant_pool.len() - 1) as ConstantIndex
     }
 
-    pub fn get_built_in(&self, name: &str) -> Rc<EmeraldObject> {
-        Rc::clone(self.built_ins.get(name).unwrap())
+    fn emit_constant(&mut self, constant: Arc<EmeraldObject>) {
+        let index = self.push_constant(constant);
+
+        self.emit(OpPush { index })
     }
 }

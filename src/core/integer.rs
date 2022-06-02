@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::core;
 use crate::object;
@@ -7,55 +7,66 @@ use crate::object::{BuiltInMethod, EmeraldObject, ExecutionContext, UnderlyingVa
 
 pub const NAME: &str = "Integer";
 
-pub fn em_class() -> Rc<EmeraldObject> {
+pub fn em_init_class() {
     let method_set = HashMap::from([
-        ("+".to_string(), Rc::from(em_integer_add as BuiltInMethod)),
-        ("-".to_string(), Rc::from(em_integer_sub as BuiltInMethod)),
-        ("*".to_string(), Rc::from(em_integer_mul as BuiltInMethod)),
-        (
-            "to_s".to_string(),
-            Rc::from(em_integer_to_s as BuiltInMethod),
-        ),
+        ("+".to_string(), em_integer_add as BuiltInMethod),
+        ("-".to_string(), em_integer_sub as BuiltInMethod),
+        ("*".to_string(), em_integer_mul as BuiltInMethod),
+        ("/".to_string(), em_integer_div as BuiltInMethod),
+        ("to_s".to_string(), em_integer_to_s as BuiltInMethod),
+        ("inspect".to_string(), em_integer_to_s as BuiltInMethod),
     ]);
 
-    object::class::new(NAME, method_set)
+    core::em_define_class(EmeraldObject::new_class(
+        NAME,
+        core::em_get_class(core::object::NAME),
+        method_set,
+    ))
+    .unwrap()
 }
 
-pub fn em_instance(class: Rc<EmeraldObject>, val: i64) -> Rc<EmeraldObject> {
-    Rc::from(EmeraldObject {
-        class: Some(class),
+pub fn em_instance(val: i64) -> Arc<EmeraldObject> {
+    Arc::from(EmeraldObject {
+        class: Some(core::em_get_class(NAME).unwrap()),
         q_super: None,
         built_in_method_set: Default::default(),
         underlying_value: UnderlyingValueType::Integer(val),
     })
 }
 
-fn em_integer_to_s(ctx: Rc<ExecutionContext>, _args: Vec<Rc<EmeraldObject>>) -> Rc<EmeraldObject> {
+fn em_integer_to_s(
+    ctx: Arc<ExecutionContext>,
+    _args: Vec<Arc<EmeraldObject>>,
+) -> Arc<EmeraldObject> {
     extract_underlying_value(
         ctx.borrow_self(),
-        { |val| core::string::em_instance(ctx.get_const("String"), val.to_string()) },
+        |val| core::string::em_instance(val.to_string()),
         format!("Calling Integer#to_s on not an integer?!?!?!"),
     )
 }
 
-fn em_integer_add(ctx: Rc<ExecutionContext>, args: Vec<Rc<EmeraldObject>>) -> Rc<EmeraldObject> {
+fn em_integer_add(ctx: Arc<ExecutionContext>, args: Vec<Arc<EmeraldObject>>) -> Arc<EmeraldObject> {
     integer_infix_operator(ctx, args, "+", |l, r| l + r)
 }
 
-fn em_integer_sub(ctx: Rc<ExecutionContext>, args: Vec<Rc<EmeraldObject>>) -> Rc<EmeraldObject> {
+fn em_integer_sub(ctx: Arc<ExecutionContext>, args: Vec<Arc<EmeraldObject>>) -> Arc<EmeraldObject> {
     integer_infix_operator(ctx, args, "-", |l, r| l - r)
 }
 
-fn em_integer_mul(ctx: Rc<ExecutionContext>, args: Vec<Rc<EmeraldObject>>) -> Rc<EmeraldObject> {
+fn em_integer_mul(ctx: Arc<ExecutionContext>, args: Vec<Arc<EmeraldObject>>) -> Arc<EmeraldObject> {
     integer_infix_operator(ctx, args, "*", |l, r| l * r)
 }
 
+fn em_integer_div(ctx: Arc<ExecutionContext>, args: Vec<Arc<EmeraldObject>>) -> Arc<EmeraldObject> {
+    integer_infix_operator(ctx, args, "/", |l, r| l / r)
+}
+
 fn integer_infix_operator<F>(
-    ctx: Rc<ExecutionContext>,
-    args: Vec<Rc<EmeraldObject>>,
+    ctx: Arc<ExecutionContext>,
+    args: Vec<Arc<EmeraldObject>>,
     op: &str,
     cb: F,
-) -> Rc<EmeraldObject>
+) -> Arc<EmeraldObject>
 where
     F: Fn(i64, i64) -> i64,
 {
@@ -64,8 +75,8 @@ where
         {
             |left| {
                 extract_underlying_value(
-                    Rc::clone(args.get(0).unwrap()),
-                    { |right| em_instance(Rc::clone(ctx.q_self.borrow_class()), cb(left, right)) },
+                    Arc::clone(args.get(0).unwrap()),
+                    |right| em_instance(cb(left, right)),
                     format!("Integer#{} was not passed an integer", op),
                 )
             }
@@ -74,7 +85,7 @@ where
     )
 }
 
-fn extract_underlying_value<F, TReturns>(obj: Rc<EmeraldObject>, cb: F, reject: String) -> TReturns
+fn extract_underlying_value<F, TReturns>(obj: Arc<EmeraldObject>, cb: F, reject: String) -> TReturns
 where
     F: Fn(i64) -> TReturns,
 {

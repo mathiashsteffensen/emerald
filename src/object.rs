@@ -1,33 +1,62 @@
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::sync::Arc;
 
-pub mod class;
+use crate::core;
 
-pub type BuiltInMethod = fn(Rc<ExecutionContext>, Vec<Rc<EmeraldObject>>) -> Rc<EmeraldObject>;
+pub type BuiltInMethod = fn(Arc<ExecutionContext>, Vec<Arc<EmeraldObject>>) -> Arc<EmeraldObject>;
 
 #[derive(Debug)]
 pub enum UnderlyingValueType {
-    Integer(i64),
-    String(String),
-    Class(String),
     None,
+    Class(String),
+    Symbol(String),
+    String(String),
+    Integer(i64),
+    True,
+    False,
+    Nil,
 }
 
 #[derive(Debug)]
 pub struct EmeraldObject {
-    pub class: Option<Rc<EmeraldObject>>,
-    pub q_super: Option<Rc<EmeraldObject>>,
-    pub built_in_method_set: HashMap<String, Rc<BuiltInMethod>>,
+    pub class: Option<Arc<EmeraldObject>>,
+    pub q_super: Option<Arc<EmeraldObject>>,
+    pub built_in_method_set: HashMap<String, BuiltInMethod>,
     pub underlying_value: UnderlyingValueType,
 }
 
 impl EmeraldObject {
+    pub fn new_instance(class_name: &str) -> Arc<EmeraldObject> {
+        Arc::from(EmeraldObject {
+            class: Some(core::em_get_class(class_name).unwrap()),
+            q_super: None,
+            built_in_method_set: Default::default(),
+            underlying_value: UnderlyingValueType::None,
+        })
+    }
+
+    pub fn new_class(
+        name: &str,
+        q_super: Option<Arc<EmeraldObject>>,
+        built_in_method_set: HashMap<String, BuiltInMethod>,
+    ) -> Arc<EmeraldObject> {
+        let underlying_value = UnderlyingValueType::Class(name.to_string());
+
+        Arc::from(EmeraldObject {
+            class: None,
+            q_super,
+            built_in_method_set,
+            underlying_value,
+        })
+    }
+
     pub fn send(
         &self,
         name: &str,
-        ctx: Rc<ExecutionContext>,
-        args: Vec<Rc<EmeraldObject>>,
-    ) -> Result<Rc<EmeraldObject>, String> {
+        ctx: Arc<ExecutionContext>,
+        args: Vec<Arc<EmeraldObject>>,
+    ) -> Result<Arc<EmeraldObject>, String> {
         if let Some(method) = self.method(name) {
             Ok(method(ctx, args))
         } else {
@@ -39,10 +68,10 @@ impl EmeraldObject {
         }
     }
 
-    pub fn method(&self, name: &str) -> Option<Rc<BuiltInMethod>> {
+    pub fn method(&self, name: &str) -> Option<BuiltInMethod> {
         match self.class.clone() {
             Some(class) => match class.built_in_method_set.get(name) {
-                Some(method) => Some(Rc::clone(method)),
+                Some(method) => Some(*method),
                 None => None,
             },
             None => None,
@@ -57,42 +86,35 @@ impl EmeraldObject {
         }
     }
 
-    pub fn borrow_class(&self) -> &Rc<EmeraldObject> {
+    pub fn borrow_class(&self) -> &Arc<EmeraldObject> {
         self.class.as_ref().unwrap()
     }
 }
 
 pub struct ExecutionContext {
-    pub outer: Option<Rc<ExecutionContext>>,
-    pub const_map: HashMap<String, Rc<EmeraldObject>>,
-    pub q_self: Rc<EmeraldObject>,
+    pub outer: Option<Arc<ExecutionContext>>,
+    pub q_self: Arc<EmeraldObject>,
 }
 
 impl ExecutionContext {
-    pub fn new(
-        q_self: Rc<EmeraldObject>,
-        const_map: HashMap<String, Rc<EmeraldObject>>,
-    ) -> ExecutionContext {
+    pub fn new(q_self: Arc<EmeraldObject>) -> ExecutionContext {
         ExecutionContext {
             outer: None,
-            const_map,
             q_self,
         }
     }
 
-    pub fn with_outer(q_self: Rc<EmeraldObject>, outer: Rc<ExecutionContext>) -> ExecutionContext {
+    pub fn with_outer(
+        q_self: Arc<EmeraldObject>,
+        outer: Arc<ExecutionContext>,
+    ) -> ExecutionContext {
         ExecutionContext {
-            outer: Some(Rc::clone(&outer)),
-            const_map: outer.const_map.clone(),
+            outer: Some(Arc::clone(&outer)),
             q_self,
         }
     }
 
-    pub fn get_const(&self, name: &str) -> Rc<EmeraldObject> {
-        Rc::clone(self.const_map.get(name).unwrap())
-    }
-
-    pub fn borrow_self(&self) -> Rc<EmeraldObject> {
-        Rc::clone(&self.q_self)
+    pub fn borrow_self(&self) -> Arc<EmeraldObject> {
+        Arc::clone(&self.q_self)
     }
 }

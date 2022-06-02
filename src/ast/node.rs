@@ -1,4 +1,5 @@
 use crate::lexer::token::TokenData;
+use std::ops::Add;
 use std::string::String;
 
 pub trait Node {
@@ -37,7 +38,7 @@ impl Node for Statement {
 
                 out
             }
-            Statement::ExpressionStatement(expr) => expr.to_string(),
+            Statement::ExpressionStatement(expr) => expr.to_string().add(";"),
         }
     }
 }
@@ -59,6 +60,7 @@ impl Block {
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct MethodCallData {
+    pub receiver: Option<Box<Expression>>,
     pub ident: Box<Expression>,
     pub args: ExpressionList,
     pub block: Block,
@@ -78,6 +80,8 @@ pub enum Expression {
     FloatLiteral(TokenData, f64),
     StringLiteral(TokenData),
     NilLiteral(TokenData),
+    TrueLiteral(TokenData),
+    FalseLiteral(TokenData),
     MethodLiteral(TokenData, Box<Expression>, Vec<Expression>, Vec<Statement>),
     ClassLiteral(TokenData, Box<Expression>, Vec<Statement>),
 }
@@ -94,6 +98,8 @@ impl Node for Expression {
             Expression::FloatLiteral(data, _val) => data.literal.to_string(),
             Expression::StringLiteral(data) => data.literal.to_string(),
             Expression::NilLiteral(data) => data.literal.to_string(),
+            Expression::TrueLiteral(data) => data.literal.to_string(),
+            Expression::FalseLiteral(data) => data.literal.to_string(),
             Expression::MethodLiteral(data, _name, _args, _body) => data.literal.to_string(),
             Expression::ClassLiteral(data, _name, _body) => data.literal.to_string(),
         }
@@ -130,7 +136,6 @@ impl Node for Expression {
                 out.push_str(data.literal.as_str());
                 out.push_str(" ");
                 out.push_str(val.to_string().as_str());
-                out.push_str(";");
 
                 out
             }
@@ -172,8 +177,15 @@ impl Node for Expression {
             }
             Expression::IntegerLiteral(data, _val) => data.literal.to_string(),
             Expression::FloatLiteral(data, _val) => data.literal.to_string(),
-            Expression::StringLiteral(data) => data.literal.to_string(),
+            Expression::StringLiteral(data) => {
+                let mut out = "\"".to_string();
+                out.push_str(data.literal.as_str());
+
+                out.add("\"")
+            }
             Expression::NilLiteral(data) => data.literal.to_string(),
+            Expression::TrueLiteral(data) => data.literal.to_string(),
+            Expression::FalseLiteral(data) => data.literal.to_string(),
             Expression::MethodLiteral(_data, name, args, body) => {
                 let mut out = "def ".to_string();
 

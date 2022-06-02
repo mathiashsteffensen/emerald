@@ -1,3 +1,5 @@
+extern crate core;
+
 mod helpers_test;
 
 use emerald::object::UnderlyingValueType;
@@ -34,7 +36,21 @@ fn test_infix_operations() {
             input: "54 * 86",
             expected: UnderlyingValueType::Integer(4644),
         },
+        VMTestCase {
+            input: "15 / 3",
+            expected: UnderlyingValueType::Integer(5),
+        },
     ]);
+
+    run_vm_tests(tests);
+}
+
+#[test]
+fn test_method_calls() {
+    let tests = Vec::from([VMTestCase {
+        input: "2.to_s",
+        expected: UnderlyingValueType::String("2".to_string()),
+    }]);
 
     run_vm_tests(tests);
 }

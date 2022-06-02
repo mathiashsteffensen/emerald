@@ -14,6 +14,13 @@ pub enum Opcode {
     // OpPop pops the topmost value from the stack
     OpPop,
 
+    // Push EM_TRUE onto the stack
+    OpTrue,
+    // Push EM_FALSE onto the stack
+    OpFalse,
+    // Push EM_NIL onto the stack
+    OpNil,
+
     // OpGetGlobal resolves a global variable reference
     OpGetGlobal { index: SymbolIndex },
     // OpSetGlobal creates a global variable reference
@@ -30,6 +37,12 @@ pub enum Opcode {
     OpGreaterThanOrEq,
     OpLessThan,
     OpLessThanOrEq,
+
+    // Sends a method call, name of method to call is at the index
+    OpSend { index: ConstantIndex },
+
+    // Set execution context
+    OpSetEC,
 
     OpReturn,
     OpReturnValue,

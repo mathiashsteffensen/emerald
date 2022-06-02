@@ -180,7 +180,7 @@ impl Lexer {
 
         tok_data.literal = self.read_number();
 
-        if self.current_char == '.' {
+        if self.current_char == '.' && char_classifiers::is_digit(self.peek_char()) {
             self.read_char();
 
             let decimals = self.read_number();

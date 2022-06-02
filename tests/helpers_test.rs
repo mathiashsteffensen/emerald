@@ -33,6 +33,20 @@ pub mod parser {
         }
     }
 
+    pub fn test_boolean_object(expression: emerald::ast::node::Expression, expected: bool) {
+        if expected {
+            match expression {
+                emerald::ast::node::Expression::TrueLiteral(_) => {}
+                _ => assert!(false, "expression was not true, got={:?}", expression,),
+            }
+        } else {
+            match expression {
+                emerald::ast::node::Expression::FalseLiteral(_) => {}
+                _ => assert!(false, "expression was not false, got={:?}", expression,),
+            }
+        }
+    }
+
     pub fn test_integer_object(expression: emerald::ast::node::Expression, expected: i64) {
         match expression {
             emerald::ast::node::Expression::IntegerLiteral(_data, val) => assert_eq!(val, expected),
@@ -79,7 +93,7 @@ pub mod parser {
 }
 
 pub mod compiler {
-    use std::rc::Rc;
+    use std::sync::Arc;
 
     use emerald::compiler::bytecode::{Bytecode, Stringable};
     use emerald::compiler::Compiler;
@@ -110,7 +124,7 @@ pub mod compiler {
             );
 
             for (i, constant) in case.expected_constants.iter().enumerate() {
-                let actual = Rc::clone(c.constant_pool.get(i).unwrap());
+                let actual = Arc::clone(c.constant_pool.get(i).unwrap());
 
                 match constant {
                     UnderlyingValueType::Integer(expected) => {
@@ -119,23 +133,33 @@ pub mod compiler {
                     UnderlyingValueType::String(expected) => {
                         test_string_object(expected.to_string(), actual)
                     }
+                    UnderlyingValueType::Symbol(expected) => {
+                        test_symbol_object(expected.to_string(), actual)
+                    }
                     _ => assert_eq!(0, 1, "Unknown expected object type"),
                 }
             }
         }
     }
 
-    pub fn test_integer_object(expected: i64, actual: Rc<EmeraldObject>) {
+    pub fn test_integer_object(expected: i64, actual: Arc<EmeraldObject>) {
         match actual.underlying_value {
             UnderlyingValueType::Integer(val) => assert_eq!(expected, val),
             _ => assert_eq!(0, 1, "Object is not Integer"),
         }
     }
 
-    pub fn test_string_object(expected: String, actual: Rc<EmeraldObject>) {
+    pub fn test_string_object(expected: String, actual: Arc<EmeraldObject>) {
         match &actual.underlying_value {
             UnderlyingValueType::String(val) => assert_eq!(expected, *val),
             _ => assert_eq!(0, 1, "Object is not String"),
+        }
+    }
+
+    pub fn test_symbol_object(expected: String, actual: Arc<EmeraldObject>) {
+        match &actual.underlying_value {
+            UnderlyingValueType::Symbol(val) => assert_eq!(expected, *val),
+            _ => assert_eq!(0, 1, "Object is not Symbol"),
         }
     }
 
@@ -153,7 +177,6 @@ pub mod compiler {
 pub mod vm {
     use emerald::object::{EmeraldObject, UnderlyingValueType};
     use emerald::vm::VM;
-    use std::rc::Rc;
 
     use super::compiler;
 
@@ -175,6 +198,9 @@ pub mod vm {
                     match case.expected {
                         UnderlyingValueType::Integer(expected) => {
                             compiler::test_integer_object(expected, actual)
+                        }
+                        UnderlyingValueType::String(expected) => {
+                            compiler::test_string_object(expected, actual)
                         }
                         _ => assert_eq!(0, 1, "Unknown expected object type"),
                     }

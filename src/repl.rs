@@ -1,21 +1,17 @@
-use std::io;
-use std::io::{BufRead, Stdin};
-use std::rc::Rc;
+use std::sync::Arc;
 
 use linefeed::{Interface, ReadResult};
 
 use crate::object::{EmeraldObject, ExecutionContext, UnderlyingValueType};
-use crate::{core, vm};
+use crate::vm;
 
-pub struct REPL {
-    stdin: Stdin,
-}
+pub struct REPL {}
 
 const PREFIX: &str = "(iem)>>> ";
 
 impl REPL {
     pub fn new() -> REPL {
-        REPL { stdin: io::stdin() }
+        REPL {}
     }
 
     pub fn run(&mut self) {
@@ -33,11 +29,11 @@ impl REPL {
 
             let result = self.interpret_line(line);
 
-            if result.responds_to("to_s") {
+            if result.responds_to("inspect") {
                 let stringified = result
                     .send(
-                        "to_s",
-                        Rc::from(ExecutionContext::new(Rc::clone(&result), core::all::map())),
+                        "inspect",
+                        Arc::from(ExecutionContext::new(Arc::clone(&result))),
                         Vec::new(),
                     )
                     .unwrap();
@@ -50,15 +46,7 @@ impl REPL {
         }
     }
 
-    fn next(&self) -> String {
-        let mut line = String::new();
-
-        self.stdin.lock().read_line(&mut line).unwrap();
-
-        line
-    }
-
-    fn interpret_line(&self, line: String) -> Rc<EmeraldObject> {
+    fn interpret_line(&self, line: String) -> Arc<EmeraldObject> {
         let result = vm::VM::interpret("(iem)".to_string(), line);
 
         match result {
