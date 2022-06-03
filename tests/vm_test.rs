@@ -24,6 +24,10 @@ fn test_literals() {
             input: "false",
             expected: UnderlyingValueType::False,
         },
+        VMTestCase {
+            input: "nil",
+            expected: UnderlyingValueType::Nil,
+        },
     ]);
 
     run_vm_tests(tests);
@@ -48,6 +52,30 @@ fn test_infix_operations() {
             input: "15 / 3",
             expected: UnderlyingValueType::Integer(5),
         },
+        VMTestCase {
+            input: "3 > 3",
+            expected: UnderlyingValueType::False,
+        },
+        VMTestCase {
+            input: "4 > 3",
+            expected: UnderlyingValueType::True,
+        },
+        VMTestCase {
+            input: "3 >= 3",
+            expected: UnderlyingValueType::True,
+        },
+        VMTestCase {
+            input: "3 < 3",
+            expected: UnderlyingValueType::False,
+        },
+        VMTestCase {
+            input: "2 < 3",
+            expected: UnderlyingValueType::True,
+        },
+        VMTestCase {
+            input: "3 <= 3",
+            expected: UnderlyingValueType::True,
+        },
     ]);
 
     run_vm_tests(tests);
@@ -58,6 +86,16 @@ fn test_method_calls() {
     let tests = Vec::from([VMTestCase {
         input: "2.to_s",
         expected: UnderlyingValueType::String("2".to_string()),
+    }]);
+
+    run_vm_tests(tests);
+}
+
+#[test]
+fn test_global_assignments() {
+    let tests = Vec::from([VMTestCase {
+        input: "var = 5; var + 5",
+        expected: UnderlyingValueType::Integer(10),
     }]);
 
     run_vm_tests(tests);

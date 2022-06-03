@@ -1,17 +1,19 @@
 use std::sync::Arc;
 
-use crate::ast;
 use crate::ast::node;
+use crate::{ast, lexer, parser};
 
 use crate::object::EmeraldObject;
 
 use crate::core;
 
 use crate::compiler::bytecode::Opcode::{
-    OpAdd, OpDiv, OpFalse, OpMul, OpNil, OpPop, OpPush, OpReturn, OpReturnValue, OpSend, OpSub,
-    OpTrue,
+    OpAdd, OpDiv, OpFalse, OpGetGlobal, OpGreaterThan, OpGreaterThanOrEq, OpLessThan,
+    OpLessThanOrEq, OpMul, OpNil, OpPop, OpPush, OpReturn, OpReturnValue, OpSend, OpSetGlobal,
+    OpSub, OpTrue,
 };
 use crate::compiler::bytecode::{Bytecode, ConstantIndex, Opcode};
+use crate::lexer::token;
 
 pub mod bytecode;
 mod symbol_table;
@@ -19,6 +21,7 @@ mod symbol_table;
 pub struct Compiler {
     pub bytecode: Bytecode,
     pub constant_pool: Vec<Arc<EmeraldObject>>,
+    pub symbol_table: symbol_table::SymbolTable,
 }
 
 impl Compiler {
@@ -26,7 +29,16 @@ impl Compiler {
         Compiler {
             bytecode: Vec::new(),
             constant_pool: Vec::with_capacity(u16::MAX as usize),
+            symbol_table: symbol_table::SymbolTable::new(),
         }
+    }
+
+    pub fn compile_string(&mut self, file: String, input: String) {
+        let mut parser = parser::Parser::new(lexer::input::Input::new(file, input));
+
+        let ast = parser.parse();
+
+        self.compile(ast);
     }
 
     pub fn compile(&mut self, node: ast::AST) {
@@ -57,6 +69,12 @@ impl Compiler {
 
     fn compile_expression(&mut self, node: node::Expression) {
         match node {
+            node::Expression::AssignmentExpression(var, _data, val) => {
+                self.compile_assignment_expression(*var, *val)
+            }
+            node::Expression::IdentifierExpression(data) => {
+                self.compile_identifier_expression(data)
+            }
             node::Expression::MethodCall(data) => self.compile_method_call(data),
             node::Expression::InfixExpression(left, data, right) => {
                 self.compile_infix_expression(*left, data.literal, *right)
@@ -69,6 +87,34 @@ impl Compiler {
             _ => panic!(
                 "Compiler#compile_expression - no match arm defined for {:?}",
                 node
+            ),
+        }
+    }
+
+    fn compile_identifier_expression(&mut self, data: token::TokenData) {
+        if let Some(sym) = self.symbol_table.resolve(&data.literal) {
+            self.emit(OpGetGlobal { index: sym.index })
+        };
+    }
+
+    fn compile_assignment_expression(&mut self, var: node::Expression, val: node::Expression) {
+        match &var {
+            node::Expression::IdentifierExpression(data) => {
+                let symbol = if let Some(sym) = self.symbol_table.resolve(&data.literal) {
+                    sym
+                } else {
+                    self.symbol_table.define(&data.literal)
+                };
+
+                self.compile_expression(val);
+
+                self.emit(OpSetGlobal {
+                    index: symbol.index,
+                });
+            }
+            _ => panic!(
+                "target of assignment expression was not identifier, got={:?}",
+                var
             ),
         }
     }
@@ -103,6 +149,10 @@ impl Compiler {
             "-" => self.emit(OpSub),
             "*" => self.emit(OpMul),
             "/" => self.emit(OpDiv),
+            ">" => self.emit(OpGreaterThan),
+            ">=" => self.emit(OpGreaterThanOrEq),
+            "<" => self.emit(OpLessThan),
+            "<=" => self.emit(OpLessThanOrEq),
             _ => panic!("Unknown operator {:?}", op),
         }
     }

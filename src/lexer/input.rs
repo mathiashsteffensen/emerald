@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct Input {
     pub file_name: String,
     pub content: String,

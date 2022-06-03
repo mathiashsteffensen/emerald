@@ -1,37 +1,38 @@
 use std::collections::HashMap;
 
 #[derive(PartialEq, Debug, Clone)]
-enum SymbolScope {
+pub enum SymbolScope {
     Global,
     Local,
     Free,
 }
 
 #[derive(PartialEq, Debug, Clone)]
-struct Symbol {
-    name: String,
-    scope: SymbolScope,
-    index: u16,
+pub struct Symbol {
+    pub name: String,
+    pub scope: SymbolScope,
+    pub index: u16,
 }
 
-struct SymbolTable {
+#[derive(PartialEq, Debug, Clone)]
+pub struct SymbolTable {
     outer: Option<Box<SymbolTable>>,
-    free_symbols: Vec<Symbol>,
+    // free_symbols: Vec<Symbol>,
     store: HashMap<String, Symbol>,
     num_definitions: u16,
 }
 
 impl SymbolTable {
-    fn new() -> SymbolTable {
+    pub fn new() -> SymbolTable {
         SymbolTable {
             outer: None,
-            free_symbols: Vec::new(),
+            // free_symbols: Vec::new(),
             store: HashMap::new(),
             num_definitions: 0,
         }
     }
 
-    fn with_outer(outer: SymbolTable) -> SymbolTable {
+    pub fn with_outer(outer: SymbolTable) -> SymbolTable {
         let mut table = SymbolTable::new();
 
         table.outer = Some(Box::new(outer));
@@ -39,7 +40,7 @@ impl SymbolTable {
         table
     }
 
-    pub fn define(&mut self, name: String) -> Symbol {
+    pub fn define(&mut self, name: &String) -> Symbol {
         let scope = match self.outer {
             Some(_) => SymbolScope::Local,
             None => SymbolScope::Global,
@@ -51,10 +52,26 @@ impl SymbolTable {
             index: self.num_definitions,
         };
 
-        self.store.insert(name, symbol.clone());
+        self.store.insert(name.clone(), symbol.clone());
         self.num_definitions += 1;
 
         symbol
+    }
+
+    pub fn resolve(&self, name: &String) -> Option<Symbol> {
+        if let Some(sym) = self.store.get(name.as_str()) {
+            Some(sym.clone())
+        } else {
+            self.resolve_outer(name)
+        }
+    }
+
+    fn resolve_outer(&self, name: &String) -> Option<Symbol> {
+        if let Some(outer) = &self.outer {
+            outer.resolve(name)
+        } else {
+            None
+        }
     }
 }
 
@@ -88,15 +105,15 @@ mod tests {
 
         let mut global = SymbolTable::new();
 
-        let a = global.define("a".to_string());
+        let a = global.define(&"a".to_string());
         assert_eq!(a, *expected.get("a").unwrap());
 
-        let b = global.define("b".to_string());
+        let b = global.define(&"b".to_string());
         assert_eq!(b, *expected.get("b").unwrap());
 
         let mut local = SymbolTable::with_outer(global);
 
-        let c = local.define("c".to_string());
+        let c = local.define(&"c".to_string());
         assert_eq!(c, *expected.get("c").unwrap())
     }
 }

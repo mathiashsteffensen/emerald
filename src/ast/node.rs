@@ -67,6 +67,14 @@ pub struct MethodCallData {
 }
 
 #[derive(PartialEq, Debug, Clone)]
+pub struct IfExpressionData {
+    pub token: TokenData,
+    pub condition: Box<Expression>,
+    pub consequence: StatementList,
+    pub alternative: Option<StatementList>,
+}
+
+#[derive(PartialEq, Debug, Clone)]
 pub enum Expression {
     // Expressions
     InfixExpression(Box<Expression>, TokenData, Box<Expression>),
@@ -74,6 +82,7 @@ pub enum Expression {
     IdentifierExpression(TokenData),
     AssignmentExpression(Box<Expression>, TokenData, Box<Expression>),
     MethodCall(MethodCallData),
+    IfExpression(IfExpressionData),
 
     // Literals, which are also expressions
     IntegerLiteral(TokenData, i64),
@@ -94,6 +103,7 @@ impl Node for Expression {
             Expression::IdentifierExpression(data) => data.literal.to_string(),
             Expression::AssignmentExpression(_name, data, _val) => data.literal.to_string(),
             Expression::MethodCall(data) => data.ident.token_literal(),
+            Expression::IfExpression(data) => data.token.literal.to_string(),
             Expression::IntegerLiteral(data, _val) => data.literal.to_string(),
             Expression::FloatLiteral(data, _val) => data.literal.to_string(),
             Expression::StringLiteral(data) => data.literal.to_string(),
@@ -172,6 +182,20 @@ impl Node for Expression {
 
                     out.push_str("end");
                 }
+
+                out
+            }
+            Expression::IfExpression(data) => {
+                let mut out = data.token.literal.to_string().add(" ");
+
+                out.push_str(&*data.condition.to_string().add("\n"));
+
+                for stmt in &data.consequence {
+                    out.push_str("  ");
+                    out.push_str(&*stmt.to_string().add("\n"))
+                }
+
+                out.push_str("end");
 
                 out
             }

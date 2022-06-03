@@ -134,6 +134,45 @@ fn test_parse_assignment_expression() {
 }
 
 #[test]
+fn test_parse_if_expression() {
+    let ast = parse(
+        "\
+    if 5 > 2
+        5
+    end",
+    );
+
+    assert_eq!(ast.statements.len(), 1);
+    assert_eq!(ast.statements[0].token_literal(), "if");
+    assert_eq!(
+        ast.statements[0].to_string(),
+        "if (5 > 2)
+  5;
+end;"
+    );
+
+    test_expression_stmt(ast.statements[0].clone(), |expr| match expr {
+        emerald::ast::node::Expression::IfExpression(data) => match *data.condition {
+            emerald::ast::node::Expression::InfixExpression(left, data, right) => {
+                test_integer_object(*left, 5);
+                assert_eq!(data.literal, ">");
+                test_integer_object(*right, 2);
+            }
+            _ => assert_eq!(
+                0, 1,
+                "if condition is not infix expression \ngot={:?}",
+                ast.statements[0]
+            ),
+        },
+        _ => assert_eq!(
+            0, 1,
+            "expression is not if expression \ngot={:?}",
+            ast.statements[0]
+        ),
+    });
+}
+
+#[test]
 fn test_parse_method_call() {
     let input = "Kernel.puts(1, 6.56, \"Hello World!\")";
 
@@ -337,7 +376,7 @@ fn test_syntax_errors() {
             test[0].to_string(),
         ));
 
-        parser.parse_ast();
+        parser.parse();
 
         assert_eq!(parser.errors.len(), 1);
         assert_eq!(parser.errors[0], test[1]);

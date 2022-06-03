@@ -8,6 +8,7 @@ pub mod all;
 pub mod basic_object;
 pub mod false_class;
 pub mod integer;
+pub mod nil_class;
 pub mod object;
 pub mod string;
 pub mod symbol;

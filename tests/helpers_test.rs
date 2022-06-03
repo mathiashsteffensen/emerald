@@ -1,5 +1,7 @@
+#[allow(unused_imports)]
 use emerald::compiler::bytecode::Stringable;
 
+#[cfg(test)]
 pub mod parser {
     pub fn parse(input: &str) -> emerald::ast::AST {
         let mut parser = emerald::parser::Parser::new(emerald::lexer::input::Input::new(
@@ -7,7 +9,7 @@ pub mod parser {
             input.to_string(),
         ));
 
-        let ast = parser.parse_ast();
+        let ast = parser.parse();
 
         if parser.errors.len() != 0 {
             for error in parser.errors.clone() {
@@ -19,6 +21,7 @@ pub mod parser {
         ast
     }
 
+    #[allow(dead_code)]
     pub fn test_expression_stmt<F>(stmt: emerald::ast::node::Statement, cb: F)
     where
         F: Fn(emerald::ast::node::Expression),
@@ -33,6 +36,7 @@ pub mod parser {
         }
     }
 
+    #[allow(dead_code)]
     pub fn test_boolean_object(expression: emerald::ast::node::Expression, expected: bool) {
         if expected {
             match expression {
@@ -47,6 +51,7 @@ pub mod parser {
         }
     }
 
+    #[allow(dead_code)]
     pub fn test_integer_object(expression: emerald::ast::node::Expression, expected: i64) {
         match expression {
             emerald::ast::node::Expression::IntegerLiteral(_data, val) => assert_eq!(val, expected),
@@ -58,6 +63,7 @@ pub mod parser {
         }
     }
 
+    #[allow(dead_code)]
     pub fn test_float_object(expression: emerald::ast::node::Expression, expected: f64) {
         match expression {
             emerald::ast::node::Expression::FloatLiteral(_data, val) => assert_eq!(val, expected),
@@ -65,6 +71,7 @@ pub mod parser {
         }
     }
 
+    #[allow(dead_code)]
     pub fn test_string_object(expression: emerald::ast::node::Expression, expected: &str) {
         match expression {
             emerald::ast::node::Expression::StringLiteral(data) => {
@@ -78,6 +85,7 @@ pub mod parser {
         }
     }
 
+    #[allow(dead_code)]
     pub fn test_identifier_object(expression: emerald::ast::node::Expression, expected: &str) {
         match expression {
             emerald::ast::node::Expression::IdentifierExpression(data) => {
@@ -92,6 +100,7 @@ pub mod parser {
     }
 }
 
+#[cfg(test)]
 pub mod compiler {
     use std::sync::Arc;
 
@@ -101,12 +110,14 @@ pub mod compiler {
 
     use super::parser;
 
+    #[allow(dead_code)]
     pub struct CompilerTestCase<'a> {
         pub input: &'a str,
         pub expected_constants: Vec<UnderlyingValueType>,
         pub expected_bytecode: Bytecode,
     }
 
+    #[allow(dead_code)]
     pub fn run_compiler_tests(cases: Vec<CompilerTestCase>) {
         for case in cases {
             let c = compile(&case.input);
@@ -142,6 +153,7 @@ pub mod compiler {
         }
     }
 
+    #[allow(dead_code)]
     pub fn test_integer_object(expected: i64, actual: Arc<EmeraldObject>) {
         match actual.underlying_value {
             UnderlyingValueType::Integer(val) => assert_eq!(expected, val),
@@ -149,6 +161,7 @@ pub mod compiler {
         }
     }
 
+    #[allow(dead_code)]
     pub fn test_string_object(expected: String, actual: Arc<EmeraldObject>) {
         match &actual.underlying_value {
             UnderlyingValueType::String(val) => assert_eq!(expected, *val),
@@ -156,6 +169,7 @@ pub mod compiler {
         }
     }
 
+    #[allow(dead_code)]
     pub fn test_symbol_object(expected: String, actual: Arc<EmeraldObject>) {
         match &actual.underlying_value {
             UnderlyingValueType::Symbol(val) => assert_eq!(expected, *val),
@@ -163,6 +177,7 @@ pub mod compiler {
         }
     }
 
+    #[allow(dead_code)]
     pub fn test_boolean_object(expected: bool, actual: Arc<EmeraldObject>) {
         if expected {
             match &actual.underlying_value {
@@ -177,6 +192,7 @@ pub mod compiler {
         }
     }
 
+    #[allow(dead_code)]
     pub fn compile(input: &str) -> Compiler {
         let mut c = Compiler::new();
 
@@ -188,17 +204,20 @@ pub mod compiler {
     }
 }
 
+#[cfg(test)]
 pub mod vm {
-    use emerald::object::{EmeraldObject, UnderlyingValueType};
+    use emerald::object::UnderlyingValueType;
     use emerald::vm::VM;
 
     use super::compiler;
 
+    #[allow(dead_code)]
     pub struct VMTestCase<'a> {
         pub input: &'a str,
         pub expected: UnderlyingValueType,
     }
 
+    #[allow(dead_code)]
     pub fn run_vm_tests(cases: Vec<VMTestCase>) {
         for case in cases {
             let result = VM::interpret("test.rb".to_string(), case.input.to_string());
@@ -218,6 +237,10 @@ pub mod vm {
                         }
                         UnderlyingValueType::True => compiler::test_boolean_object(true, actual),
                         UnderlyingValueType::False => compiler::test_boolean_object(false, actual),
+                        UnderlyingValueType::Nil => match actual.underlying_value {
+                            UnderlyingValueType::Nil => {}
+                            _ => assert!(false, "was not nil, got={:?}", actual.underlying_value),
+                        },
                         _ => assert_eq!(0, 1, "Unknown expected object type"),
                     }
                 }

@@ -1,28 +1,47 @@
+use std::ops::Add;
 use std::sync::Arc;
 
-use linefeed::{Interface, ReadResult};
+use linefeed::{DefaultTerminal, Interface, ReadResult};
 
 use crate::object::{EmeraldObject, ExecutionContext, UnderlyingValueType};
-use crate::vm;
+use crate::{compiler, debug, vm};
 
-pub struct REPL {}
+pub struct REPL {
+    compiler: compiler::Compiler,
+    reader: Interface<DefaultTerminal>,
+    line: i64,
+}
 
-const PREFIX: &str = "(iem)>>> ";
+const PREFIX: &str = "iem(main):";
+const HISTORY_FILE: &str = "/tmp/iem.hst";
 
 impl REPL {
     pub fn new() -> REPL {
-        REPL {}
+        REPL {
+            compiler: compiler::Compiler::new(),
+            reader: Interface::new("iem").unwrap(),
+            line: 1,
+        }
     }
 
     pub fn run(&mut self) {
-        let reader = Interface::new("iem").unwrap();
+        self.set_prompt();
 
-        reader.set_prompt(PREFIX).unwrap();
+        if let Err(e) = self.reader.load_history(HISTORY_FILE) {
+            debug::log(format!(
+                "Could not load history file {}: {}",
+                HISTORY_FILE, e
+            ));
+        }
 
-        while let ReadResult::Input(line) = reader.read_line().unwrap() {
+        while let ReadResult::Input(line) = self.reader.read_line().unwrap() {
             if line.as_str() == "quit" {
                 println!("\nBye!\n");
                 return;
+            }
+
+            if !line.trim().is_empty() {
+                self.reader.add_history_unique(line.clone());
             }
 
             let result = self.interpret_line(line);
@@ -43,14 +62,32 @@ impl REPL {
             } else {
                 println!("(Object does not support inspect)\n=>")
             }
+
+            if let Err(e) = self.reader.save_history(HISTORY_FILE) {
+                debug::log(format!(
+                    "Could not save history file {}: {}",
+                    HISTORY_FILE, e
+                ));
+            }
+
+            self.line += 1;
+            self.set_prompt();
         }
     }
 
-    fn interpret_line(&self, line: String) -> Arc<EmeraldObject> {
-        let result = vm::VM::interpret("(iem)".to_string(), line);
+    fn set_prompt(&self) {
+        self.reader
+            .set_prompt(&*PREFIX.to_string().add(&*format!("{:03}:0> ", self.line)))
+            .unwrap();
+    }
 
-        match result {
-            Ok((_, mut vm)) => vm.last_popped_stack_object(),
+    fn interpret_line(&mut self, line: String) -> Arc<EmeraldObject> {
+        self.compiler.compile_string("(iem)".to_string(), line);
+
+        let mut vm = vm::VM::new(&self.compiler);
+
+        match vm.run() {
+            Ok(()) => vm.last_popped_stack_object(),
             Err(e) => panic!("{}", e),
         }
     }

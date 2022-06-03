@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::compiler::bytecode::{Bytecode, Opcode};
+use crate::compiler::bytecode::{Bytecode, ConstantIndex, Opcode, SymbolIndex};
 use crate::object::{EmeraldObject, ExecutionContext, UnderlyingValueType};
 use crate::{compiler, core, lexer, parser};
 
@@ -39,7 +39,7 @@ impl VM {
     ) -> Result<(compiler::Compiler, VM), String> {
         let input = lexer::input::Input::new(file_name, content);
         let mut parser = parser::Parser::new(input);
-        let ast = parser.parse_ast();
+        let ast = parser.parse();
 
         if parser.errors.len() != 0 {
             return Err(parser.errors.get(0).cloned().unwrap());
@@ -69,24 +69,18 @@ impl VM {
                 }
                 Opcode::OpTrue => self.push(Arc::clone(&core::true_class::EM_TRUE)),
                 Opcode::OpFalse => self.push(Arc::clone(&core::false_class::EM_FALSE)),
-                Opcode::OpSend { index } => {
-                    let receiver = self.pop();
-                    let method = self.constants.get(index as usize).cloned().unwrap();
-
-                    match &method.underlying_value {
-                        UnderlyingValueType::Symbol(method_name) => {
-                            self.execute_method_call(receiver, method_name.as_str(), Vec::new())
-                        }
-                        _ => panic!(
-                            "Method name was not symbol, got={:?}",
-                            method.underlying_value
-                        ),
-                    }
-                }
+                Opcode::OpNil => self.push(Arc::clone(&core::nil_class::EM_NIL)),
+                Opcode::OpSend { index } => self.execute_op_send(index),
+                Opcode::OpSetGlobal { index } => self.execute_op_set_global(index),
+                Opcode::OpGetGlobal { index } => self.execute_op_get_global(index),
                 Opcode::OpAdd => self.execute_infix_operator("+"),
                 Opcode::OpSub => self.execute_infix_operator("-"),
                 Opcode::OpMul => self.execute_infix_operator("*"),
                 Opcode::OpDiv => self.execute_infix_operator("/"),
+                Opcode::OpGreaterThan => self.execute_infix_operator(">"),
+                Opcode::OpGreaterThanOrEq => self.execute_infix_operator(">="),
+                Opcode::OpLessThan => self.execute_infix_operator("<"),
+                Opcode::OpLessThanOrEq => self.execute_infix_operator("<="),
                 _ => return Err(format!("Opcode not yet implemented {:?}", op)),
             }
         }
@@ -94,11 +88,41 @@ impl VM {
         Ok(())
     }
 
+    fn execute_op_set_global(&mut self, index: SymbolIndex) {
+        let val = self.stack_top();
+
+        self.globals.insert(index as usize, val)
+    }
+
+    fn execute_op_get_global(&mut self, index: SymbolIndex) {
+        let val = self
+            .globals
+            .get(index as usize)
+            .unwrap_or(&core::nil_class::EM_NIL);
+
+        self.push(Arc::clone(val));
+    }
+
     fn execute_infix_operator(&mut self, op: &str) {
         let right = self.pop();
         let left = self.pop();
 
         self.execute_method_call(left, op, Vec::from([right]));
+    }
+
+    fn execute_op_send(&mut self, index: ConstantIndex) {
+        let receiver = self.pop();
+        let method = self.constants.get(index as usize).cloned().unwrap();
+
+        match &method.underlying_value {
+            UnderlyingValueType::Symbol(method_name) => {
+                self.execute_method_call(receiver, method_name.as_str(), Vec::new())
+            }
+            _ => panic!(
+                "Method name was not symbol, got={:?}",
+                method.underlying_value
+            ),
+        }
     }
 
     fn execute_method_call(

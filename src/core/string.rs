@@ -1,5 +1,4 @@
 use crate::core;
-use crate::object;
 use crate::object::{BuiltInMethod, EmeraldObject, ExecutionContext, UnderlyingValueType};
 use std::collections::HashMap;
 use std::ops::Add;

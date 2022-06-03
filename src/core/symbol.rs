@@ -1,5 +1,4 @@
 use crate::core;
-use crate::object;
 use crate::object::{EmeraldObject, UnderlyingValueType};
 use std::sync::Arc;
 

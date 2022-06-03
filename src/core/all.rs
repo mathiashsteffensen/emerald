@@ -6,6 +6,7 @@ pub fn init() {
     core::object::em_init_class();
 
     // Primitives
+    core::nil_class::em_init_class();
     core::true_class::em_init_class();
     core::false_class::em_init_class();
     core::integer::em_init_class();

@@ -1,8 +1,7 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::object::{EmeraldObject, UnderlyingValueType};
-use crate::{core, object};
+use crate::core;
+use crate::object::EmeraldObject;
 
 pub const NAME: &str = "Object";
 

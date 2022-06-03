@@ -2,7 +2,6 @@ start = Time.now.to_f
 
 count = 1_000_000
 
-
 count.times do
     "hello" == "hello"
 end

@@ -6,7 +6,7 @@ pub const LESS_GREATER: i16 = 2;
 pub const SUM: i16 = 3;
 pub const PRODUCT: i16 = 4;
 pub const PREFIX: i16 = 5;
-pub const CALL: i16 = 6;
+// pub const CALL: i16 = 6;
 pub const ACCESSOR: i16 = 7;
 
 pub fn precedence_for(token: lexer::token::Token) -> i16 {

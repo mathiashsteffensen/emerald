@@ -1,6 +1,7 @@
 use emerald;
 use emerald::compiler::bytecode::Opcode::{
-    OpAdd, OpDiv, OpFalse, OpMul, OpNil, OpPop, OpPush, OpSend, OpSub, OpTrue,
+    OpAdd, OpDiv, OpFalse, OpGetGlobal, OpGreaterThan, OpGreaterThanOrEq, OpLessThan,
+    OpLessThanOrEq, OpMul, OpNil, OpPop, OpPush, OpSend, OpSetGlobal, OpSub, OpTrue,
 };
 use emerald::object::UnderlyingValueType;
 
@@ -16,6 +17,28 @@ fn test_compile_method_call() {
             UnderlyingValueType::Symbol("to_s".to_string()),
         ]),
         expected_bytecode: Vec::from([OpPush { index: 0 }, OpSend { index: 1 }, OpPop]),
+    }]);
+
+    run_compiler_tests(tests)
+}
+
+#[test]
+fn test_compile_global_assignments() {
+    let tests = Vec::from([CompilerTestCase {
+        input: "var = 5; var + 5",
+        expected_constants: Vec::from([
+            UnderlyingValueType::Integer(5),
+            UnderlyingValueType::Integer(5),
+        ]),
+        expected_bytecode: Vec::from([
+            OpPush { index: 0 },
+            OpSetGlobal { index: 0 },
+            OpPop,
+            OpGetGlobal { index: 0 },
+            OpPush { index: 1 },
+            OpAdd,
+            OpPop,
+        ]),
     }]);
 
     run_compiler_tests(tests)
@@ -55,6 +78,58 @@ fn test_compile_infix_expression() {
                 UnderlyingValueType::Integer(2),
             ]),
             expected_bytecode: Vec::from([OpPush { index: 0 }, OpPush { index: 1 }, OpDiv, OpPop]),
+        },
+        CompilerTestCase {
+            input: "1 > 2",
+            expected_constants: Vec::from([
+                UnderlyingValueType::Integer(1),
+                UnderlyingValueType::Integer(2),
+            ]),
+            expected_bytecode: Vec::from([
+                OpPush { index: 0 },
+                OpPush { index: 1 },
+                OpGreaterThan,
+                OpPop,
+            ]),
+        },
+        CompilerTestCase {
+            input: "1 >= 2",
+            expected_constants: Vec::from([
+                UnderlyingValueType::Integer(1),
+                UnderlyingValueType::Integer(2),
+            ]),
+            expected_bytecode: Vec::from([
+                OpPush { index: 0 },
+                OpPush { index: 1 },
+                OpGreaterThanOrEq,
+                OpPop,
+            ]),
+        },
+        CompilerTestCase {
+            input: "1 < 2",
+            expected_constants: Vec::from([
+                UnderlyingValueType::Integer(1),
+                UnderlyingValueType::Integer(2),
+            ]),
+            expected_bytecode: Vec::from([
+                OpPush { index: 0 },
+                OpPush { index: 1 },
+                OpLessThan,
+                OpPop,
+            ]),
+        },
+        CompilerTestCase {
+            input: "1 <= 2",
+            expected_constants: Vec::from([
+                UnderlyingValueType::Integer(1),
+                UnderlyingValueType::Integer(2),
+            ]),
+            expected_bytecode: Vec::from([
+                OpPush { index: 0 },
+                OpPush { index: 1 },
+                OpLessThanOrEq,
+                OpPop,
+            ]),
         },
         CompilerTestCase {
             input: "\"Hello \" + \"World!\"",
