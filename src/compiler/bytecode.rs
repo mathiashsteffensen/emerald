@@ -2,6 +2,7 @@ use std::string::String;
 
 pub type ConstantIndex = u16;
 pub type SymbolIndex = u16;
+pub type JumpOffset = u16;
 
 pub trait Stringable {
     fn to_string(&self) -> String;
@@ -25,6 +26,11 @@ pub enum Opcode {
     OpGetGlobal { index: SymbolIndex },
     // OpSetGlobal creates a global variable reference
     OpSetGlobal { index: SymbolIndex },
+
+    // Jump 'offset' forward if element at top of stack is not truthy
+    OpJumpNotTruthy { offset: JumpOffset },
+    // Jump 'offset' forward no matter what
+    OpJump { offset: JumpOffset },
 
     // Infix operators
     OpAdd,

@@ -25,7 +25,7 @@ where
     Formatter: Fn(u128) -> String,
 {
     if !is_debug() {
-        return cb()
+        return cb();
     }
 
     let start = SystemTime::now();

@@ -1,7 +1,7 @@
 use emerald;
 use emerald::compiler::bytecode::Opcode::{
-    OpAdd, OpDiv, OpFalse, OpGetGlobal, OpGreaterThan, OpGreaterThanOrEq, OpLessThan,
-    OpLessThanOrEq, OpMul, OpNil, OpPop, OpPush, OpSend, OpSetGlobal, OpSub, OpTrue,
+    OpAdd, OpDiv, OpFalse, OpGetGlobal, OpGreaterThan, OpGreaterThanOrEq, OpJump, OpJumpNotTruthy,
+    OpLessThan, OpLessThanOrEq, OpMul, OpNil, OpPop, OpPush, OpSend, OpSetGlobal, OpSub, OpTrue,
 };
 use emerald::object::UnderlyingValueType;
 
@@ -201,6 +201,26 @@ fn test_compile_nil_literal() {
         input: "nil",
         expected_constants: Vec::from([]),
         expected_bytecode: Vec::from([OpNil, OpPop]),
+    }]);
+
+    run_compiler_tests(tests)
+}
+
+#[test]
+fn test_compile_if_expression() {
+    let tests = Vec::from([CompilerTestCase {
+        input: "if true
+            5
+        end",
+        expected_constants: Vec::from([UnderlyingValueType::Integer(5)]),
+        expected_bytecode: Vec::from([
+            OpTrue,
+            OpJumpNotTruthy { offset: 2 },
+            OpPush { index: 0 },
+            OpJump { offset: 1 },
+            OpNil,
+            OpPop,
+        ]),
     }]);
 
     run_compiler_tests(tests)

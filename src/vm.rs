@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::compiler::bytecode::{Bytecode, ConstantIndex, Opcode, SymbolIndex};
+use crate::compiler::bytecode::{Bytecode, ConstantIndex, JumpOffset, Opcode, SymbolIndex};
 use crate::object::{EmeraldObject, ExecutionContext, UnderlyingValueType};
 use crate::{compiler, core, lexer, parser};
 
@@ -71,6 +71,8 @@ impl VM {
                 Opcode::OpFalse => self.push(Arc::clone(&core::false_class::EM_FALSE)),
                 Opcode::OpNil => self.push(Arc::clone(&core::nil_class::EM_NIL)),
                 Opcode::OpSend { index } => self.execute_op_send(index),
+                Opcode::OpJumpNotTruthy { offset } => self.execute_op_jump_not_truthy(offset),
+                Opcode::OpJump { offset } => self.execute_jump(offset),
                 Opcode::OpSetGlobal { index } => self.execute_op_set_global(index),
                 Opcode::OpGetGlobal { index } => self.execute_op_get_global(index),
                 Opcode::OpAdd => self.execute_infix_operator("+"),
@@ -86,6 +88,18 @@ impl VM {
         }
 
         Ok(())
+    }
+
+    fn execute_op_jump_not_truthy(&mut self, offset: JumpOffset) {
+        let val = self.pop();
+
+        if !core::em_is_truthy(val) {
+            self.execute_jump(offset)
+        }
+    }
+
+    fn execute_jump(&mut self, offset: JumpOffset) {
+        self.cp += offset as i64
     }
 
     fn execute_op_set_global(&mut self, index: SymbolIndex) {

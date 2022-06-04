@@ -16,6 +16,7 @@ use crate::compiler::bytecode::{Bytecode, ConstantIndex, Opcode};
 use crate::lexer::token;
 
 pub mod bytecode;
+mod compile_if_expression;
 mod symbol_table;
 
 pub struct Compiler {
@@ -84,11 +85,18 @@ impl Compiler {
             node::Expression::InfixExpression(left, data, right) => {
                 self.compile_infix_expression(*left, data.literal, *right)
             }
+            node::Expression::IfExpression(data) => compile_if_expression::exec(self, data),
             node::Expression::IntegerLiteral(_data, val) => self.compile_integer_literal(val),
             node::Expression::StringLiteral(data) => self.compile_string_literal(data.literal),
-            node::Expression::TrueLiteral(_data) => self.emit(OpTrue),
-            node::Expression::FalseLiteral(_data) => self.emit(OpFalse),
-            node::Expression::NilLiteral(_data) => self.emit(OpNil),
+            node::Expression::TrueLiteral(_data) => {
+                self.emit(OpTrue);
+            }
+            node::Expression::FalseLiteral(_data) => {
+                self.emit(OpFalse);
+            }
+            node::Expression::NilLiteral(_data) => {
+                self.emit(OpNil);
+            }
             _ => panic!(
                 "Compiler#compile_expression - no match arm defined for {:?}",
                 node
@@ -98,7 +106,7 @@ impl Compiler {
 
     fn compile_identifier_expression(&mut self, data: token::TokenData) {
         if let Some(sym) = self.symbol_table.resolve(&data.literal) {
-            self.emit(OpGetGlobal { index: sym.index })
+            self.emit(OpGetGlobal { index: sym.index });
         };
     }
 
@@ -134,7 +142,7 @@ impl Compiler {
                 let symbol = core::symbol::em_instance(data.literal);
                 let index = self.push_constant(symbol);
 
-                self.emit(OpSend { index })
+                self.emit(OpSend { index });
             }
             _ => panic!("Method call ident was, well, not an ident ..."),
         }
@@ -159,7 +167,7 @@ impl Compiler {
             "<" => self.emit(OpLessThan),
             "<=" => self.emit(OpLessThanOrEq),
             _ => panic!("Unknown operator {:?}", op),
-        }
+        };
     }
 
     fn compile_string_literal(&mut self, val: String) {
@@ -174,8 +182,23 @@ impl Compiler {
         self.emit_constant(obj)
     }
 
-    fn emit(&mut self, op: Opcode) {
+    fn remove_last_if_op_pop(&mut self) {
+        match self.bytecode.last().unwrap() {
+            OpPop => {
+                self.bytecode.pop();
+            }
+            _ => {}
+        }
+    }
+
+    fn change_op(&mut self, index: usize, new: Opcode) {
+        self.bytecode[index] = new
+    }
+
+    fn emit(&mut self, op: Opcode) -> usize {
         self.bytecode.push(op);
+
+        self.bytecode.len() - 1
     }
 
     fn push_constant(&mut self, constant: Arc<EmeraldObject>) -> ConstantIndex {
@@ -187,6 +210,6 @@ impl Compiler {
     fn emit_constant(&mut self, constant: Arc<EmeraldObject>) {
         let index = self.push_constant(constant);
 
-        self.emit(OpPush { index })
+        self.emit(OpPush { index });
     }
 }

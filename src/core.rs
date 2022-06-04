@@ -41,3 +41,7 @@ pub fn em_get_class(name: &str) -> Option<Arc<EmeraldObject>> {
         None => None,
     }
 }
+
+pub fn em_is_truthy(obj: Arc<EmeraldObject>) -> bool {
+    !Arc::ptr_eq(&obj, &nil_class::EM_NIL) && !Arc::ptr_eq(&obj, &false_class::EM_FALSE)
+}
