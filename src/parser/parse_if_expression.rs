@@ -1,6 +1,7 @@
 use crate::ast::node::{Expression, IfExpressionData};
+use crate::lexer::token;
 use crate::lexer::token::TokenData;
-use crate::parser::{parse_expression, precedence, Parser};
+use crate::parser::{parse_expression, parse_statement_list, precedence, Parser};
 
 pub fn exec(p: &mut Parser, data: TokenData) -> Option<Expression> {
     p.next_token();
@@ -9,7 +10,8 @@ pub fn exec(p: &mut Parser, data: TokenData) -> Option<Expression> {
     match condition {
         Some(condition) => {
             p.next_token();
-            let consequence = p.parse_do_end_block();
+            let consequence =
+                parse_statement_list::exec(p, |token| matches!(token, token::Token::End(_)));
 
             Some(Expression::IfExpression(IfExpressionData {
                 condition: Box::new(condition),

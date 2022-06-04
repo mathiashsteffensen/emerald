@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::ast::node;
-use crate::{ast, lexer, parser};
+use crate::{ast, debug, lexer, parser};
 
 use crate::object::EmeraldObject;
 
@@ -42,11 +42,16 @@ impl Compiler {
     }
 
     pub fn compile(&mut self, node: ast::AST) {
-        core::all::init();
+        debug::time(
+            || {
+                core::all::init();
 
-        for stmt in node.statements {
-            self.compile_statement(stmt);
-        }
+                for stmt in &node.statements {
+                    self.compile_statement(stmt.clone());
+                }
+            },
+            |elapsed| format!("Finished compiling in {}ms", elapsed),
+        )
     }
 
     fn compile_statement(&mut self, node: node::Statement) {

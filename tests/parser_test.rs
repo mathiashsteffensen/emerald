@@ -174,11 +174,12 @@ end;"
 
 #[test]
 fn test_parse_method_call() {
-    let input = "Kernel.puts(1, 6.56, \"Hello World!\")";
+    let input = "Kernel.puts(1, 6.56, \"Hello World!\")
+    puts(\"Hello\")";
 
     let ast = parse(input);
 
-    assert_eq!(ast.statements.len(), 1);
+    assert_eq!(ast.statements.len(), 2);
 
     test_expression_stmt(ast.statements[0].clone(), |expr| match expr {
         emerald::ast::node::Expression::MethodCall(data) => {
@@ -198,6 +199,25 @@ fn test_parse_method_call() {
             0, 1,
             "expression is not method call \ngot={:?}",
             ast.statements[0]
+        ),
+    });
+
+    test_expression_stmt(ast.statements[1].clone(), |expr| match expr {
+        emerald::ast::node::Expression::MethodCall(data) => {
+            match data.receiver {
+                None => {}
+                Some(ident) => assert!(false, "Method call had receiver {:?}", ident),
+            }
+            test_identifier_object(*data.ident, "puts");
+
+            assert_eq!(data.args.len(), 1);
+
+            test_string_object(data.args[0].clone(), "Hello");
+        }
+        _ => assert_eq!(
+            0, 1,
+            "expression is not method call \ngot={:?}",
+            ast.statements[1]
         ),
     });
 }
