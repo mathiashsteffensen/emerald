@@ -1,12 +1,16 @@
 use std::sync::Arc;
 
-use crate::compiler::bytecode::{Bytecode, ConstantIndex, JumpOffset, Opcode, SymbolIndex};
+use crate::compiler::bytecode::{ConstantIndex, JumpOffset, Opcode, SymbolIndex};
+use crate::core::nil_class::EM_NIL;
 use crate::object::{EmeraldObject, ExecutionContext, UnderlyingValueType};
+use crate::vm::frame::Frame;
 use crate::{compiler, core, lexer, parser};
+
+mod frame;
 
 const STACK_SIZE: u16 = 2048;
 const GLOBALS_SIZE: u16 = u16::MAX;
-// const MAX_FRAMES: u16 = STACK_SIZE / 2;
+const MAX_FRAMES: u16 = STACK_SIZE / 2;
 
 pub struct VM {
     execution_context: Arc<ExecutionContext>,
@@ -14,12 +18,16 @@ pub struct VM {
     globals: Vec<Arc<EmeraldObject>>,
     stack: Vec<Arc<EmeraldObject>>,
     pub sp: u16, // Always points to the next value. Top of stack is stack[sp-1]
-    bytecode: Bytecode,
-    cp: i64, // Code pointer, always points to index of next Opcode to fetch
+    frames: Vec<Frame>,
+    fp: u16, // Points to current frame
 }
 
 impl VM {
     pub fn new(c: &compiler::Compiler) -> VM {
+        let base_frame = Frame::new(c.bytecode.clone());
+        let mut frames = Vec::with_capacity(MAX_FRAMES as usize);
+        frames.push(base_frame);
+
         VM {
             execution_context: Arc::from(ExecutionContext::new(
                 core::em_get_class("String").unwrap(),
@@ -28,8 +36,8 @@ impl VM {
             globals: Vec::with_capacity(GLOBALS_SIZE as usize),
             stack: Vec::with_capacity(STACK_SIZE as usize),
             sp: 0,
-            bytecode: c.bytecode.clone(),
-            cp: 0,
+            frames,
+            fp: 0,
         }
     }
 
@@ -57,7 +65,7 @@ impl VM {
     }
 
     pub fn run(&mut self) -> Result<(), String> {
-        while let Some(op) = self.fetch() {
+        while let Some(op) = self.current_frame().fetch() {
             match op {
                 Opcode::OpPush { index } => {
                     let obj = self.constants.get(index as usize).cloned().unwrap();
@@ -66,6 +74,20 @@ impl VM {
                 }
                 Opcode::OpPop => {
                     self.pop();
+                }
+                Opcode::OpReturnValue => {
+                    self.pop();
+                    if self.fp == 0 {
+                        return Ok(());
+                    }
+                }
+                Opcode::OpReturn => {
+                    self.push(Arc::clone(&EM_NIL));
+                    if self.fp == 0 {
+                        self.pop();
+
+                        return Ok(());
+                    }
                 }
                 Opcode::OpTrue => self.push(Arc::clone(&core::true_class::EM_TRUE)),
                 Opcode::OpFalse => self.push(Arc::clone(&core::false_class::EM_FALSE)),
@@ -99,7 +121,7 @@ impl VM {
     }
 
     fn execute_jump(&mut self, offset: JumpOffset) {
-        self.cp += offset as i64
+        self.current_frame().cp += offset as u64
     }
 
     fn execute_op_set_global(&mut self, index: SymbolIndex) {
@@ -161,14 +183,6 @@ impl VM {
         self.push(result);
     }
 
-    fn fetch(&mut self) -> Option<Opcode> {
-        let op = self.bytecode.get(self.cp as usize);
-
-        self.cp += 1;
-
-        op.cloned()
-    }
-
     fn push(&mut self, obj: Arc<EmeraldObject>) {
         self.stack.insert(self.sp as usize, obj);
         self.sp += 1;
@@ -180,6 +194,10 @@ impl VM {
         self.sp -= 1;
 
         obj
+    }
+
+    fn current_frame(&mut self) -> &mut Frame {
+        &mut self.frames[self.fp as usize]
     }
 
     // fetches the object at the top of the stack

@@ -111,9 +111,61 @@ fn test_if_expressions() {
             expected: UnderlyingValueType::Integer(5),
         },
         VMTestCase {
+            input: "if true
+                5
+            else
+                25
+            end",
+            expected: UnderlyingValueType::Integer(5),
+        },
+        VMTestCase {
             input: "if false
                 5
             end",
+            expected: UnderlyingValueType::Nil,
+        },
+        VMTestCase {
+            input: "if false
+                5
+            else
+                25
+            end",
+            expected: UnderlyingValueType::Integer(25),
+        },
+    ]);
+
+    run_vm_tests(tests);
+}
+
+#[test]
+fn test_return_statements() {
+    let tests = Vec::from([
+        VMTestCase {
+            input: "if true
+                return 5
+            end
+            10",
+            expected: UnderlyingValueType::Integer(5),
+        },
+        VMTestCase {
+            input: "if false
+                return 5
+            end
+            10",
+            expected: UnderlyingValueType::Integer(10),
+        },
+        VMTestCase {
+            input: "if false
+                return
+            end
+            25",
+            expected: UnderlyingValueType::Integer(25),
+        },
+        VMTestCase {
+            input: "if true
+                return
+            end
+            25",
             expected: UnderlyingValueType::Nil,
         },
     ]);

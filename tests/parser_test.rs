@@ -139,6 +139,8 @@ fn test_parse_if_expression() {
         "\
     if 5 > 2
         5
+    else
+        10
     end",
     );
 
@@ -148,6 +150,8 @@ fn test_parse_if_expression() {
         ast.statements[0].to_string(),
         "if (5 > 2)
   5;
+else
+  10;
 end;"
     );
 

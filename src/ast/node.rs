@@ -195,6 +195,15 @@ impl Node for Expression {
                     out.push_str(&*stmt.to_string().add("\n"))
                 }
 
+                if let Some(alternative) = &data.alternative {
+                    out.push_str("else\n");
+
+                    for stmt in alternative {
+                        out.push_str("  ");
+                        out.push_str(&*stmt.to_string().add("\n"))
+                    }
+                }
+
                 out.push_str("end");
 
                 out

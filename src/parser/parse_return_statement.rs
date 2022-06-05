@@ -8,7 +8,6 @@ pub fn exec(p: &mut Parser, data: TokenData) -> Option<Statement> {
 
     if p.peek_token_is_newline() || p.peek_token_is_semicolon() || p.peek_token_is_eof() {
         p.next_token();
-        p.next_token();
         return return_statement(None);
     }
 

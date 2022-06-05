@@ -1,12 +1,50 @@
 use emerald;
 use emerald::compiler::bytecode::Opcode::{
     OpAdd, OpDiv, OpFalse, OpGetGlobal, OpGreaterThan, OpGreaterThanOrEq, OpJump, OpJumpNotTruthy,
-    OpLessThan, OpLessThanOrEq, OpMul, OpNil, OpPop, OpPush, OpSend, OpSetGlobal, OpSub, OpTrue,
+    OpLessThan, OpLessThanOrEq, OpMul, OpNil, OpPop, OpPush, OpReturn, OpReturnValue, OpSend,
+    OpSetGlobal, OpSub, OpTrue,
 };
 use emerald::object::UnderlyingValueType;
 
 mod helpers_test;
 use helpers_test::compiler::*;
+
+#[test]
+fn test_compile_return_statement() {
+    let tests = Vec::from([
+        CompilerTestCase {
+            input: "if true
+                return 5
+            end",
+            expected_constants: Vec::from([UnderlyingValueType::Integer(5)]),
+            expected_bytecode: Vec::from([
+                OpTrue,
+                OpJumpNotTruthy { offset: 3 },
+                OpPush { index: 0 },
+                OpReturnValue,
+                OpJump { offset: 1 },
+                OpNil,
+                OpPop,
+            ]),
+        },
+        CompilerTestCase {
+            input: "if true
+                return
+            end",
+            expected_constants: Vec::from([]),
+            expected_bytecode: Vec::from([
+                OpTrue,
+                OpJumpNotTruthy { offset: 2 },
+                OpReturn,
+                OpJump { offset: 1 },
+                OpNil,
+                OpPop,
+            ]),
+        },
+    ]);
+
+    run_compiler_tests(tests)
+}
 
 #[test]
 fn test_compile_method_call() {
@@ -208,20 +246,57 @@ fn test_compile_nil_literal() {
 
 #[test]
 fn test_compile_if_expression() {
-    let tests = Vec::from([CompilerTestCase {
-        input: "if true
-            5
-        end",
-        expected_constants: Vec::from([UnderlyingValueType::Integer(5)]),
-        expected_bytecode: Vec::from([
-            OpTrue,
-            OpJumpNotTruthy { offset: 2 },
-            OpPush { index: 0 },
-            OpJump { offset: 1 },
-            OpNil,
-            OpPop,
-        ]),
-    }]);
+    let tests = Vec::from([
+        CompilerTestCase {
+            input: "if true
+                5
+            end",
+            expected_constants: Vec::from([UnderlyingValueType::Integer(5)]),
+            expected_bytecode: Vec::from([
+                OpTrue,
+                OpJumpNotTruthy { offset: 2 },
+                OpPush { index: 0 },
+                OpJump { offset: 1 },
+                OpNil,
+                OpPop,
+            ]),
+        },
+        CompilerTestCase {
+            input: "if true
+                5
+                4
+                3
+                2
+                1
+            else
+                \"Hello\"
+            end",
+            expected_constants: Vec::from([
+                UnderlyingValueType::Integer(5),
+                UnderlyingValueType::Integer(4),
+                UnderlyingValueType::Integer(3),
+                UnderlyingValueType::Integer(2),
+                UnderlyingValueType::Integer(1),
+                UnderlyingValueType::String("Hello".to_string()),
+            ]),
+            expected_bytecode: Vec::from([
+                OpTrue,
+                OpJumpNotTruthy { offset: 10 },
+                OpPush { index: 0 },
+                OpPop,
+                OpPush { index: 1 },
+                OpPop,
+                OpPush { index: 2 },
+                OpPop,
+                OpPush { index: 3 },
+                OpPop,
+                OpPush { index: 4 },
+                OpJump { offset: 1 },
+                OpPush { index: 5 },
+                OpPop,
+            ]),
+        },
+    ]);
 
     run_compiler_tests(tests)
 }

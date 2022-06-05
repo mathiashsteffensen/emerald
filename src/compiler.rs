@@ -213,3 +213,17 @@ impl Compiler {
         self.emit(OpPush { index });
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_compile_string() {
+        let mut compiler = Compiler::new();
+
+        compiler.compile_string("test.rb".to_string(), "2".to_string());
+
+        assert_eq!(compiler.bytecode[0], OpPush { index: 0 })
+    }
+}

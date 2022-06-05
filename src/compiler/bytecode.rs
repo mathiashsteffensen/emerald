@@ -8,7 +8,7 @@ pub trait Stringable {
     fn to_string(&self) -> String;
 }
 
-#[derive(Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Opcode {
     // OpPush pushes a constant from the constant pool onto the stack
     OpPush { index: ConstantIndex },

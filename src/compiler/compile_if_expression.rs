@@ -39,6 +39,8 @@ pub fn exec(c: &mut Compiler, data: IfExpressionData) {
         }
     }
 
+    c.remove_last_if_op_pop();
+
     let real_jump_offset = (c.bytecode.len() - jump_pos - 1) as JumpOffset;
     c.change_op(
         jump_pos,
