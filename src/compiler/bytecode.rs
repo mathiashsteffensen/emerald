@@ -11,7 +11,9 @@ pub trait Stringable {
 #[derive(PartialEq, Debug, Clone)]
 pub enum Opcode {
     // OpPush pushes a constant from the constant pool onto the stack
-    OpPush { index: ConstantIndex },
+    OpPush {
+        index: ConstantIndex,
+    },
     // OpPop pops the topmost value from the stack
     OpPop,
 
@@ -23,14 +25,31 @@ pub enum Opcode {
     OpNil,
 
     // OpGetGlobal resolves a global variable reference
-    OpGetGlobal { index: SymbolIndex },
+    OpGetGlobal {
+        index: SymbolIndex,
+    },
     // OpSetGlobal creates a global variable reference
-    OpSetGlobal { index: SymbolIndex },
+    OpSetGlobal {
+        index: SymbolIndex,
+    },
+
+    // OpGetLocal resolves a local variable reference
+    OpGetLocal {
+        index: SymbolIndex,
+    },
+    // OpSetLocal creates a local variable reference
+    OpSetLocal {
+        index: SymbolIndex,
+    },
 
     // Jump 'offset' forward if element at top of stack is not truthy
-    OpJumpNotTruthy { offset: JumpOffset },
+    OpJumpNotTruthy {
+        offset: JumpOffset,
+    },
     // Jump 'offset' forward no matter what
-    OpJump { offset: JumpOffset },
+    OpJump {
+        offset: JumpOffset,
+    },
 
     // Infix operators
     OpAdd,
@@ -44,11 +63,23 @@ pub enum Opcode {
     OpLessThan,
     OpLessThanOrEq,
 
+    // Defines a new method
+    OpDefineMethod {
+        proc_index: ConstantIndex,
+        name_index: ConstantIndex,
+    },
+
     // Sends a method call, name of method to call is at the index
-    OpSend { index: ConstantIndex },
+    OpSend {
+        index: ConstantIndex,
+        num_args: u8,
+    },
 
     // Set execution context
     OpSetEC,
+
+    // Push 'self' from the current execution context onto the stack
+    OpPushSelf,
 
     OpReturn,
     OpReturnValue,
@@ -86,9 +117,9 @@ mod tests {
     use std::mem::size_of;
 
     #[test]
-    fn test_opcode_is_32_bits() {
-        // An Opcode should be 32 bits; anything bigger and we've mis-defined some
+    fn test_opcode_is_6_bytes() {
+        // An Opcode should be 6 bytes; anything bigger and we've mis-defined some
         // variant
-        assert_eq!(size_of::<Opcode>(), 4);
+        assert_eq!(size_of::<Opcode>(), 6);
     }
 }

@@ -12,4 +12,5 @@ pub fn init() {
     core::integer::em_init_class();
     core::string::em_init_class();
     core::symbol::em_init_class();
+    core::proc::em_init_class();
 }

@@ -1,10 +1,10 @@
 use emerald;
 use emerald::compiler::bytecode::Opcode::{
-    OpAdd, OpDiv, OpFalse, OpGetGlobal, OpGreaterThan, OpGreaterThanOrEq, OpJump, OpJumpNotTruthy,
-    OpLessThan, OpLessThanOrEq, OpMul, OpNil, OpPop, OpPush, OpReturn, OpReturnValue, OpSend,
-    OpSetGlobal, OpSub, OpTrue,
+    OpAdd, OpDefineMethod, OpDiv, OpFalse, OpGetGlobal, OpGetLocal, OpGreaterThan,
+    OpGreaterThanOrEq, OpJump, OpJumpNotTruthy, OpLessThan, OpLessThanOrEq, OpMul, OpNil, OpPop,
+    OpPush, OpPushSelf, OpReturn, OpReturnValue, OpSend, OpSetGlobal, OpSub, OpTrue,
 };
-use emerald::object::UnderlyingValueType;
+use emerald::object::{Block, UnderlyingValueType};
 
 mod helpers_test;
 use helpers_test::compiler::*;
@@ -47,6 +47,78 @@ fn test_compile_return_statement() {
 }
 
 #[test]
+fn test_compile_method_literal() {
+    let tests = Vec::from([
+        CompilerTestCase {
+            input: "def num
+                2
+            end",
+            expected_constants: Vec::from([
+                UnderlyingValueType::Symbol("num".to_string()),
+                UnderlyingValueType::Integer(2),
+                UnderlyingValueType::Proc(Block::new(
+                    Vec::from([OpPush { index: 1 }, OpReturnValue]),
+                    0,
+                    0,
+                )),
+            ]),
+            expected_bytecode: Vec::from([
+                OpDefineMethod {
+                    name_index: 0,
+                    proc_index: 2,
+                },
+                OpPop,
+            ]),
+        },
+        CompilerTestCase {
+            input: "def my_method(arg, other)
+                puts(arg, other)
+            end
+
+            my_method(3, 4)",
+            expected_constants: Vec::from([
+                UnderlyingValueType::Symbol("my_method".to_string()),
+                UnderlyingValueType::Symbol("puts".to_string()),
+                UnderlyingValueType::Proc(Block::new(
+                    Vec::from([
+                        OpGetLocal { index: 0 },
+                        OpGetLocal { index: 1 },
+                        OpPushSelf,
+                        OpSend {
+                            index: 1,
+                            num_args: 2,
+                        },
+                        OpReturnValue,
+                    ]),
+                    2,
+                    0,
+                )),
+                UnderlyingValueType::Integer(3),
+                UnderlyingValueType::Integer(4),
+                UnderlyingValueType::Symbol("my_method".to_string()),
+            ]),
+            expected_bytecode: Vec::from([
+                OpDefineMethod {
+                    name_index: 0,
+                    proc_index: 2,
+                },
+                OpPop,
+                OpPush { index: 3 },
+                OpPush { index: 4 },
+                OpPushSelf,
+                OpSend {
+                    index: 5,
+                    num_args: 2,
+                },
+                OpPop,
+            ]),
+        },
+    ]);
+
+    run_compiler_tests(tests)
+}
+
+#[test]
 fn test_compile_method_call() {
     let tests = Vec::from([CompilerTestCase {
         input: "2.to_s",
@@ -54,7 +126,14 @@ fn test_compile_method_call() {
             UnderlyingValueType::Integer(2),
             UnderlyingValueType::Symbol("to_s".to_string()),
         ]),
-        expected_bytecode: Vec::from([OpPush { index: 0 }, OpSend { index: 1 }, OpPop]),
+        expected_bytecode: Vec::from([
+            OpPush { index: 0 },
+            OpSend {
+                index: 1,
+                num_args: 0,
+            },
+            OpPop,
+        ]),
     }]);
 
     run_compiler_tests(tests)

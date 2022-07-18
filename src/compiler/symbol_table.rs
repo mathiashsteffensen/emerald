@@ -4,7 +4,7 @@ use std::collections::HashMap;
 pub enum SymbolScope {
     Global,
     Local,
-    Free,
+    //     Free,
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -15,8 +15,8 @@ pub struct Symbol {
 }
 
 #[derive(PartialEq, Debug, Clone)]
-pub struct SymbolTable {
-    outer: Option<Box<SymbolTable>>,
+pub(crate) struct SymbolTable {
+    pub(crate) outer: Option<Box<SymbolTable>>,
     // free_symbols: Vec<Symbol>,
     store: HashMap<String, Symbol>,
     num_definitions: u16,
@@ -114,6 +114,10 @@ mod tests {
         let mut local = SymbolTable::with_outer(global);
 
         let c = local.define(&"c".to_string());
-        assert_eq!(c, *expected.get("c").unwrap())
+        assert_eq!(c, *expected.get("c").unwrap());
+        assert_eq!(
+            local.resolve(&"c".to_string()).unwrap(),
+            *expected.get("c").unwrap()
+        );
     }
 }

@@ -10,7 +10,6 @@ pub fn exec(p: &mut Parser, ident: Expression) -> Option<Expression> {
     };
 
     p.next_token();
-    p.next_token();
 
     Some(Expression::MethodCall(node::MethodCallData {
         receiver: None,

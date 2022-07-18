@@ -36,10 +36,10 @@ test:
 	go test ./lexer ./parser ./compiler/ ./vm/ ./core/ -cover
 
 test-rust:
-	cargo llvm-cov --html
+	cargo llvm-cov --html -- --test-threads=1
 
 build-rust:
-	cargo build --release && cp target/release/emerald tmp/emerald-rust
+	cargo build ${MODE} && cp target/release/emerald tmp/emerald-rust
 
 lint:
 	cargo fmt

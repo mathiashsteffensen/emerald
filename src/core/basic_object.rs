@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::core;
-use crate::object::{EmeraldObject, UnderlyingValueType};
+use crate::object::EmeraldObject;
 
 pub const NAME: &str = "BasicObject";
 
@@ -10,10 +10,5 @@ pub fn em_init_class() {
 }
 
 pub fn em_instance() -> Arc<EmeraldObject> {
-    Arc::from(EmeraldObject {
-        class: Some(core::em_get_class(NAME).unwrap()),
-        q_super: None,
-        built_in_method_set: Default::default(),
-        underlying_value: UnderlyingValueType::None,
-    })
+    EmeraldObject::new_instance(NAME)
 }

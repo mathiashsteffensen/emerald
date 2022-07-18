@@ -21,12 +21,7 @@ pub fn em_init_class() {
 }
 
 pub fn em_instance(val: String) -> Arc<EmeraldObject> {
-    Arc::from(EmeraldObject {
-        class: Some(core::em_get_class(NAME).unwrap()),
-        q_super: None,
-        built_in_method_set: Default::default(),
-        underlying_value: UnderlyingValueType::String(val),
-    })
+    EmeraldObject::new_instance_with_underlying_value(NAME, UnderlyingValueType::String(val))
 }
 
 pub fn em_string_to_s(

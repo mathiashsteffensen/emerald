@@ -106,7 +106,8 @@ pub mod compiler {
 
     use emerald::compiler::bytecode::{Bytecode, Stringable};
     use emerald::compiler::Compiler;
-    use emerald::object::{EmeraldObject, UnderlyingValueType};
+    use emerald::kernel;
+    use emerald::object::{Block, EmeraldObject, UnderlyingValueType};
 
     use super::parser;
 
@@ -120,22 +121,27 @@ pub mod compiler {
     #[allow(dead_code)]
     pub fn run_compiler_tests(cases: Vec<CompilerTestCase>) {
         for case in cases {
-            let c = compile(&case.input);
+            kernel::reset_consts();
+
+            let mut c = compile(&case.input);
 
             assert_eq!(
-                c.bytecode.to_string(),
+                c.bytecode_mut().to_string(),
                 case.expected_bytecode.to_string(),
                 "Bytecode did not match"
             );
 
+            let pool = kernel::CONSTANT_POOL.lock().unwrap();
+
             assert_eq!(
-                c.constant_pool.len(),
+                pool.len(),
                 case.expected_constants.len(),
                 "Unexpected amount of constants"
             );
+            drop(pool);
 
             for (i, constant) in case.expected_constants.iter().enumerate() {
-                let actual = Arc::clone(c.constant_pool.get(i).unwrap());
+                let actual = kernel::get_const(i).unwrap();
 
                 match constant {
                     UnderlyingValueType::Integer(expected) => {
@@ -147,6 +153,9 @@ pub mod compiler {
                     UnderlyingValueType::Symbol(expected) => {
                         test_symbol_object(expected.to_string(), actual)
                     }
+                    UnderlyingValueType::Proc(block) => {
+                        test_proc_object(block, actual);
+                    }
                     _ => assert_eq!(0, 1, "Unknown expected object type"),
                 }
             }
@@ -156,8 +165,17 @@ pub mod compiler {
     #[allow(dead_code)]
     pub fn test_integer_object(expected: i64, actual: Arc<EmeraldObject>) {
         match actual.underlying_value {
-            UnderlyingValueType::Integer(val) => assert_eq!(expected, val),
-            _ => assert_eq!(0, 1, "Object is not Integer"),
+            UnderlyingValueType::Integer(val) => assert_eq!(
+                expected, val,
+                "expected integer to equal {}, but got {}",
+                expected, val
+            ),
+            _ => assert_eq!(
+                expected,
+                -12382190231,
+                "Object is not Integer, got {}",
+                actual.class_name()
+            ),
         }
     }
 
@@ -193,6 +211,26 @@ pub mod compiler {
     }
 
     #[allow(dead_code)]
+    pub fn test_proc_object(expected: &Block, actual: Arc<EmeraldObject>) {
+        match &actual.underlying_value {
+            UnderlyingValueType::Proc(actual) => {
+                assert_eq!(
+                    actual.bytecode.to_string(),
+                    expected.bytecode.to_string(),
+                    "Proc bytecode did not match"
+                );
+                assert_eq!(actual.arity, expected.arity);
+                assert_eq!(actual.num_locals, expected.num_locals);
+            }
+            _ => assert!(
+                false,
+                "object was not proc, got={:?}",
+                &actual.underlying_value
+            ),
+        }
+    }
+
+    #[allow(dead_code)]
     pub fn compile(input: &str) -> Compiler {
         let mut c = Compiler::new();
 
@@ -206,8 +244,8 @@ pub mod compiler {
 
 #[cfg(test)]
 pub mod vm {
+    use emerald::kernel;
     use emerald::object::UnderlyingValueType;
-    use emerald::vm::VM;
 
     use super::compiler;
 
@@ -220,30 +258,27 @@ pub mod vm {
     #[allow(dead_code)]
     pub fn run_vm_tests(cases: Vec<VMTestCase>) {
         for case in cases {
-            let result = VM::interpret("test.rb".to_string(), case.input.to_string());
+            let result = kernel::execute("test.rb".to_string(), case.input.to_string());
 
             match result {
-                Ok((_, mut vm)) => {
-                    assert_eq!(vm.sp, 0, "Stack pointer was not reset after test");
-
-                    let actual = vm.last_popped_stack_object();
-
-                    match case.expected {
-                        UnderlyingValueType::Integer(expected) => {
-                            compiler::test_integer_object(expected, actual)
-                        }
-                        UnderlyingValueType::String(expected) => {
-                            compiler::test_string_object(expected, actual)
-                        }
-                        UnderlyingValueType::True => compiler::test_boolean_object(true, actual),
-                        UnderlyingValueType::False => compiler::test_boolean_object(false, actual),
-                        UnderlyingValueType::Nil => match actual.underlying_value {
-                            UnderlyingValueType::Nil => {}
-                            _ => assert!(false, "was not nil, got={:?}", actual.underlying_value),
-                        },
-                        _ => assert_eq!(0, 1, "Unknown expected object type"),
+                Ok(actual) => match case.expected {
+                    UnderlyingValueType::Integer(expected) => {
+                        compiler::test_integer_object(expected, actual)
                     }
-                }
+                    UnderlyingValueType::String(expected) => {
+                        compiler::test_string_object(expected, actual)
+                    }
+                    UnderlyingValueType::Symbol(expected) => {
+                        compiler::test_symbol_object(expected, actual)
+                    }
+                    UnderlyingValueType::True => compiler::test_boolean_object(true, actual),
+                    UnderlyingValueType::False => compiler::test_boolean_object(false, actual),
+                    UnderlyingValueType::Nil => match actual.underlying_value {
+                        UnderlyingValueType::Nil => {}
+                        _ => assert!(false, "was not nil, got={:?}", actual.underlying_value),
+                    },
+                    _ => assert_eq!(0, 1, "Unknown expected object type"),
+                },
                 Err(err) => assert_eq!(0, 1, "VM test failed with error {}", err),
             }
         }

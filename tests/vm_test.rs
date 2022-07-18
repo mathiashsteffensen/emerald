@@ -76,17 +76,71 @@ fn test_infix_operations() {
             input: "3 <= 3",
             expected: UnderlyingValueType::True,
         },
+        VMTestCase {
+            input: "3 <= 3",
+            expected: UnderlyingValueType::True,
+        },
+        VMTestCase {
+            input: "3 == 3",
+            expected: UnderlyingValueType::True,
+        },
+        VMTestCase {
+            input: "3 == 4",
+            expected: UnderlyingValueType::False,
+        },
     ]);
 
     run_vm_tests(tests);
 }
 
 #[test]
-fn test_method_calls() {
+fn test_method_literals() {
     let tests = Vec::from([VMTestCase {
-        input: "2.to_s",
-        expected: UnderlyingValueType::String("2".to_string()),
+        input: "def get_num
+            2
+        end",
+        expected: UnderlyingValueType::Symbol("get_num".to_string()),
     }]);
+
+    run_vm_tests(tests);
+}
+
+#[test]
+fn test_method_calls() {
+    let tests = Vec::from([
+        // VMTestCase {
+        //     input: "2.to_s",
+        //     expected: UnderlyingValueType::String("2".to_string()),
+        // },
+        // VMTestCase {
+        //     input: "def num
+        //         2
+        //     end
+        //
+        //    num",
+        //     expected: UnderlyingValueType::Integer(2),
+        // },
+        // VMTestCase {
+        //     input: "def add(x, y)
+        //         x + y
+        //     end
+        //
+        //    add(5, 4)",
+        //     expected: UnderlyingValueType::Integer(9),
+        // },
+        VMTestCase {
+            input: "def add(x, y)
+                if x == 5
+                    return 0
+                end
+
+                x == 5
+            end
+
+           add(5, 4)",
+            expected: UnderlyingValueType::Integer(0),
+        },
+    ]);
 
     run_vm_tests(tests);
 }

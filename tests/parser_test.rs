@@ -294,20 +294,20 @@ fn test_method_literal() {
         assert_eq!(ast.statements.len(), 1);
 
         test_expression_stmt(ast.statements[0].clone(), |expr| match expr {
-            emerald::ast::node::Expression::MethodLiteral(_data, name, args, body) => {
-                test_identifier_object(*name, &*test.name);
+            emerald::ast::node::Expression::MethodLiteral(data) => {
+                test_identifier_object(*data.name, &*test.name);
 
-                assert_eq!(args.len(), test.args.len());
+                assert_eq!(data.block.args.len(), test.args.len());
 
-                for (i, arg) in args.iter().enumerate() {
+                for (i, arg) in data.block.args.iter().enumerate() {
                     test_identifier_object(arg.clone(), &*test.args[i])
                 }
 
                 assert_eq!(
-                    body.len(),
+                    data.block.body.len(),
                     test.num_stmts as usize,
                     "wrong num statements, got={:?}",
-                    body
+                    data.block.body
                 )
             }
             _ => assert_eq!(

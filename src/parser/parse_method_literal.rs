@@ -1,8 +1,9 @@
-use crate::ast::node::Expression;
+use crate::ast::node;
+use crate::ast::node::{Expression, MethodLiteralData};
 use crate::lexer::token;
 use crate::parser::{parse_paren_delimited_expression_list, parse_statement_list, Parser};
 
-pub fn exec(p: &mut Parser, data: token::TokenData) -> Option<Expression> {
+pub fn exec(p: &mut Parser) -> Option<Expression> {
     p.next_token();
 
     if let token::Token::Ident(ident_data) = p.current_token.clone() {
@@ -19,7 +20,10 @@ pub fn exec(p: &mut Parser, data: token::TokenData) -> Option<Expression> {
 
         let body = parse_statement_list::exec(p, |token| matches!(token, token::Token::End(_data)));
 
-        Some(Expression::MethodLiteral(data, Box::new(name), args, body))
+        Some(Expression::MethodLiteral(MethodLiteralData {
+            name: Box::new(name),
+            block: node::Block { args, body },
+        }))
     } else {
         None
     }

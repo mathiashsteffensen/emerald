@@ -22,6 +22,7 @@ pub fn em_init_class() {
             "<=".to_string(),
             em_integer_less_than_or_eq as BuiltInMethod,
         ),
+        ("==".to_string(), em_integer_eq as BuiltInMethod),
         ("to_s".to_string(), em_integer_to_s as BuiltInMethod),
         ("inspect".to_string(), em_integer_to_s as BuiltInMethod),
     ]);
@@ -35,12 +36,10 @@ pub fn em_init_class() {
 }
 
 pub fn em_instance(val: i64) -> Arc<EmeraldObject> {
-    Arc::from(EmeraldObject {
-        class: Some(core::em_get_class(NAME).unwrap()),
-        q_super: None,
-        built_in_method_set: Default::default(),
-        underlying_value: UnderlyingValueType::Integer(val),
-    })
+    Arc::from(EmeraldObject::new_instance_with_underlying_value(
+        NAME,
+        UnderlyingValueType::Integer(val),
+    ))
 }
 
 fn em_integer_to_s(
@@ -96,6 +95,10 @@ fn em_integer_less_than_or_eq(
     args: Vec<Arc<EmeraldObject>>,
 ) -> Arc<EmeraldObject> {
     boolean_infix_operator(ctx, args, "<=", |l, r| l <= r)
+}
+
+fn em_integer_eq(ctx: Arc<ExecutionContext>, args: Vec<Arc<EmeraldObject>>) -> Arc<EmeraldObject> {
+    boolean_infix_operator(ctx, args, "==", |l, r| l == r)
 }
 
 fn integer_infix_operator<F>(

@@ -12,7 +12,7 @@ The below is a list of the features on the roadmap and the ones that have alread
 - [ ] full UTF8 support
     - [ ] Unicode identifier
     - [ ] Unicode symbols
-- [x] methods
+- [x] method definitions
     - [x] with parens
     - [x] without parens
     - [x] return keyword

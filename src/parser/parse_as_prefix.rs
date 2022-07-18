@@ -13,7 +13,7 @@ pub fn exec(p: &mut Parser) -> Option<Expression> {
         token::Token::Bang(data) => parse_prefix_expression::exec(p, data),
         token::Token::Minus(data) => parse_prefix_expression::exec(p, data),
         token::Token::Ident(data) => parse_identifier_expression::exec(p, data),
-        token::Token::Def(data) => parse_method_literal::exec(p, data),
+        token::Token::Def(_data) => parse_method_literal::exec(p),
         token::Token::If(data) => parse_if_expression::exec(p, data),
         token::Token::Class(data) => parse_class_literal::exec(p, data),
         token::Token::Int(data) => parse_integer_literal::exec(p, data),

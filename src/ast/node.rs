@@ -48,8 +48,8 @@ pub type StatementList = Vec<Statement>;
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Block {
-    args: ExpressionList,
-    body: StatementList,
+    pub args: ExpressionList,
+    pub body: StatementList,
 }
 
 impl Block {
@@ -63,6 +63,12 @@ pub struct MethodCallData {
     pub receiver: Option<Box<Expression>>,
     pub ident: Box<Expression>,
     pub args: ExpressionList,
+    pub block: Block,
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub struct MethodLiteralData {
+    pub name: Box<Expression>,
     pub block: Block,
 }
 
@@ -91,7 +97,7 @@ pub enum Expression {
     NilLiteral(TokenData),
     TrueLiteral(TokenData),
     FalseLiteral(TokenData),
-    MethodLiteral(TokenData, Box<Expression>, Vec<Expression>, Vec<Statement>),
+    MethodLiteral(MethodLiteralData),
     ClassLiteral(TokenData, Box<Expression>, Vec<Statement>),
 }
 
@@ -110,7 +116,7 @@ impl Node for Expression {
             Expression::NilLiteral(data) => data.literal.to_string(),
             Expression::TrueLiteral(data) => data.literal.to_string(),
             Expression::FalseLiteral(data) => data.literal.to_string(),
-            Expression::MethodLiteral(data, _name, _args, _body) => data.literal.to_string(),
+            Expression::MethodLiteral(data) => data.name.token_literal(),
             Expression::ClassLiteral(data, _name, _body) => data.literal.to_string(),
         }
     }
@@ -219,21 +225,21 @@ impl Node for Expression {
             Expression::NilLiteral(data) => data.literal.to_string(),
             Expression::TrueLiteral(data) => data.literal.to_string(),
             Expression::FalseLiteral(data) => data.literal.to_string(),
-            Expression::MethodLiteral(_data, name, args, body) => {
+            Expression::MethodLiteral(data) => {
                 let mut out = "def ".to_string();
 
-                out.push_str(name.to_string().as_str());
+                out.push_str(data.name.to_string().as_str());
                 out.push_str("(");
 
                 let mut arg_strings: Vec<String> = Vec::new();
-                for arg in args {
+                for arg in &data.block.args {
                     arg_strings.push(arg.to_string())
                 }
 
                 out.push_str(arg_strings.join(", ").as_str());
                 out.push_str(")\n");
 
-                for stmt in body {
+                for stmt in &data.block.body {
                     out.push_str(stmt.to_string().as_str());
                     out.push_str("\n");
                 }

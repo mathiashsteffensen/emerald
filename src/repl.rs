@@ -49,6 +49,7 @@ impl REPL {
             if result.responds_to("inspect") {
                 let stringified = result
                     .send(
+                        result.clone(),
                         "inspect",
                         Arc::from(ExecutionContext::new(Arc::clone(&result))),
                         Vec::new(),
@@ -84,7 +85,7 @@ impl REPL {
     fn interpret_line(&mut self, line: String) -> Arc<EmeraldObject> {
         self.compiler.compile_string("(iem)".to_string(), line);
 
-        let mut vm = vm::VM::new(&self.compiler);
+        let mut vm = vm::VM::new(self.compiler.bytecode().clone(), Default::default());
 
         match vm.run() {
             Ok(()) => vm.last_popped_stack_object(),

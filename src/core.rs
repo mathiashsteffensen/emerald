@@ -10,6 +10,7 @@ pub mod false_class;
 pub mod integer;
 pub mod nil_class;
 pub mod object;
+pub mod proc;
 pub mod string;
 pub mod symbol;
 pub mod true_class;
@@ -42,6 +43,14 @@ pub fn em_get_class(name: &str) -> Option<Arc<EmeraldObject>> {
     }
 }
 
-pub fn em_is_truthy(obj: Arc<EmeraldObject>) -> bool {
-    !Arc::ptr_eq(&obj, &nil_class::EM_NIL) && !Arc::ptr_eq(&obj, &false_class::EM_FALSE)
+pub fn em_is_nil(obj: &Arc<EmeraldObject>) -> bool {
+    Arc::ptr_eq(&obj, &nil_class::EM_NIL)
+}
+
+pub fn em_is_false(obj: &Arc<EmeraldObject>) -> bool {
+    Arc::ptr_eq(&obj, &false_class::EM_FALSE)
+}
+
+pub fn em_is_truthy(obj: &Arc<EmeraldObject>) -> bool {
+    !(em_is_nil(obj) || em_is_false(obj))
 }

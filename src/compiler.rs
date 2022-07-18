@@ -1,36 +1,40 @@
 use std::sync::Arc;
 
 use crate::ast::node;
-use crate::{ast, debug, lexer, parser};
+use crate::{ast, debug, kernel, lexer, parser};
 
 use crate::object::EmeraldObject;
 
 use crate::core;
 
 use crate::compiler::bytecode::Opcode::{
-    OpAdd, OpDiv, OpFalse, OpGetGlobal, OpGreaterThan, OpGreaterThanOrEq, OpLessThan,
-    OpLessThanOrEq, OpMul, OpNil, OpPop, OpPush, OpReturn, OpReturnValue, OpSend, OpSetGlobal,
-    OpSub, OpTrue,
+    OpAdd, OpDiv, OpEqual, OpFalse, OpGetGlobal, OpGetLocal, OpGreaterThan, OpGreaterThanOrEq,
+    OpLessThan, OpLessThanOrEq, OpMul, OpNil, OpPop, OpPush, OpPushSelf, OpReturn, OpReturnValue,
+    OpSend, OpSetGlobal, OpSub, OpTrue,
 };
 use crate::compiler::bytecode::{Bytecode, ConstantIndex, Opcode};
+use crate::compiler::scope::CompilationScope;
 use crate::lexer::token;
 
 pub mod bytecode;
+mod compile_block;
 mod compile_if_expression;
-mod symbol_table;
+mod compile_method_literal;
+pub(crate) mod scope;
+pub(crate) mod symbol_table;
 
 pub struct Compiler {
-    pub bytecode: Bytecode,
-    pub constant_pool: Vec<Arc<EmeraldObject>>,
-    pub symbol_table: symbol_table::SymbolTable,
+    pub(crate) symbol_table: symbol_table::SymbolTable,
+    pub(crate) scopes: Vec<CompilationScope>,
+    pub(crate) scope_index: u8,
 }
 
 impl Compiler {
     pub fn new() -> Compiler {
         Compiler {
-            bytecode: Vec::new(),
-            constant_pool: Vec::with_capacity(u16::MAX as usize),
             symbol_table: symbol_table::SymbolTable::new(),
+            scopes: Vec::from([scope::new()]),
+            scope_index: 0,
         }
     }
 
@@ -82,6 +86,7 @@ impl Compiler {
                 self.compile_identifier_expression(data)
             }
             node::Expression::MethodCall(data) => self.compile_method_call(data),
+            node::Expression::MethodLiteral(data) => compile_method_literal::exec(self, data),
             node::Expression::InfixExpression(left, data, right) => {
                 self.compile_infix_expression(*left, data.literal, *right)
             }
@@ -106,7 +111,16 @@ impl Compiler {
 
     fn compile_identifier_expression(&mut self, data: token::TokenData) {
         if let Some(sym) = self.symbol_table.resolve(&data.literal) {
-            self.emit(OpGetGlobal { index: sym.index });
+            let op = match sym.scope {
+                symbol_table::SymbolScope::Global => OpGetGlobal { index: sym.index },
+                symbol_table::SymbolScope::Local => OpGetLocal { index: sym.index },
+            };
+            self.emit(op);
+        } else {
+            let index = self.push_constant(core::symbol::em_instance(data.literal));
+
+            self.emit(OpPushSelf);
+            self.emit(OpSend { index, num_args: 0 });
         };
     }
 
@@ -133,8 +147,16 @@ impl Compiler {
     }
 
     fn compile_method_call(&mut self, data: node::MethodCallData) {
+        let args = &data.args;
+        let num_args = args.len() as u8;
+        for arg in args {
+            self.compile_expression(arg.clone())
+        }
+
         if let Some(receiver) = data.receiver {
             self.compile_expression(*receiver);
+        } else {
+            self.emit(OpPushSelf);
         };
 
         match *data.ident {
@@ -142,7 +164,7 @@ impl Compiler {
                 let symbol = core::symbol::em_instance(data.literal);
                 let index = self.push_constant(symbol);
 
-                self.emit(OpSend { index });
+                self.emit(OpSend { index, num_args });
             }
             _ => panic!("Method call ident was, well, not an ident ..."),
         }
@@ -166,6 +188,7 @@ impl Compiler {
             ">=" => self.emit(OpGreaterThanOrEq),
             "<" => self.emit(OpLessThan),
             "<=" => self.emit(OpLessThanOrEq),
+            "==" => self.emit(OpEqual),
             _ => panic!("Unknown operator {:?}", op),
         };
     }
@@ -183,34 +206,48 @@ impl Compiler {
     }
 
     fn remove_last_if_op_pop(&mut self) {
-        match self.bytecode.last().unwrap() {
-            OpPop => {
-                self.bytecode.pop();
-            }
-            _ => {}
+        if self.check_last_op(|op| matches!(op, Opcode::OpPop)) {
+            self.bytecode_mut().pop();
         }
     }
 
+    fn check_last_op<F>(&mut self, checker: F) -> bool
+    where
+        F: Fn(&Opcode) -> bool,
+    {
+        checker(self.bytecode_mut().last().unwrap())
+    }
+
     fn change_op(&mut self, index: usize, new: Opcode) {
-        self.bytecode[index] = new
+        self.bytecode_mut()[index] = new
     }
 
     fn emit(&mut self, op: Opcode) -> usize {
-        self.bytecode.push(op);
+        self.bytecode_mut().push(op);
 
-        self.bytecode.len() - 1
+        self.bytecode_mut().len() - 1
     }
 
     fn push_constant(&mut self, constant: Arc<EmeraldObject>) -> ConstantIndex {
-        self.constant_pool.push(constant);
-
-        (self.constant_pool.len() - 1) as ConstantIndex
+        kernel::push_const(constant) as ConstantIndex
     }
 
     fn emit_constant(&mut self, constant: Arc<EmeraldObject>) {
         let index = self.push_constant(constant);
 
         self.emit(OpPush { index });
+    }
+
+    pub fn bytecode_mut(&mut self) -> &mut Bytecode {
+        let scope = &mut self.scopes[self.scope_index as usize];
+
+        &mut scope.bytecode
+    }
+
+    pub fn bytecode(&self) -> &Bytecode {
+        let scope = &self.scopes[self.scope_index as usize];
+
+        &scope.bytecode
     }
 }
 
@@ -224,6 +261,6 @@ mod test {
 
         compiler.compile_string("test.rb".to_string(), "2".to_string());
 
-        assert_eq!(compiler.bytecode[0], OpPush { index: 0 })
+        assert_eq!(compiler.bytecode_mut()[0], OpPush { index: 0 })
     }
 }
