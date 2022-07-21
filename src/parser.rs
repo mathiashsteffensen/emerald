@@ -84,8 +84,8 @@ impl Parser {
 
     fn add_syntax_error(&mut self, got_data: token::TokenData, expected: &str) {
         self.add_error(&*format!(
-            "syntax error at line:{}:{}: expected '{}', found '{}'",
-            got_data.line, got_data.column, expected, got_data.literal,
+            "syntax error at {}:{}:{}: expected '{}', found '{}'",
+            self.input.file_name, got_data.line, got_data.column, expected, got_data.literal,
         ));
     }
 

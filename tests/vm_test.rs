@@ -108,26 +108,26 @@ fn test_method_literals() {
 #[test]
 fn test_method_calls() {
     let tests = Vec::from([
-        // VMTestCase {
-        //     input: "2.to_s",
-        //     expected: UnderlyingValueType::String("2".to_string()),
-        // },
-        // VMTestCase {
-        //     input: "def num
-        //         2
-        //     end
-        //
-        //    num",
-        //     expected: UnderlyingValueType::Integer(2),
-        // },
-        // VMTestCase {
-        //     input: "def add(x, y)
-        //         x + y
-        //     end
-        //
-        //    add(5, 4)",
-        //     expected: UnderlyingValueType::Integer(9),
-        // },
+        VMTestCase {
+            input: "2.to_s",
+            expected: UnderlyingValueType::String("2".to_string()),
+        },
+        VMTestCase {
+            input: "def num
+                2
+            end
+
+           num",
+            expected: UnderlyingValueType::Integer(2),
+        },
+        VMTestCase {
+            input: "def add(x, y)
+                x + y
+            end
+
+           add(5, 4)",
+            expected: UnderlyingValueType::Integer(9),
+        },
         VMTestCase {
             input: "def add(x, y)
                 if x == 5
@@ -137,8 +137,32 @@ fn test_method_calls() {
                 x == 5
             end
 
-           add(5, 4)",
+            add(5, 4)",
             expected: UnderlyingValueType::Integer(0),
+        },
+        VMTestCase {
+            input: "def fib(n)
+              if n <= 1
+                return n
+              end
+
+              fib(n - 1) + fib(n - 2)
+            end
+
+            fib(3)",
+            expected: UnderlyingValueType::Integer(2),
+        },
+        VMTestCase {
+            input: "def fib(n)
+              if n <= 1
+                return n
+              end
+
+              fib(n - 1) + fib(n - 2)
+            end
+
+            fib(18)",
+            expected: UnderlyingValueType::Integer(2_584),
         },
     ]);
 
@@ -150,6 +174,23 @@ fn test_global_assignments() {
     let tests = Vec::from([VMTestCase {
         input: "var = 5; var + 5",
         expected: UnderlyingValueType::Integer(10),
+    }]);
+
+    run_vm_tests(tests);
+}
+
+#[test]
+fn test_local_assignments() {
+    let tests = Vec::from([VMTestCase {
+        input: "def method
+            var = 15
+            other_var = 5
+
+            var + other_var
+        end
+
+        method",
+        expected: UnderlyingValueType::Integer(20),
     }]);
 
     run_vm_tests(tests);

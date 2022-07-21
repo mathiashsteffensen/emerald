@@ -25,7 +25,7 @@ pub fn exec(c: &mut Compiler, node: node::Block) -> object::Block {
         c.change_op(index, OpReturnValue);
     };
 
-    let bytecode = compiler::scope::leave(c);
+    let (bytecode, num_locals) = compiler::scope::leave(c);
 
-    object::Block::new(bytecode, node.args.len() as u8, 0)
+    object::Block::new(bytecode, node.args.len() as u8, num_locals)
 }

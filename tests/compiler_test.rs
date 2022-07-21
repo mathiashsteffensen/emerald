@@ -2,7 +2,7 @@ use emerald;
 use emerald::compiler::bytecode::Opcode::{
     OpAdd, OpDefineMethod, OpDiv, OpFalse, OpGetGlobal, OpGetLocal, OpGreaterThan,
     OpGreaterThanOrEq, OpJump, OpJumpNotTruthy, OpLessThan, OpLessThanOrEq, OpMul, OpNil, OpPop,
-    OpPush, OpPushSelf, OpReturn, OpReturnValue, OpSend, OpSetGlobal, OpSub, OpTrue,
+    OpPush, OpPushSelf, OpReturn, OpReturnValue, OpSend, OpSetGlobal, OpSetLocal, OpSub, OpTrue,
 };
 use emerald::object::{Block, UnderlyingValueType};
 
@@ -71,27 +71,101 @@ fn test_compile_method_literal() {
             ]),
         },
         CompilerTestCase {
+            input: "def fib(n)
+              if n <= 1
+                return n
+              end
+
+              fib(n - 1) + fib(n - 2)
+            end
+
+            fib(3)",
+            expected_constants: Vec::from([
+                UnderlyingValueType::Symbol("fib".to_string()),
+                UnderlyingValueType::Integer(1),
+                UnderlyingValueType::Integer(1),
+                UnderlyingValueType::Symbol("fib".to_string()),
+                UnderlyingValueType::Integer(2),
+                UnderlyingValueType::Symbol("fib".to_string()),
+                UnderlyingValueType::Proc(Block::new(
+                    Vec::from([
+                        OpGetLocal { index: 0 },
+                        OpPush { index: 1 },
+                        OpLessThanOrEq,
+                        OpJumpNotTruthy { offset: 3 },
+                        OpGetLocal { index: 0 },
+                        OpReturnValue,
+                        OpJump { offset: 1 },
+                        OpNil,
+                        OpPop,
+                        OpGetLocal { index: 0 },
+                        OpPush { index: 2 },
+                        OpSub,
+                        OpPushSelf,
+                        OpSend {
+                            index: 3,
+                            num_args: 1,
+                        },
+                        OpGetLocal { index: 0 },
+                        OpPush { index: 4 },
+                        OpSub,
+                        OpPushSelf,
+                        OpSend {
+                            index: 5,
+                            num_args: 1,
+                        },
+                        OpAdd,
+                        OpReturnValue,
+                    ]),
+                    1,
+                    1,
+                )),
+                UnderlyingValueType::Integer(3),
+                UnderlyingValueType::Symbol("fib".to_string()),
+            ]),
+            expected_bytecode: Vec::from([
+                OpDefineMethod {
+                    name_index: 0,
+                    proc_index: 6,
+                },
+                OpPop,
+                OpPush { index: 7 },
+                OpPushSelf,
+                OpSend {
+                    index: 8,
+                    num_args: 1,
+                },
+                OpPop,
+            ]),
+        },
+        CompilerTestCase {
             input: "def my_method(arg, other)
-                puts(arg, other)
+                msg = \"Hello\"
+                puts(arg, other, msg)
             end
 
             my_method(3, 4)",
             expected_constants: Vec::from([
                 UnderlyingValueType::Symbol("my_method".to_string()),
+                UnderlyingValueType::String("Hello".to_string()),
                 UnderlyingValueType::Symbol("puts".to_string()),
                 UnderlyingValueType::Proc(Block::new(
                     Vec::from([
+                        OpPush { index: 1 },
+                        OpSetLocal { index: 2 },
+                        OpPop,
                         OpGetLocal { index: 0 },
                         OpGetLocal { index: 1 },
+                        OpGetLocal { index: 2 },
                         OpPushSelf,
                         OpSend {
-                            index: 1,
-                            num_args: 2,
+                            index: 2,
+                            num_args: 3,
                         },
                         OpReturnValue,
                     ]),
                     2,
-                    0,
+                    3,
                 )),
                 UnderlyingValueType::Integer(3),
                 UnderlyingValueType::Integer(4),
@@ -100,14 +174,14 @@ fn test_compile_method_literal() {
             expected_bytecode: Vec::from([
                 OpDefineMethod {
                     name_index: 0,
-                    proc_index: 2,
+                    proc_index: 3,
                 },
                 OpPop,
-                OpPush { index: 3 },
                 OpPush { index: 4 },
+                OpPush { index: 5 },
                 OpPushSelf,
                 OpSend {
-                    index: 5,
+                    index: 6,
                     num_args: 2,
                 },
                 OpPop,

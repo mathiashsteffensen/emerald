@@ -19,7 +19,7 @@ pub(crate) struct SymbolTable {
     pub(crate) outer: Option<Box<SymbolTable>>,
     // free_symbols: Vec<Symbol>,
     store: HashMap<String, Symbol>,
-    num_definitions: u16,
+    pub(crate) num_definitions: u16,
 }
 
 impl SymbolTable {

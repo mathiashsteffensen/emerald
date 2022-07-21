@@ -281,6 +281,8 @@ pub mod vm {
                 },
                 Err(err) => assert_eq!(0, 1, "VM test failed with error {}", err),
             }
+
+            kernel::EMERALD_VM.lock().unwrap().current_fiber.reset();
         }
     }
 }

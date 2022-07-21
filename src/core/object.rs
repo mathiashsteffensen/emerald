@@ -28,11 +28,12 @@ pub fn em_instance() -> Arc<EmeraldObject> {
     EmeraldObject::new_instance(NAME)
 }
 
-fn em_object_puts(ctx: Arc<ExecutionContext>, args: Vec<Arc<EmeraldObject>>) -> Arc<EmeraldObject> {
+fn em_object_puts(
+    _ctx: Arc<ExecutionContext>,
+    args: Vec<Arc<EmeraldObject>>,
+) -> Arc<EmeraldObject> {
     for arg in args {
-        let stringified = arg
-            .send(arg.clone(), "to_s", Arc::clone(&ctx), Default::default())
-            .unwrap();
+        let stringified = arg.send(arg.clone(), "to_s", Default::default());
 
         match &stringified.underlying_value {
             UnderlyingValueType::String(s) => {

@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
+use log::debug;
 use std::sync::{Arc, Mutex};
 
-use crate::compiler::bytecode::Bytecode;
 use crate::compiler::Compiler;
 use crate::object::EmeraldObject;
 use crate::vm::VM;
@@ -15,7 +15,7 @@ lazy_static! {
         Mutex::new(Vec::with_capacity(CONSTANT_POOL_SIZE as usize));
     pub static ref GLOBALS: Mutex<Vec<Arc<EmeraldObject>>> =
         Mutex::new(Vec::with_capacity(GLOBALS_SIZE as usize));
-    pub static ref MAIN_VM: Mutex<VM> = Mutex::new(VM::new(Vec::new(), Default::default()));
+    pub static ref EMERALD_VM: Mutex<VM> = Mutex::new(VM::new());
 }
 
 pub fn execute(file_name: String, content: String) -> Result<Arc<EmeraldObject>, String> {
@@ -30,18 +30,27 @@ pub fn execute(file_name: String, content: String) -> Result<Arc<EmeraldObject>,
     let mut c = Compiler::new();
     c.compile(ast);
 
-    let mut vm = MAIN_VM.lock().unwrap();
-    vm.set_bytecode_and_locals(c.bytecode().clone(), Vec::new());
+    let mut vm = EMERALD_VM.lock().unwrap();
+    vm.set_bytecode(c.bytecode().clone());
     vm.run()?;
 
     Ok(vm.last_popped_stack_object())
 }
 
-pub fn execute_bytecode(bytecode: Bytecode, locals: Vec<Arc<EmeraldObject>>) -> Arc<EmeraldObject> {
-    let mut vm = MAIN_VM.lock().unwrap();
-    vm.set_bytecode_and_locals(bytecode, locals);
-    vm.run().unwrap();
-    vm.last_popped_stack_object()
+pub fn execute_method_call(
+    receiver: Arc<EmeraldObject>,
+    method_name: &str,
+    args: Vec<Arc<EmeraldObject>>,
+) -> Arc<EmeraldObject> {
+    debug!("Trying to acquire lock on main VM");
+    let mut vm = EMERALD_VM.lock().unwrap();
+    debug!("Lock acquired");
+    let num_args = *&args.len() as u8;
+    for arg in args {
+        vm.push(arg)
+    }
+    vm.execute_method_call(receiver, method_name, num_args);
+    vm.current_fiber.pop()
 }
 
 pub fn push_const(obj: Arc<EmeraldObject>) -> usize {

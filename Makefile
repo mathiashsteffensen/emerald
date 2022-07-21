@@ -39,7 +39,7 @@ test-rust:
 	cargo llvm-cov --html -- --test-threads=1
 
 build-rust:
-	cargo build ${MODE} && cp target/release/emerald tmp/emerald-rust
+	cargo build ${MODE} && cp target/debug/emerald tmp/emerald-rust
 
 lint:
 	cargo fmt

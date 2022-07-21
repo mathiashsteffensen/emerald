@@ -161,6 +161,6 @@ where
 {
     match obj.underlying_value {
         UnderlyingValueType::Integer(val) => cb(val),
-        _ => panic!("{}", reject),
+        _ => panic!("{}, got {}", reject, obj.class_name()),
     }
 }

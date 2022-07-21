@@ -1,7 +1,6 @@
 pub mod ast;
 pub mod compiler;
 pub mod core;
-mod debug;
 pub mod kernel;
 pub mod lexer;
 pub mod object;

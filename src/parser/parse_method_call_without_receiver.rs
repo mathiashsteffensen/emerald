@@ -9,8 +9,6 @@ pub fn exec(p: &mut Parser, ident: Expression) -> Option<Expression> {
         return None;
     };
 
-    p.next_token();
-
     Some(Expression::MethodCall(node::MethodCallData {
         receiver: None,
         ident: Box::new(ident),

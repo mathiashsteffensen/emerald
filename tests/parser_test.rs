@@ -363,6 +363,10 @@ fn test_operator_precedence_parsing() {
             "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)));",
         ],
         ["(5 + 5) * 2 * (5 + 5)", "(((5 + 5) * 2) * (5 + 5));"],
+        [
+            "fib(n - 1) + fib(n - 2)",
+            "(fib((n - 1))\n + fib((n - 2))\n);",
+        ],
     ]);
 
     for test in tests {
@@ -375,14 +379,17 @@ fn test_operator_precedence_parsing() {
 #[test]
 fn test_syntax_errors() {
     let tests = Vec::from([
-        ["(5+4;", "syntax error at line:1:5: expected ')', found ';'"],
+        [
+            "(5+4;",
+            "syntax error at test.rb:1:5: expected ')', found ';'",
+        ],
         [
             "var = (5+4;",
-            "syntax error at line:1:11: expected ')', found ';'",
+            "syntax error at test.rb:1:11: expected ')', found ';'",
         ],
         [
             "def hello; 2;",
-            "syntax error at line:1:14: expected 'end', found 'EOF'",
+            "syntax error at test.rb:1:14: expected 'end', found 'EOF'",
         ],
         [
             "def hello
@@ -390,7 +397,7 @@ fn test_syntax_errors() {
 
                do_other_stuff
             ",
-            "syntax error at line:5:13: expected 'end', found 'EOF'",
+            "syntax error at test.rb:5:13: expected 'end', found 'EOF'",
         ],
     ]);
 

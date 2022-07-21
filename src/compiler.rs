@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::ast::node;
-use crate::{ast, debug, kernel, lexer, parser};
+use crate::{ast, kernel, lexer, parser};
 
 use crate::object::EmeraldObject;
 
@@ -10,7 +10,7 @@ use crate::core;
 use crate::compiler::bytecode::Opcode::{
     OpAdd, OpDiv, OpEqual, OpFalse, OpGetGlobal, OpGetLocal, OpGreaterThan, OpGreaterThanOrEq,
     OpLessThan, OpLessThanOrEq, OpMul, OpNil, OpPop, OpPush, OpPushSelf, OpReturn, OpReturnValue,
-    OpSend, OpSetGlobal, OpSub, OpTrue,
+    OpSend, OpSetGlobal, OpSetLocal, OpSub, OpTrue,
 };
 use crate::compiler::bytecode::{Bytecode, ConstantIndex, Opcode};
 use crate::compiler::scope::CompilationScope;
@@ -47,16 +47,11 @@ impl Compiler {
     }
 
     pub fn compile(&mut self, node: ast::AST) {
-        debug::time(
-            || {
-                core::all::init();
+        core::all::init();
 
-                for stmt in &node.statements {
-                    self.compile_statement(stmt.clone());
-                }
-            },
-            |elapsed| format!("Finished compiling in {}ms", elapsed),
-        )
+        for stmt in &node.statements {
+            self.compile_statement(stmt.clone());
+        }
     }
 
     fn compile_statement(&mut self, node: node::Statement) {
@@ -127,7 +122,7 @@ impl Compiler {
     fn compile_assignment_expression(&mut self, var: node::Expression, val: node::Expression) {
         match &var {
             node::Expression::IdentifierExpression(data) => {
-                let symbol = if let Some(sym) = self.symbol_table.resolve(&data.literal) {
+                let sym = if let Some(sym) = self.symbol_table.resolve(&data.literal) {
                     sym
                 } else {
                     self.symbol_table.define(&data.literal)
@@ -135,9 +130,12 @@ impl Compiler {
 
                 self.compile_expression(val);
 
-                self.emit(OpSetGlobal {
-                    index: symbol.index,
-                });
+                let op = match sym.scope {
+                    symbol_table::SymbolScope::Global => OpSetGlobal { index: sym.index },
+                    symbol_table::SymbolScope::Local => OpSetLocal { index: sym.index },
+                };
+
+                self.emit(op);
             }
             _ => panic!(
                 "target of assignment expression was not identifier, got={:?}",
@@ -166,7 +164,7 @@ impl Compiler {
 
                 self.emit(OpSend { index, num_args });
             }
-            _ => panic!("Method call ident was, well, not an ident ..."),
+            _ => unreachable!(),
         }
     }
 

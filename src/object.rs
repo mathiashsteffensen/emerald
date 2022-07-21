@@ -107,26 +107,9 @@ impl EmeraldObject {
         &self,
         receiver: Arc<EmeraldObject>,
         name: &str,
-        ctx: Arc<ExecutionContext>,
         args: Vec<Arc<EmeraldObject>>,
-    ) -> Result<Arc<EmeraldObject>, String> {
-        if let Some(method) = self.method(name) {
-            match method {
-                EmeraldMethod::BuiltIn(method) => Ok(method(
-                    Arc::from(ExecutionContext::with_outer(receiver, ctx)),
-                    args,
-                )),
-                EmeraldMethod::Compiled(block) => {
-                    Ok(kernel::execute_bytecode(block.bytecode, args))
-                }
-            }
-        } else {
-            Err(format!(
-                "Undefined method {} for {:?}",
-                name,
-                self.class_name(),
-            ))
-        }
+    ) -> Arc<EmeraldObject> {
+        kernel::execute_method_call(receiver, name, args)
     }
 
     pub fn define_method(&self, name: String, block: Block) {
@@ -194,5 +177,16 @@ impl ExecutionContext {
 
     pub fn borrow_self(&self) -> Arc<EmeraldObject> {
         Arc::clone(&self.q_self)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::mem::size_of;
+
+    #[test]
+    fn test_object_size() {
+        assert_eq!(size_of::<Arc<EmeraldObject>>(), 8);
     }
 }

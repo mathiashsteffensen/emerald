@@ -2,9 +2,10 @@ use std::ops::Add;
 use std::sync::Arc;
 
 use linefeed::{DefaultTerminal, Interface, ReadResult};
+use log::debug;
 
-use crate::object::{EmeraldObject, ExecutionContext, UnderlyingValueType};
-use crate::{compiler, debug, vm};
+use crate::object::{EmeraldObject, UnderlyingValueType};
+use crate::{compiler, vm};
 
 pub struct REPL {
     compiler: compiler::Compiler,
@@ -28,10 +29,7 @@ impl REPL {
         self.set_prompt();
 
         if let Err(e) = self.reader.load_history(HISTORY_FILE) {
-            debug::log(format!(
-                "Could not load history file {}: {}",
-                HISTORY_FILE, e
-            ));
+            debug!("Could not load history file {}: {}", HISTORY_FILE, e);
         }
 
         while let ReadResult::Input(line) = self.reader.read_line().unwrap() {
@@ -47,14 +45,7 @@ impl REPL {
             let result = self.interpret_line(line);
 
             if result.responds_to("inspect") {
-                let stringified = result
-                    .send(
-                        result.clone(),
-                        "inspect",
-                        Arc::from(ExecutionContext::new(Arc::clone(&result))),
-                        Vec::new(),
-                    )
-                    .unwrap();
+                let stringified = result.send(result.clone(), "inspect", Vec::new());
 
                 match &stringified.underlying_value {
                     UnderlyingValueType::String(str) => println!("=> {}", str),
@@ -65,10 +56,7 @@ impl REPL {
             }
 
             if let Err(e) = self.reader.save_history(HISTORY_FILE) {
-                debug::log(format!(
-                    "Could not save history file {}: {}",
-                    HISTORY_FILE, e
-                ));
+                debug!("Could not save history file {}: {}", HISTORY_FILE, e);
             }
 
             self.line += 1;
@@ -85,10 +73,17 @@ impl REPL {
     fn interpret_line(&mut self, line: String) -> Arc<EmeraldObject> {
         self.compiler.compile_string("(iem)".to_string(), line);
 
-        let mut vm = vm::VM::new(self.compiler.bytecode().clone(), Default::default());
+        let mut vm = vm::VM::new();
+        vm.set_bytecode(self.compiler.bytecode().clone());
 
         match vm.run() {
-            Ok(()) => vm.last_popped_stack_object(),
+            Ok(()) => {
+                debug!(
+                    "Stack pointer after interpreting line is {}",
+                    vm.current_fiber.sp
+                );
+                vm.last_popped_stack_object()
+            }
             Err(e) => panic!("{}", e),
         }
     }
