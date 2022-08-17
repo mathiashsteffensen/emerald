@@ -21,7 +21,7 @@ func InitObject() {
 				return NativeBoolToBooleanObject(target == args[0])
 			},
 			"!=": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return NativeBoolToBooleanObject(target.Inspect() != args[0].Inspect())
+				return NativeBoolToBooleanObject(target != args[0])
 			},
 			"methods": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				methods := []object.EmeraldValue{}

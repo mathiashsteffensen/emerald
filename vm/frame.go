@@ -14,6 +14,7 @@ type Frame struct {
 func NewFrame(block *object.ClosedBlock, basePointer int) *Frame {
 	return &Frame{block: block, ip: -1, basePointer: basePointer}
 }
+
 func (f *Frame) Instructions() compiler.Instructions {
 	return f.block.Instructions
 }
@@ -22,6 +23,7 @@ func (vm *VM) currentFrame() *Frame {
 	return vm.frames[vm.framesIndex-1]
 }
 
+// Adds a new call frame to the VM
 func (vm *VM) pushFrame(f *Frame) {
 	vm.frames[vm.framesIndex] = f
 	vm.framesIndex++

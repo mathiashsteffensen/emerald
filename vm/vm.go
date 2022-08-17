@@ -3,23 +3,20 @@ package vm
 import (
 	"emerald/compiler"
 	"emerald/core"
+	"emerald/kernel"
 	"emerald/object"
 	"fmt"
 )
 
 const (
-	StackSize   = 2048
 	GlobalsSize = 65536
-	MaxFrames   = 1024
 )
 
 // VM is our virtual machine responsible for the fetch, decode, execute cycle
 type VM struct {
 	ctx         *object.Context
-	constants   []object.EmeraldValue
 	stack       []object.EmeraldValue
 	sp          int // Always points to the next value. Top of stack is stack[sp-1]
-	globals     []object.EmeraldValue
 	frames      []*Frame
 	framesIndex int
 }
@@ -35,10 +32,8 @@ func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
 
 	vm := &VM{
 		ctx:         &object.Context{DefinitionTarget: core.Object, ExecutionTarget: core.MainObject},
-		constants:   bytecode.Constants,
 		stack:       make([]object.EmeraldValue, StackSize),
 		sp:          0,
-		globals:     make([]object.EmeraldValue, GlobalsSize),
 		frames:      frames,
 		framesIndex: 1,
 	}
@@ -48,12 +43,6 @@ func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
 	}
 
 	return vm
-}
-
-func WithGlobalsStore(s []object.EmeraldValue) ConstructorOption {
-	return func(vm *VM) {
-		vm.globals = s
-	}
 }
 
 func (vm *VM) Run() error {
@@ -107,7 +96,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
 
-		err := vm.push(vm.constants[constIndex])
+		err := vm.push(kernel.GetConst(constIndex))
 		if err != nil {
 			return err
 		}
@@ -121,14 +110,14 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 	case compiler.OpGetGlobal:
 		globalIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
-		err := vm.push(vm.globals[globalIndex])
+		err := vm.push(kernel.GetGlobalVariable(globalIndex))
 		if err != nil {
 			return err
 		}
 	case compiler.OpSetGlobal:
 		globalIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
-		vm.globals[globalIndex] = vm.StackTop()
+		kernel.SetGlobalVariable(globalIndex, vm.StackTop())
 	case compiler.OpGetLocal:
 		localIndex := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
@@ -154,7 +143,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
 
-		name := vm.constants[constIndex]
+		name := kernel.GetConst(constIndex)
 		target := vm.ctx.ExecutionTarget
 
 		val := target.InstanceVariableGet(name.(*core.SymbolInstance).Value, target, target)
@@ -171,7 +160,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
 
-		name := vm.constants[constIndex]
+		name := kernel.GetConst(constIndex)
 		val := vm.StackTop()
 		target := vm.ctx.ExecutionTarget
 
@@ -284,7 +273,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 }
 
 func (vm *VM) closeBlock(constIndex, numFreeVars int) error {
-	constant := vm.constants[constIndex]
+	constant := kernel.GetConst(uint16(constIndex))
 	block, ok := constant.(*object.Block)
 	if !ok {
 		return fmt.Errorf("not a block: %+v", constant)
@@ -301,8 +290,10 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) error {
 }
 
 func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
-	name := vm.stack[vm.sp-2-numArgs].(*core.SymbolInstance)
-	block := vm.stack[vm.sp-1-numArgs]
+	basePointer := vm.sp - numArgs
+
+	name := vm.stack[basePointer-2].(*core.SymbolInstance)
+	block := vm.stack[basePointer-1]
 
 	target := vm.ctx.ExecutionTarget
 	method, errVal := target.Class().ExtractMethod(name.Value, target.Class(), target)
@@ -316,7 +307,7 @@ func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 			return core.NewArgumentError(numArgs, method.NumArgs)
 		}
 
-		frame := NewFrame(method, vm.sp-numArgs)
+		frame := NewFrame(method, basePointer)
 		vm.pushFrame(frame)
 		vm.sp = frame.basePointer + method.NumLocals
 	case *object.WrappedBuiltInMethod:

@@ -1,6 +1,6 @@
 # Emerald - A Ruby VM
 
-Emerald is a Ruby compiler & Virtual Machine written in Rust (Is in the process of a rewrite from Go).
+Emerald is a Ruby compiler & virtual machine written in Go.
 
 ### Supported language features
 This is still quite far away from being a real implementation.
@@ -175,7 +175,7 @@ The below is a list of the features on the roadmap and the ones that have alread
 - [ ] scope operator `::`
 - [ ] classes
     - [x] class objects
-    - [ ] class Class
+    - [x] class Class
     - [x] instance variables
     - [ ] class variables
     - [x] class methods

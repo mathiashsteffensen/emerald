@@ -3,6 +3,7 @@ package compiler
 import (
 	"emerald/ast"
 	"emerald/core"
+	"emerald/kernel"
 	"emerald/object"
 )
 
@@ -13,7 +14,6 @@ type EmittedInstruction struct {
 
 type Compiler struct {
 	instructions        Instructions
-	constants           []object.EmeraldValue
 	symbolTable         *SymbolTable
 	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
@@ -32,7 +32,6 @@ func New(options ...ConstructorOption) *Compiler {
 
 	c := &Compiler{
 		instructions:        Instructions{},
-		constants:           []object.EmeraldValue{},
 		symbolTable:         NewSymbolTable(),
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
@@ -46,10 +45,9 @@ func New(options ...ConstructorOption) *Compiler {
 	return c
 }
 
-func WithState(s *SymbolTable, constants []object.EmeraldValue) ConstructorOption {
+func WithState(s *SymbolTable) ConstructorOption {
 	return func(c *Compiler) {
 		c.symbolTable = s
-		c.constants = constants
 	}
 }
 
@@ -201,7 +199,6 @@ func (c *Compiler) Compile(node ast.Node) error {
 func (c *Compiler) Bytecode() *Bytecode {
 	return &Bytecode{
 		Instructions: c.currentInstructions(),
-		Constants:    c.constants,
 	}
 }
 
@@ -305,6 +302,5 @@ func (c *Compiler) setLastInstruction(op Opcode, pos int) {
 
 // addConstant adds a constant to the constant stack and returns its location
 func (c *Compiler) addConstant(obj object.EmeraldValue) int {
-	c.constants = append(c.constants, obj)
-	return len(c.constants) - 1
+	return kernel.AddConst(obj)
 }

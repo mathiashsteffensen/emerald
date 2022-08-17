@@ -4,6 +4,7 @@ import (
 	"emerald/ast"
 	"emerald/compiler"
 	"emerald/core"
+	"emerald/kernel"
 	"emerald/lexer"
 	"emerald/object"
 	"emerald/parser"
@@ -50,6 +51,8 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 
 				t.Errorf("stack pointer was not reset after running test, this indicates a memory leak in the VM, was %d", vm.sp)
 			}
+
+			kernel.Reset()
 		})
 	}
 }

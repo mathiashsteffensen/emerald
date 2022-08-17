@@ -22,7 +22,7 @@ define benchmark_build_time =
 endef
 
 default:
-	make lint test-rust build-rust
+	make lint test build
 
 emerald: ./**/*.go
 	$(benchmark_build_time)
@@ -33,16 +33,10 @@ iem: ./**/*.go
 build: emerald iem
 
 test:
-	go test ./lexer ./parser ./compiler/ ./vm/ ./core/ -cover
-
-test-rust:
-	cargo llvm-cov --html -- --test-threads=1
-
-build-rust:
-	cargo build ${MODE} && cp target/debug/emerald tmp/emerald-rust
+	go test ./lexer ./parser ./compiler/ ./object/ ./vm/ ./core/ -cover
 
 lint:
-	cargo fmt
+	staticcheck ./...
 
 install:
 	go mod download && \

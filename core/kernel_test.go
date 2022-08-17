@@ -8,6 +8,10 @@ func TestKernel_class(t *testing.T) {
 			input:    "Object.new.class",
 			expected: "class:Object",
 		},
+		{
+			input:    "Object.class",
+			expected: "class:Class",
+		},
 	}
 
 	runCoreTests(t, tests)

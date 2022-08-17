@@ -27,11 +27,10 @@ func (vm *VM) EvalBlock(block object.EmeraldValue, args ...object.EmeraldValue) 
 		}
 	}
 
+	basePointer := vm.sp - len(args)
 	startFrameIndex := vm.framesIndex
-
-	frame := NewFrame(bl, vm.sp-len(args))
-	vm.pushFrame(frame)
-	vm.sp = frame.basePointer + bl.NumLocals
+	vm.pushFrame(NewFrame(bl, basePointer))
+	vm.sp = basePointer + bl.NumLocals
 
 	var (
 		ip  int

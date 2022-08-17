@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"emerald/object"
 	"fmt"
 )
 
@@ -18,7 +17,6 @@ type (
 
 	Bytecode struct {
 		Instructions Instructions
-		Constants    []object.EmeraldValue
 	}
 )
 

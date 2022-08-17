@@ -3,6 +3,7 @@ package compiler
 import (
 	"emerald/ast"
 	"emerald/core"
+	"emerald/kernel"
 	"emerald/lexer"
 	"emerald/object"
 	"emerald/parser"
@@ -40,11 +41,13 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 				t.Errorf("testInstructions failed: %s", err)
 			}
 
-			err = testConstants(tt.expectedConstants, bytecode.Constants)
+			err = testConstants(tt.expectedConstants, kernel.ConstantPool)
 
 			if err != nil {
 				t.Errorf("testConstants failed: %s", err)
 			}
+
+			kernel.Reset()
 		})
 	}
 }

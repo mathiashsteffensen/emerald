@@ -1,40 +1,55 @@
 package repl
 
 import (
-	"bufio"
 	"emerald/compiler"
 	"emerald/lexer"
-	"emerald/object"
 	"emerald/parser"
 	"emerald/vm"
 	"fmt"
+	"github.com/chzyer/readline"
 	"io"
 )
 
 const PROMPT_FMT = "iem(main):%03d:0> "
 
-func Start(in io.Reader, out io.Writer) {
-	lineCount := 0
-	scanner := bufio.NewScanner(in)
+func Start(in io.ReadCloser, out io.Writer) {
+	readline.SetHistoryPath("/tmp/iem.hst")
+	buffer, err := readline.New(fmt.Sprintf(PROMPT_FMT, 1))
+	if err != nil {
+		panic(fmt.Sprintf("Failed to initialize REPL buffer %s", err))
+	}
 
-	constants := []object.EmeraldValue{}
-	globals := make([]object.EmeraldValue, vm.GlobalsSize)
+	buffer.Config.Stdin = in
+	buffer.Config.Stdout = out
+	buffer.Config.Stderr = out
+
+	lineCount := 1
+
 	symbolTable := compiler.NewSymbolTable()
 
-	for {
-		lineCount++
+	var line string
 
+	for {
 		fmt.Fprintf(out, PROMPT_FMT, lineCount)
 
-		scanned := scanner.Scan()
-		if !scanned {
-			return
+		line, err = buffer.Readline()
+		if err != nil {
+			if err.Error() == "Interrupt" {
+				continue
+			}
+
+			switch err.Error() {
+			case "Interrupt":
+				continue
+			default:
+				fmt.Fprintf(out, "Error reading line %s\n", err)
+				continue
+			}
 		}
 
-		line := scanner.Text()
-		if line == "quit" {
+		if line == "quit" || line == "exit" {
 			fmt.Fprintf(out, "See you next time!\n")
-			return
+			break
 		}
 
 		l := lexer.New(lexer.NewInput("repl.rb", line))
@@ -46,7 +61,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		comp := compiler.New(compiler.WithState(symbolTable, constants), compiler.WithBuiltIns())
+		comp := compiler.New(compiler.WithState(symbolTable), compiler.WithBuiltIns())
 
 		err := comp.Compile(program)
 		if err != nil {
@@ -55,9 +70,8 @@ func Start(in io.Reader, out io.Writer) {
 		}
 
 		code := comp.Bytecode()
-		constants = code.Constants
 
-		machine := vm.New(code, vm.WithGlobalsStore(globals))
+		machine := vm.New(code)
 
 		err = machine.Run()
 		if err != nil {
@@ -72,6 +86,8 @@ func Start(in io.Reader, out io.Writer) {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
 		}
+
+		lineCount++
 	}
 }
 
