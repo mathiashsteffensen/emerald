@@ -6,6 +6,8 @@ Emerald is a Ruby compiler & virtual machine written in Go.
 
 Run the following from your command line:
 ```bash
+git clone git@github.com:mathiashsteffensen/emerald.git && \
+cd emerald && \
 make build
 ```
 
