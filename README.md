@@ -2,6 +2,25 @@
 
 Emerald is a Ruby compiler & virtual machine written in Go.
 
+### Building Emerald
+
+Run the following from your command line:
+```bash
+make build
+```
+
+This will build an `emerald` & an `iem` executable in the current directory.
+
+To run a source file of Ruby code:
+```bash
+./emerald main.rb
+```
+
+To start the Emerald VM in interactive mode:
+```bash
+./iem
+```
+
 ### Supported language features
 This is still quite far away from being a real implementation.
 The below is a list of the features on the roadmap and the ones that have already been implemented.
