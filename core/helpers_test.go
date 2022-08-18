@@ -178,12 +178,12 @@ func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual o
 		return fmt.Errorf("object is not Hash. got=%T (%+v)", actual, actual)
 	}
 
-	if len(hash.Value) != len(expected) {
-		return fmt.Errorf("hash has wrong number of Pairs. want=%d, got=%d", len(expected), len(hash.Value))
+	if len(hash.Values) != len(expected) {
+		return fmt.Errorf("hash has wrong number of Pairs. want=%d, got=%d", len(expected), len(hash.Values))
 	}
 
 	for expectedKey, expectedValue := range expected {
-		pair, ok := hash.Value[expectedKey.HashKey()]
+		pair, ok := hash.Values[expectedKey.HashKey()]
 		if !ok {
 			return fmt.Errorf("no pair for given key in Pairs")
 		}

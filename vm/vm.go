@@ -390,13 +390,13 @@ func (vm *VM) buildArray(startIndex, endIndex int) object.EmeraldValue {
 }
 
 func (vm *VM) buildHash(startIndex, endIndex int) object.EmeraldValue {
-	values := map[string]object.EmeraldValue{}
+	hash := core.NewHash()
 
 	for i := startIndex; i < endIndex; i += 2 {
-		values[vm.stack[i].HashKey()] = vm.stack[i+1]
+		hash.Set(vm.stack[i], vm.stack[i+1])
 	}
 
-	return core.NewHash(values)
+	return hash
 }
 
 func (vm *VM) conditionalJump(condition bool, ins compiler.Instructions, ip int) {
