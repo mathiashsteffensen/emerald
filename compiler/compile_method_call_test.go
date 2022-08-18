@@ -246,6 +246,52 @@ func TestCompileMethodCall(t *testing.T) {
 				Make(OpPop),
 			},
 		},
+		{
+			name: "assignment method call",
+			input: `
+				class Logger
+					class << self
+						def level=(new)
+							@level = new
+						end
+					end
+				end
+
+				Logger.level = :debug
+			`,
+			expectedConstants: []any{
+				"class:Logger",
+				":@level",
+				":level=",
+				[]Instructions{
+					Make(OpGetLocal, 0),
+					Make(OpInstanceVarSet, 1),
+					Make(OpReturnValue),
+				},
+				":level=",
+				":debug",
+			},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpSetGlobal, 0),
+				Make(OpOpenClass),
+				Make(OpDefinitionStaticTrue),
+				Make(OpPushConstant, 2),
+				Make(OpPushConstant, 3),
+				Make(OpDefineMethod),
+				Make(OpDefinitionStaticFalse),
+				Make(OpCloseClass),
+				Make(OpPop),
+				Make(OpGetGlobal, 0),
+				Make(OpSetExecutionTarget),
+				Make(OpPushConstant, 4),
+				Make(OpNull),
+				Make(OpPushConstant, 5),
+				Make(OpSend, 1),
+				Make(OpResetExecutionTarget),
+				Make(OpPop),
+			},
+		},
 	}
 	runCompilerTests(t, tests)
 }

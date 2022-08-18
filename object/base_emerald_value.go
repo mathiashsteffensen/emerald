@@ -121,7 +121,7 @@ func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue
 }
 
 func (val *BaseEmeraldValue) InstanceVariableGet(name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue {
-	value, ok := val.instanceVariables[name]
+	value, ok := val.InstanceVariables()[name]
 	if ok {
 		return value
 	}

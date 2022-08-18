@@ -24,7 +24,7 @@ func main() {
 		for _, err := range p.Errors() {
 			fmt.Printf("parser error: %s\n", err)
 		}
-		return
+		os.Exit(1)
 	}
 
 	c := compiler.New(compiler.WithBuiltIns())

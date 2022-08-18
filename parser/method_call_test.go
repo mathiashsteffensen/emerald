@@ -18,7 +18,7 @@ func TestMethodCallParsing(t *testing.T) {
 		end.first
 
 		Logger.info(msg)
-		@var.method
+		Logger.level = :debug
 	`
 
 	program := testParseAST(t, input)
@@ -99,6 +99,22 @@ func TestMethodCallParsing(t *testing.T) {
 		return
 	}
 	if !testIdentifier(t, exp.Method, "info") {
+		return
+	}
+
+	stmt, ok = program.Statements[2].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("stmt is not ast.ExpressionStatement. got=%T", program.Statements[0])
+	}
+	exp, ok = stmt.Expression.(*ast.MethodCall)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.MethodCall. got=%T", stmt.Expression)
+	}
+
+	if !testIdentifier(t, exp.Left, "Logger") {
+		return
+	}
+	if !testIdentifier(t, exp.Method, "level=") {
 		return
 	}
 }

@@ -32,7 +32,7 @@ func New(input *Input) *Lexer {
 
 func (l *Lexer) Snapshot(token Token) string {
 	start := token.Pos - 30
-	end := token.Pos + 5
+	end := token.Pos + 8
 
 	if start < 0 {
 		start = 0
@@ -47,7 +47,7 @@ func (l *Lexer) Snapshot(token Token) string {
 	buf.WriteString(l.currentInput.content[start:end])
 	buf.WriteString("\n")
 
-	for i := 0; i < token.Pos-start; i++ {
+	for i := 0; i < token.Column-2; i++ {
 		buf.WriteString(" ")
 	}
 	buf.WriteString("^")

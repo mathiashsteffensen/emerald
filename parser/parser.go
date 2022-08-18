@@ -502,13 +502,20 @@ func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
 
 	p.nextToken()
 
-	node.Method = &ast.IdentifierExpression{Value: p.curToken.Literal, Token: p.curToken}
+	methodIdent := &ast.IdentifierExpression{Value: p.curToken.Literal, Token: p.curToken}
 
 	if p.peekTokenIs(lexer.LPAREN) {
 		p.nextToken()
 		node.Arguments = p.parseCallArguments()
+	} else if p.peekTokenIs(lexer.ASSIGN) {
+		methodIdent.Value = methodIdent.Value + p.peekToken.Literal
+		methodIdent.Token.Literal = methodIdent.TokenLiteral() + p.peekToken.Literal
+		p.nextToken()
+		p.nextToken()
+		node.Arguments = []ast.Expression{p.parseExpression(LOWEST)}
 	}
 
+	node.Method = methodIdent
 	node.Block = p.parseBlockLiteral()
 
 	if p.curTokenIs(lexer.DOT) {

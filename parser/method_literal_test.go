@@ -114,6 +114,16 @@ func TestMethodLiteralExpression(t *testing.T) {
 			"method",
 			[]string{},
 		},
+		{
+			"assignment method",
+			`
+			def level=(new)
+				@level = new
+			end
+			`,
+			"level=",
+			[]string{"new"},
+		},
 	}
 
 	for _, tt := range tests {

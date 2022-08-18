@@ -12,8 +12,16 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 		return nil
 	}
 
-	method.Name = p.parseIdentifierExpression()
+	methodIdent := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 	p.nextIfSemicolonOrNewline()
+
+	if p.peekTokenIs(lexer.ASSIGN) {
+		methodIdent.Value = methodIdent.Value + p.peekToken.Literal
+		methodIdent.Token.Literal = methodIdent.TokenLiteral() + p.peekToken.Literal
+		p.nextToken()
+	}
+
+	method.Name = methodIdent
 
 	if p.peekTokenIs(lexer.LPAREN) {
 		p.nextToken()

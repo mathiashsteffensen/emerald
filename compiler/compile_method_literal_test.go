@@ -86,6 +86,28 @@ func TestCompileMethodLiteral(t *testing.T) {
 				Make(OpPop),
 			},
 		},
+		{
+			input: `
+				def level=(new)
+					@level = new
+				end
+			`,
+			expectedConstants: []any{
+				":@level",
+				":level=",
+				[]Instructions{
+					Make(OpGetLocal, 0),
+					Make(OpInstanceVarSet, 0),
+					Make(OpReturnValue),
+				},
+			},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 1),
+				Make(OpPushConstant, 2),
+				Make(OpDefineMethod),
+				Make(OpPop),
+			},
+		},
 	}
 	runCompilerTests(t, tests)
 }

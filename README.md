@@ -211,9 +211,7 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] `self`
     - [x] singleton classes (also known as the metaclass or eigenclass) `class << self`
     - [ ] singleton methods `def self.method`
-    - [ ] assigment methods
-    - [x] self defined classes
-    - [ ] self defined classes with inheritance
+    - [x] assigment methods
     - [ ] super in methods
 - [x] modules
 - [x] object main

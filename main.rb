@@ -25,6 +25,10 @@ module BaseLogger
     def current_level
         @current_level ||= :info
     end
+
+    def level=(new_level)
+        @current_level = new_level
+    end
 end
 
 class Logger
@@ -42,6 +46,10 @@ end
 if x < y && true
     if true
         Logger.instance.info("Hello World!")
+
+        Logger.instance.level = :debug
+
+        Logger.instance.warn("level is " + Logger.instance.current_level.to_s)
 
         Logger.instance.debug("debug msg")
 
