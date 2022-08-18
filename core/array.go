@@ -13,7 +13,20 @@ type ArrayInstance struct {
 }
 
 func InitArray() {
-	Array = object.NewClass("Array", Object, Object.Class(), arrayBuiltInMethodSet, object.BuiltInMethodSet{})
+	Array = object.NewClass(
+		"Array",
+		Object,
+		Object.Class(),
+		object.BuiltInMethodSet{
+			"[]":      arrayIndexAccessor(),
+			"push":    arrayPush(),
+			"each":    arrayEach(),
+			"to_s":    arrayToS(),
+			"inspect": arrayToS(),
+		},
+		object.BuiltInMethodSet{},
+		Enumerable,
+	)
 }
 
 func NewArray(val []object.EmeraldValue) *ArrayInstance {
@@ -23,8 +36,8 @@ func NewArray(val []object.EmeraldValue) *ArrayInstance {
 	}
 }
 
-var arrayBuiltInMethodSet = object.BuiltInMethodSet{
-	"[]": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+func arrayIndexAccessor() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := target.(*ArrayInstance).Value
 
 		intArg, ok := args[0].(*IntegerInstance)
@@ -39,55 +52,16 @@ var arrayBuiltInMethodSet = object.BuiltInMethodSet{
 		}
 
 		return arr[index]
-	},
-	"find":       arrayFind(),
-	"find_index": arrayFindIndex(),
-	"map":        arrayMap(),
-	"each":       arrayEach(),
-	"sum":        arraySum(),
-	"to_s":       arrayToS(),
-	"inspect":    arrayToS(),
-}
-
-func arrayFind() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := target.(*ArrayInstance)
-
-		for _, val := range arr.Value {
-			if yield(block, val) == TRUE {
-				return val
-			}
-		}
-
-		return NULL
 	}
 }
 
-func arrayFindIndex() object.BuiltInMethod {
+func arrayPush() object.BuiltInMethod {
 	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := target.(*ArrayInstance)
 
-		for i, val := range arr.Value {
-			if yield(block, val) == TRUE {
-				return NewInteger(int64(i))
-			}
-		}
+		arr.Value = append(arr.Value, args[0])
 
-		return NULL
-	}
-}
-
-func arrayMap() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := target.(*ArrayInstance)
-
-		newArr := make([]object.EmeraldValue, len(arr.Value))
-
-		for i, val := range arr.Value {
-			newArr[i] = yield(block, val)
-		}
-
-		return NewArray(newArr)
+		return arr
 	}
 }
 
@@ -100,37 +74,6 @@ func arrayEach() object.BuiltInMethod {
 		}
 
 		return arr
-	}
-}
-
-func arraySum() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		var err error
-		arr := target.(*ArrayInstance)
-		blockGiven := IsNull(block)
-
-		var accumulated object.EmeraldValue
-		if blockGiven {
-			accumulated = yield(block, arr.Value[0])
-		} else {
-			accumulated = arr.Value[0]
-		}
-
-		for _, value := range arr.Value[1:] {
-			if blockGiven {
-				accumulated, err = accumulated.SEND(ctx, nil, "+", accumulated, nil, yield(block, value))
-				if err != nil {
-					return NewStandardError(err.Error())
-				}
-			} else {
-				accumulated, err = accumulated.SEND(ctx, nil, "+", accumulated, nil, value)
-				if err != nil {
-					return NewStandardError(err.Error())
-				}
-			}
-		}
-
-		return accumulated
 	}
 }
 

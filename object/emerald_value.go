@@ -39,7 +39,7 @@ type (
 			yield YieldFunc,
 			name string,
 			target EmeraldValue,
-			block *ClosedBlock,
+			block EmeraldValue,
 			args ...EmeraldValue,
 		) (EmeraldValue, error)
 		InstanceVariableGet(name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue

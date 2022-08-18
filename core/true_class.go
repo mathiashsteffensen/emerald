@@ -21,3 +21,12 @@ func InitTrueClass() {
 		return NewString("true")
 	}
 }
+
+func IsTruthy(obj object.EmeraldValue) bool {
+	switch obj {
+	case FALSE, NULL:
+		return false
+	default:
+		return true
+	}
+}

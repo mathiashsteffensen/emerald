@@ -35,6 +35,11 @@ func TestIntegerOperators(t *testing.T) {
 			expected: 3,
 		},
 		{
+			name:     "dividing with remainder",
+			input:    "5/2",
+			expected: 2.5,
+		},
+		{
 			name:     "Multiplying",
 			input:    "6*2",
 			expected: 12,

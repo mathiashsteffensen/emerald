@@ -51,12 +51,18 @@ var integerBuiltInMethodSet = object.BuiltInMethodSet{
 		return NewInteger(target.(*IntegerInstance).Value * otherVal.Value)
 	},
 	"/": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		otherVal, err := requireOneIntegerArg("/", args)
+		right, err := requireOneIntegerArg("/", args)
 		if err != nil {
 			return err
 		}
 
-		return NewInteger(target.(*IntegerInstance).Value / otherVal.Value)
+		left := target.(*IntegerInstance)
+
+		if left.Value%right.Value == 0 {
+			return NewInteger(left.Value / right.Value)
+		} else {
+			return NewFloat(float64(left.Value) / float64(right.Value))
+		}
 	},
 	"<": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		otherVal, err := requireOneIntegerArg("<", args)

@@ -10,7 +10,7 @@ func (vm *VM) executeBangOperator() error {
 
 	var result object.EmeraldValue
 
-	if isTruthy(operand) {
+	if core.IsTruthy(operand) {
 		result = core.FALSE
 	} else {
 		result = core.TRUE

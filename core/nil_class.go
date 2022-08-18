@@ -29,7 +29,7 @@ func IsNull(obj object.EmeraldValue) bool {
 		return false
 	}
 
-	if super, ok := obj.(*object.Class); ok && super.Name == NilClass.Name {
+	if obj == NULL {
 		return true
 	}
 

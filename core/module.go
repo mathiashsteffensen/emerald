@@ -15,4 +15,6 @@ func InitModule() {
 
 	Class.SetSuper(Module)
 	Class.Class().(*object.SingletonClass).SetSuper(Module.Class())
+
+	Kernel.Class().(*object.SingletonClass).SetSuper(Module)
 }

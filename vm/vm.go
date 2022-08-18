@@ -104,9 +104,9 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		pos := int(compiler.ReadUint16(ins[ip+1:]))
 		vm.currentFrame().ip = pos - 1
 	case compiler.OpJumpNotTruthy:
-		vm.conditionalJump(!isTruthy(vm.StackTop()), ins, ip)
+		vm.conditionalJump(!core.IsTruthy(vm.StackTop()), ins, ip)
 	case compiler.OpJumpTruthy:
-		vm.conditionalJump(isTruthy(vm.StackTop()), ins, ip)
+		vm.conditionalJump(core.IsTruthy(vm.StackTop()), ins, ip)
 	case compiler.OpGetGlobal:
 		globalIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
@@ -331,7 +331,7 @@ func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
 		vm.pushFrame(frame)
 		vm.sp = frame.basePointer + method.NumLocals
 	case *object.WrappedBuiltInMethod:
-		result := method.Method(vm.ctx, target, block, vm.EvalBlock, vm.stack[vm.sp-numArgs:vm.sp]...)
+		result := vm.evalBuiltIn(method, block, vm.stack[vm.sp-numArgs:vm.sp])
 		vm.sp -= numArgs + 2
 		err := vm.push(result)
 
@@ -406,14 +406,5 @@ func (vm *VM) conditionalJump(condition bool, ins compiler.Instructions, ip int)
 		newPosition := int(compiler.ReadUint16(ins[ip+1:]))
 		vm.currentFrame().ip = newPosition - 1
 		vm.sp--
-	}
-}
-
-func isTruthy(obj object.EmeraldValue) bool {
-	switch obj {
-	case core.FALSE, core.NULL:
-		return false
-	default:
-		return true
 	}
 }

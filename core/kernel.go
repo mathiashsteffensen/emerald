@@ -21,7 +21,6 @@ func InitKernel() {
 			"puts": kernelPuts(),
 		},
 		object.BuiltInMethodSet{},
-		Module,
 	)
 }
 

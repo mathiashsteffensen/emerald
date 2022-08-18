@@ -18,6 +18,7 @@ func init() {
 	InitSymbol()
 
 	// Initialize composite data types
+	InitEnumerable()
 	InitArray()
 	InitHash()
 

@@ -67,6 +67,11 @@ func testExpectedObject(
 		if err != nil {
 			t.Errorf("testIntegerObject failed: %s", err)
 		}
+	case float64:
+		err := testFloatObject(expected, actual)
+		if err != nil {
+			t.Errorf("testFloatObject failed: %s", err)
+		}
 	case bool:
 		err := testBooleanObject(expected, actual)
 		if err != nil {
@@ -196,6 +201,17 @@ func testIntegerObject(expected int64, actual object.EmeraldValue) error {
 	}
 	if result.Value != expected {
 		return fmt.Errorf("object has wrong value. got=%d, want=%d", result.Value, expected)
+	}
+	return nil
+}
+
+func testFloatObject(expected float64, actual object.EmeraldValue) error {
+	result, ok := actual.(*core.FloatInstance)
+	if !ok {
+		return fmt.Errorf("object is not FloatInstance. got=%T (%+v)", actual, actual)
+	}
+	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. got=%f, want=%f", result.Value, expected)
 	}
 	return nil
 }
