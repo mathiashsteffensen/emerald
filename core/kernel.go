@@ -28,11 +28,9 @@ func InitKernel() {
 func kernelClass() object.BuiltInMethod {
 	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		class := target.Class()
-		typ := class.Type()
 
-		for typ != object.CLASS_VALUE {
+		for class.Type() != object.CLASS_VALUE {
 			class = class.Super()
-			typ = class.Type()
 		}
 
 		return class

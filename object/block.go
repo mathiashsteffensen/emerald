@@ -16,6 +16,7 @@ func (b *Block) Super() EmeraldValue       { return nil }
 func (b *Block) Ancestors() []EmeraldValue { return []EmeraldValue{} }
 func (*Block) Type() EmeraldValueType      { return BLOCK_VALUE }
 func (b *Block) Inspect() string           { return fmt.Sprintf("#<Block:%p>", b) }
+func (b *Block) HashKey() string           { return b.Inspect() }
 
 func NewBlock(instructions []byte, numLocals int, numArgs int) *Block {
 	return &Block{

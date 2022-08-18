@@ -1,15 +1,19 @@
-start = Time.now.to_f
-
 count = 1_000_000
 
-count.times do
-    "hello" == "hello"
-end
 
+str = "hello"
+
+start = Time.now.to_f
+count.times do
+    str == str
+end
 puts("Compared " + count.to_s + " Strings in " + (Time.now.to_f - start).to_s + "s")
 
-count.times do
-    :hello == :hello
-end
 
+sym = :hello
+
+start = Time.now.to_f
+count.times do
+    sym == sym
+end
 puts("Compared " + count.to_s + " Symbols in " + (Time.now.to_f - start).to_s + "s")

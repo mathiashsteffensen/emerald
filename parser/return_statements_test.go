@@ -9,7 +9,7 @@ func TestReturnStatements(t *testing.T) {
 	tests := []struct {
 		name          string
 		input         string
-		expectedValue interface{}
+		expectedValue any
 	}{
 		{"returning a number", "return 5;", 5},
 		{"returning a boolean", "return true;", true},

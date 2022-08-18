@@ -8,7 +8,7 @@ func TestCompileMethodLiteral(t *testing.T) {
 			input: `def method
 				return 5 + 10
 			end`,
-			expectedConstants: []interface{}{
+			expectedConstants: []any{
 				10,
 				5,
 				":method",
@@ -30,7 +30,7 @@ func TestCompileMethodLiteral(t *testing.T) {
 			input: `def method
 				5 + 10
 			end`,
-			expectedConstants: []interface{}{
+			expectedConstants: []any{
 				10,
 				5,
 				":method",
@@ -53,7 +53,7 @@ func TestCompileMethodLiteral(t *testing.T) {
 				5
 				10
 			end`,
-			expectedConstants: []interface{}{
+			expectedConstants: []any{
 				5,
 				10,
 				":method",
@@ -73,7 +73,7 @@ func TestCompileMethodLiteral(t *testing.T) {
 		},
 		{
 			input: `def method; end`,
-			expectedConstants: []interface{}{
+			expectedConstants: []any{
 				":method",
 				[]Instructions{
 					Make(OpReturn),

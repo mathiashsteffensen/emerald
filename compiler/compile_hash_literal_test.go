@@ -7,16 +7,42 @@ func TestCompileHashLiteral(t *testing.T) {
 		{
 			name:              "with no keys",
 			input:             "{}",
-			expectedConstants: []interface{}{},
+			expectedConstants: []any{},
 			expectedInstructions: []Instructions{
 				Make(OpHash, 0),
 				Make(OpPop),
 			},
 		},
 		{
+			name:              "with index accessor",
+			input:             "{}[:key]",
+			expectedConstants: []any{":[]", ":key"},
+			expectedInstructions: []Instructions{
+				Make(OpHash, 0),
+				Make(OpSetExecutionTarget),
+				Make(OpPushConstant, 0),
+				Make(OpNull),
+				Make(OpPushConstant, 1),
+				Make(OpSend, 1),
+				Make(OpResetExecutionTarget),
+				Make(OpPop),
+			},
+		},
+		{
+			name:              "with syntactic sugar for symbol keys",
+			input:             "{key: 2}",
+			expectedConstants: []any{":key", 2},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpPushConstant, 1),
+				Make(OpHash, 2),
+				Make(OpPop),
+			},
+		},
+		{
 			name:              "with constant keys and values",
-			input:             "{1: 2, 3: 4, 5: 6}",
-			expectedConstants: []interface{}{1, 2, 3, 4, 5, 6},
+			input:             "{1 => 2, 3 => 4, 5 => 6}",
+			expectedConstants: []any{1, 2, 3, 4, 5, 6},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),
@@ -30,8 +56,8 @@ func TestCompileHashLiteral(t *testing.T) {
 		},
 		{
 			name:              "with expression values",
-			input:             "{1: 2 + 3, 4: 5 * 6}",
-			expectedConstants: []interface{}{1, 3, 2, 4, 6, 5},
+			input:             "{1 => 2 + 3, 4 => 5 * 6}",
+			expectedConstants: []any{1, 3, 2, 4, 6, 5},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpPushConstant, 1),

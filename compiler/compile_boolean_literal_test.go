@@ -7,7 +7,7 @@ func TestCompileBooleanLiteral(t *testing.T) {
 		{
 			name:              "true",
 			input:             "true",
-			expectedConstants: []interface{}{},
+			expectedConstants: []any{},
 			expectedInstructions: []Instructions{
 				Make(OpTrue),
 				Make(OpPop),
@@ -16,7 +16,7 @@ func TestCompileBooleanLiteral(t *testing.T) {
 		{
 			name:              "false",
 			input:             "false",
-			expectedConstants: []interface{}{},
+			expectedConstants: []any{},
 			expectedInstructions: []Instructions{
 				Make(OpFalse),
 				Make(OpPop),

@@ -9,7 +9,7 @@ func TestCompileAssignment(t *testing.T) {
 			one = 1
 			two = 2
 			`,
-			expectedConstants: []interface{}{1, 2},
+			expectedConstants: []any{1, 2},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpSetGlobal, 0),
@@ -23,7 +23,7 @@ func TestCompileAssignment(t *testing.T) {
 			input: `
 			one = 1
 			`,
-			expectedConstants: []interface{}{1},
+			expectedConstants: []any{1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpSetGlobal, 0),
@@ -35,7 +35,7 @@ func TestCompileAssignment(t *testing.T) {
 			one = 1
 			two = one
 			`,
-			expectedConstants: []interface{}{1},
+			expectedConstants: []any{1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpSetGlobal, 0),
@@ -49,7 +49,7 @@ func TestCompileAssignment(t *testing.T) {
 			input: `
 			two = one = 1
 			`,
-			expectedConstants: []interface{}{1},
+			expectedConstants: []any{1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpSetGlobal, 0),
@@ -62,7 +62,7 @@ func TestCompileAssignment(t *testing.T) {
 			num = 55
 			def method; num; end
 			`,
-			expectedConstants: []interface{}{
+			expectedConstants: []any{
 				55,
 				":method",
 				[]Instructions{
@@ -86,7 +86,7 @@ func TestCompileAssignment(t *testing.T) {
 				num = 55
 			end
 			`,
-			expectedConstants: []interface{}{
+			expectedConstants: []any{
 				55,
 				":method",
 				[]Instructions{
@@ -110,7 +110,7 @@ func TestCompileAssignment(t *testing.T) {
 				a + b
 			end
 			`,
-			expectedConstants: []interface{}{
+			expectedConstants: []any{
 				55,
 				77,
 				":method",

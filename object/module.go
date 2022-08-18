@@ -20,6 +20,7 @@ func (m *Module) Ancestors() []EmeraldValue {
 
 	return ancestors
 }
+func (m *Module) HashKey() string { return m.Inspect() }
 
 func NewModule(name string, builtInMethodSet, staticBuiltInMethodSet BuiltInMethodSet, parentClass EmeraldValue, modules ...EmeraldValue) *Module {
 	mod := &Module{

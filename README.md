@@ -129,11 +129,11 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] array of strings `%w{}`
     - [ ] array of symbols `%i{}`
 - [x] nil
-- [ ] hashes
-    - [ ] literal with `=>` notation
+- [x] hashes
+    - [x] literal with `=>` notation
     - [x] literal with `key:` notation
-    - [ ] indexing `hash[:foo]`
-    - [ ] every Ruby Object can be a hash key
+    - [x] indexing `hash[:foo]`
+    - [x] every Ruby Object can be a hash key
 - [ ] symbols
     - [x] `:symbol`
     - [ ] `:"symbol"`
@@ -218,3 +218,4 @@ The below is a list of the features on the roadmap and the ones that have alread
 - [x] modules
 - [x] object main
 - [x] comments '#'
+- [ ] C extension compatability

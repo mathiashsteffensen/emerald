@@ -1,5 +1,7 @@
 package object
 
+import "fmt"
+
 type (
 	// BuiltInMethod - The type signature of an Emerald method defined in Go compiler
 	BuiltInMethod func(ctx *Context, target EmeraldValue, block EmeraldValue, yield YieldFunc, args ...EmeraldValue) EmeraldValue
@@ -42,6 +44,7 @@ type (
 		) (EmeraldValue, error)
 		InstanceVariableGet(name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue
 		InstanceVariableSet(name string, value EmeraldValue)
+		HashKey() string
 	}
 )
 
@@ -55,8 +58,9 @@ const (
 	RETURN_VALUE
 )
 
-func (method *WrappedBuiltInMethod) Inspect() string           { return "obscure Go compiler" }
+func (method *WrappedBuiltInMethod) Inspect() string           { return fmt.Sprintf("#<Block:%p>", method) }
 func (method *WrappedBuiltInMethod) Type() EmeraldValueType    { return BLOCK_VALUE }
 func (method *WrappedBuiltInMethod) Class() EmeraldValue       { return nil }
 func (method *WrappedBuiltInMethod) Super() EmeraldValue       { return nil }
 func (method *WrappedBuiltInMethod) Ancestors() []EmeraldValue { return []EmeraldValue{} }
+func (method *WrappedBuiltInMethod) HashKey() string           { return method.Inspect() }

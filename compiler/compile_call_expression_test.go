@@ -9,7 +9,7 @@ func TestCompileCallExpression(t *testing.T) {
 			def one_arg(a); a; end
 			one_arg(24)
 			`,
-			expectedConstants: []interface{}{
+			expectedConstants: []any{
 				":one_arg",
 				[]Instructions{
 					Make(OpGetLocal, 0),
@@ -35,7 +35,7 @@ func TestCompileCallExpression(t *testing.T) {
 			def many_arg(a, b, c); a; b; c; end
 			many_arg(24, 25, 26)
 			`,
-			expectedConstants: []interface{}{
+			expectedConstants: []any{
 				":many_arg",
 				[]Instructions{
 					Make(OpGetLocal, 0),

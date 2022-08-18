@@ -16,7 +16,7 @@ import (
 type vmTestCase struct {
 	name     string
 	input    string
-	expected interface{}
+	expected any
 }
 
 func runVmTests(t *testing.T, tests []vmTestCase) {
@@ -59,7 +59,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 
 func testExpectedObject(
 	t *testing.T,
-	expected interface{},
+	expected any,
 	actual object.EmeraldValue,
 ) {
 	t.Helper()
@@ -163,7 +163,7 @@ func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual o
 	}
 
 	for expectedKey, expectedValue := range expected {
-		pair, ok := hash.Value[expectedKey]
+		pair, ok := hash.Value[expectedKey.HashKey()]
 		if !ok {
 			return fmt.Errorf("no pair for given key in Pairs")
 		}

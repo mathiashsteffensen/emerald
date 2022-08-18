@@ -410,8 +410,24 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 
 		key := p.parseExpression(LOWEST)
 
-		if !p.expectPeek(lexer.COLON) {
-			return nil
+		if p.peekTokenIs(lexer.COLON) {
+			switch typedKey := key.(type) {
+			case *ast.IdentifierExpression:
+				p.nextToken()
+				typedKey.Token.Literal = ":"
+				key = &ast.SymbolLiteral{Value: typedKey.Value, Token: typedKey.Token}
+			case *ast.StringLiteral:
+				p.nextToken()
+				typedKey.Token.Literal = ":"
+				key = &ast.SymbolLiteral{Value: typedKey.Value, Token: typedKey.Token}
+			default:
+				p.peekError(lexer.ARROW)
+				return nil
+			}
+		} else {
+			if !p.expectPeek(lexer.ARROW) {
+				return nil
+			}
 		}
 
 		p.nextToken()

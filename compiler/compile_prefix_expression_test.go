@@ -7,7 +7,7 @@ func TestCompilePrefixExpression(t *testing.T) {
 		{
 			name:              "negating integer",
 			input:             "-1",
-			expectedConstants: []interface{}{1},
+			expectedConstants: []any{1},
 			expectedInstructions: []Instructions{
 				Make(OpPushConstant, 0),
 				Make(OpMinus),
@@ -17,7 +17,7 @@ func TestCompilePrefixExpression(t *testing.T) {
 		{
 			name:              "negating boolean",
 			input:             "!true",
-			expectedConstants: []interface{}{},
+			expectedConstants: []any{},
 			expectedInstructions: []Instructions{
 				Make(OpTrue),
 				Make(OpBang),

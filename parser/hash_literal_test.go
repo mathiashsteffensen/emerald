@@ -8,7 +8,6 @@ import (
 func TestHashLiteralParsing(t *testing.T) {
 	input := `{
 		hello: false,
-		0: true,
 		"string": 25
 	}`
 
@@ -26,37 +25,25 @@ func TestHashLiteralParsing(t *testing.T) {
 	var value ast.Expression
 
 	for key, val := range literal.Value {
-		if key.String() == "hello" {
+		if key.String() == ":hello" {
 			value = val
 			ok = true
 		}
 	}
 	if !ok {
-		t.Errorf("literal.Value doesn't have expected key 'hello'. got=%q", literal.Value)
+		t.Errorf("literal.Value doesn't have expected key ':hello'. got=%q", literal.Value)
 	}
 	testBooleanLiteral(t, value, false)
 	ok = false
 
 	for key, val := range literal.Value {
-		if key.String() == "0" {
+		if key.String() == ":string" {
 			value = val
 			ok = true
 		}
 	}
 	if !ok {
-		t.Errorf("literal.Value doesn't have expected key '0'. got=%q", literal.Value)
-	}
-	testBooleanLiteral(t, value, true)
-	ok = false
-
-	for key, val := range literal.Value {
-		if key.String() == `"string"` {
-			value = val
-			ok = true
-		}
-	}
-	if !ok {
-		t.Errorf("literal.Value doesn't have expected key 'string'. got=%q", literal.Value)
+		t.Errorf("literal.Value doesn't have expected key ':string'. got=%q", literal.Value)
 	}
 
 	testIntegerLiteral(t, value, 25)

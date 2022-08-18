@@ -28,6 +28,7 @@ func (c *SingletonClass) Ancestors() []EmeraldValue {
 
 	return ancestors
 }
+func (c *SingletonClass) HashKey() string { return c.Inspect() }
 
 func NewSingletonClass(instance EmeraldValue, set BuiltInMethodSet, super EmeraldValue) *SingletonClass {
 	return &SingletonClass{

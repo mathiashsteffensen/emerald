@@ -11,7 +11,7 @@ func TestCompileIdentifierExpression(t *testing.T) {
 			end
 			no_arg
 			`,
-			expectedConstants: []interface{}{
+			expectedConstants: []any{
 				24,
 				":no_arg",
 				[]Instructions{

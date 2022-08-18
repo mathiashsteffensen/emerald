@@ -32,6 +32,7 @@ func (c *Class) Ancestors() []EmeraldValue {
 
 	return ancestors
 }
+func (c *Class) HashKey() string { return c.Inspect() }
 
 func (c *Class) New() *Instance {
 	instance := &Instance{}
@@ -62,9 +63,15 @@ func NewClass(
 	}
 
 	if _, ok := Classes["Class"]; ok {
-		class.class = NewSingletonClass(class, staticBuiltInMethodSet, Classes["Class"].New())
+		class.class = NewSingletonClass(class, staticBuiltInMethodSet, Classes["Class"])
 	} else {
 		class.class = NewSingletonClass(class, staticBuiltInMethodSet, staticParent)
+	}
+
+	if name == "Class" {
+		for _, existingClass := range Classes {
+			existingClass.class = NewSingletonClass(existingClass, existingClass.class.BuiltInMethodSet(), class)
+		}
 	}
 
 	if name != "" {

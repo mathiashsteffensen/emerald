@@ -15,7 +15,7 @@ import (
 type compilerTestCase struct {
 	name                 string
 	input                string
-	expectedConstants    []interface{}
+	expectedConstants    []any
 	expectedInstructions []Instructions
 }
 
@@ -86,7 +86,7 @@ func concatInstructions(s []Instructions) Instructions {
 }
 
 func testConstants(
-	expected []interface{},
+	expected []any,
 	actual []object.EmeraldValue,
 ) error {
 	if len(expected) != len(actual) {

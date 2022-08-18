@@ -57,7 +57,7 @@ func runCoreTests(t *testing.T, tests []coreTestCase) {
 
 func testExpectedObject(
 	t *testing.T,
-	expected interface{},
+	expected any,
 	actual object.EmeraldValue,
 ) {
 	t.Helper()
@@ -178,7 +178,7 @@ func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual o
 	}
 
 	for expectedKey, expectedValue := range expected {
-		pair, ok := hash.Value[expectedKey]
+		pair, ok := hash.Value[expectedKey.HashKey()]
 		if !ok {
 			return fmt.Errorf("no pair for given key in Pairs")
 		}
@@ -275,23 +275,20 @@ func testModuleObject(expected string, actual object.EmeraldValue) error {
 
 func testInstanceObject(expected string, actual object.EmeraldValue) error {
 	var (
-		actualInstance *object.Instance
-		ok             bool
+		class *object.Class
 	)
 
 	if expected == "Class" {
-		actualInstance, ok = actual.(*object.Class).Class().Super().(*object.Instance)
-		if !ok {
-			return fmt.Errorf("expected instance got=%T", actual)
-		}
+		class = actual.(*object.Class)
+		expected = ""
 	} else {
-		actualInstance, ok = actual.(*object.Instance)
+		actualInstance, ok := actual.(*object.Instance)
 		if !ok {
 			return fmt.Errorf("expected instance got=%T", actual)
 		}
-	}
 
-	class := actualInstance.Class().Super().(*object.Class)
+		class = actualInstance.Class().Super().(*object.Class)
+	}
 
 	if class.Name != expected {
 		return fmt.Errorf("expected instance to be instance of %s, but is instance of %s", expected, class.Name)

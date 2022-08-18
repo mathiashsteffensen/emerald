@@ -176,6 +176,19 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		if err != nil {
 			return err
 		}
+	case compiler.OpHash:
+		numElements := int(compiler.ReadUint16(ins[ip+1:]))
+		vm.currentFrame().ip += 2
+
+		startIndex := vm.sp - numElements
+
+		hash := vm.buildHash(startIndex, vm.sp)
+		vm.sp = startIndex
+
+		err := vm.push(hash)
+		if err != nil {
+			return err
+		}
 	case compiler.OpBang:
 		err := vm.executeBangOperator()
 		if err != nil {
@@ -266,6 +279,13 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 			} else {
 				vm.stack[vm.sp-1] = result
 			}
+		} else {
+			def, err := compiler.Lookup(byte(op))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("opcode not implemented %s", def.Name)
 		}
 	}
 
@@ -367,6 +387,16 @@ func (vm *VM) buildArray(startIndex, endIndex int) object.EmeraldValue {
 	}
 
 	return core.NewArray(elements)
+}
+
+func (vm *VM) buildHash(startIndex, endIndex int) object.EmeraldValue {
+	values := map[string]object.EmeraldValue{}
+
+	for i := startIndex; i < endIndex; i += 2 {
+		values[vm.stack[i].HashKey()] = vm.stack[i+1]
+	}
+
+	return core.NewHash(values)
 }
 
 func (vm *VM) conditionalJump(condition bool, ins compiler.Instructions, ip int) {

@@ -9,7 +9,7 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	prefixTests := []struct {
 		input    string
 		operator string
-		value    interface{}
+		value    any
 	}{
 		{"!5;", "!", 5},
 		{"-15;", "-", 15},
