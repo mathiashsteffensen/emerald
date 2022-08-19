@@ -49,7 +49,7 @@ func TestNextToken(t *testing.T) {
 	[0, 1]
 	nil &&= ||= module
 	begin rescue ensure
-	$: $LOAD_PATH`
+	$: $LOAD_PATH Integer::MAX`
 
 	tests := []struct {
 		expectedType    TokenType
@@ -255,6 +255,9 @@ func TestNextToken(t *testing.T) {
 		{NEWLINE, "\n"},
 		{GLOBAL_IDENT, "$:"},
 		{GLOBAL_IDENT, "$LOAD_PATH"},
+		{IDENT, "Integer"},
+		{SCOPE, "::"},
+		{IDENT, "MAX"},
 		{EOF, ""},
 	}
 

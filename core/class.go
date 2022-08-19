@@ -22,8 +22,11 @@ func InitClass() {
 
 				return NewArray(methods)
 			},
+			"name": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+				return NewString(target.(*object.Class).Name)
+			},
 			"new": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return ctx.ExecutionTarget.(*object.Class).New()
+				return target.(*object.Class).New()
 			},
 		},
 		object.BuiltInMethodSet{

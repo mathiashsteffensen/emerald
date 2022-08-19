@@ -4,6 +4,7 @@ import (
 	"emerald/compiler"
 	"emerald/core"
 	"emerald/lexer"
+	"emerald/log"
 	"emerald/parser"
 	"emerald/vm"
 	"fmt"
@@ -11,6 +12,8 @@ import (
 )
 
 func main() {
+	log.ExperimentalWarning()
+
 	file := os.Args[1]
 
 	bytes, err := os.ReadFile(file)

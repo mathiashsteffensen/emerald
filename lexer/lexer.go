@@ -151,7 +151,13 @@ func (l *Lexer) Run() {
 			case ']':
 				tok = l.newToken(RBRACKET, l.currentChar)
 			case ':':
-				tok = l.newToken(COLON, l.currentChar)
+				if l.peekChar() == ':' {
+					char := l.currentChar
+					l.readChar()
+					tok = Token{Type: SCOPE, Literal: string(char) + string(l.currentChar)}
+				} else {
+					tok = l.newToken(COLON, l.currentChar)
+				}
 			case '.':
 				tok = l.newToken(DOT, l.currentChar)
 			case '"':

@@ -1,4 +1,4 @@
-count = 1_000_000
+count = 100_000
 
 
 str = "hello"

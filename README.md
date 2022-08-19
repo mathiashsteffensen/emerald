@@ -122,7 +122,7 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] automatic concatenation
 - [ ] arrays
     - [x] array literal `[1,2]`
-    - [ ] array indexing `arr[2]`
+    - [x] array indexing `arr[2]`
     - [ ] splat
     - [ ] array decomposition
     - [ ] implicit array assignment

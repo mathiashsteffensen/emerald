@@ -22,9 +22,9 @@ define benchmark_build_time =
 endef
 
 default:
-	make lint test build
+	@make lint test build
 
-emerald: ./**/*.go
+emerald: ./**/*.go ./cmd/emerald/main.go
 	$(benchmark_build_time)
 
 iem: ./**/*.go
@@ -33,10 +33,13 @@ iem: ./**/*.go
 build: emerald iem
 
 test:
-	go test ./lexer ./parser ./compiler/ ./object/ ./vm/ ./core/ -cover
+	@echo "Running test suite" && echo "" && go test ./lexer ./parser ./compiler/ ./vm/ ./core/ -cover && echo ""
+
+ci-test:
+	go test ./lexer ./parser ./compiler/ ./object/ ./vm/ ./core/
 
 lint:
-	staticcheck ./...
+	@echo "Linting ..." && staticcheck ./... && echo ""
 
 install:
 	go mod download && \

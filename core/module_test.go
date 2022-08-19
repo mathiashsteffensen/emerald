@@ -70,3 +70,24 @@ func TestModule_define_method(t *testing.T) {
 
 	runCoreTests(t, tests)
 }
+
+func TestModule_attr_accessor(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			name: "accessor",
+			input: `
+				class MyClass
+					attr_accessor(:hello) 
+				end
+
+				c = MyClass.new
+
+				c.hello = "Hello"
+				c.hello
+			`,
+			expected: "Hello",
+		},
+	}
+
+	runCoreTests(t, tests)
+}

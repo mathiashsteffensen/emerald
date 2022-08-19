@@ -32,6 +32,16 @@ func InitString() {
 			"to_sym": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return NewSymbol(target.Inspect())
 			},
+			"==": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+				left := target.(*StringInstance)
+				right, ok := args[0].(*StringInstance)
+
+				if ok {
+					return NativeBoolToBooleanObject(left.Value == right.Value)
+				} else {
+					return NativeBoolToBooleanObject(left == right)
+				}
+			},
 			"+": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				targetString := target.(*StringInstance)
 

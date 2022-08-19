@@ -31,6 +31,7 @@ const (
 	GT_OR_EQ        TokenType = ">="
 	APPEND          TokenType = "<<"
 	DOT             TokenType = "."
+	SCOPE           TokenType = "::"
 	BIT_AND         TokenType = "&"
 	BOOL_AND        TokenType = "&&"
 	BOOL_AND_ASSIGN TokenType = "&&="

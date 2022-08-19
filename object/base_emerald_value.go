@@ -87,7 +87,7 @@ func (val *BaseEmeraldValue) SEND(
 	block EmeraldValue,
 	args ...EmeraldValue,
 ) (EmeraldValue, error) {
-	method, err := target.Class().ExtractMethod(name, target, target)
+	method, err := target.Class().ExtractMethod(name, target.Class(), target.Class())
 	if err != nil {
 		return nil, err
 	}

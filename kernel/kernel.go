@@ -1,6 +1,8 @@
 package kernel
 
-import "emerald/object"
+import (
+	"emerald/object"
+)
 
 const GlobalsSize = 65536
 

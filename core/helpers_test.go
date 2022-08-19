@@ -158,7 +158,7 @@ func parse(t *testing.T, input string) *ast.AST {
 func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) error {
 	array, ok := actual.(*core.ArrayInstance)
 	if !ok {
-		return fmt.Errorf("object not Array: %T (%+v)", actual, actual)
+		return fmt.Errorf("object not Array: type=%T value=(%+v) inspect=%s", actual, actual, actual.Inspect())
 	}
 
 	if len(array.Value) != len(expected) {

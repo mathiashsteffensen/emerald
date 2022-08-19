@@ -14,10 +14,13 @@ const PROMPT_FMT = "iem(main):%03d:0> "
 
 func Start(in io.ReadCloser, out io.Writer) {
 	readline.SetHistoryPath("/tmp/iem.hst")
+
 	buffer, err := readline.New(fmt.Sprintf(PROMPT_FMT, 1))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to initialize REPL buffer %s", err))
 	}
+
+	defer buffer.Close()
 
 	buffer.Config.Stdin = in
 	buffer.Config.Stdout = out
@@ -46,6 +49,8 @@ func Start(in io.ReadCloser, out io.Writer) {
 				continue
 			}
 		}
+
+		buffer.SaveHistory(line)
 
 		if line == "quit" || line == "exit" {
 			fmt.Fprintf(out, "See you next time!\n")
