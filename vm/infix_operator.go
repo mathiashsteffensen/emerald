@@ -10,6 +10,7 @@ var infixOperators = map[compiler.Opcode]string{
 	compiler.OpSub:             "-",
 	compiler.OpDiv:             "/",
 	compiler.OpMul:             "*",
+	compiler.OpSpaceship:       "<=>",
 	compiler.OpLessThan:        "<",
 	compiler.OpLessThanOrEq:    "<=",
 	compiler.OpGreaterThan:     ">",

@@ -204,6 +204,17 @@ func TestCompileInfixExpression(t *testing.T) {
 				Make(OpPop),
 			},
 		},
+		{
+			name:              "spaceship",
+			input:             "1 <=> 2",
+			expectedConstants: []any{2, 1},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpPushConstant, 1),
+				Make(OpSpaceship),
+				Make(OpPop),
+			},
+		},
 	}
 
 	runCompilerTests(t, tests)

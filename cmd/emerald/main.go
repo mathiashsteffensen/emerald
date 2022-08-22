@@ -6,20 +6,41 @@ import (
 	"emerald/lexer"
 	"emerald/log"
 	"emerald/parser"
+	"emerald/types"
 	"emerald/vm"
+	"flag"
 	"fmt"
+	"github.com/pkg/profile"
 	"os"
+	"strings"
 )
+
+var profilingEnabled = flag.Bool("profile", false, "EM_DEBUG=1 emerald --profile lib/main.rb")
 
 func main() {
 	log.ExperimentalWarning()
 
-	file := os.Args[1]
+	flag.Parse()
 
-	bytes, err := os.ReadFile(file)
+	if log.IsLevel(log.InternalDebugLevel) && *profilingEnabled {
+		log.InternalDebug("Running with profiling enabled")
+		defer profile.Start().Stop()
+	}
+
+	args := types.NewSlice(os.Args[1:]...)
+
+	file := args.Find(func(arg string) bool {
+		return !strings.HasPrefix(arg, "--")
+	})
+
+	if file == nil {
+		log.Fatal("No file to run")
+	}
+
+	bytes, err := os.ReadFile(*file)
 	checkError("error reading file", err)
 
-	l := lexer.New(lexer.NewInput(file, string(bytes)))
+	l := lexer.New(lexer.NewInput(*file, string(bytes)))
 	p := parser.New(l)
 	program := p.ParseAST()
 

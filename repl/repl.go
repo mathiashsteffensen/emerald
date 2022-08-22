@@ -3,6 +3,7 @@ package repl
 import (
 	"emerald/compiler"
 	"emerald/lexer"
+	"emerald/log"
 	"emerald/parser"
 	"emerald/vm"
 	"fmt"
@@ -12,7 +13,11 @@ import (
 
 const PROMPT_FMT = "iem(main):%03d:0> "
 
-func Start(in io.ReadCloser, out io.Writer) {
+type Config struct {
+	OutputBytecode bool
+}
+
+func Start(in io.ReadCloser, out io.Writer, config Config) {
 	readline.SetHistoryPath("/tmp/iem.hst")
 
 	buffer, err := readline.New(fmt.Sprintf(PROMPT_FMT, 1))
@@ -75,6 +80,10 @@ func Start(in io.ReadCloser, out io.Writer) {
 		}
 
 		code := comp.Bytecode()
+
+		if config.OutputBytecode {
+			log.InternalDebugF("Emerald bytecode: \n%s", code.Instructions[0:])
+		}
 
 		machine := vm.New(code)
 

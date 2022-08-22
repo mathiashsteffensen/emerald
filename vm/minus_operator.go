@@ -5,15 +5,15 @@ import (
 	"fmt"
 )
 
-func (vm *VM) executeMinusOperator() error {
+func (vm *VM) executeMinusOperator() {
 	operand := vm.pop()
 
 	switch operand := operand.(type) {
 	case *core.IntegerInstance:
-		return vm.push(core.NewInteger(-operand.Value))
+		vm.push(core.NewInteger(-operand.Value))
 	case *core.FloatInstance:
-		return vm.push(core.NewFloat(-operand.Value))
+		vm.push(core.NewFloat(-operand.Value))
 	default:
-		return fmt.Errorf("unsupported type for negation: %s", operand.Class().Super())
+		panic(fmt.Errorf("unsupported type for negation: %s", operand.Class().Super()))
 	}
 }

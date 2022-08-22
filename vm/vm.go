@@ -74,32 +74,28 @@ func (vm *VM) fetch() (int, compiler.Instructions, compiler.Opcode) {
 }
 
 func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) error {
+	var err error
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	switch op {
 	case compiler.OpPop:
 		vm.pop()
 	case compiler.OpTrue:
-		err := vm.push(core.TRUE)
-		if err != nil {
-			return err
-		}
+		vm.push(core.TRUE)
 	case compiler.OpFalse:
-		err := vm.push(core.FALSE)
-		if err != nil {
-			return err
-		}
+		vm.push(core.FALSE)
 	case compiler.OpNull:
-		err := vm.push(core.NULL)
-		if err != nil {
-			return err
-		}
+		vm.push(core.NULL)
 	case compiler.OpPushConstant:
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
 
-		err := vm.push(kernel.GetConst(constIndex))
-		if err != nil {
-			return err
-		}
+		vm.push(kernel.GetConst(constIndex))
 	case compiler.OpJump:
 		pos := int(compiler.ReadUint16(ins[ip+1:]))
 		vm.currentFrame().ip = pos - 1
@@ -110,10 +106,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 	case compiler.OpGetGlobal:
 		globalIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
-		err := vm.push(kernel.GetGlobalVariable(globalIndex))
-		if err != nil {
-			return err
-		}
+		vm.push(kernel.GetGlobalVariable(globalIndex))
 	case compiler.OpSetGlobal:
 		globalIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
@@ -122,10 +115,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		localIndex := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
 		frame := vm.currentFrame()
-		err := vm.push(vm.stack[frame.basePointer+int(localIndex)])
-		if err != nil {
-			return err
-		}
+		vm.push(vm.stack[frame.basePointer+int(localIndex)])
 	case compiler.OpSetLocal:
 		localIndex := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
@@ -135,10 +125,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		freeIndex := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
 
-		err := vm.push(vm.currentFrame().block.FreeVariables[freeIndex])
-		if err != nil {
-			return err
-		}
+		vm.push(vm.currentFrame().block.FreeVariables[freeIndex])
 	case compiler.OpInstanceVarGet:
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
@@ -152,10 +139,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 			val = core.NULL
 		}
 
-		err := vm.push(val)
-		if err != nil {
-			return err
-		}
+		vm.push(val)
 	case compiler.OpInstanceVarSet:
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
@@ -172,10 +156,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		array := vm.buildArray(vm.sp-numElements, vm.sp)
 		vm.sp = vm.sp - numElements
 
-		err := vm.push(array)
-		if err != nil {
-			return err
-		}
+		vm.push(array)
 	case compiler.OpHash:
 		numElements := int(compiler.ReadUint16(ins[ip+1:]))
 		vm.currentFrame().ip += 2
@@ -185,38 +166,23 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		hash := vm.buildHash(startIndex, vm.sp)
 		vm.sp = startIndex
 
-		err := vm.push(hash)
-		if err != nil {
-			return err
-		}
+		vm.push(hash)
 	case compiler.OpBang:
-		err := vm.executeBangOperator()
-		if err != nil {
-			return err
-		}
+		vm.executeBangOperator()
 	case compiler.OpMinus:
-		err := vm.executeMinusOperator()
-		if err != nil {
-			return err
-		}
+		vm.executeMinusOperator()
 	case compiler.OpReturn:
 		frame := vm.popFrame()
 		vm.sp = frame.basePointer - 2
 
-		err := vm.push(core.NULL)
-		if err != nil {
-			return err
-		}
+		vm.push(core.NULL)
 	case compiler.OpReturnValue:
 		returnValue := vm.pop()
 
 		frame := vm.popFrame()
 		vm.sp = frame.basePointer - 2
 
-		err := vm.push(returnValue)
-		if err != nil {
-			return err
-		}
+		vm.push(returnValue)
 	case compiler.OpDefineMethod:
 		block := vm.pop().(*object.Block)
 		name := vm.stack[vm.sp-1].(*core.SymbolInstance)
@@ -225,13 +191,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 	case compiler.OpSend:
 		numArgs := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
-		err := vm.callFunction(int(numArgs))
-		if err != nil {
-			err := vm.push(err)
-			if err != nil {
-				return err
-			}
-		}
+		vm.callFunction(int(numArgs))
 	case compiler.OpOpenClass:
 		outerCtx := vm.ctx
 		newTarget := vm.pop()
@@ -261,10 +221,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		numFreeVars := compiler.ReadUint8(ins[ip+3:])
 		vm.currentFrame().ip += 3
 
-		err := vm.closeBlock(int(constIndex), int(numFreeVars))
-		if err != nil {
-			return err
-		}
+		vm.closeBlock(int(constIndex), int(numFreeVars))
 	case compiler.OpDefinitionStaticTrue:
 		vm.ctx.DefinitionTarget = vm.ctx.DefinitionTarget.Class()
 	case compiler.OpDefinitionStaticFalse:
@@ -289,14 +246,14 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		}
 	}
 
-	return nil
+	return err
 }
 
-func (vm *VM) closeBlock(constIndex, numFreeVars int) error {
+func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 	constant := kernel.GetConst(uint16(constIndex))
 	block, ok := constant.(*object.Block)
 	if !ok {
-		return fmt.Errorf("not a block: %+v", constant)
+		panic(fmt.Errorf("not a block: %+v", constant))
 	}
 
 	free := make([]object.EmeraldValue, numFreeVars)
@@ -306,41 +263,31 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) error {
 
 	vm.sp = vm.sp - numFreeVars
 
-	return vm.push(object.NewClosedBlock(block, free))
+	vm.push(object.NewClosedBlock(block, free))
 }
 
-func (vm *VM) callFunction(numArgs int) (err object.EmeraldValue) {
+func (vm *VM) callFunction(numArgs int) {
 	basePointer := vm.sp - numArgs
 
 	name := vm.stack[basePointer-2].(*core.SymbolInstance)
 	block := vm.stack[basePointer-1]
 
 	target := vm.ctx.ExecutionTarget
-	method, errVal := target.Class().ExtractMethod(name.Value, target.Class(), target)
-	if errVal != nil {
-		return core.NewStandardError(errVal.Error())
+	method, err := target.Class().ExtractMethod(name.Value, target.Class(), target)
+	if err != nil {
+		panic(err)
 	}
 
 	switch method := method.(type) {
 	case *object.ClosedBlock:
-		if numArgs != method.NumArgs {
-			return core.NewArgumentError(numArgs, method.NumArgs)
-		}
-
 		frame := NewFrame(method, basePointer)
 		vm.pushFrame(frame)
 		vm.sp = frame.basePointer + method.NumLocals
 	case *object.WrappedBuiltInMethod:
 		result := vm.evalBuiltIn(method, block, vm.stack[vm.sp-numArgs:vm.sp])
 		vm.sp -= numArgs + 2
-		err := vm.push(result)
-
-		if err != nil {
-			panic(err)
-		}
+		vm.push(result)
 	}
-
-	return nil
 }
 
 func (vm *VM) Context() *object.Context {
@@ -361,15 +308,13 @@ func (vm *VM) LastPoppedStackElem() object.EmeraldValue {
 }
 
 // push an obj on to the stack
-func (vm *VM) push(obj object.EmeraldValue) error {
+func (vm *VM) push(obj object.EmeraldValue) {
 	if vm.sp >= StackSize {
-		return fmt.Errorf("stack overflow: max stack size of %d exceeded", StackSize)
+		panic(fmt.Errorf("stack overflow: max stack size of %d exceeded", StackSize))
 	}
 
 	vm.stack[vm.sp] = obj
 	vm.sp++
-
-	return nil
 }
 
 // pop an obj from the top of the stack

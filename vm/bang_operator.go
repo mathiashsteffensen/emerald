@@ -5,7 +5,7 @@ import (
 	"emerald/object"
 )
 
-func (vm *VM) executeBangOperator() error {
+func (vm *VM) executeBangOperator() {
 	operand := vm.pop()
 
 	var result object.EmeraldValue
@@ -16,5 +16,5 @@ func (vm *VM) executeBangOperator() error {
 		result = core.TRUE
 	}
 
-	return vm.push(result)
+	vm.push(result)
 }

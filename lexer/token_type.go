@@ -23,6 +23,7 @@ const (
 	BANG            TokenType = "!"
 	ASTERISK        TokenType = "*"
 	SLASH           TokenType = "/"
+	SPACESHIP       TokenType = "<=>"
 	LT              TokenType = "<"
 	GT              TokenType = ">"
 	EQ              TokenType = "=="

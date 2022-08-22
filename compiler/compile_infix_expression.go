@@ -17,6 +17,8 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) error {
 		op = OpMul
 	case "/":
 		op = OpDiv
+	case "<=>":
+		op = OpSpaceship
 	case ">":
 		op = OpGreaterThan
 	case ">=":

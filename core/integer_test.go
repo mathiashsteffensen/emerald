@@ -114,6 +114,29 @@ func TestIntegerOperators(t *testing.T) {
 	runCoreTests(t, tests)
 }
 
+func TestInteger_spaceship(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "1 <=> 2",
+			expected: -1,
+		},
+		{
+			input:    "3 <=> 2",
+			expected: 1,
+		},
+		{
+			input:    "2 <=> 2",
+			expected: 0,
+		},
+		{
+			input:    "-2 <=> 2",
+			expected: -1,
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestInteger_to_s(t *testing.T) {
 	tests := []coreTestCase{
 		{

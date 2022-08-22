@@ -2,7 +2,6 @@ package vm
 
 import (
 	"emerald/compiler"
-	"emerald/core"
 	"testing"
 )
 
@@ -19,7 +18,7 @@ func BenchmarkFibonacci(b *testing.B) {
 	  fib(n - 1) + fib(n - 2)
 	end
 	
-	fib(28)
+	fib(18)
 	`
 
 	for i := 0; i < b.N; i++ {
@@ -36,11 +35,6 @@ func BenchmarkFibonacci(b *testing.B) {
 		err = vm.Run()
 		if err != nil {
 			b.Fatalf("vm error: %s", err)
-		}
-
-		val := vm.LastPoppedStackElem().(*core.IntegerInstance).Value
-		if val != 317811 {
-			b.Fatalf("Fibonacci calculation wrong, want=317811 got=%d", val)
 		}
 	}
 }

@@ -15,29 +15,28 @@ func (vm *VM) EvalBlock(block object.EmeraldValue, args ...object.EmeraldValue) 
 	return vm.withExecutionContextForBlock(func() object.EmeraldValue {
 		switch bl := block.(type) {
 		case *object.WrappedBuiltInMethod:
+			// Builtin methods are easy, just call some Go code
 			return vm.evalBuiltIn(bl, core.NULL, args)
 		case *object.ClosedBlock:
 			var err error
 
-			err = vm.push(core.NULL)
-			if err != nil {
-				return core.NewStandardError(err.Error())
-			}
-			err = vm.push(core.NULL)
-			if err != nil {
-				return core.NewStandardError(err.Error())
-			}
+			// The VM accounts for the name of the method being called being on the stack when a block is evaluated
+			// So we just push something on the stack and nil is the cheapest
+			vm.push(core.NULL)
+			// Same for a block value
+			vm.push(core.NULL)
 
+			// Add the arguments to the stack
 			for _, arg := range args {
-				err = vm.push(arg)
-				if err != nil {
-					return core.NewStandardError(err.Error())
-				}
+				vm.push(arg)
 			}
 
+			// Prepare the call frame
 			basePointer := vm.sp - len(args)
 			startFrameIndex := vm.framesIndex
 			vm.pushFrame(NewFrame(bl, basePointer))
+
+			// Prepare the vm stack pointer
 			vm.sp = basePointer + bl.NumLocals
 
 			var (
@@ -46,6 +45,7 @@ func (vm *VM) EvalBlock(block object.EmeraldValue, args ...object.EmeraldValue) 
 				op  compiler.Opcode
 			)
 
+			// Execute
 			for vm.framesIndex > startFrameIndex {
 				vm.currentFrame().ip++
 
@@ -59,6 +59,7 @@ func (vm *VM) EvalBlock(block object.EmeraldValue, args ...object.EmeraldValue) 
 				}
 			}
 
+			// Return value is left on the stack
 			return vm.pop()
 		default:
 			log.Panicf("Yielded to not a block?, got=%#v", bl)

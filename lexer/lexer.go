@@ -108,12 +108,18 @@ func (l *Lexer) Run() {
 				if l.peekChar() == '=' {
 					char := l.currentChar
 					l.readChar()
-					tok = Token{Type: LT_OR_EQ, Literal: string(char) + string(l.currentChar)}
+
+					if l.peekChar() == '>' {
+						tok = l.newTokenStr(SPACESHIP, string(char)+string(l.currentChar)+string(l.peekChar()))
+						l.readChar()
+					} else {
+						tok = l.newTokenStr(LT_OR_EQ, string(char)+string(l.currentChar))
+					}
 				} else {
 					if l.peekChar() == '<' {
 						char := l.currentChar
 						l.readChar()
-						tok = Token{Type: APPEND, Literal: string(char) + string(l.currentChar)}
+						tok = l.newTokenStr(APPEND, string(char)+string(l.currentChar))
 					} else {
 						tok = l.newToken(LT, l.currentChar)
 					}
@@ -281,6 +287,10 @@ func (l *Lexer) NextToken() Token {
 
 func (l *Lexer) newToken(tokenType TokenType, ch byte) Token {
 	return Token{Type: tokenType, Literal: string(ch), Line: l.Line, Column: l.Column, Pos: l.position}
+}
+
+func (l *Lexer) newTokenStr(tokenType TokenType, str string) Token {
+	return Token{Type: tokenType, Literal: str, Line: l.Line, Column: l.Column, Pos: l.position}
 }
 
 func (l *Lexer) readChar() {

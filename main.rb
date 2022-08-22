@@ -4,30 +4,24 @@ y = 7
 LEVELS = [:fatal, :error, :warn, :info, :debug, :trace]
 
 module BaseLogger
+    attr_accessor(:level)
+
     100.times do
         LEVELS.each do |lvl|
             define_method(lvl) do |msg|
-                if should_log(lvl)
+                if should_log?(lvl)
                     puts(lvl.to_s.upcase + " | " + msg)
                 end
             end
         end
     end
 
-    def should_log(lvl)
-        index_for_level(lvl) <= index_for_level(current_level)
+    def should_log?(lvl)
+        index_for_level(lvl) <= index_for_level(level)
     end
 
     def index_for_level(lvl)
         LEVELS.find_index { |other_level| other_level == lvl }
-    end
-
-    def current_level
-        @current_level ||= :info
-    end
-
-    def level=(new_level)
-        @current_level = new_level
     end
 end
 
@@ -43,15 +37,16 @@ class Logger
     end
 end
 
+Logger.instance.level = :info
+Logger.level = :info
+
 if x < y && true
     if true
         Logger.instance.info("Hello World!")
 
+        Logger.instance.debug("Won't see this")
         Logger.instance.level = :debug
-
-        Logger.instance.warn("level is " + Logger.instance.current_level.to_s)
-
-        Logger.instance.debug("debug msg")
+        Logger.instance.debug("Hello again")
 
         ["this", "is", "an", "array"].each { |msg| Logger.warn(msg) }
     end
