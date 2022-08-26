@@ -8,7 +8,7 @@ import (
 var TypeError *object.Class
 
 func InitTypeError() {
-	TypeError = object.NewClass("TypeError", StandardError, StandardError.Class(), object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	TypeError = DefineClass(Object, "TypeError", StandardError)
 }
 
 type TypeErrorInstance struct {

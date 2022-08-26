@@ -19,12 +19,10 @@ func TestCompileHashLiteral(t *testing.T) {
 			expectedConstants: []any{":[]", ":key"},
 			expectedInstructions: []Instructions{
 				Make(OpHash, 0),
-				Make(OpSetExecutionTarget),
 				Make(OpPushConstant, 0),
 				Make(OpNull),
 				Make(OpPushConstant, 1),
 				Make(OpSend, 1),
-				Make(OpResetExecutionTarget),
 				Make(OpPop),
 			},
 		},

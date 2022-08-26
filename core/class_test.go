@@ -29,3 +29,26 @@ func TestClass_ancestors(t *testing.T) {
 
 	runCoreTests(t, tests)
 }
+
+func TestClass_name(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			name:     "Class",
+			input:    "Class.name",
+			expected: "Class",
+		},
+		{
+			name: "Namespaced class",
+			input: `
+				module MyMod
+					class MyClass; end
+				end
+
+				MyMod::MyClass.name
+			`,
+			expected: "MyMod::MyClass",
+		},
+	}
+
+	runCoreTests(t, tests)
+}

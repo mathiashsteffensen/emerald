@@ -13,25 +13,21 @@ func (err *ExceptionInstance) Message() string   { return err.message }
 func (err *ExceptionInstance) ClassName() string { return Exception.Name }
 
 func InitException() {
-	Exception = object.NewClass(
-		"Exception",
-		Object,
-		Object.Class(),
-		object.BuiltInMethodSet{
-			"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return NewString(target.(object.EmeraldError).Inspect())
-			},
-		},
-		object.BuiltInMethodSet{
-			"new": exceptionNew(NewException),
-		},
-	)
+	Exception = DefineClass(Object, "Exception", Object)
+	Exception.BuiltInMethodSet()["to_s"] = exceptionToS()
+	Exception.BuiltInMethodSet()["new"] = exceptionNew(NewException)
 }
 
 func NewException(msg string) object.EmeraldError {
 	return &ExceptionInstance{
 		Instance: Exception.New(),
 		message:  msg,
+	}
+}
+
+func exceptionToS() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(target.(object.EmeraldError).Inspect())
 	}
 }
 

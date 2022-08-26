@@ -100,11 +100,11 @@ func TestKernel_include(t *testing.T) {
 			input: `module MyMod
 				def hello; "Hello"; end
 			end
-			
+		
 			class MyClass
 				include(MyMod)
 			end
-
+		
 			MyClass.new.hello`,
 			expected: "Hello",
 		},

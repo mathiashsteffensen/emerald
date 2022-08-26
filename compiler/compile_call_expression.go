@@ -6,7 +6,7 @@ import (
 )
 
 func (c *Compiler) compileCallExpression(node *ast.CallExpression) error {
-	method := core.NewSymbol(node.Method.(*ast.IdentifierExpression).Value)
+	method := core.NewSymbol(node.Method.Value)
 
 	c.emit(OpPushConstant, c.addConstant(method))
 

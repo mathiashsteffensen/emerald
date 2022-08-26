@@ -29,7 +29,7 @@ func InitModule() {
 
 func moduleDefineMethod() object.BuiltInMethod {
 	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		ctx.DefinitionTarget.DefineMethod(block, args...)
+		target.DefineMethod(block, args...)
 
 		return args[0]
 	}

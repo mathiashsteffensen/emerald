@@ -45,26 +45,26 @@ func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
 	return vm
 }
 
-func (vm *VM) Run() error {
+func (vm *VM) Run() {
+	vm.runWhile(func() bool {
+		return vm.currentFrame().ip < len(vm.currentFrame().Instructions())-1
+	})
+}
+
+func (vm *VM) runWhile(condition func() bool) {
 	var (
 		ip  int
 		ins compiler.Instructions
 		op  compiler.Opcode
-		err error
 	)
 
-	for vm.currentFrame().ip < len(vm.currentFrame().Instructions())-1 {
+	for condition() {
 		vm.currentFrame().ip++
 
 		ip, ins, op = vm.fetch()
 
-		err = vm.execute(ip, ins, op)
-		if err != nil {
-			return err
-		}
+		vm.execute(ip, ins, op)
 	}
-
-	return err
 }
 
 func (vm *VM) fetch() (int, compiler.Instructions, compiler.Opcode) {
@@ -73,18 +73,12 @@ func (vm *VM) fetch() (int, compiler.Instructions, compiler.Opcode) {
 	return ip, ins, compiler.Opcode(ins[ip])
 }
 
-func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) error {
-	var err error
-
-	defer func() {
-		if r := recover(); r != nil {
-			err = r.(error)
-		}
-	}()
-
+func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 	switch op {
 	case compiler.OpPop:
 		vm.pop()
+	case compiler.OpSelf:
+		vm.push(vm.ctx.ExecutionTarget)
 	case compiler.OpTrue:
 		vm.push(core.TRUE)
 	case compiler.OpFalse:
@@ -92,8 +86,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 	case compiler.OpNull:
 		vm.push(core.NULL)
 	case compiler.OpPushConstant:
-		constIndex := compiler.ReadUint16(ins[ip+1:])
-		vm.currentFrame().ip += 2
+		constIndex := vm.readUint16(ins, ip)
 
 		vm.push(kernel.GetConst(constIndex))
 	case compiler.OpJump:
@@ -104,16 +97,13 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 	case compiler.OpJumpTruthy:
 		vm.conditionalJump(core.IsTruthy(vm.StackTop()), ins, ip)
 	case compiler.OpGetGlobal:
-		globalIndex := compiler.ReadUint16(ins[ip+1:])
-		vm.currentFrame().ip += 2
+		globalIndex := vm.readUint16(ins, ip)
 		vm.push(kernel.GetGlobalVariable(globalIndex))
 	case compiler.OpSetGlobal:
-		globalIndex := compiler.ReadUint16(ins[ip+1:])
-		vm.currentFrame().ip += 2
+		globalIndex := vm.readUint16(ins, ip)
 		kernel.SetGlobalVariable(globalIndex, vm.StackTop())
 	case compiler.OpGetLocal:
-		localIndex := compiler.ReadUint8(ins[ip+1:])
-		vm.currentFrame().ip += 1
+		localIndex := vm.readUint8(ins, ip)
 		frame := vm.currentFrame()
 		vm.push(vm.stack[frame.basePointer+int(localIndex)])
 	case compiler.OpSetLocal:
@@ -127,8 +117,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 
 		vm.push(vm.currentFrame().block.FreeVariables[freeIndex])
 	case compiler.OpInstanceVarGet:
-		constIndex := compiler.ReadUint16(ins[ip+1:])
-		vm.currentFrame().ip += 2
+		constIndex := vm.readUint16(ins, ip)
 
 		name := kernel.GetConst(constIndex)
 		target := vm.ctx.ExecutionTarget
@@ -140,6 +129,14 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		}
 
 		vm.push(val)
+	case compiler.OpConstantGet:
+		vm.executeOpConstantGet(ins, ip)
+	case compiler.OpConstantSet:
+		vm.executeOpConstantSet(ins, ip)
+	case compiler.OpConstantGetOrSet:
+		vm.executeOpConstantGetOrSet(ins, ip)
+	case compiler.OpScopedConstantGet:
+		vm.executeOpScopedConstantGet(ins, ip)
 	case compiler.OpInstanceVarSet:
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
@@ -173,33 +170,44 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		vm.executeMinusOperator()
 	case compiler.OpReturn:
 		frame := vm.popFrame()
-		vm.sp = frame.basePointer - 2
+		vm.sp = frame.basePointer - 3
 
 		vm.push(core.NULL)
 	case compiler.OpReturnValue:
-		returnValue := vm.pop()
+		returnValue := vm.stack[vm.sp-1]
 
 		frame := vm.popFrame()
-		vm.sp = frame.basePointer - 2
+		vm.sp = frame.basePointer - 3
 
 		vm.push(returnValue)
 	case compiler.OpDefineMethod:
 		block := vm.pop().(*object.Block)
 		name := vm.stack[vm.sp-1].(*core.SymbolInstance)
 
-		vm.ctx.DefinitionTarget.DefineMethod(object.NewClosedBlock(block, []object.EmeraldValue{}), name)
+		vm.ctx.ExecutionTarget.DefineMethod(object.NewClosedBlock(block, []object.EmeraldValue{}), name)
 	case compiler.OpSend:
 		numArgs := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
 		vm.callFunction(int(numArgs))
 	case compiler.OpOpenClass:
 		outerCtx := vm.ctx
-		newTarget := vm.pop()
+		newSelf := vm.pop()
+
+		var name string
+
+		switch newSelf := newSelf.(type) {
+		case *object.Class:
+			name = newSelf.Name
+		case *object.Module:
+			name = newSelf.Name
+		}
+
+		setConst(outerCtx.ExecutionTarget, name, newSelf)
 
 		vm.ctx = &object.Context{
 			Outer:            outerCtx,
-			ExecutionTarget:  newTarget,
-			DefinitionTarget: newTarget,
+			ExecutionTarget:  newSelf,
+			DefinitionTarget: newSelf,
 		}
 	case compiler.OpCloseClass:
 		to := vm.ctx.Outer
@@ -222,10 +230,10 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		vm.currentFrame().ip += 3
 
 		vm.closeBlock(int(constIndex), int(numFreeVars))
-	case compiler.OpDefinitionStaticTrue:
-		vm.ctx.DefinitionTarget = vm.ctx.DefinitionTarget.Class()
-	case compiler.OpDefinitionStaticFalse:
-		vm.ctx.DefinitionTarget = vm.ctx.DefinitionTarget.(*object.SingletonClass).Instance
+	case compiler.OpStaticTrue:
+		vm.ctx.ExecutionTarget = vm.ctx.ExecutionTarget.Class()
+	case compiler.OpStaticFalse:
+		vm.ctx.ExecutionTarget = vm.ctx.ExecutionTarget.(*object.SingletonClass).Instance
 	default:
 		if opString, ok := infixOperators[op]; ok {
 			left := vm.pop()
@@ -239,14 +247,12 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) err
 		} else {
 			def, err := compiler.Lookup(byte(op))
 			if err != nil {
-				return err
+				panic(err)
 			}
 
-			return fmt.Errorf("opcode not implemented %s", def.Name)
+			panic(fmt.Errorf("opcode not implemented %s", def.Name))
 		}
 	}
-
-	return err
 }
 
 func (vm *VM) closeBlock(constIndex, numFreeVars int) {
@@ -269,29 +275,48 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 func (vm *VM) callFunction(numArgs int) {
 	basePointer := vm.sp - numArgs
 
+	receiver := vm.stack[basePointer-3]
 	name := vm.stack[basePointer-2].(*core.SymbolInstance)
 	block := vm.stack[basePointer-1]
 
-	target := vm.ctx.ExecutionTarget
-	method, err := target.Class().ExtractMethod(name.Value, target.Class(), target)
+	method, err := receiver.Class().ExtractMethod(name.Value, receiver.Class(), receiver)
 	if err != nil {
 		panic(err)
 	}
 
-	switch method := method.(type) {
-	case *object.ClosedBlock:
-		frame := NewFrame(method, basePointer)
-		vm.pushFrame(frame)
-		vm.sp = frame.basePointer + method.NumLocals
-	case *object.WrappedBuiltInMethod:
-		result := vm.evalBuiltIn(method, block, vm.stack[vm.sp-numArgs:vm.sp])
-		vm.sp -= numArgs + 2
-		vm.push(result)
-	}
+	vm.withExecutionContext(receiver, func() {
+		switch method := method.(type) {
+		case *object.ClosedBlock:
+			frame := NewFrame(method, basePointer)
+			vm.pushFrame(frame)
+			vm.sp = frame.basePointer + method.NumLocals
+			originalFrameIndex := vm.framesIndex
+			vm.runWhile(func() bool {
+				return vm.framesIndex >= originalFrameIndex
+			})
+		case *object.WrappedBuiltInMethod:
+			result := vm.evalBuiltIn(receiver, method, block, vm.stack[basePointer:vm.sp])
+			vm.sp = basePointer - 3
+			vm.push(result)
+		}
+	})
 }
 
 func (vm *VM) Context() *object.Context {
 	return vm.ctx
+}
+
+func (vm *VM) withExecutionContext(self object.EmeraldValue, cb func()) {
+	oldCtx := vm.ctx
+
+	vm.ctx = &object.Context{
+		Outer:           vm.ctx,
+		ExecutionTarget: self,
+	}
+
+	cb()
+
+	vm.ctx = oldCtx
 }
 
 // StackTop fetches the object at the top of the stack
@@ -352,4 +377,16 @@ func (vm *VM) conditionalJump(condition bool, ins compiler.Instructions, ip int)
 		vm.currentFrame().ip = newPosition - 1
 		vm.sp--
 	}
+}
+
+func (vm *VM) readUint8(ins compiler.Instructions, ip int) uint8 {
+	val := compiler.ReadUint8(ins[ip+1:])
+	vm.currentFrame().ip += 1
+	return val
+}
+
+func (vm *VM) readUint16(ins compiler.Instructions, ip int) uint16 {
+	val := compiler.ReadUint16(ins[ip+1:])
+	vm.currentFrame().ip += 2
+	return val
 }

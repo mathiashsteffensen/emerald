@@ -41,6 +41,9 @@ func InitObject() {
 		Kernel,
 	)
 
+	Object.NamespaceDefinitionSet(Object.Name, Object)
+	Object.NamespaceDefinitionSet(Class.Name, Class)
+
 	MainObject = Object.New()
 	MainObject.Class().BuiltInMethodSet()["to_s"] = func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString("main:Object")

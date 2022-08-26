@@ -48,7 +48,7 @@ func kernelKindOf() object.BuiltInMethod {
 			return NewTypeError("class or module required")
 		}
 
-		for _, ancestor := range ctx.ExecutionTarget.Class().Ancestors() {
+		for _, ancestor := range target.Class().Ancestors() {
 			if ancestor == args[0] {
 				return TRUE
 			}
@@ -93,10 +93,10 @@ func kernelInclude() object.BuiltInMethod {
 				return NewStandardError(fmt.Sprintf("wrong argument type %s (expected Module)", arg.Inspect()))
 			}
 
-			ctx.DefinitionTarget.Include(mod)
+			target.Include(mod)
 		}
 
-		return ctx.DefinitionTarget
+		return target
 	}
 }
 

@@ -18,6 +18,13 @@ func testParseAST(t *testing.T, input string) *ast.AST {
 	return program
 }
 
+func expectStatementLength(t *testing.T, stmt []ast.Statement, length int) {
+	if len(stmt) != length {
+		t.Fatalf("AST does not contain %d statements. got=%d\n",
+			length, len(stmt))
+	}
+}
+
 func testInfixExpression(t *testing.T, exp ast.Expression, left any, operator string, right any) bool {
 	opExp, ok := exp.(*ast.InfixExpression)
 	if !ok {

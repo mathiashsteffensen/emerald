@@ -10,7 +10,7 @@ func TestModule_define_method(t *testing.T) {
 				class MyClass
 					define_method(:hello) { "Hello" }
 				end
-
+		
 				MyClass.new.hello
 			`,
 			expected: "Hello",
@@ -18,13 +18,13 @@ func TestModule_define_method(t *testing.T) {
 		{
 			name: "defining a static method",
 			input: `
-				class MyClass
+				module MyMod
 					class << self
 						define_method(:hello) { "Hello" }
 					end
 				end
-
-				MyClass.hello
+		
+				MyMod.hello
 			`,
 			expected: "Hello",
 		},
@@ -32,7 +32,7 @@ func TestModule_define_method(t *testing.T) {
 			name: "defining a method inside a block in a class",
 			input: `
 				METHODS = [:hello]
-
+		
 				class MyClass
 					10.times do
 						METHODS.each do |method|
@@ -40,7 +40,7 @@ func TestModule_define_method(t *testing.T) {
 						end
 					end
 				end
-
+		
 				MyClass.new.hello
 			`,
 			expected: "Hello",
@@ -49,7 +49,7 @@ func TestModule_define_method(t *testing.T) {
 			name: "defining a method inside a block in a module",
 			input: `
 				METHODS = [:hello]
-
+		
 				module MyMod
 					10.times do
 						METHODS.each do |method|
@@ -57,11 +57,11 @@ func TestModule_define_method(t *testing.T) {
 						end
 					end
 				end
-
+		
 				class MyClass
 					include(MyMod)
 				end
-
+		
 				MyClass.new.hello
 			`,
 			expected: "Hello",

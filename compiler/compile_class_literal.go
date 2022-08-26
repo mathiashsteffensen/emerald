@@ -8,22 +8,9 @@ import (
 
 func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) error {
 	name := node.Name.Value
+	class := object.NewClass(name, core.Object, core.Object.Class(), object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-	var (
-		symbol Symbol
-		ok     bool
-	)
-	symbol, ok = c.symbolTable.Resolve(name)
-	if ok {
-		c.emit(OpGetGlobal, symbol.Index)
-	} else {
-		symbol = c.symbolTable.Define(name)
-		class := object.NewClass(name, core.Object, core.Object.Class(), object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-
-		c.emit(OpPushConstant, c.addConstant(class))
-		c.emit(OpSetGlobal, symbol.Index)
-	}
-
+	c.emitConstantGetOrSet(name, class)
 	c.emit(OpOpenClass)
 
 	if len(node.Body.Statements) == 0 {
@@ -47,7 +34,7 @@ func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) error {
 }
 
 func (c *Compiler) compileStaticClassLiteral(node *ast.StaticClassLiteral) error {
-	c.emit(OpDefinitionStaticTrue)
+	c.emit(OpStaticTrue)
 
 	err := c.Compile(node.Body)
 	if err != nil {
@@ -56,10 +43,10 @@ func (c *Compiler) compileStaticClassLiteral(node *ast.StaticClassLiteral) error
 
 	if c.lastInstructionIs(OpPop) {
 		lastPos := c.scopes[c.scopeIndex].lastInstruction.Position
-		c.replaceInstruction(lastPos, Make(OpDefinitionStaticFalse))
-		c.scopes[c.scopeIndex].lastInstruction.Opcode = OpDefinitionStaticFalse
+		c.replaceInstruction(lastPos, Make(OpStaticFalse))
+		c.scopes[c.scopeIndex].lastInstruction.Opcode = OpStaticFalse
 	} else {
-		c.emit(OpDefinitionStaticFalse)
+		c.emit(OpStaticFalse)
 	}
 
 	return nil

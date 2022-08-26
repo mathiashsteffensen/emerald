@@ -35,13 +35,9 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 			}
 
 			vm := New(comp.Bytecode())
+			safeRun(t, vm)
 
-			err = vm.Run()
-			if err != nil {
-				t.Fatalf("vm error: %s", err)
-			}
-
-			stackElem := vm.LastPoppedStackElem()
+			stackElem := safePop(t, vm)
 			testExpectedObject(t, tt.expected, stackElem)
 
 			if vm.sp != 0 {
@@ -55,6 +51,26 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 			kernel.Reset()
 		})
 	}
+}
+
+func safeRun(t *testing.T, vm *VM) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("vm error: %s", r)
+		}
+	}()
+
+	vm.Run()
+}
+
+func safePop(t *testing.T, vm *VM) object.EmeraldValue {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("Failed to to get last popped stack element with err %s", r)
+		}
+	}()
+
+	return vm.LastPoppedStackElem()
 }
 
 func testExpectedObject(
@@ -177,7 +193,7 @@ func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual o
 func testIntegerObject(expected int64, actual object.EmeraldValue) error {
 	result, ok := actual.(*core.IntegerInstance)
 	if !ok {
-		return fmt.Errorf("object is not IntegerInstance. got=%T (%+v)", actual, actual)
+		return fmt.Errorf("object is not IntegerInstance. got=%s", actual.Inspect())
 	}
 	if result.Value != expected {
 		return fmt.Errorf("object has wrong value. got=%d, want=%d", result.Value, expected)
@@ -234,18 +250,13 @@ func testSymbolObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testClassObject(expected string, actual object.EmeraldValue) error {
-	expectedClass, ok := object.GetClassByName(expected)
-	if !ok {
-		return fmt.Errorf("undefined class %s", expected)
-	}
-
 	actualClass, ok := actual.(*object.Class)
 	if !ok {
-		return fmt.Errorf("expected class got=%T (%+v)", actual, actual)
+		return fmt.Errorf("expected class got=%s", actual.Inspect())
 	}
 
-	if expectedClass.Name != actualClass.Name {
-		return fmt.Errorf("expectedClass was expected to be %s, got=%s", expectedClass.Name, actualClass.Name)
+	if expected != actualClass.Name {
+		return fmt.Errorf("expectedClass was expected to be %s, got=%s", expected, actualClass.Name)
 	}
 
 	return nil

@@ -8,15 +8,8 @@ import (
 var StandardError *object.Class
 
 func InitStandardError() {
-	StandardError = object.NewClass(
-		"StandardError",
-		Exception,
-		Exception.Class(),
-		object.BuiltInMethodSet{},
-		object.BuiltInMethodSet{
-			"new": exceptionNew(NewStandardError),
-		},
-	)
+	StandardError = DefineClass(Object, "StandardError", Exception)
+	StandardError.BuiltInMethodSet()["new"] = exceptionNew(NewStandardError)
 }
 
 type StandardErrorInstance struct {

@@ -6,16 +6,26 @@ import (
 )
 
 type BaseEmeraldValue struct {
-	builtInMethodSet  BuiltInMethodSet
-	definedMethodSet  DefinedMethodSet
-	instanceVariables map[string]EmeraldValue
-	includedModules   []EmeraldValue
+	builtInMethodSet     BuiltInMethodSet
+	definedMethodSet     DefinedMethodSet
+	instanceVariables    map[string]EmeraldValue
+	includedModules      []EmeraldValue
+	parentNamespace      EmeraldValue
+	namespaceDefinitions map[string]EmeraldValue
 }
 
 func (val *BaseEmeraldValue) IncludedModules() []EmeraldValue { return val.includedModules }
 
 func (val *BaseEmeraldValue) Include(mod EmeraldValue) {
 	val.includedModules = append(val.includedModules, mod)
+}
+
+func (val *BaseEmeraldValue) NamespaceDefinitions() map[string]EmeraldValue {
+	if val.namespaceDefinitions == nil {
+		val.namespaceDefinitions = map[string]EmeraldValue{}
+	}
+
+	return val.namespaceDefinitions
 }
 
 func (val *BaseEmeraldValue) InstanceVariables() map[string]EmeraldValue {
@@ -139,6 +149,33 @@ func (val *BaseEmeraldValue) InstanceVariableSet(name string, value EmeraldValue
 	val.InstanceVariables()[name] = value
 }
 
+func (val *BaseEmeraldValue) NamespaceDefinitionSet(name string, value EmeraldValue) {
+	val.NamespaceDefinitions()[name] = value
+}
+
+func (val *BaseEmeraldValue) NamespaceDefinitionGet(name string) EmeraldValue {
+	value := val.NamespaceDefinitions()[name]
+
+	if value != nil {
+		return value
+	}
+
+	if val.parentNamespace != nil {
+		return val.parentNamespace.NamespaceDefinitionGet(name)
+	}
+
+	return nil
+}
+
+func (val *BaseEmeraldValue) ParentNamespace() EmeraldValue {
+	return val.parentNamespace
+}
+
+func (val *BaseEmeraldValue) SetParentNamespace(parent EmeraldValue) {
+	val.parentNamespace = parent
+}
+
 func (val *BaseEmeraldValue) ResetForSpec() {
 	val.definedMethodSet = DefinedMethodSet{}
+	val.instanceVariables = nil
 }

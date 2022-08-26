@@ -17,9 +17,9 @@ func TestMethodCall(t *testing.T) {
 					"hello"
 				end
 			end
-
+		
 			instance = Greeter.new
-
+		
 			instance.hello
 			`,
 			expected: "hello",
@@ -34,13 +34,18 @@ func TestMethodCall(t *testing.T) {
 					end
 				end
 			end
-
+		
 			Greeter.hello
 			`,
 			expected: "hello",
 		},
 		{
 			name:     "passing a block to a builtin method",
+			input:    "[0,1,2].map { |i| i }",
+			expected: []any{0, 1, 2},
+		},
+		{
+			name:     "passing a block to a builtin method v2",
 			input:    "[0,1,2].map { |i| i + 2 }",
 			expected: []any{2, 3, 4},
 		},
@@ -80,7 +85,7 @@ func TestMethodCall(t *testing.T) {
 						end
 					end
 				end
-
+		
 				MyClass.new.one(:two)
 			`,
 			expected: ":one",

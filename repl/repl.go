@@ -86,12 +86,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 		}
 
 		machine := vm.New(code)
-
-		err = machine.Run()
-		if err != nil {
-			fmt.Fprintf(out, "Woops! Executing bytecode failed:\n %s\n", err)
-			continue
-		}
+		machine.Run()
 
 		evaluated := machine.LastPoppedStackElem()
 

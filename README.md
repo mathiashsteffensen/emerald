@@ -194,6 +194,8 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] retry
 - [ ] constants
 - [ ] scope operator `::`
+  - [x] Constant access `MyMod::MyClass`
+  - [ ] Method access `String::new`
 - [ ] classes
     - [x] class objects
     - [x] class Class

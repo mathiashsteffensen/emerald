@@ -43,11 +43,7 @@ func runCoreTests(t *testing.T, tests []coreTestCase) {
 			}
 
 			machine := vm.New(comp.Bytecode())
-
-			err = machine.Run()
-			if err != nil {
-				t.Fatalf("vm error: %s", err)
-			}
+			machine.Run()
 
 			stackElem := machine.LastPoppedStackElem()
 			testExpectedObject(t, tt.expected, stackElem)

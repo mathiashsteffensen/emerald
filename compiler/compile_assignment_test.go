@@ -262,6 +262,7 @@ func TestCompileAssignment(t *testing.T) {
 				Make(OpPushConstant, 5),
 				Make(OpDefineMethod),
 				Make(OpPop),
+				Make(OpSelf),
 				Make(OpPushConstant, 6),
 				Make(OpNull),
 				Make(OpSend, 0),

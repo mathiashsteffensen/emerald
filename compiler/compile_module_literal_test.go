@@ -7,10 +7,9 @@ func TestCompileModuleLiteral(t *testing.T) {
 		{
 			name:              "module with no methods",
 			input:             "module MyMod; end",
-			expectedConstants: []any{"module:MyMod"},
+			expectedConstants: []any{":MyMod", "module:MyMod"},
 			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpSetGlobal, 0),
+				Make(OpConstantGetOrSet, 0, 1),
 				Make(OpOpenClass),
 				Make(OpNull),
 				Make(OpCloseClass),
@@ -22,13 +21,12 @@ func TestCompileModuleLiteral(t *testing.T) {
 			input: `module MyMod
 				def method; end
 			end`,
-			expectedConstants: []any{"module:MyMod", ":method", []Instructions{Make(OpReturn)}},
+			expectedConstants: []any{":MyMod", "module:MyMod", ":method", []Instructions{Make(OpReturn)}},
 			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpSetGlobal, 0),
+				Make(OpConstantGetOrSet, 0, 1),
 				Make(OpOpenClass),
-				Make(OpPushConstant, 1),
 				Make(OpPushConstant, 2),
+				Make(OpPushConstant, 3),
 				Make(OpDefineMethod),
 				Make(OpCloseClass),
 				Make(OpPop),

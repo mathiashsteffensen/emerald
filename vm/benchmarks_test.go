@@ -31,10 +31,6 @@ func BenchmarkFibonacci(b *testing.B) {
 		}
 
 		vm := New(comp.Bytecode())
-
-		err = vm.Run()
-		if err != nil {
-			b.Fatalf("vm error: %s", err)
-		}
+		vm.Run()
 	}
 }

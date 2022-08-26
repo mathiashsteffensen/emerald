@@ -44,6 +44,10 @@ type (
 		) (EmeraldValue, error)
 		InstanceVariableGet(name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue
 		InstanceVariableSet(name string, value EmeraldValue)
+		ParentNamespace() EmeraldValue
+		SetParentNamespace(parent EmeraldValue)
+		NamespaceDefinitionGet(name string) EmeraldValue
+		NamespaceDefinitionSet(name string, value EmeraldValue)
 		HashKey() string
 	}
 )
@@ -57,6 +61,25 @@ const (
 	BLOCK_VALUE
 	RETURN_VALUE
 )
+
+func (t EmeraldValueType) String() string {
+	switch t {
+	case CLASS_VALUE:
+		return "Class"
+	case STATIC_CLASS_VALUE:
+		return "Static Class"
+	case MODULE_VALUE:
+		return "Module"
+	case INSTANCE_VALUE:
+		return "Instance"
+	case BLOCK_VALUE:
+		return "Block"
+	case RETURN_VALUE:
+		return "Return"
+	}
+
+	return ""
+}
 
 func (method *WrappedBuiltInMethod) Inspect() string           { return fmt.Sprintf("#<Block:%p>", method) }
 func (method *WrappedBuiltInMethod) Type() EmeraldValueType    { return BLOCK_VALUE }

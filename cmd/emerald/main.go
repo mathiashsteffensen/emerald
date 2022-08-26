@@ -57,9 +57,7 @@ func main() {
 	checkError("Compilation failed", err)
 
 	machine := vm.New(c.Bytecode())
-
-	err = machine.Run()
-	checkError("VM failed to execute bytecode", err)
+	machine.Run()
 
 	evaluated := machine.LastPoppedStackElem()
 

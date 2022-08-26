@@ -13,7 +13,7 @@ type SingletonClass struct {
 
 func (c *SingletonClass) Type() EmeraldValueType    { return STATIC_CLASS_VALUE }
 func (c *SingletonClass) Inspect() string           { return fmt.Sprintf("#<Class:%s>", c.Instance.Inspect()) }
-func (c *SingletonClass) Class() EmeraldValue       { return nil }
+func (c *SingletonClass) Class() EmeraldValue       { return c.super }
 func (c *SingletonClass) Super() EmeraldValue       { return c.super }
 func (c *SingletonClass) SetSuper(val EmeraldValue) { c.super = val }
 func (c *SingletonClass) Ancestors() []EmeraldValue {

@@ -62,8 +62,8 @@ func NewClass(
 		},
 	}
 
-	if _, ok := Classes["Class"]; ok {
-		class.class = NewSingletonClass(class, staticBuiltInMethodSet, Classes["Class"])
+	if classClass, ok := Classes["Class"]; ok {
+		class.class = NewSingletonClass(class, staticBuiltInMethodSet, classClass)
 	} else {
 		class.class = NewSingletonClass(class, staticBuiltInMethodSet, staticParent)
 	}

@@ -1,6 +1,9 @@
 package core
 
-import "emerald/object"
+import (
+	"bytes"
+	"emerald/object"
+)
 
 var Class *object.Class
 
@@ -11,7 +14,7 @@ func InitClass() {
 		nil,
 		object.BuiltInMethodSet{
 			"ancestors": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return NewArray(ctx.ExecutionTarget.Ancestors())
+				return NewArray(target.Ancestors())
 			},
 			"methods": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				methods := []object.EmeraldValue{}
@@ -23,7 +26,30 @@ func InitClass() {
 				return NewArray(methods)
 			},
 			"name": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return NewString(target.(*object.Class).Name)
+				self := target.(*object.Class)
+
+				var namespaces bytes.Buffer
+
+				parent := self.ParentNamespace()
+				for parent != nil &&
+					parent != Object &&
+					(parent.Type() == object.CLASS_VALUE || parent.Type() == object.MODULE_VALUE) {
+
+					switch parent := parent.(type) {
+					case *object.Module:
+						namespaces.WriteString(parent.Name)
+					case *object.Class:
+						namespaces.WriteString(parent.Name)
+					}
+
+					namespaces.WriteString("::")
+
+					parent = parent.ParentNamespace()
+				}
+
+				namespaces.WriteString(self.Name)
+
+				return NewString(namespaces.String())
 			},
 			"new": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				return target.(*object.Class).New()

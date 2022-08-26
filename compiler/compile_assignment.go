@@ -3,6 +3,7 @@ package compiler
 import (
 	"emerald/ast"
 	"emerald/core"
+	"unicode"
 )
 
 func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) error {
@@ -13,6 +14,11 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) error {
 
 	switch name := node.Name.(type) {
 	case *ast.IdentifierExpression:
+		if unicode.IsUpper(rune(name.Value[0])) {
+			c.emit(OpConstantSet, c.addConstant(core.NewSymbol(name.Value)))
+			return nil
+		}
+
 		stringName := name.String()
 
 		symbol, ok := c.symbolTable.Resolve(stringName)

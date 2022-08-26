@@ -8,22 +8,9 @@ import (
 
 func (c *Compiler) compileModuleLiteral(node *ast.ModuleLiteral) error {
 	name := node.Name.Value
+	class := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{}, core.Module)
 
-	var (
-		symbol Symbol
-		ok     bool
-	)
-	symbol, ok = c.symbolTable.Resolve(name)
-	if ok {
-		c.emit(OpGetGlobal, symbol.Index)
-	} else {
-		symbol = c.symbolTable.Define(name)
-		class := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{}, core.Module)
-
-		c.emit(OpPushConstant, c.addConstant(class))
-		c.emit(OpSetGlobal, symbol.Index)
-	}
-
+	c.emitConstantGetOrSet(name, class)
 	c.emit(OpOpenClass)
 
 	if len(node.Body.Statements) == 0 {

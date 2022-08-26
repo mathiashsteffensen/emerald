@@ -8,7 +8,7 @@ import (
 
 type CallExpression struct {
 	Token     lexer.Token // The '(' token
-	Method    Expression  // Identifier
+	Method    *IdentifierExpression
 	Arguments []Expression
 	Block     *BlockLiteral
 }

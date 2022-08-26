@@ -45,7 +45,7 @@ func TestInstanceVariable(t *testing.T) {
 						@info
 					end
 				end
-
+		
 				instance = MyClass.new
 				instance.set
 				instance.info

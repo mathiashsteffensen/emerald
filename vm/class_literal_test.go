@@ -36,6 +36,16 @@ func TestClassLiteral(t *testing.T) {
 			end`,
 			expected: "class:MyClass",
 		},
+		{
+			name: "namespaced class",
+			input: `
+			module MyMod
+				class MyClass; end
+			end
+		
+			MyMod::MyClass`,
+			expected: "class:MyClass",
+		},
 	}
 
 	runVmTests(t, tests)

@@ -13,20 +13,15 @@ type ArrayInstance struct {
 }
 
 func InitArray() {
-	Array = object.NewClass(
-		"Array",
-		Object,
-		Object.Class(),
-		object.BuiltInMethodSet{
-			"[]":      arrayIndexAccessor(),
-			"push":    arrayPush(),
-			"each":    arrayEach(),
-			"to_s":    arrayToS(),
-			"inspect": arrayToS(),
-		},
-		object.BuiltInMethodSet{},
-		Enumerable,
-	)
+	Array = DefineClass(Object, "Array", Object)
+
+	Array.Include(Enumerable)
+
+	DefineMethod(Array, "[]", arrayIndexAccessor(), false)
+	DefineMethod(Array, "push", arrayPush(), false)
+	DefineMethod(Array, "each", arrayEach(), false)
+	DefineMethod(Array, "to_s", arrayToS(), false)
+	DefineMethod(Array, "inspect", arrayToS(), false)
 }
 
 func NewArray(val []object.EmeraldValue) *ArrayInstance {

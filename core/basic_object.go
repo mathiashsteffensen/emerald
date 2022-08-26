@@ -7,5 +7,5 @@ import (
 var BasicObject *object.Class
 
 func InitBasicObject() {
-	BasicObject = object.NewClass("BasicObject", nil, Class, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	BasicObject = object.NewClass("BasicObject", nil, nil, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 }

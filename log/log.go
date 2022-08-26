@@ -119,7 +119,7 @@ func logRoutine() {
 		if msg.args == nil {
 			write(msg.level, msg.format)
 		} else {
-			writef(msg.level, msg.format, msg.args)
+			writef(msg.level, msg.format, msg.args...)
 		}
 	}
 }
