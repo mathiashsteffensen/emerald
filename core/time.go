@@ -22,11 +22,11 @@ func NewTime(val time.Time) *TimeInstance {
 func init() {
 	Time = DefineClass(Object, "Time", Object)
 
-	DefineMethod(Time, "new", timeNew(), true)
-	DefineMethod(Time, "now", timeNew(), true)
+	DefineSingletonMethod(Time, "new", timeNew())
+	DefineSingletonMethod(Time, "now", timeNew())
 
-	DefineMethod(Time, "-", timeSubtract(), false)
-	DefineMethod(Time, "to_f", timeToF(), false)
+	DefineMethod(Time, "-", timeSubtract())
+	DefineMethod(Time, "to_f", timeToF())
 }
 
 func timeNew() object.BuiltInMethod {

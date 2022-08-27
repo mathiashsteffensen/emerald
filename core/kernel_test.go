@@ -44,12 +44,12 @@ func TestKernel_class(t *testing.T) {
 func TestKernel_kind_of(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			name:     "when target is instance of class",
+			name:     "when self is instance of class",
 			input:    "Object.new.kind_of?(Object)",
 			expected: true,
 		},
 		{
-			name:     "when target is instance of subclass",
+			name:     "when self is instance of subclass",
 			input:    "String.new.kind_of?(Object)",
 			expected: true,
 		},

@@ -13,21 +13,19 @@ func InitClass() {
 		nil,
 		nil,
 		object.BuiltInMethodSet{
-			"ancestors": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return NewArray(target.Ancestors())
+			"ancestors": func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+				return NewArray(self.Ancestors())
 			},
-			"methods": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			"methods": func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				methods := []object.EmeraldValue{}
 
-				for _, method := range target.Methods(target) {
+				for _, method := range self.Methods(self) {
 					methods = append(methods, NewSymbol(method))
 				}
 
 				return NewArray(methods)
 			},
-			"name": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				self := target.(*object.Class)
-
+			"name": func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				var namespaces bytes.Buffer
 
 				parent := self.ParentNamespace()
@@ -47,7 +45,7 @@ func InitClass() {
 					parent = parent.ParentNamespace()
 				}
 
-				namespaces.WriteString(self.Name)
+				namespaces.WriteString(self.(*object.Class).Name)
 
 				return NewString(namespaces.String())
 			},

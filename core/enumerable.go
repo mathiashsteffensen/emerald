@@ -7,24 +7,20 @@ import "emerald/object"
 var Enumerable *object.Module
 
 func InitEnumerable() {
-	Enumerable = object.NewModule(
-		"Enumerable",
-		object.BuiltInMethodSet{
-			"map":        enumerableMap(),
-			"find":       enumerableFind(),
-			"find_index": enumerableFindIndex(),
-			"sum":        enumerableSum(),
-		},
-		object.BuiltInMethodSet{},
-	)
+	Enumerable = DefineModule(Object, "Enumerable")
+
+	DefineMethod(Enumerable, "map", enumerableMap())
+	DefineMethod(Enumerable, "find", enumerableFind())
+	DefineMethod(Enumerable, "find_index", enumerableFindIndex())
+	DefineMethod(Enumerable, "sum", enumerableSum())
 }
 
 func enumerableMap() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := NewArray(make([]object.EmeraldValue, 0))
 
 		wrappedBlock := &object.WrappedBuiltInMethod{
-			Method: func(ctx *object.Context, target object.EmeraldValue, _block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			Method: func(ctx *object.Context, self object.EmeraldValue, _block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				arr.Value = append(
 					arr.Value,
 					yield(block, args...),
@@ -33,7 +29,7 @@ func enumerableMap() object.BuiltInMethod {
 			},
 		}
 
-		_, err := target.SEND(ctx, yield, "each", target, wrappedBlock)
+		_, err := self.SEND(ctx, yield, "each", self, wrappedBlock)
 		if err != nil {
 			return NewStandardError(err.Error())
 		}
@@ -43,11 +39,11 @@ func enumerableMap() object.BuiltInMethod {
 }
 
 func enumerableFind() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		var firstTruthyElement object.EmeraldValue
 
 		wrappedBlock := &object.WrappedBuiltInMethod{
-			Method: func(ctx *object.Context, target object.EmeraldValue, _block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			Method: func(ctx *object.Context, self object.EmeraldValue, _block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				if firstTruthyElement != nil {
 					return NULL
 				}
@@ -63,7 +59,7 @@ func enumerableFind() object.BuiltInMethod {
 			},
 		}
 
-		_, err := target.SEND(ctx, yield, "each", target, wrappedBlock)
+		_, err := self.SEND(ctx, yield, "each", self, wrappedBlock)
 		if err != nil {
 			return NewStandardError(err.Error())
 		}

@@ -58,7 +58,7 @@ func (val *BaseEmeraldValue) DefineMethod(block EmeraldValue, args ...EmeraldVal
 	val.DefinedMethodSet()[name] = block.(*ClosedBlock)
 }
 
-func (val *BaseEmeraldValue) Methods(target EmeraldValue) []string {
+func (val *BaseEmeraldValue) Methods(self EmeraldValue) []string {
 	methods := []string{}
 
 	for key := range val.BuiltInMethodSet() {
@@ -73,7 +73,7 @@ func (val *BaseEmeraldValue) Methods(target EmeraldValue) []string {
 		methods = append(methods, mod.Methods(mod)...)
 	}
 
-	super := target.Super()
+	super := self.Super()
 	reflected := reflect.ValueOf(super)
 
 	if super != nil && reflected.IsValid() && !reflected.IsNil() {
@@ -83,8 +83,8 @@ func (val *BaseEmeraldValue) Methods(target EmeraldValue) []string {
 	return methods
 }
 
-func (val *BaseEmeraldValue) RespondsTo(name string, target EmeraldValue) bool {
-	_, err := val.ExtractMethod(name, target, target)
+func (val *BaseEmeraldValue) RespondsTo(name string, self EmeraldValue) bool {
+	_, err := val.ExtractMethod(name, self, self)
 
 	return err == nil
 }
@@ -93,11 +93,11 @@ func (val *BaseEmeraldValue) SEND(
 	ctx *Context,
 	yield YieldFunc,
 	name string,
-	target EmeraldValue,
+	self EmeraldValue,
 	block EmeraldValue,
 	args ...EmeraldValue,
 ) (EmeraldValue, error) {
-	method, err := target.Class().ExtractMethod(name, target.Class(), target.Class())
+	method, err := self.Class().ExtractMethod(name, self.Class(), self.Class())
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (val *BaseEmeraldValue) SEND(
 	case *ClosedBlock:
 		return yield(method, args...), nil
 	case *WrappedBuiltInMethod:
-		return method.Method(ctx, target, block, yield, args...), nil
+		return method.Method(ctx, self, block, yield, args...), nil
 	}
 
 	return nil, nil

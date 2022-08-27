@@ -8,68 +8,17 @@ import (
 var Float *object.Class
 
 func InitFloat() {
-	Float = object.NewClass("Float", Object, Object.Class(), object.BuiltInMethodSet{
-		"+": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-			left := target.(*FloatInstance)
+	Float = DefineClass(Object, "Float", Object)
 
-			var newValue float64
+	Float.Include(Comparable)
 
-			switch right := args[0].(type) {
-			case *IntegerInstance:
-				newValue = left.Value + float64(right.Value)
-			case *FloatInstance:
-				newValue = left.Value + right.Value
-			}
-
-			return NewFloat(newValue)
-		},
-		"-": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-			left := target.(*FloatInstance)
-
-			var newValue float64
-
-			switch right := args[0].(type) {
-			case *IntegerInstance:
-				newValue = left.Value - float64(right.Value)
-			case *FloatInstance:
-				newValue = left.Value - right.Value
-			}
-
-			return NewFloat(newValue)
-		},
-		"*": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-			left := target.(*FloatInstance)
-
-			var newValue float64
-
-			switch right := args[0].(type) {
-			case *IntegerInstance:
-				newValue = left.Value * float64(right.Value)
-			case *FloatInstance:
-				newValue = left.Value * right.Value
-			}
-
-			return NewFloat(newValue)
-		},
-		"/": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-			left := target.(*FloatInstance)
-
-			var newValue float64
-
-			switch right := args[0].(type) {
-			case *IntegerInstance:
-				newValue = left.Value / float64(right.Value)
-			case *FloatInstance:
-				newValue = left.Value / right.Value
-			}
-
-			return NewFloat(newValue)
-		},
-		"<=>": floatSpaceship(),
-		"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-			return NewString(strconv.FormatFloat(target.(*FloatInstance).Value, 'f', -1, 64))
-		},
-	}, object.BuiltInMethodSet{}, Comparable)
+	DefineMethod(Float, "to_s", floatToS())
+	DefineMethod(Float, "inspect", floatToS())
+	DefineMethod(Float, "<=>", floatSpaceship())
+	DefineMethod(Float, "+", floatAdd())
+	DefineMethod(Float, "-", floatSubtract())
+	DefineMethod(Float, "*", floatMultiply())
+	DefineMethod(Float, "/", floatDivide())
 }
 
 type FloatInstance struct {
@@ -81,6 +30,80 @@ func NewFloat(val float64) *FloatInstance {
 	return &FloatInstance{
 		Instance: Float.New(),
 		Value:    val,
+	}
+}
+
+func floatToS() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(strconv.FormatFloat(target.(*FloatInstance).Value, 'f', -1, 64))
+	}
+}
+
+func floatAdd() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		left := target.(*FloatInstance)
+
+		var newValue float64
+
+		switch right := args[0].(type) {
+		case *IntegerInstance:
+			newValue = left.Value + float64(right.Value)
+		case *FloatInstance:
+			newValue = left.Value + right.Value
+		}
+
+		return NewFloat(newValue)
+	}
+}
+
+func floatSubtract() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		left := target.(*FloatInstance)
+
+		var newValue float64
+
+		switch right := args[0].(type) {
+		case *IntegerInstance:
+			newValue = left.Value - float64(right.Value)
+		case *FloatInstance:
+			newValue = left.Value - right.Value
+		}
+
+		return NewFloat(newValue)
+	}
+}
+
+func floatMultiply() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		left := target.(*FloatInstance)
+
+		var newValue float64
+
+		switch right := args[0].(type) {
+		case *IntegerInstance:
+			newValue = left.Value * float64(right.Value)
+		case *FloatInstance:
+			newValue = left.Value * right.Value
+		}
+
+		return NewFloat(newValue)
+	}
+}
+
+func floatDivide() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		left := target.(*FloatInstance)
+
+		var newValue float64
+
+		switch right := args[0].(type) {
+		case *IntegerInstance:
+			newValue = left.Value / float64(right.Value)
+		case *FloatInstance:
+			newValue = left.Value / right.Value
+		}
+
+		return NewFloat(newValue)
 	}
 }
 

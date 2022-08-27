@@ -23,35 +23,35 @@ func NewString(val string) object.EmeraldValue {
 func InitString() {
 	String = DefineClass(Object, "String", Object)
 
-	DefineMethod(String, "to_s", stringToS(), false)
-	DefineMethod(String, "inspect", stringInspect(), false)
-	DefineMethod(String, "to_sym", stringToSym(), false)
-	DefineMethod(String, "==", stringEquals(), false)
-	DefineMethod(String, "+", stringAdd(), false)
-	DefineMethod(String, "upcase", stringUpcase(), false)
+	DefineMethod(String, "to_s", stringToS())
+	DefineMethod(String, "inspect", stringInspect())
+	DefineMethod(String, "to_sym", stringToSym())
+	DefineMethod(String, "==", stringEquals())
+	DefineMethod(String, "+", stringAdd())
+	DefineMethod(String, "upcase", stringUpcase())
 }
 
 func stringToS() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return target
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return self
 	}
 }
 
 func stringInspect() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(fmt.Sprintf(`"%s"`, target.(*StringInstance).Value))
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(fmt.Sprintf(`"%s"`, self.(*StringInstance).Value))
 	}
 }
 
 func stringToSym() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewSymbol(target.Inspect())
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewSymbol(self.Inspect())
 	}
 }
 
 func stringEquals() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		left := target.(*StringInstance)
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		left := self.(*StringInstance)
 		right, ok := args[0].(*StringInstance)
 
 		if ok {
@@ -63,8 +63,8 @@ func stringEquals() object.BuiltInMethod {
 }
 
 func stringAdd() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		targetString := target.(*StringInstance)
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		selfString := self.(*StringInstance)
 
 		argString, ok := args[0].(*StringInstance)
 		if !ok {
@@ -79,7 +79,7 @@ func stringAdd() object.BuiltInMethod {
 			return NewStandardError(fmt.Sprintf("no implicit conversion of %s to String", typ))
 		}
 
-		return NewString(targetString.Value + argString.Value)
+		return NewString(selfString.Value + argString.Value)
 	}
 }
 

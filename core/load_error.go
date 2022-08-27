@@ -9,7 +9,8 @@ var LoadError *object.Class
 
 func InitLoadError() {
 	LoadError = DefineClass(Object, "LoadError", StandardError)
-	DefineMethod(LoadError, "new", exceptionNew(NewLoadError), true)
+
+	DefineSingletonMethod(LoadError, "new", exceptionNew(NewLoadError))
 }
 
 type LoadErrorInstance struct {

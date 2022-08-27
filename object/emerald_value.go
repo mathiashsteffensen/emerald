@@ -4,7 +4,7 @@ import "fmt"
 
 type (
 	// BuiltInMethod - The type signature of an Emerald method defined in Go compiler
-	BuiltInMethod func(ctx *Context, target EmeraldValue, block EmeraldValue, yield YieldFunc, args ...EmeraldValue) EmeraldValue
+	BuiltInMethod func(ctx *Context, self EmeraldValue, block EmeraldValue, yield YieldFunc, args ...EmeraldValue) EmeraldValue
 
 	// WrappedBuiltInMethod -  Wraps a built-in method so that it conforms to the EmeraldValue interface
 	WrappedBuiltInMethod struct {
@@ -31,18 +31,18 @@ type (
 		BuiltInMethodSet() BuiltInMethodSet
 		DefinedMethodSet() DefinedMethodSet
 		DefineMethod(block EmeraldValue, args ...EmeraldValue)
-		ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error)
-		Methods(target EmeraldValue) []string
-		RespondsTo(name string, target EmeraldValue) bool
+		ExtractMethod(name string, extractFrom EmeraldValue, self EmeraldValue) (EmeraldValue, error)
+		Methods(self EmeraldValue) []string
+		RespondsTo(name string, self EmeraldValue) bool
 		SEND(
 			ctx *Context,
 			yield YieldFunc,
 			name string,
-			target EmeraldValue,
+			self EmeraldValue,
 			block EmeraldValue,
 			args ...EmeraldValue,
 		) (EmeraldValue, error)
-		InstanceVariableGet(name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue
+		InstanceVariableGet(name string, extractFrom EmeraldValue, self EmeraldValue) EmeraldValue
 		InstanceVariableSet(name string, value EmeraldValue)
 		ParentNamespace() EmeraldValue
 		SetParentNamespace(parent EmeraldValue)

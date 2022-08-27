@@ -17,11 +17,11 @@ func InitArray() {
 
 	Array.Include(Enumerable)
 
-	DefineMethod(Array, "[]", arrayIndexAccessor(), false)
-	DefineMethod(Array, "push", arrayPush(), false)
-	DefineMethod(Array, "each", arrayEach(), false)
-	DefineMethod(Array, "to_s", arrayToS(), false)
-	DefineMethod(Array, "inspect", arrayToS(), false)
+	DefineMethod(Array, "[]", arrayIndexAccessor())
+	DefineMethod(Array, "push", arrayPush())
+	DefineMethod(Array, "each", arrayEach())
+	DefineMethod(Array, "to_s", arrayToS())
+	DefineMethod(Array, "inspect", arrayToS())
 }
 
 func NewArray(val []object.EmeraldValue) *ArrayInstance {
@@ -32,8 +32,8 @@ func NewArray(val []object.EmeraldValue) *ArrayInstance {
 }
 
 func arrayIndexAccessor() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := target.(*ArrayInstance).Value
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := self.(*ArrayInstance).Value
 
 		intArg, ok := args[0].(*IntegerInstance)
 		if !ok {
@@ -51,8 +51,8 @@ func arrayIndexAccessor() object.BuiltInMethod {
 }
 
 func arrayPush() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := target.(*ArrayInstance)
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := self.(*ArrayInstance)
 
 		arr.Value = append(arr.Value, args[0])
 
@@ -61,8 +61,8 @@ func arrayPush() object.BuiltInMethod {
 }
 
 func arrayEach() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := target.(*ArrayInstance)
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := self.(*ArrayInstance)
 
 		for _, val := range arr.Value {
 			yield(block, val)
@@ -73,12 +73,12 @@ func arrayEach() object.BuiltInMethod {
 }
 
 func arrayToS() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		var out bytes.Buffer
 
 		out.WriteString("[")
 
-		values := target.(*ArrayInstance).Value
+		values := self.(*ArrayInstance).Value
 		for i, value := range values {
 			out.WriteString(value.Inspect())
 

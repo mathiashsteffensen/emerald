@@ -9,7 +9,8 @@ var StandardError *object.Class
 
 func InitStandardError() {
 	StandardError = DefineClass(Object, "StandardError", Exception)
-	StandardError.BuiltInMethodSet()["new"] = exceptionNew(NewStandardError)
+
+	DefineSingletonMethod(StandardError, "new", exceptionNew(NewStandardError))
 }
 
 type StandardErrorInstance struct {

@@ -89,7 +89,7 @@ const (
 	OpReturnValue
 	OpDefineMethod
 
-	// OpSend Invokes a method on the current execution context target.
+	// OpSend Invokes a method on the current execution context self.
 	// Takes an operand that references the number of arguments passed.
 	// Pops that number of arguments from the stack,
 	// the next object on the stack is the symbol representing the name of the method to invoke

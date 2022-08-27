@@ -22,18 +22,20 @@ func DefineClass(namespace object.EmeraldValue, name string, super *object.Class
 func DefineModule(namespace object.EmeraldValue, name string) *object.Module {
 	module := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-	namespace.NamespaceDefinitionSet(name, module)
-	module.SetParentNamespace(namespace)
+	if namespace != nil {
+		namespace.NamespaceDefinitionSet(name, module)
+		module.SetParentNamespace(namespace)
+	}
 
 	return module
 }
 
-func DefineMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, singleton bool) {
-	if singleton {
-		receiver.Class().BuiltInMethodSet()[name] = method
-	} else {
-		receiver.BuiltInMethodSet()[name] = method
-	}
+func DefineMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod) {
+	receiver.BuiltInMethodSet()[name] = method
+}
+
+func DefineSingletonMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod) {
+	receiver.Class().BuiltInMethodSet()[name] = method
 }
 
 func NativeBoolToBooleanObject(input bool) object.EmeraldValue {

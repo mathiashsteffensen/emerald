@@ -13,26 +13,22 @@ var Kernel *object.Module
 var Compile func(fileName string, content string) []byte
 
 func InitKernel() {
-	Kernel = object.NewModule(
-		"Kernel",
-		object.BuiltInMethodSet{
-			"require_relative": kernelRequireRelative(),
-			"class":            kernelClass(),
-			"kind_of?":         kernelKindOf(),
-			"is_a?":            kernelKindOf(),
-			"include":          kernelInclude(),
-			"inspect":          kernelInspect(),
+	Kernel = DefineModule(nil, "Kernel")
 
-			// Should be made private when that function has been implemented
-			"puts": kernelPuts(),
-		},
-		object.BuiltInMethodSet{},
-	)
+	DefineMethod(Kernel, "inspect", kernelInspect())
+	DefineMethod(Kernel, "require_relative", kernelRequireRelative())
+	DefineMethod(Kernel, "class", kernelClass())
+	DefineMethod(Kernel, "kind_of?", kernelKindOf())
+	DefineMethod(Kernel, "is_a?", kernelKindOf())
+	DefineMethod(Kernel, "include", kernelInclude())
+
+	// Should be made private when that function has been implemented
+	DefineMethod(Kernel, "puts", kernelPuts())
 }
 
 func kernelClass() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		class := target.Class()
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		class := self.Class()
 
 		for class.Type() != object.CLASS_VALUE {
 			class = class.Super()
@@ -43,7 +39,7 @@ func kernelClass() object.BuiltInMethod {
 }
 
 func kernelKindOf() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		if len(args) != 1 {
 			return NewArgumentError(len(args), 1)
 		}
@@ -54,7 +50,7 @@ func kernelKindOf() object.BuiltInMethod {
 			return NewTypeError("class or module required")
 		}
 
-		for _, ancestor := range target.Class().Ancestors() {
+		for _, ancestor := range self.Class().Ancestors() {
 			if ancestor == args[0] {
 				return TRUE
 			}
@@ -65,7 +61,7 @@ func kernelKindOf() object.BuiltInMethod {
 }
 
 func kernelPuts() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		strings := []any{}
 
 		for _, arg := range args {
@@ -84,7 +80,7 @@ func kernelPuts() object.BuiltInMethod {
 }
 
 func kernelInclude() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		if len(args) == 0 {
 			return NewStandardError("wrong number of arguments (given 0, expected 1+)")
 		}
@@ -99,15 +95,15 @@ func kernelInclude() object.BuiltInMethod {
 				return NewStandardError(fmt.Sprintf("wrong argument type %s (expected Module)", arg.Inspect()))
 			}
 
-			target.Include(mod)
+			self.Include(mod)
 		}
 
-		return target
+		return self
 	}
 }
 
 func kernelRequireRelative() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		path := args[0].(*StringInstance).Value
 
 		absoluteFilePath, err := filepath.Abs(path)

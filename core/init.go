@@ -29,4 +29,7 @@ func init() {
 	InitArgumentError()
 	InitTypeError()
 	InitLoadError()
+
+	// Initialize remaining core classes & modules
+	InitRegexp()
 }

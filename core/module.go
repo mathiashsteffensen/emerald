@@ -8,18 +8,12 @@ import (
 var Module *object.Class
 
 func InitModule() {
-	Module = object.NewClass(
-		"Module",
-		Object,
-		Object.Class(),
-		object.BuiltInMethodSet{
-			"define_method": moduleDefineMethod(),
-			"attr_reader":   moduleAttrReader(),
-			"attr_writer":   moduleAttrWriter(),
-			"attr_accessor": moduleAttrAccessor(),
-		},
-		object.BuiltInMethodSet{},
-	)
+	Module = DefineClass(Object, "Module", Object)
+
+	DefineMethod(Module, "define_method", moduleDefineMethod())
+	DefineMethod(Module, "attr_reader", moduleAttrReader())
+	DefineMethod(Module, "attr_writer", moduleAttrWriter())
+	DefineMethod(Module, "attr_accessor", moduleAttrAccessor())
 
 	Class.SetSuper(Module)
 	Class.Class().(*object.SingletonClass).SetSuper(Module.Class())
@@ -28,20 +22,20 @@ func InitModule() {
 }
 
 func moduleDefineMethod() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		target.DefineMethod(block, args...)
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		self.DefineMethod(block, args...)
 
 		return args[0]
 	}
 }
 
 func moduleAttrReader() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
 			name, instanceVarName := nameAndInstanceVarFromObject(arg)
 
-			target.BuiltInMethodSet()[name] = func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				value := target.InstanceVariableGet(instanceVarName, target, target)
+			self.BuiltInMethodSet()[name] = func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+				value := self.InstanceVariableGet(instanceVarName, self, self)
 
 				if value == nil {
 					return NULL
@@ -56,11 +50,11 @@ func moduleAttrReader() object.BuiltInMethod {
 }
 
 func moduleAttrWriter() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
 			name, instanceVarName := nameAndInstanceVarFromObject(arg)
 
-			target.BuiltInMethodSet()[fmt.Sprintf("%s=", name)] = func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+			self.BuiltInMethodSet()[fmt.Sprintf("%s=", name)] = func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 				target.InstanceVariableSet(instanceVarName, args[0])
 
 				return args[0]
@@ -72,13 +66,13 @@ func moduleAttrWriter() object.BuiltInMethod {
 }
 
 func moduleAttrAccessor() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		_, err := target.SEND(ctx, yield, "attr_reader", target, block, args...)
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		_, err := self.SEND(ctx, yield, "attr_reader", self, block, args...)
 		if err != nil {
 			return NewStandardError(err.Error())
 		}
 
-		_, err = target.SEND(ctx, yield, "attr_writer", target, block, args...)
+		_, err = self.SEND(ctx, yield, "attr_writer", self, block, args...)
 		if err != nil {
 			return NewStandardError(err.Error())
 		}

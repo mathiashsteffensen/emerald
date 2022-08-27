@@ -21,12 +21,13 @@ func (err *ArgumentErrorInstance) Inspect() string {
 
 func InitArgumentError() {
 	ArgumentError = DefineClass(Object, "ArgumentError", StandardError)
-	DefineMethod(ArgumentError, "new", exceptionNew(func(msg string) object.EmeraldError {
+
+	DefineSingletonMethod(ArgumentError, "new", exceptionNew(func(msg string) object.EmeraldError {
 		return &ArgumentErrorInstance{
 			Instance: ArgumentError.New(),
 			message:  msg,
 		}
-	}), true)
+	}))
 }
 
 func NewArgumentError(given int, expected int) object.EmeraldError {

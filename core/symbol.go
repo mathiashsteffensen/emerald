@@ -5,19 +5,9 @@ import "emerald/object"
 var Symbol *object.Class
 
 func InitSymbol() {
-	Symbol = object.NewClass(
-		"Symbol",
-		Object,
-		Object.Class(),
-		object.BuiltInMethodSet{
-			"to_s": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				val := target.Inspect()
+	Symbol = DefineClass(Object, "Symbol", Object)
 
-				return NewString(val[1:])
-			},
-		},
-		object.BuiltInMethodSet{},
-	)
+	DefineMethod(Symbol, "to_s", symbolToS())
 }
 
 type SymbolInstance struct {
@@ -53,5 +43,13 @@ func (s SymbolInternStore) ResolveOrDefine(val string) object.EmeraldValue {
 		return sym
 	} else {
 		return s.Define(val)
+	}
+}
+
+func symbolToS() object.BuiltInMethod {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		val := self.Inspect()
+
+		return NewString(val[1:])
 	}
 }
