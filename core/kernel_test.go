@@ -2,6 +2,30 @@ package core_test
 
 import "testing"
 
+func TestKernel_require_relative(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    `require_relative("../main")`,
+			expected: true,
+		},
+		{
+			name: "requiring same file twice",
+			input: `
+				require_relative("../main")
+				require_relative("../main")
+			`,
+			expected: false,
+		},
+		{
+			name:     "when file doesn't exist",
+			input:    `require_relative("../lib/main")`,
+			expected: "error:LoadError:cannot load such file -- /home/mathias/code/emerald/lib/main",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestKernel_class(t *testing.T) {
 	tests := []coreTestCase{
 		{

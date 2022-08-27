@@ -2,20 +2,26 @@ package core
 
 import (
 	"emerald/object"
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 )
 
 var Kernel *object.Module
+
+var Compile func(fileName string, content string) []byte
 
 func InitKernel() {
 	Kernel = object.NewModule(
 		"Kernel",
 		object.BuiltInMethodSet{
-			"class":    kernelClass(),
-			"kind_of?": kernelKindOf(),
-			"is_a?":    kernelKindOf(),
-			"include":  kernelInclude(),
-			"inspect":  kernelInspect(),
+			"require_relative": kernelRequireRelative(),
+			"class":            kernelClass(),
+			"kind_of?":         kernelKindOf(),
+			"is_a?":            kernelKindOf(),
+			"include":          kernelInclude(),
+			"inspect":          kernelInspect(),
 
 			// Should be made private when that function has been implemented
 			"puts": kernelPuts(),
@@ -100,8 +106,59 @@ func kernelInclude() object.BuiltInMethod {
 	}
 }
 
+func kernelRequireRelative() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		path := args[0].(*StringInstance).Value
+
+		absoluteFilePath, err := filepath.Abs(path)
+		if err != nil {
+			panic(err) // TODO: Should probably change this when exception handling is implemented
+		}
+
+		absolutePathStr := NewString(absoluteFilePath)
+
+		requiredFiles := requiredFilesHash()
+
+		// File has already been loaded
+		if requiredFiles.Get(absolutePathStr) != nil {
+			return FALSE
+		}
+
+		sourceContent, err := os.ReadFile(absoluteFilePath + ".rb")
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return NewLoadError(fmt.Sprintf("cannot load such file -- %s", absoluteFilePath))
+			}
+
+			panic(err)
+		}
+
+		instructions := Compile(absoluteFilePath, string(sourceContent))
+
+		requiredBlock := &object.ClosedBlock{Block: &object.Block{Instructions: instructions}}
+
+		yield(requiredBlock)
+
+		requiredFiles.Set(absolutePathStr, TRUE)
+		println(absoluteFilePath)
+
+		return TRUE
+	}
+}
+
 func kernelInspect() object.BuiltInMethod {
 	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString(target.Inspect())
+	}
+}
+
+func requiredFilesHash() *HashInstance {
+	requiredFiles := Kernel.InstanceVariableGet("required_files", Kernel, Kernel)
+	if requiredFiles == nil {
+		hash := NewHash()
+		Kernel.InstanceVariableSet("required_files", hash)
+		return hash
+	} else {
+		return requiredFiles.(*HashInstance)
 	}
 }

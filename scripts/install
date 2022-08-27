@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+make build
+
+mkdir -p /home/"$USER"/.emerald
+mkdir -p /home/"$USER"/.emerald/bin
+
+cp ./emerald /home/"$USER"/.emerald/bin/emerald
+cp ./iem /home/"$USER"/.emerald/bin/iem
+
+echo "export PATH=$PATH:/home/$USER/.emerald/bin" >> ~/.bashrc
+echo "export GEM_HOME=/home/$USER/.emerald/vendor" >> ~/.bashrc
+echo "export GEM_PATH=/home/$USER/.emerald/vendor" >> ~/.bashrc

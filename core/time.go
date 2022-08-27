@@ -20,21 +20,31 @@ func NewTime(val time.Time) *TimeInstance {
 }
 
 func init() {
-	var timeNew object.BuiltInMethod = func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	Time = DefineClass(Object, "Time", Object)
+
+	DefineMethod(Time, "new", timeNew(), true)
+	DefineMethod(Time, "now", timeNew(), true)
+
+	DefineMethod(Time, "-", timeSubtract(), false)
+	DefineMethod(Time, "to_f", timeToF(), false)
+}
+
+func timeNew() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewTime(time.Now())
 	}
+}
 
-	Time = object.NewClass("Time", Object, Object.Class(), object.BuiltInMethodSet{
-		"-": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-			newVal := target.(*TimeInstance).Value.Sub(args[0].(*TimeInstance).Value)
+func timeToF() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewFloat(float64(target.(*TimeInstance).Value.UnixMilli()) / 1000.0)
+	}
+}
 
-			return NewInteger(newVal.Milliseconds())
-		},
-		"to_f": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-			return NewFloat(float64(target.(*TimeInstance).Value.UnixMilli()) / 1000.0)
-		},
-	}, object.BuiltInMethodSet{
-		"now": timeNew,
-		"new": timeNew,
-	})
+func timeSubtract() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		newVal := target.(*TimeInstance).Value.Sub(args[0].(*TimeInstance).Value)
+
+		return NewInteger(newVal.Milliseconds())
+	}
 }

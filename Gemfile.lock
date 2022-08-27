@@ -1,0 +1,13 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    mspec (1.9.1)
+
+PLATFORMS
+  x86_64-linux
+
+DEPENDENCIES
+  mspec
+
+BUNDLED WITH
+   2.2.3

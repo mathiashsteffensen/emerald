@@ -214,7 +214,7 @@ func testFloatObject(expected float64, actual object.EmeraldValue) error {
 
 func testBooleanObject(expected bool, actual object.EmeraldValue) error {
 	if actual != core.TRUE && actual != core.FALSE {
-		return fmt.Errorf("object is not Boolean. got=%T (%+v)", actual, actual)
+		return fmt.Errorf("object is not Boolean. got=%s", actual.Inspect())
 	}
 
 	if (actual == core.TRUE) != expected {
@@ -316,7 +316,7 @@ func testErrorObject(expected string, actual object.EmeraldValue) error {
 
 	emeraldError, ok := actual.(object.EmeraldError)
 	if !ok {
-		return fmt.Errorf("object was not EmeraldError, got=%#v", actual)
+		return fmt.Errorf("object was not EmeraldError, got=%s", actual.Inspect())
 	}
 
 	if emeraldError.ClassName() != className {

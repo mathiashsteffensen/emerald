@@ -4,7 +4,10 @@ import (
 	"emerald/ast"
 	"emerald/core"
 	"emerald/kernel"
+	"emerald/lexer"
 	"emerald/object"
+	"emerald/parser"
+	"fmt"
 )
 
 type EmittedInstruction struct {
@@ -57,6 +60,28 @@ func WithBuiltIns() ConstructorOption {
 	}
 }
 
+func init() {
+	core.Compile = func(fileName string, content string) []byte {
+		l := lexer.New(lexer.NewInput(fileName, content))
+		p := parser.New(l)
+		ast := p.ParseAST()
+
+		if len(p.Errors()) != 0 {
+			panic(fmt.Errorf("failed to parse source file %s", fileName))
+		}
+
+		c := New()
+		err := c.Compile(ast)
+		if err != nil {
+			panic(err)
+		}
+
+		instructions := append(c.Bytecode().Instructions, byte(OpReturn))
+
+		return instructions
+	}
+}
+
 func (c *Compiler) Compile(node ast.Node) error {
 	switch node := node.(type) {
 	case *ast.AST:
@@ -97,6 +122,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+	case *ast.Self:
+		c.emit(OpSelf)
 	case *ast.IdentifierExpression:
 		c.compileIdentifierExpression(node)
 	case *ast.InstanceVariable:

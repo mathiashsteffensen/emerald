@@ -15,10 +15,10 @@ func (vm *VM) EvalBlock(block object.EmeraldValue, args ...object.EmeraldValue) 
 		switch bl := block.(type) {
 		case *object.WrappedBuiltInMethod:
 			// Builtin methods are easy, just call some Go code
-			return vm.evalBuiltIn(vm.ctx.ExecutionTarget, bl, core.NULL, args)
+			return vm.evalBuiltIn(vm.ctx.Self, bl, core.NULL, args)
 		case *object.ClosedBlock:
 			// Method receiver
-			vm.push(vm.ctx.ExecutionTarget)
+			vm.push(vm.ctx.Self)
 			// The VM accounts for the name of the method being called being on the stack when a block is evaluated
 			// So we just push something on the stack and nil is the cheapest
 			vm.push(core.NULL)

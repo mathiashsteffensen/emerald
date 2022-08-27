@@ -28,4 +28,5 @@ func init() {
 	InitStandardError()
 	InitArgumentError()
 	InitTypeError()
+	InitLoadError()
 }

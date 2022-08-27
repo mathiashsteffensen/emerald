@@ -9,6 +9,7 @@ var TypeError *object.Class
 
 func InitTypeError() {
 	TypeError = DefineClass(Object, "TypeError", StandardError)
+	DefineMethod(TypeError, "new", exceptionNew(NewTypeError), true)
 }
 
 type TypeErrorInstance struct {

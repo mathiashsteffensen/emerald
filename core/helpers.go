@@ -28,8 +28,8 @@ func DefineModule(namespace object.EmeraldValue, name string) *object.Module {
 	return module
 }
 
-func DefineMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, static bool) {
-	if static {
+func DefineMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, singleton bool) {
+	if singleton {
 		receiver.Class().BuiltInMethodSet()[name] = method
 	} else {
 		receiver.BuiltInMethodSet()[name] = method

@@ -24,6 +24,7 @@ func InitString() {
 	String = DefineClass(Object, "String", Object)
 
 	DefineMethod(String, "to_s", stringToS(), false)
+	DefineMethod(String, "inspect", stringInspect(), false)
 	DefineMethod(String, "to_sym", stringToSym(), false)
 	DefineMethod(String, "==", stringEquals(), false)
 	DefineMethod(String, "+", stringAdd(), false)
@@ -33,6 +34,12 @@ func InitString() {
 func stringToS() object.BuiltInMethod {
 	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return target
+	}
+}
+
+func stringInspect() object.BuiltInMethod {
+	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(fmt.Sprintf(`"%s"`, target.(*StringInstance).Value))
 	}
 }
 

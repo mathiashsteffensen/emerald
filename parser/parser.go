@@ -57,6 +57,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.INSTANCE_VAR, p.parseInstanceVariable)
 	p.registerPrefix(lexer.GLOBAL_IDENT, p.parseGlobalVariable)
 	p.registerPrefix(lexer.MODULE, p.parseModuleLiteral)
+	p.registerPrefix(lexer.SELF, p.parseSelf)
 
 	p.infixParseFns = make(map[lexer.TokenType]infixParseFn)
 	p.registerInfix(lexer.PLUS, p.parseInfixExpression)

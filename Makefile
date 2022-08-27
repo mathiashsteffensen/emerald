@@ -1,10 +1,10 @@
 SHELL:=/bin/bash
 
-define print =
+define print
 	@echo "--- $(1)"
 endef
 
-define println =
+define println
 	$(call print,$(1))
 	@echo ""
 endef
@@ -24,13 +24,18 @@ endef
 default:
 	@make lint test build
 
-emerald: ./**/*.go ./cmd/emerald/main.go
+emerald: ./**/*.go
 	$(benchmark_build_time)
 
 iem: ./**/*.go
 	$(benchmark_build_time)
 
 build: emerald iem
+
+install:
+	@make build && \
+	cp ./emerald /usr/local/bin/emerald && \
+	cp ./iem /usr/local/bin/iem
 
 test:
 	@echo "Running test suite" && echo "" && go test ./lexer ./parser ./compiler/ ./vm/ ./core/ -cover && echo ""
@@ -40,7 +45,3 @@ ci-test:
 
 lint:
 	@echo "Linting ..." && staticcheck ./... && echo ""
-
-install:
-	go mod download && \
-	go install honnef.co/go/tools/cmd/staticcheck@latest

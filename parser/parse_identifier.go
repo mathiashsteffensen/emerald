@@ -23,6 +23,10 @@ func (p *Parser) parseGlobalVariable() ast.Expression {
 	return p.parseIdentifierOrAssignment(node)
 }
 
+func (p *Parser) parseSelf() ast.Expression {
+	return &ast.Self{IdentifierExpression: &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
+}
+
 func (p *Parser) parseIdentifierOrAssignment(identNode ast.Expression) ast.Expression {
 	switch p.peekToken.Type {
 	case lexer.ASSIGN:

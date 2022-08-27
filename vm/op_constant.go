@@ -12,7 +12,7 @@ func (vm *VM) executeOpConstantGet(ins compiler.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
 	name := kernel.GetConst(nameIndex).(*core.SymbolInstance).Value
 
-	value, err := getConst(vm.ctx.ExecutionTarget, name)
+	value, err := getConst(vm.ctx.Self, name)
 	if err != nil {
 		panic(err)
 	}
@@ -26,7 +26,7 @@ func (vm *VM) executeOpConstantSet(ins compiler.Instructions, ip int) {
 	// Don't pop it from the stack, we leave it there since assignment expressions return the assigned value
 	value := vm.StackTop()
 
-	setConst(vm.ctx.ExecutionTarget, name, value)
+	setConst(vm.ctx.Self, name, value)
 }
 
 func (vm *VM) executeOpConstantGetOrSet(ins compiler.Instructions, ip int) {
@@ -35,7 +35,7 @@ func (vm *VM) executeOpConstantGetOrSet(ins compiler.Instructions, ip int) {
 	valueIndex := compiler.ReadUint16(ins[ip+3:])
 	vm.currentFrame().ip += 2
 
-	self := vm.ctx.ExecutionTarget
+	self := vm.ctx.Self
 
 	value, err := getConst(self, name)
 	if err != nil {

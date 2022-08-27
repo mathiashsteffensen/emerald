@@ -31,7 +31,7 @@ func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
 	frames[0] = mainFrame
 
 	vm := &VM{
-		ctx:         &object.Context{DefinitionTarget: core.Object, ExecutionTarget: core.MainObject},
+		ctx:         &object.Context{Self: core.MainObject},
 		stack:       make([]object.EmeraldValue, StackSize),
 		sp:          0,
 		frames:      frames,
@@ -78,7 +78,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 	case compiler.OpPop:
 		vm.pop()
 	case compiler.OpSelf:
-		vm.push(vm.ctx.ExecutionTarget)
+		vm.push(vm.ctx.Self)
 	case compiler.OpTrue:
 		vm.push(core.TRUE)
 	case compiler.OpFalse:
@@ -120,7 +120,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		constIndex := vm.readUint16(ins, ip)
 
 		name := kernel.GetConst(constIndex)
-		target := vm.ctx.ExecutionTarget
+		target := vm.ctx.Self
 
 		val := target.InstanceVariableGet(name.(*core.SymbolInstance).Value, target, target)
 
@@ -143,7 +143,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 
 		name := kernel.GetConst(constIndex)
 		val := vm.StackTop()
-		target := vm.ctx.ExecutionTarget
+		target := vm.ctx.Self
 
 		target.InstanceVariableSet(name.(*core.SymbolInstance).Value, val)
 	case compiler.OpArray:
@@ -184,7 +184,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		block := vm.pop().(*object.Block)
 		name := vm.stack[vm.sp-1].(*core.SymbolInstance)
 
-		vm.ctx.ExecutionTarget.DefineMethod(object.NewClosedBlock(block, []object.EmeraldValue{}), name)
+		vm.ctx.Self.DefineMethod(object.NewClosedBlock(block, []object.EmeraldValue{}), name)
 	case compiler.OpSend:
 		numArgs := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
@@ -202,12 +202,11 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 			name = newSelf.Name
 		}
 
-		setConst(outerCtx.ExecutionTarget, name, newSelf)
+		setConst(outerCtx.Self, name, newSelf)
 
 		vm.ctx = &object.Context{
-			Outer:            outerCtx,
-			ExecutionTarget:  newSelf,
-			DefinitionTarget: newSelf,
+			Outer: outerCtx,
+			Self:  newSelf,
 		}
 	case compiler.OpCloseClass:
 		to := vm.ctx.Outer
@@ -218,9 +217,8 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		newTarget := vm.pop()
 
 		vm.ctx = &object.Context{
-			Outer:            oldContext,
-			ExecutionTarget:  newTarget,
-			DefinitionTarget: oldContext.DefinitionTarget,
+			Outer: oldContext,
+			Self:  newTarget,
 		}
 	case compiler.OpResetExecutionTarget:
 		vm.ctx = vm.ctx.Outer
@@ -231,9 +229,9 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 
 		vm.closeBlock(int(constIndex), int(numFreeVars))
 	case compiler.OpStaticTrue:
-		vm.ctx.ExecutionTarget = vm.ctx.ExecutionTarget.Class()
+		vm.ctx.Self = vm.ctx.Self.Class()
 	case compiler.OpStaticFalse:
-		vm.ctx.ExecutionTarget = vm.ctx.ExecutionTarget.(*object.SingletonClass).Instance
+		vm.ctx.Self = vm.ctx.Self.(*object.SingletonClass).Instance
 	default:
 		if opString, ok := infixOperators[op]; ok {
 			left := vm.pop()
@@ -310,8 +308,8 @@ func (vm *VM) withExecutionContext(self object.EmeraldValue, cb func()) {
 	oldCtx := vm.ctx
 
 	vm.ctx = &object.Context{
-		Outer:           vm.ctx,
-		ExecutionTarget: self,
+		Outer: vm.ctx,
+		Self:  self,
 	}
 
 	cb()
