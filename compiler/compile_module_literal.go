@@ -1,9 +1,9 @@
 package compiler
 
 import (
-	"emerald/ast"
 	"emerald/core"
 	"emerald/object"
+	"emerald/parser/ast"
 )
 
 func (c *Compiler) compileModuleLiteral(node *ast.ModuleLiteral) error {

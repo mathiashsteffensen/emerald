@@ -1,8 +1,8 @@
 package compiler
 
 import (
-	"emerald/ast"
 	"emerald/core"
+	ast "emerald/parser/ast"
 	"unicode"
 )
 
@@ -26,10 +26,9 @@ func (c *Compiler) compileIdentifierExpression(node ast.Expression) {
 		c.emit(OpInstanceVarGet, c.addConstant(core.NewSymbol(node.Value)))
 	case *ast.GlobalVariable:
 		symbol, ok := c.symbolTable.Resolve(node.Value)
-		if ok {
-			c.emitSymbol(symbol)
-		} else {
-			c.emit(OpNull)
+		if !ok {
+			symbol = c.symbolTable.DefineGlobal(node.Value)
 		}
+		c.emitSymbol(symbol)
 	}
 }

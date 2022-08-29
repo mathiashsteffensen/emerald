@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"emerald/ast"
+	ast "emerald/parser/ast"
 )
 
 func (p *Parser) parseScopeAccessor(receiver ast.Expression) ast.Expression {

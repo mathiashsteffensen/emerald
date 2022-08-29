@@ -16,20 +16,51 @@ func TestRegexp_inspect(t *testing.T) {
 func TestRegexp_match(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			input:    `/a/ =~ "a"`,
+			input:    `(/a/ =~ "a").is_a?(MatchData)`,
 			expected: true,
 		},
 		{
-			input:    `/a/ =~ "b"`,
-			expected: false,
-		},
-		{
-			input:    `/a/.match("a")`,
+			input:    `/a/.match("a").is_a?(MatchData)`,
 			expected: true,
 		},
 		{
 			input:    `/a/.match("b")`,
-			expected: false,
+			expected: nil,
+		},
+		{
+			input: `
+				/a/ =~ "a"
+				$~.is_a?(MatchData)
+			`,
+			expected: true,
+		},
+		{
+			input: `
+				/a/ =~ "a"
+				Regexp.last_match.is_a?(MatchData)
+			`,
+			expected: true,
+		},
+		{
+			input: `
+				/a/ =~ "a"
+				$&
+			`,
+			expected: "a",
+		},
+		{
+			input: `
+				/a(b)(c)/ =~ "abc"
+				$1
+			`,
+			expected: "b",
+		},
+		{
+			input: `
+				/a(b)(c)/ =~ "abc"
+				$2
+			`,
+			expected: "c",
 		},
 	}
 

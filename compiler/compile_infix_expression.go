@@ -1,7 +1,7 @@
 package compiler
 
 import (
-	"emerald/ast"
+	ast "emerald/parser/ast"
 	"fmt"
 )
 

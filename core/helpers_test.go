@@ -1,12 +1,12 @@
 package core_test
 
 import (
-	"emerald/ast"
 	"emerald/compiler"
 	"emerald/core"
-	"emerald/lexer"
 	"emerald/object"
 	"emerald/parser"
+	"emerald/parser/ast"
+	"emerald/parser/lexer"
 	"emerald/vm"
 	"fmt"
 	"strings"
@@ -35,7 +35,7 @@ func runCoreTests(t *testing.T, tests []coreTestCase) {
 			}
 
 			program := parse(t, tt.input)
-			comp := compiler.New(compiler.WithBuiltIns())
+			comp := compiler.New()
 
 			err := comp.Compile(program)
 			if err != nil {
@@ -206,7 +206,8 @@ func testFloatObject(expected float64, actual object.EmeraldValue) error {
 	if !ok {
 		return fmt.Errorf("object is not FloatInstance. got=%T (%+v)", actual, actual)
 	}
-	if result.Value != expected {
+
+	if result.Value < (expected-0.0001) || result.Value > (expected+0.0001) {
 		return fmt.Errorf("object has wrong value. got=%f, want=%f", result.Value, expected)
 	}
 	return nil

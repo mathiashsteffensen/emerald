@@ -38,10 +38,12 @@ install:
 	cp ./iem /usr/local/bin/iem
 
 test:
-	@echo "Running test suite" && echo "" && go test ./lexer ./parser ./compiler/ ./vm/ ./core/ -cover && echo ""
+	@echo "Running test suite" && echo "" && \
+ 	go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ -coverprofile=./tmp/coverage.out && \
+ 	go tool cover -html=tmp/coverage.out -o tmp/coverage.html && echo ""
 
 ci-test:
-	go test ./lexer ./parser ./compiler/ ./object/ ./vm/ ./core/
+	go test ./parser/lexer ./parser ./compiler/ ./object/ ./vm/ ./core/
 
 lint:
 	@echo "Linting ..." && staticcheck ./... && echo ""

@@ -28,6 +28,10 @@ func TestGlobalAssignment(t *testing.T) {
 			`,
 			expected: "hello",
 		},
+		{
+			input:    "$~",
+			expected: nil,
+		},
 	}
 	runVmTests(t, tests)
 }

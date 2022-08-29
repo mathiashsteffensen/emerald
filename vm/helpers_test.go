@@ -1,13 +1,13 @@
 package vm
 
 import (
-	"emerald/ast"
 	"emerald/compiler"
 	"emerald/core"
-	"emerald/kernel"
-	"emerald/lexer"
+	"emerald/heap"
 	"emerald/object"
 	"emerald/parser"
+	"emerald/parser/ast"
+	"emerald/parser/lexer"
 	"fmt"
 	"strings"
 	"testing"
@@ -27,7 +27,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 			core.Object.ResetForSpec()
 
 			program := parse(tt.input)
-			comp := compiler.New(compiler.WithBuiltIns())
+			comp := compiler.New()
 
 			err := comp.Compile(program)
 			if err != nil {
@@ -48,7 +48,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 				t.Errorf("stack pointer was not reset after running test, this indicates a memory leak in the VM, was %d", vm.sp)
 			}
 
-			kernel.Reset()
+			heap.Reset()
 		})
 	}
 }

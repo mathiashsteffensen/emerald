@@ -3,7 +3,7 @@ package vm
 import (
 	"emerald/compiler"
 	"emerald/core"
-	"emerald/kernel"
+	"emerald/heap"
 	"emerald/object"
 	"fmt"
 )
@@ -88,7 +88,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 	case compiler.OpPushConstant:
 		constIndex := vm.readUint16(ins, ip)
 
-		vm.push(kernel.GetConst(constIndex))
+		vm.push(heap.GetConstant(constIndex))
 	case compiler.OpAdd:
 		vm.evalInfixOperator("+")
 	case compiler.OpSub:
@@ -122,10 +122,14 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.conditionalJump(core.IsTruthy(vm.StackTop()), ins, ip)
 	case compiler.OpGetGlobal:
 		globalIndex := vm.readUint16(ins, ip)
-		vm.push(kernel.GetGlobalVariable(globalIndex))
+		value := heap.GetGlobalVariable(globalIndex)
+		if value == nil {
+			value = core.NULL
+		}
+		vm.push(value)
 	case compiler.OpSetGlobal:
 		globalIndex := vm.readUint16(ins, ip)
-		kernel.SetGlobalVariable(globalIndex, vm.StackTop())
+		heap.SetGlobalVariable(globalIndex, vm.StackTop())
 	case compiler.OpGetLocal:
 		localIndex := vm.readUint8(ins, ip)
 		frame := vm.currentFrame()
@@ -143,7 +147,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 	case compiler.OpInstanceVarGet:
 		constIndex := vm.readUint16(ins, ip)
 
-		name := kernel.GetConst(constIndex)
+		name := heap.GetConstant(constIndex)
 		target := vm.ctx.Self
 
 		val := target.InstanceVariableGet(name.(*core.SymbolInstance).Value, target, target)
@@ -165,7 +169,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		vm.currentFrame().ip += 2
 
-		name := kernel.GetConst(constIndex)
+		name := heap.GetConstant(constIndex)
 		val := vm.StackTop()
 		target := vm.ctx.Self
 
@@ -267,7 +271,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 }
 
 func (vm *VM) closeBlock(constIndex, numFreeVars int) {
-	constant := kernel.GetConst(uint16(constIndex))
+	constant := heap.GetConstant(uint16(constIndex))
 	block, ok := constant.(*object.Block)
 	if !ok {
 		panic(fmt.Errorf("not a block: %+v", constant))

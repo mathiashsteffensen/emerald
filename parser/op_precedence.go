@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"emerald/lexer"
+	"emerald/parser/lexer"
 )
 
 const (

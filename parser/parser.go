@@ -2,8 +2,8 @@ package parser
 
 import (
 	"bytes"
-	"emerald/ast"
-	"emerald/lexer"
+	ast "emerald/parser/ast"
+	"emerald/parser/lexer"
 	"fmt"
 	"strconv"
 )
@@ -542,8 +542,6 @@ func (p *Parser) parseIndexAccessor(left ast.Expression) ast.Expression {
 	node.Method = &ast.IdentifierExpression{Value: "[]"}
 
 	node.Arguments = p.parseExpressionList(lexer.RBRACKET)
-
-	p.nextToken()
 
 	return node
 }

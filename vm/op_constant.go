@@ -3,14 +3,14 @@ package vm
 import (
 	"emerald/compiler"
 	"emerald/core"
-	"emerald/kernel"
+	"emerald/heap"
 	"emerald/object"
 	"fmt"
 )
 
 func (vm *VM) executeOpConstantGet(ins compiler.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
-	name := kernel.GetConst(nameIndex).(*core.SymbolInstance).Value
+	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 
 	value, err := getConst(vm.ctx.Self, name)
 	if err != nil {
@@ -22,7 +22,7 @@ func (vm *VM) executeOpConstantGet(ins compiler.Instructions, ip int) {
 
 func (vm *VM) executeOpConstantSet(ins compiler.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
-	name := kernel.GetConst(nameIndex).(*core.SymbolInstance).Value
+	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 	// Don't pop it from the stack, we leave it there since assignment expressions return the assigned value
 	value := vm.StackTop()
 
@@ -31,7 +31,7 @@ func (vm *VM) executeOpConstantSet(ins compiler.Instructions, ip int) {
 
 func (vm *VM) executeOpConstantGetOrSet(ins compiler.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
-	name := kernel.GetConst(nameIndex).(*core.SymbolInstance).Value
+	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 	valueIndex := compiler.ReadUint16(ins[ip+3:])
 	vm.currentFrame().ip += 2
 
@@ -39,7 +39,7 @@ func (vm *VM) executeOpConstantGetOrSet(ins compiler.Instructions, ip int) {
 
 	value, err := getConst(self, name)
 	if err != nil {
-		value = kernel.GetConst(valueIndex)
+		value = heap.GetConstant(valueIndex)
 
 		// If self is an instance, define the constant on the class
 		if self.Type() == object.INSTANCE_VALUE {
@@ -54,7 +54,7 @@ func (vm *VM) executeOpConstantGetOrSet(ins compiler.Instructions, ip int) {
 
 func (vm *VM) executeOpScopedConstantGet(ins compiler.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
-	name := kernel.GetConst(nameIndex).(*core.SymbolInstance).Value
+	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 
 	self := vm.pop()
 

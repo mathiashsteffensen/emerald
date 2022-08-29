@@ -1,6 +1,8 @@
 package compiler
 
-import "emerald/ast"
+import (
+	"emerald/parser/ast"
+)
 
 func (c *Compiler) compileArrayLiteral(node *ast.ArrayLiteral) error {
 	for _, val := range node.Value {

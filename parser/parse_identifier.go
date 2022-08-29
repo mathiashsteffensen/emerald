@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"emerald/ast"
-	"emerald/lexer"
+	ast "emerald/parser/ast"
+	"emerald/parser/lexer"
 )
 
 func (p *Parser) parseIdentifierExpression() ast.Expression {

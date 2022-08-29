@@ -1,9 +1,9 @@
 package compiler
 
 import (
-	"emerald/ast"
 	"emerald/core"
 	"emerald/object"
+	ast "emerald/parser/ast"
 )
 
 func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
@@ -45,7 +45,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int, err
 	}
 
 	freeSymbols := c.symbolTable.FreeSymbols
-	numLocals := c.symbolTable.numDefinitions
+	numLocals := c.symbolTable.NumDefinitions
 	instructions := c.leaveScope()
 
 	for _, s := range freeSymbols {

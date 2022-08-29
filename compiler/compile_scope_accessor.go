@@ -1,8 +1,8 @@
 package compiler
 
 import (
-	"emerald/ast"
 	"emerald/core"
+	"emerald/parser/ast"
 )
 
 func (c *Compiler) compileScopeAccessor(node *ast.ScopeAccessor) {

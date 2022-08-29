@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"emerald/ast"
+	ast "emerald/parser/ast"
 	"testing"
 )
 

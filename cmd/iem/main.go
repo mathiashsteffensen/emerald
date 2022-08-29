@@ -7,12 +7,12 @@ import (
 	"os"
 )
 
-var outputBytecode = flag.Bool("output-bytecode", false, "EM_DEBUG=true iem --output-bytecode")
+var outputMode = flag.String("outmode", "inspect", "EM_DEBUG=1 iem -outmode=ast")
 
 func main() {
 	log.ExperimentalWarning()
 
 	flag.Parse()
 
-	repl.Start(os.Stdin, os.Stdout, repl.Config{OutputBytecode: *outputBytecode})
+	repl.Start(os.Stdin, os.Stdout, repl.Config{OutputBytecode: *outputMode == "bytecode", AstMode: *outputMode == "ast"})
 }

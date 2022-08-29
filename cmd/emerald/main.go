@@ -3,9 +3,9 @@ package main
 import (
 	"emerald/compiler"
 	"emerald/core"
-	"emerald/lexer"
 	"emerald/log"
 	"emerald/parser"
+	"emerald/parser/lexer"
 	"emerald/types"
 	"emerald/vm"
 	"flag"
@@ -51,7 +51,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	c := compiler.New(compiler.WithBuiltIns())
+	c := compiler.New()
 
 	err = c.Compile(program)
 	checkError("Compilation failed", err)

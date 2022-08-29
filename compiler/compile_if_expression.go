@@ -1,6 +1,8 @@
 package compiler
 
-import "emerald/ast"
+import (
+	"emerald/parser/ast"
+)
 
 func (c *Compiler) compileIfExpression(node *ast.IfExpression) error {
 	err := c.Compile(node.Condition)

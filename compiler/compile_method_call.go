@@ -1,6 +1,8 @@
 package compiler
 
-import "emerald/ast"
+import (
+	"emerald/parser/ast"
+)
 
 func (c *Compiler) compileMethodCall(node *ast.MethodCall) error {
 	err := c.Compile(node.Left)

@@ -2,9 +2,10 @@ package repl
 
 import (
 	"emerald/compiler"
-	"emerald/lexer"
 	"emerald/log"
 	"emerald/parser"
+	"emerald/parser/ast"
+	"emerald/parser/lexer"
 	"emerald/vm"
 	"fmt"
 	"github.com/chzyer/readline"
@@ -15,6 +16,7 @@ const PROMPT_FMT = "iem(main):%03d:0> "
 
 type Config struct {
 	OutputBytecode bool
+	AstMode        bool
 }
 
 func Start(in io.ReadCloser, out io.Writer, config Config) {
@@ -33,9 +35,9 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 
 	lineCount := 1
 
-	symbolTable := compiler.NewSymbolTable()
-
 	var line string
+
+	astNodes := []*ast.AST{}
 
 	for {
 		fmt.Fprintf(out, PROMPT_FMT, lineCount)
@@ -71,7 +73,15 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			continue
 		}
 
-		comp := compiler.New(compiler.WithState(symbolTable), compiler.WithBuiltIns())
+		if config.AstMode {
+			astNodes = append(astNodes, program)
+			for _, node := range astNodes {
+				fmt.Fprintf(out, "%s\n", node.String())
+			}
+			continue
+		}
+
+		comp := compiler.New()
 
 		err := comp.Compile(program)
 		if err != nil {

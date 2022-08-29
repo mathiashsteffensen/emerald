@@ -1,6 +1,7 @@
 package core
 
 import (
+	"emerald/heap"
 	"emerald/object"
 	"fmt"
 	"github.com/dlclark/regexp2"
@@ -26,6 +27,7 @@ func InitRegexp() {
 	Regexp = DefineClass(Object, "Regexp", Object)
 
 	DefineSingletonMethod(Regexp, "new", regexpNew())
+	DefineSingletonMethod(Regexp, "last_match", regexpLastMatch())
 
 	DefineMethod(Regexp, "inspect", regexpInspect())
 	DefineMethod(Regexp, "match", regexpMatch())
@@ -35,6 +37,16 @@ func InitRegexp() {
 func regexpNew() object.BuiltInMethod {
 	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewRegexp(args[0].(*StringInstance).Value)
+	}
+}
+
+func regexpLastMatch() object.BuiltInMethod {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		lastMatch := heap.GetGlobalVariableString("$~")
+		if lastMatch == nil {
+			return NULL
+		}
+		return lastMatch
 	}
 }
 
@@ -51,9 +63,13 @@ func regexpMatch() object.BuiltInMethod {
 }
 
 func regexStringMatch(regex *RegexpInstance, str *StringInstance) object.EmeraldValue {
-	if isMatch, _ := regex.Expression.MatchString(str.Value); isMatch {
-		return TRUE
-	}
+	if m, err := regex.Expression.FindStringMatch(str.Value); err != nil {
+		panic(err)
+	} else if m == nil {
+		return NULL
+	} else {
+		result := NewMatchData(regex, m)
 
-	return FALSE
+		return result
+	}
 }

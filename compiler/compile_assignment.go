@@ -1,8 +1,9 @@
 package compiler
 
 import (
-	"emerald/ast"
 	"emerald/core"
+	"emerald/heap"
+	ast "emerald/parser/ast"
 	"unicode"
 )
 
@@ -27,9 +28,9 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) error {
 		}
 
 		switch symbol.Scope {
-		case GlobalScope:
+		case heap.GlobalScope:
 			c.emit(OpSetGlobal, symbol.Index)
-		case LocalScope:
+		case heap.LocalScope:
 			c.emit(OpSetLocal, symbol.Index)
 		}
 	case *ast.InstanceVariable:

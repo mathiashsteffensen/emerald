@@ -16,20 +16,12 @@ func TestString_to_sym(t *testing.T) {
 func TestString_match(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			input:    `"a" =~ /a/`,
+			input:    `("a" =~ /a/).is_a?(MatchData)`,
 			expected: true,
 		},
 		{
-			input:    `"a" =~ /b/`,
-			expected: false,
-		},
-		{
-			input:    `"a".match(/a/)`,
+			input:    `"a".match(/a/).is_a?(MatchData)`,
 			expected: true,
-		},
-		{
-			input:    `"a".match(/b/)`,
-			expected: false,
 		},
 	}
 

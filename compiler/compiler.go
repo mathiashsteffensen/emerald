@@ -1,12 +1,12 @@
 package compiler
 
 import (
-	"emerald/ast"
 	"emerald/core"
-	"emerald/kernel"
-	"emerald/lexer"
+	"emerald/heap"
 	"emerald/object"
 	"emerald/parser"
+	"emerald/parser/ast"
+	"emerald/parser/lexer"
 	"fmt"
 )
 
@@ -17,7 +17,7 @@ type EmittedInstruction struct {
 
 type Compiler struct {
 	instructions        Instructions
-	symbolTable         *SymbolTable
+	symbolTable         *heap.SymbolTable
 	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
 	scopes              []CompilationScope
@@ -35,7 +35,7 @@ func New(options ...ConstructorOption) *Compiler {
 
 	c := &Compiler{
 		instructions:        Instructions{},
-		symbolTable:         NewSymbolTable(),
+		symbolTable:         heap.GlobalSymbolTable,
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
 		scopes:              []CompilationScope{mainScope},
@@ -46,18 +46,6 @@ func New(options ...ConstructorOption) *Compiler {
 	}
 
 	return c
-}
-
-func WithState(s *SymbolTable) ConstructorOption {
-	return func(c *Compiler) {
-		c.symbolTable = s
-	}
-}
-
-func WithBuiltIns() ConstructorOption {
-	return func(c *Compiler) {
-		// No-op
-	}
 }
 
 func init() {
@@ -225,7 +213,7 @@ func (c *Compiler) enterScope() {
 	c.scopes = append(c.scopes, scope)
 	c.scopeIndex++
 
-	c.symbolTable = NewEnclosedSymbolTable(c.symbolTable)
+	c.symbolTable = heap.NewEnclosedSymbolTable(c.symbolTable)
 }
 
 func (c *Compiler) leaveScope() Instructions {
@@ -285,13 +273,13 @@ func (c *Compiler) emitConstantGetOrSet(name string, value object.EmeraldValue) 
 	c.emit(OpConstantGetOrSet, c.addConstant(symbol), c.addConstant(value))
 }
 
-func (c *Compiler) emitSymbol(symbol Symbol) {
+func (c *Compiler) emitSymbol(symbol heap.Symbol) {
 	switch symbol.Scope {
-	case GlobalScope:
+	case heap.GlobalScope:
 		c.emit(OpGetGlobal, symbol.Index)
-	case LocalScope:
+	case heap.LocalScope:
 		c.emit(OpGetLocal, symbol.Index)
-	case FreeScope:
+	case heap.FreeScope:
 		c.emit(OpGetFree, symbol.Index)
 	}
 }
@@ -321,5 +309,5 @@ func (c *Compiler) setLastInstruction(op Opcode, pos int) {
 
 // addConstant adds a constant to the constant stack and returns its location
 func (c *Compiler) addConstant(obj object.EmeraldValue) int {
-	return kernel.AddConst(obj)
+	return heap.AddConstant(obj)
 }
