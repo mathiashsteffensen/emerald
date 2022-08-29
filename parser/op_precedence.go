@@ -7,29 +7,29 @@ import (
 const (
 	_ int = iota
 	LOWEST
-	MODIFIER    // val = 10 if true
-	BOOL_OR     // ||
-	BOOL_AND    // &&
-	EQUALS      // ==
-	LESSGREATER // > or <
-	SUM         // +
-	PRODUCT     // *
-	PREFIX      // -X or !X
-	CALL        // myFunction(X)
-	ACCESSOR    // myHash.property
+	MODIFIER   // val = 10 if true
+	BOOL_OR    // ||
+	BOOL_AND   // &&
+	COMPARATOR // ==
+	ORDERING   // > or <
+	SUM        // +
+	PRODUCT    // *
+	PREFIX     // -X or !X
+	CALL       // myFunction(X)
+	ACCESSOR   // myHash.property
 )
 
 var precedences = map[lexer.TokenType]int{
 	lexer.IF:        MODIFIER,
 	lexer.BOOL_OR:   BOOL_OR,
 	lexer.BOOL_AND:  BOOL_AND,
-	lexer.SPACESHIP: EQUALS,
-	lexer.EQ:        EQUALS,
-	lexer.NOT_EQ:    EQUALS,
-	lexer.LT:        LESSGREATER,
-	lexer.GT:        LESSGREATER,
-	lexer.LT_OR_EQ:  LESSGREATER,
-	lexer.GT_OR_EQ:  LESSGREATER,
+	lexer.SPACESHIP: COMPARATOR,
+	lexer.EQ:        COMPARATOR,
+	lexer.NOT_EQ:    COMPARATOR,
+	lexer.LT:        ORDERING,
+	lexer.GT:        ORDERING,
+	lexer.LT_OR_EQ:  ORDERING,
+	lexer.GT_OR_EQ:  ORDERING,
 	lexer.PLUS:      SUM,
 	lexer.MINUS:     SUM,
 	lexer.SLASH:     PRODUCT,

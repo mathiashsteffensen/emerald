@@ -9,13 +9,15 @@ var Regexp *object.Class
 
 type RegexpInstance struct {
 	*object.Instance
-	expression *regexp2.Regexp
+	Source     string
+	Expression *regexp2.Regexp
 }
 
 func NewRegexp(pattern string) *RegexpInstance {
 	return &RegexpInstance{
 		Instance:   Regexp.New(),
-		expression: regexp2.MustCompile(pattern, 0),
+		Source:     pattern,
+		Expression: regexp2.MustCompile(pattern, 0),
 	}
 }
 
@@ -41,7 +43,7 @@ func regexpMatch() object.BuiltInMethod {
 }
 
 func regexStringMatch(regex *RegexpInstance, str *StringInstance) object.EmeraldValue {
-	if isMatch, _ := regex.expression.MatchString(str.Value); isMatch {
+	if isMatch, _ := regex.Expression.MatchString(str.Value); isMatch {
 		return TRUE
 	}
 

@@ -15,6 +15,7 @@ const (
 	INT    TokenType = "INT"
 	FLOAT  TokenType = "FLOAT"
 	STRING TokenType = "STRING"
+	REGEXP TokenType = "REGEXP"
 
 	// Operators
 	ASSIGN          TokenType = "="

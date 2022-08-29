@@ -19,7 +19,7 @@ func TestNextToken(t *testing.T) {
 	@result.method
 
 	print(result)
-	!-/*5;
+	!-*5;
 	5 < 10 > 5;
 
 	[] << 5
@@ -49,7 +49,8 @@ func TestNextToken(t *testing.T) {
 	[0, 1]
 	nil &&= ||= module
 	begin rescue ensure
-	$: $LOAD_PATH Integer::MAX <=>`
+	$: $LOAD_PATH Integer::MAX <=>
+	/^[w]|abc/`
 
 	tests := []struct {
 		expectedType    TokenType
@@ -107,7 +108,6 @@ func TestNextToken(t *testing.T) {
 		{NEWLINE, "\n"},
 		{BANG, "!"},
 		{MINUS, "-"},
-		{SLASH, "/"},
 		{ASTERISK, "*"},
 		{INT, "5"},
 		{SEMICOLON, ";"},
@@ -259,6 +259,8 @@ func TestNextToken(t *testing.T) {
 		{SCOPE, "::"},
 		{IDENT, "MAX"},
 		{SPACESHIP, "<=>"},
+		{NEWLINE, "\n"},
+		{REGEXP, "^[w]|abc"},
 		{EOF, ""},
 	}
 

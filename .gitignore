@@ -4,6 +4,7 @@
 # Executables
 emerald
 iem
+!stdlib/iem
 
 # tmp files
 tmp

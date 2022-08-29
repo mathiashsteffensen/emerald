@@ -173,6 +173,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.SymbolLiteral:
 		sym := core.NewSymbol(node.Value)
 		c.emit(OpPushConstant, c.addConstant(sym))
+	case *ast.RegexpLiteral:
+		c.compileRegexpLiteral(node)
 	case *ast.ArrayLiteral:
 		err := c.compileArrayLiteral(node)
 		if err != nil {

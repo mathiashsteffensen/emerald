@@ -13,6 +13,7 @@ type Lexer struct {
 	nextPosition int
 	currentChar  byte // current char under examination
 	outputChan   chan Token
+	lastEmitted  Token
 }
 
 func New(input *Input) *Lexer {
@@ -145,7 +146,12 @@ func (l *Lexer) Run() {
 			case '-':
 				tok = l.newToken(MINUS, l.currentChar)
 			case '/':
-				tok = l.newToken(SLASH, l.currentChar)
+				if l.isRegexpStart() {
+					pattern := l.readRegexp()
+					tok = l.newTokenStr(REGEXP, pattern)
+				} else {
+					tok = l.newToken(SLASH, l.currentChar)
+				}
 			case '*':
 				tok = l.newToken(ASTERISK, l.currentChar)
 			case '{':
@@ -278,6 +284,7 @@ func (l *Lexer) Close() {
 }
 
 func (l *Lexer) sendToken(token Token) {
+	l.lastEmitted = token
 	l.outputChan <- token
 }
 
@@ -317,7 +324,7 @@ func (l *Lexer) peekChar() byte {
 }
 
 func (l *Lexer) eatWhitespace() {
-	for l.currentChar == ' ' || l.currentChar == '\t' || l.currentChar == '\r' {
+	for isWhiteSpace(l.currentChar) {
 		l.readChar()
 	}
 }
@@ -341,8 +348,15 @@ func (l *Lexer) readString() string {
 	return l.currentInput.content[position:l.position]
 }
 
-func isDigit(ch byte) bool {
-	return '0' <= ch && ch <= '9'
+func (l *Lexer) readRegexp() string {
+	position := l.position + 1
+	for {
+		l.readChar()
+		if l.currentChar == '/' || l.currentChar == 0 {
+			break
+		}
+	}
+	return l.currentInput.content[position:l.position]
 }
 
 func (l *Lexer) readIdentifier() string {
@@ -358,6 +372,10 @@ func (l *Lexer) readIdentifier() string {
 	return l.currentInput.content[position:l.position]
 }
 
-func isLetter(ch byte) bool {
-	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+func (l *Lexer) ReadWhile(condition func() bool) string {
+	position := l.position + 1
+	for condition() {
+		l.readChar()
+	}
+	return l.currentInput.content[position:l.position]
 }

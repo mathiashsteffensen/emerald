@@ -107,26 +107,23 @@ func testConstants(
 				return fmt.Errorf("constant %d - testFloatObject failed: %s", i, err)
 			}
 		case string:
-			var err error
-
 			if strings.HasPrefix(constant, ":") {
-				err = testSymbolObject(constant, actual[i])
-			} else {
-				if strings.HasPrefix(constant, "class:") {
-					err = testClassObject(constant[6:], actual[i])
-				} else {
-					if strings.HasPrefix(constant, "module:") {
-						err = testModuleObject(constant[7:], actual[i])
-					} else {
-						err = testStringObject(constant, actual[i])
-					}
-				}
+				return testSymbolObject(constant, actual[i])
 			}
 
-			if err != nil {
-				return fmt.Errorf("constant %d - testStringObject failed: %s",
-					i, err)
+			if strings.HasPrefix(constant, "/") && strings.HasSuffix(constant, "/") {
+				return testRegexpObject(constant[1:len(constant)-1], actual[i])
 			}
+
+			if strings.HasPrefix(constant, "class:") {
+				return testClassObject(constant[6:], actual[i])
+			}
+
+			if strings.HasPrefix(constant, "module:") {
+				return testModuleObject(constant[7:], actual[i])
+			}
+
+			return testStringObject(constant, actual[i])
 		case []Instructions:
 			fn, ok := actual[i].(*object.Block)
 			if !ok {
@@ -172,6 +169,17 @@ func testStringObject(expected string, actual object.EmeraldValue) error {
 	}
 	if result.Value != expected {
 		return fmt.Errorf("object has wrong value. got=%q, want=%q", result.Value, expected)
+	}
+	return nil
+}
+
+func testRegexpObject(expected string, actual object.EmeraldValue) error {
+	result, ok := actual.(*core.RegexpInstance)
+	if !ok {
+		return fmt.Errorf("object is not Regexp. got=%T (%+v)", actual, actual)
+	}
+	if result.Source != expected {
+		return fmt.Errorf("object has wrong value. got=%q, want=%q", result.Source, expected)
 	}
 	return nil
 }
