@@ -6,4 +6,4 @@ def fib(n)
   fib(n - 1) + fib(n - 2)
 end
 
-fib(28)
+fib(23)

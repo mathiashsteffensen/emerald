@@ -84,24 +84,19 @@ func (l *Lexer) Run() {
 				}
 				continue
 			case '=':
-				if l.peekChar() == '=' {
-					char := l.currentChar
-					l.readChar()
-					tok = Token{Type: EQ, Literal: string(char) + string(l.currentChar)}
-				} else {
-					if l.peekChar() == '>' {
-						char := l.currentChar
-						l.readChar()
-						tok = Token{Type: ARROW, Literal: string(char) + string(l.currentChar), Line: l.Line, Column: l.Column, Pos: l.position}
-					} else {
-						tok = l.newToken(ASSIGN, l.currentChar)
-					}
+				switch l.peekChar() {
+				case '=':
+					tok = l.combineCurrentAndPeek(EQ)
+				case '>':
+					tok = l.combineCurrentAndPeek(ARROW)
+				case '~':
+					tok = l.combineCurrentAndPeek(MATCH)
+				default:
+					tok = l.newToken(ASSIGN, l.currentChar)
 				}
 			case '!':
 				if l.peekChar() == '=' {
-					char := l.currentChar
-					l.readChar()
-					tok = Token{Type: NOT_EQ, Literal: string(char) + string(l.currentChar)}
+					tok = l.combineCurrentAndPeek(NOT_EQ)
 				} else {
 					tok = l.newToken(BANG, l.currentChar)
 				}
@@ -298,6 +293,12 @@ func (l *Lexer) newToken(tokenType TokenType, ch byte) Token {
 
 func (l *Lexer) newTokenStr(tokenType TokenType, str string) Token {
 	return Token{Type: tokenType, Literal: str, Line: l.Line, Column: l.Column, Pos: l.position}
+}
+
+func (l *Lexer) combineCurrentAndPeek(typ TokenType) Token {
+	char := l.currentChar
+	l.readChar()
+	return l.newTokenStr(typ, string(char)+string(l.currentChar))
 }
 
 func (l *Lexer) readChar() {

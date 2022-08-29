@@ -34,6 +34,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 		{"false && true", false, "&&", true},
 		{"false || true", false, "||", true},
 		{"1 <=> 2", 1, "<=>", 2},
+		{"regex =~ string", "regex", "=~", "string"},
 	}
 
 	for _, tt := range infixTests {

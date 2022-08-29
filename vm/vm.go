@@ -89,6 +89,30 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		constIndex := vm.readUint16(ins, ip)
 
 		vm.push(kernel.GetConst(constIndex))
+	case compiler.OpAdd:
+		vm.evalInfixOperator("+")
+	case compiler.OpSub:
+		vm.evalInfixOperator("-")
+	case compiler.OpDiv:
+		vm.evalInfixOperator("/")
+	case compiler.OpMul:
+		vm.evalInfixOperator("*")
+	case compiler.OpMatch:
+		vm.evalInfixOperator("=~")
+	case compiler.OpSpaceship:
+		vm.evalInfixOperator("<=>")
+	case compiler.OpLessThan:
+		vm.evalInfixOperator("<")
+	case compiler.OpLessThanOrEq:
+		vm.evalInfixOperator("<=")
+	case compiler.OpGreaterThan:
+		vm.evalInfixOperator(">")
+	case compiler.OpGreaterThanOrEq:
+		vm.evalInfixOperator(">=")
+	case compiler.OpEqual:
+		vm.evalInfixOperator("==")
+	case compiler.OpNotEqual:
+		vm.evalInfixOperator("!=")
 	case compiler.OpJump:
 		pos := int(compiler.ReadUint16(ins[ip+1:]))
 		vm.currentFrame().ip = pos - 1
@@ -233,23 +257,12 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 	case compiler.OpStaticFalse:
 		vm.ctx.Self = vm.ctx.Self.(*object.SingletonClass).Instance
 	default:
-		if opString, ok := infixOperators[op]; ok {
-			left := vm.pop()
-
-			result, sendErr := left.SEND(vm.ctx, vm.EvalBlock, opString, left, nil, vm.StackTop())
-			if sendErr != nil {
-				vm.stack[vm.sp-1] = core.NewStandardError(sendErr.Error())
-			} else {
-				vm.stack[vm.sp-1] = result
-			}
-		} else {
-			def, err := compiler.Lookup(byte(op))
-			if err != nil {
-				panic(err)
-			}
-
-			panic(fmt.Errorf("opcode not implemented %s", def.Name))
+		def, err := compiler.Lookup(byte(op))
+		if err != nil {
+			panic(err)
 		}
+
+		panic(fmt.Errorf("opcode not implemented %s", def.Name))
 	}
 }
 
@@ -298,6 +311,17 @@ func (vm *VM) callFunction(numArgs int) {
 			vm.push(result)
 		}
 	})
+}
+
+func (vm *VM) evalInfixOperator(op string) {
+	left := vm.pop()
+
+	result, sendErr := left.SEND(vm.ctx, vm.EvalBlock, op, left, nil, vm.StackTop())
+	if sendErr != nil {
+		vm.stack[vm.sp-1] = core.NewStandardError(sendErr.Error())
+	} else {
+		vm.stack[vm.sp-1] = result
+	}
 }
 
 func (vm *VM) Context() *object.Context {

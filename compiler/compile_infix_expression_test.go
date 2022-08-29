@@ -215,6 +215,17 @@ func TestCompileInfixExpression(t *testing.T) {
 				Make(OpPop),
 			},
 		},
+		{
+			name:              "matching",
+			input:             `/a/ =~ "a"`,
+			expectedConstants: []any{"a", "/a/"},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpPushConstant, 1),
+				Make(OpMatch),
+				Make(OpPop),
+			},
+		},
 	}
 
 	runCompilerTests(t, tests)

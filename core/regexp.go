@@ -2,6 +2,7 @@ package core
 
 import (
 	"emerald/object"
+	"fmt"
 	"github.com/dlclark/regexp2"
 )
 
@@ -26,6 +27,7 @@ func InitRegexp() {
 
 	DefineSingletonMethod(Regexp, "new", regexpNew())
 
+	DefineMethod(Regexp, "inspect", regexpInspect())
 	DefineMethod(Regexp, "match", regexpMatch())
 	DefineMethod(Regexp, "=~", regexpMatch())
 }
@@ -33,6 +35,12 @@ func InitRegexp() {
 func regexpNew() object.BuiltInMethod {
 	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewRegexp(args[0].(*StringInstance).Value)
+	}
+}
+
+func regexpInspect() object.BuiltInMethod {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(fmt.Sprintf("/%s/", self.(*RegexpInstance).Source))
 	}
 }
 

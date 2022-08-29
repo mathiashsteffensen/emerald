@@ -29,6 +29,7 @@ const (
 	GT              TokenType = ">"
 	EQ              TokenType = "=="
 	NOT_EQ          TokenType = "!="
+	MATCH           TokenType = "=~"
 	LT_OR_EQ        TokenType = "<="
 	GT_OR_EQ        TokenType = ">="
 	APPEND          TokenType = "<<"

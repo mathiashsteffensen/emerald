@@ -50,7 +50,7 @@ func TestNextToken(t *testing.T) {
 	nil &&= ||= module
 	begin rescue ensure
 	$: $LOAD_PATH Integer::MAX <=>
-	/^[w]|abc/`
+	/^[w]|abc/ =~`
 
 	tests := []struct {
 		expectedType    TokenType
@@ -261,6 +261,7 @@ func TestNextToken(t *testing.T) {
 		{SPACESHIP, "<=>"},
 		{NEWLINE, "\n"},
 		{REGEXP, "^[w]|abc"},
+		{MATCH, "=~"},
 		{EOF, ""},
 	}
 

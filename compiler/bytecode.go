@@ -34,6 +34,7 @@ const (
 	OpSub
 	OpMul
 	OpDiv
+	OpMatch
 	OpSpaceship
 	OpEqual
 	OpNotEqual
@@ -137,6 +138,7 @@ var definitions = map[Opcode]*Definition{
 	OpSub:                  {"OpSub", []int{}},
 	OpMul:                  {"OpMul", []int{}},
 	OpDiv:                  {"OpDiv", []int{}},
+	OpMatch:                {"OpMatch", []int{}},
 	OpSpaceship:            {"OpSpaceship", []int{}},
 	OpEqual:                {"OpEqual", []int{}},
 	OpNotEqual:             {"OpNotEqual", []int{}},

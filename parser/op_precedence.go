@@ -23,6 +23,7 @@ var precedences = map[lexer.TokenType]int{
 	lexer.IF:        MODIFIER,
 	lexer.BOOL_OR:   BOOL_OR,
 	lexer.BOOL_AND:  BOOL_AND,
+	lexer.MATCH:     COMPARATOR,
 	lexer.SPACESHIP: COMPARATOR,
 	lexer.EQ:        COMPARATOR,
 	lexer.NOT_EQ:    COMPARATOR,

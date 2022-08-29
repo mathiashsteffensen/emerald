@@ -29,6 +29,8 @@ func InitString() {
 	DefineMethod(String, "==", stringEquals())
 	DefineMethod(String, "+", stringAdd())
 	DefineMethod(String, "upcase", stringUpcase())
+	DefineMethod(String, "match", stringMatch())
+	DefineMethod(String, "=~", stringMatch())
 }
 
 func stringToS() object.BuiltInMethod {
@@ -86,5 +88,11 @@ func stringAdd() object.BuiltInMethod {
 func stringUpcase() object.BuiltInMethod {
 	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString(strings.ToUpper(target.(*StringInstance).Value))
+	}
+}
+
+func stringMatch() object.BuiltInMethod {
+	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+		return regexStringMatch(args[0].(*RegexpInstance), self.(*StringInstance))
 	}
 }
