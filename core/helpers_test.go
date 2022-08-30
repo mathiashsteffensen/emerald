@@ -193,7 +193,7 @@ func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual o
 func testIntegerObject(expected int64, actual object.EmeraldValue) error {
 	result, ok := actual.(*core.IntegerInstance)
 	if !ok {
-		return fmt.Errorf("object is not IntegerInstance. got=%T (%+v)", actual, actual)
+		return fmt.Errorf("object is not IntegerInstance. got=%s", actual.Inspect())
 	}
 	if result.Value != expected {
 		return fmt.Errorf("object has wrong value. got=%d, want=%d", result.Value, expected)

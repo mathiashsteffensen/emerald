@@ -49,8 +49,14 @@ func InitClass() {
 
 				return NewString(namespaces.String())
 			},
-			"new": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return target.(*object.Class).New()
+			"new": func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+				instance := self.(*object.Class).New()
+
+				if instance.RespondsTo("initialize", instance) {
+					Send(instance, "initialize", block, args...)
+				}
+
+				return instance
 			},
 		},
 		object.BuiltInMethodSet{

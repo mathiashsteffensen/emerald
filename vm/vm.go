@@ -21,9 +21,7 @@ type VM struct {
 	framesIndex int
 }
 
-type ConstructorOption func(vm *VM)
-
-func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
+func New(bytecode *compiler.Bytecode) *VM {
 	mainBlock := &object.ClosedBlock{Block: &object.Block{Instructions: bytecode.Instructions}}
 	mainFrame := NewFrame(mainBlock, 0)
 
@@ -38,8 +36,8 @@ func New(bytecode *compiler.Bytecode, options ...ConstructorOption) *VM {
 		framesIndex: 1,
 	}
 
-	for _, option := range options {
-		option(vm)
+	core.Send = func(self object.EmeraldValue, name string, block object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		return vm.Send(self, name, block, args...)
 	}
 
 	return vm
@@ -320,7 +318,7 @@ func (vm *VM) callFunction(numArgs int) {
 func (vm *VM) evalInfixOperator(op string) {
 	left := vm.pop()
 
-	result, sendErr := left.SEND(vm.ctx, vm.EvalBlock, op, left, nil, vm.StackTop())
+	result, sendErr := left.SEND(vm.ctx, vm.Yield, op, left, nil, vm.StackTop())
 	if sendErr != nil {
 		vm.stack[vm.sp-1] = core.NewStandardError(sendErr.Error())
 	} else {

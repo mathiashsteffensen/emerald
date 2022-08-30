@@ -52,3 +52,29 @@ func TestClass_name(t *testing.T) {
 
 	runCoreTests(t, tests)
 }
+
+func TestClass_new_instance(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input: `
+				module MyMod
+					class MyClass
+						def initialize(value)
+							@value = value
+						end
+
+						def value
+							@value
+						end
+					end
+				end
+
+				instance = MyMod::MyClass.new(2)
+				instance.value
+			`,
+			expected: 2,
+		},
+	}
+
+	runCoreTests(t, tests)
+}
