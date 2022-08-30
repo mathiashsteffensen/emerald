@@ -25,6 +25,20 @@ func expectStatementLength(t *testing.T, stmt []ast.Statement, length int) {
 	}
 }
 
+func testExpressionStatement[T ast.Expression](t *testing.T, stmt ast.Statement, cb func(expression T)) {
+	exprStmt, ok := stmt.(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("stmt is not ast.ExpressionStatement. got=%T", stmt)
+	}
+	
+	exp, ok := exprStmt.Expression.(T)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.MethodCall. got=%T", exprStmt.Expression)
+	}
+
+	cb(exp)
+}
+
 func testInfixExpression(t *testing.T, exp ast.Expression, left any, operator string, right any) bool {
 	opExp, ok := exp.(*ast.InfixExpression)
 	if !ok {

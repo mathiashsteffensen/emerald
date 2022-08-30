@@ -257,7 +257,7 @@ func (p *Parser) parseStringLiteral() ast.Expression {
 func (p *Parser) parseSymbolLiteral() ast.Expression {
 	symbol := &ast.SymbolLiteral{Token: p.curToken}
 
-	if !p.expectPeekMultiple(lexer.IDENT, lexer.STRING) {
+	if !p.expectPeekMultiple(true, lexer.IDENT, lexer.STRING) {
 		return nil
 	}
 
@@ -407,6 +407,40 @@ func (p *Parser) parseExpressionList(delim lexer.TokenType) []ast.Expression {
 	return args
 }
 
+// Tokens that signify the end of a method call without parentheses
+var endOfMethodArgsWithoutParenthesesTokens = []lexer.TokenType{
+	lexer.EOF,
+	lexer.NEWLINE,
+	lexer.DO,     // When passed a block
+	lexer.LBRACE, // When passed a block
+	lexer.RBRACE, // When last expression in a single line block
+	lexer.RPAREN, // when part of a grouped expression
+}
+
+func (p *Parser) parseMethodArgsWithoutParentheses() []ast.Expression {
+	args := []ast.Expression{}
+
+	if p.peekPrecedence() != LOWEST || p.peekTokenIsMultiple(endOfMethodArgsWithoutParenthesesTokens...) {
+		return args
+	}
+
+	p.nextToken()
+
+	args = append(args, p.parseExpression(LOWEST))
+
+	for p.peekTokenIs(lexer.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if p.peekTokenIsMultiple(endOfMethodArgsWithoutParenthesesTokens...) {
+		p.nextToken()
+	}
+
+	return args
+}
+
 func (p *Parser) parseHashLiteral() ast.Expression {
 	value := make(map[ast.Expression]ast.Expression)
 
@@ -509,34 +543,6 @@ func (p *Parser) parseStaticClassLiteral() ast.Expression {
 	return class
 }
 
-func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
-	node := &ast.MethodCall{Token: p.curToken, Left: left, CallExpression: &ast.CallExpression{}}
-
-	p.nextToken()
-
-	methodIdent := &ast.IdentifierExpression{Value: p.curToken.Literal, Token: p.curToken}
-
-	if p.peekTokenIs(lexer.LPAREN) {
-		p.nextToken()
-		node.Arguments = p.parseCallArguments()
-	} else if p.peekTokenIs(lexer.ASSIGN) {
-		methodIdent.Value = methodIdent.Value + p.peekToken.Literal
-		methodIdent.Token.Literal = methodIdent.TokenLiteral() + p.peekToken.Literal
-		p.nextToken()
-		p.nextToken()
-		node.Arguments = []ast.Expression{p.parseExpression(LOWEST)}
-	}
-
-	node.Method = methodIdent
-	node.Block = p.parseBlockLiteral()
-
-	if p.curTokenIs(lexer.DOT) {
-		return p.parseMethodCall(node)
-	}
-
-	return node
-}
-
 func (p *Parser) parseIndexAccessor(left ast.Expression) ast.Expression {
 	node := &ast.MethodCall{Token: p.curToken, Left: left, CallExpression: &ast.CallExpression{}}
 	node.Method = &ast.IdentifierExpression{Value: "[]"}
@@ -554,6 +560,16 @@ func (p *Parser) peekTokenIs(t lexer.TokenType) bool {
 	return p.peekToken.Type == t
 }
 
+func (p *Parser) peekTokenIsMultiple(types ...lexer.TokenType) bool {
+	for _, t := range types {
+		if p.peekTokenIs(t) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (p *Parser) expectPeek(t lexer.TokenType) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
@@ -564,12 +580,12 @@ func (p *Parser) expectPeek(t lexer.TokenType) bool {
 	}
 }
 
-func (p *Parser) expectPeekMultiple(types ...lexer.TokenType) bool {
-	for _, t := range types {
-		if p.peekTokenIs(t) {
+func (p *Parser) expectPeekMultiple(advance bool, types ...lexer.TokenType) bool {
+	if p.peekTokenIsMultiple(types...) {
+		if advance {
 			p.nextToken()
-			return true
 		}
+		return true
 	}
 
 	p.peekErrorMultiple(types...)

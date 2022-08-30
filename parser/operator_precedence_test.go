@@ -1,6 +1,8 @@
 package parser
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestOperatorPrecedence(t *testing.T) {
 	tests := []struct {
@@ -130,11 +132,13 @@ func TestOperatorPrecedence(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program := testParseAST(t, tt.input)
+		t.Run("", func(t *testing.T) {
+			program := testParseAST(t, tt.input)
 
-		actual := program.String()
-		if actual != tt.expected {
-			t.Errorf("expected=%q, got=%q", tt.expected, actual)
-		}
+			actual := program.String()
+			if actual != tt.expected {
+				t.Errorf("expected=%q, got=%q", tt.expected, actual)
+			}
+		})
 	}
 }
