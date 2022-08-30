@@ -45,7 +45,7 @@ The below is a list of the features on the roadmap and the ones that have alread
 - [x] method calls
     - [x] with parens
     - [x] without parens
-    - [ ] without parens with args
+    - [x] without parens with args
     - [x] with block arguments
 - [ ] conditionals
     - [x] if
@@ -142,7 +142,7 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] `%s{symbol}`
     - [x] singleton symbols
 - [ ] regexp
-    - [ ] `/regex/`
+    - [x] `/regex/`
     - [ ] `%r{regex}`
 - [ ] ranges
     - [ ] `..` inclusive
@@ -169,7 +169,7 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [x] `==` (equal)
     - [x] `!=` (not equal)
     - [ ] `===` (case equality)
-    - [ ] `=~` (pattern match)
+    - [x] `=~` (pattern match)
     - [ ] `!~` (does not match)
     - [ ] `<=>` (comparison or spaceship operator)
     - [x] `<=` (less or equal)
