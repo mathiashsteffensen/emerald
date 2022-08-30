@@ -11,4 +11,4 @@ type SymbolLiteral struct {
 
 func (sl *SymbolLiteral) expressionNode()      {}
 func (sl *SymbolLiteral) TokenLiteral() string { return sl.Token.Literal }
-func (sl *SymbolLiteral) String() string       { return sl.TokenLiteral() + sl.Value }
+func (sl *SymbolLiteral) String() string       { return ":" + sl.Value }

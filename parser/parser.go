@@ -368,16 +368,6 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	return expression
 }
 
-func (p *Parser) parseCallExpression(method ast.Expression) ast.Expression {
-	exp := &ast.CallExpression{Token: p.curToken, Method: method.(*ast.IdentifierExpression)}
-
-	exp.Arguments = p.parseCallArguments()
-
-	exp.Block = p.parseBlockLiteral()
-
-	return exp
-}
-
 func (p *Parser) parseCallArguments() []ast.Expression {
 	return p.parseExpressionList(lexer.RPAREN)
 }
@@ -407,40 +397,6 @@ func (p *Parser) parseExpressionList(delim lexer.TokenType) []ast.Expression {
 	return args
 }
 
-// Tokens that signify the end of a method call without parentheses
-var endOfMethodArgsWithoutParenthesesTokens = []lexer.TokenType{
-	lexer.EOF,
-	lexer.NEWLINE,
-	lexer.DO,     // When passed a block
-	lexer.LBRACE, // When passed a block
-	lexer.RBRACE, // When last expression in a single line block
-	lexer.RPAREN, // when part of a grouped expression
-}
-
-func (p *Parser) parseMethodArgsWithoutParentheses() []ast.Expression {
-	args := []ast.Expression{}
-
-	if p.peekPrecedence() != LOWEST || p.peekTokenIsMultiple(endOfMethodArgsWithoutParenthesesTokens...) {
-		return args
-	}
-
-	p.nextToken()
-
-	args = append(args, p.parseExpression(LOWEST))
-
-	for p.peekTokenIs(lexer.COMMA) {
-		p.nextToken()
-		p.nextToken()
-		args = append(args, p.parseExpression(LOWEST))
-	}
-
-	if p.peekTokenIsMultiple(endOfMethodArgsWithoutParenthesesTokens...) {
-		p.nextToken()
-	}
-
-	return args
-}
-
 func (p *Parser) parseHashLiteral() ast.Expression {
 	value := make(map[ast.Expression]ast.Expression)
 
@@ -454,23 +410,21 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 
 		p.nextToken()
 
-		key := p.parseExpression(LOWEST)
+		var key ast.Expression
 
 		if p.peekTokenIs(lexer.COLON) {
-			switch typedKey := key.(type) {
-			case *ast.IdentifierExpression:
-				p.nextToken()
-				typedKey.Token.Literal = ":"
-				key = &ast.SymbolLiteral{Value: typedKey.Value, Token: typedKey.Token}
-			case *ast.StringLiteral:
-				p.nextToken()
-				typedKey.Token.Literal = ":"
-				key = &ast.SymbolLiteral{Value: typedKey.Value, Token: typedKey.Token}
+			switch p.curToken.Type {
+			case lexer.IDENT:
+				key = &ast.SymbolLiteral{Token: p.curToken, Value: p.curToken.Literal}
+			case lexer.STRING:
+				key = &ast.SymbolLiteral{Token: p.curToken, Value: p.curToken.Literal}
 			default:
 				p.peekError(lexer.ARROW)
 				return nil
 			}
+			p.nextToken()
 		} else {
+			key = p.parseExpression(LOWEST)
 			if !p.expectPeek(lexer.ARROW) {
 				return nil
 			}

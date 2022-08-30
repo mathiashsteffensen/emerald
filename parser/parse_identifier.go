@@ -8,7 +8,19 @@ import (
 func (p *Parser) parseIdentifierExpression() ast.Expression {
 	node := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 
-	return p.parseIdentifierOrAssignment(node)
+	if p.peekTokenDoesntSignifyCallArguments() {
+		return p.parseIdentifierOrAssignment(node)
+	} else {
+		callExpression := &ast.CallExpression{
+			Token:  p.curToken,
+			Method: node,
+		}
+
+		callExpression.Arguments = p.parseMethodArgsWithoutParentheses()
+		callExpression.Block = p.parseBlockLiteral()
+
+		return callExpression
+	}
 }
 
 func (p *Parser) parseInstanceVariable() ast.Expression {

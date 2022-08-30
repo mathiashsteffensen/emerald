@@ -9,13 +9,13 @@ func TestCallExpressionParsing(t *testing.T) {
 	tests := []struct {
 		name         string
 		input        string
-		expectedArgs []int64
+		expectedArgs []any
 		expectBlock  bool
 	}{
 		{
 			"with parentheses & not passing a block",
 			"add(1, 6, 9);",
-			[]int64{1, 6, 9},
+			[]any{1, 6, 9},
 			false,
 		},
 		{
@@ -23,8 +23,14 @@ func TestCallExpressionParsing(t *testing.T) {
 			`add(1, 19, 27) do
 				do_stuff
 			end`,
-			[]int64{1, 19, 27},
+			[]any{1, 19, 27},
 			true,
+		},
+		{
+			"without parentheses & not passing a block",
+			"add 1, 6, 9",
+			[]any{1, 6, 9},
+			false,
 		},
 	}
 

@@ -77,7 +77,7 @@ func TestModule_attr_accessor(t *testing.T) {
 			name: "accessor",
 			input: `
 				class MyClass
-					attr_accessor(:hello) 
+					attr_accessor :hello
 				end
 
 				c = MyClass.new
