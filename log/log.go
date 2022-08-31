@@ -50,6 +50,11 @@ type message struct {
 }
 
 var msgChan = make(chan message, 50)
+var doneChan = make(chan bool)
+
+func Shutdown() {
+	doneChan <- true
+}
 
 func writeToChan(level Level, msg string) {
 	msgChan <- message{
@@ -114,12 +119,15 @@ func writef(level Level, format string, args ...any) {
 
 func logRoutine() {
 	for {
-		msg := <-msgChan
-
-		if msg.args == nil {
-			write(msg.level, msg.format)
-		} else {
-			writef(msg.level, msg.format, msg.args...)
+		select {
+		case msg := <-msgChan:
+			if msg.args == nil {
+				write(msg.level, msg.format)
+			} else {
+				writef(msg.level, msg.format, msg.args...)
+			}
+		case <-doneChan:
+			return
 		}
 	}
 }

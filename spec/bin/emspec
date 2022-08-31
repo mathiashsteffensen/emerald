@@ -1,0 +1,5 @@
+#!/usr/bin/env emerald
+
+require_relative "../support/emspec"
+
+EMSpec.run

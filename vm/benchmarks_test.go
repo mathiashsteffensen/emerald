@@ -30,7 +30,7 @@ func BenchmarkFibonacci(b *testing.B) {
 			b.Fatalf("compiler error: %s", err)
 		}
 
-		vm := New(comp.Bytecode())
+		vm := New("", comp.Bytecode())
 		vm.Run()
 	}
 }

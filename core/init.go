@@ -33,4 +33,5 @@ func init() {
 	// Initialize remaining core classes & modules
 	InitRegexp()
 	InitMatchData()
+	InitIO()
 }

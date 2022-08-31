@@ -2,7 +2,6 @@ package main
 
 import (
 	"emerald/compiler"
-	"emerald/core"
 	"emerald/log"
 	"emerald/parser"
 	"emerald/parser/lexer"
@@ -12,6 +11,7 @@ import (
 	"fmt"
 	"github.com/pkg/profile"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -37,10 +37,13 @@ func main() {
 		log.Fatal("No file to run")
 	}
 
-	bytes, err := os.ReadFile(*file)
+	absFile, err := filepath.Abs(*file)
+	checkError("Failed to make path absolute?", err)
+
+	bytes, err := os.ReadFile(absFile)
 	checkError("error reading file", err)
 
-	l := lexer.New(lexer.NewInput(*file, string(bytes)))
+	l := lexer.New(lexer.NewInput(absFile, string(bytes)))
 	p := parser.New(l)
 	program := p.ParseAST()
 
@@ -56,14 +59,10 @@ func main() {
 	err = c.Compile(program)
 	checkError("Compilation failed", err)
 
-	machine := vm.New(c.Bytecode())
+	machine := vm.New(absFile, c.Bytecode())
 	machine.Run()
 
-	evaluated := machine.LastPoppedStackElem()
-
-	if core.IsError(evaluated) {
-		fmt.Println(evaluated.Inspect())
-	}
+	log.Shutdown()
 }
 
 func checkError(msg string, err error) {

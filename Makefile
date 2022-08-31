@@ -24,10 +24,10 @@ endef
 default:
 	@make lint test build
 
-emerald: ./**/*.go
+emerald: ./**/*.go ./cmd/emerald/main.go
 	$(benchmark_build_time)
 
-iem: ./**/*.go
+iem: ./**/*.go ./cmd/iem/main.go
 	$(benchmark_build_time)
 
 build: emerald iem

@@ -34,7 +34,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 				t.Fatalf("compiler error: %s", err)
 			}
 
-			vm := New(comp.Bytecode())
+			vm := New("test", comp.Bytecode())
 			safeRun(t, vm)
 
 			stackElem := safePop(t, vm)

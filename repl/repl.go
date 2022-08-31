@@ -95,7 +95,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			log.InternalDebugF("Emerald bytecode: \n%s", code.Instructions[0:])
 		}
 
-		machine := vm.New(code)
+		machine := vm.New("repl.rb", code)
 		machine.Run()
 
 		evaluated := machine.LastPoppedStackElem()

@@ -1,11 +1,13 @@
 package core
 
 import (
+	"emerald/log"
 	"emerald/object"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var Kernel *object.Module
@@ -105,10 +107,15 @@ func kernelInclude() object.BuiltInMethod {
 func kernelRequireRelative() object.BuiltInMethod {
 	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
 		path := args[0].(*StringInstance).Value
+		fileParts := strings.Split(ctx.File, "/")
+		fileParts[len(fileParts)-1] = ""
+		dir := filepath.Join(fileParts...)
 
-		absoluteFilePath, err := filepath.Abs(path)
+		log.InternalDebugF("Attempting to require %s from dir %s", path, dir)
+
+		absoluteFilePath, err := filepath.Abs("/" + filepath.Join(dir, path))
 		if err != nil {
-			panic(err) // TODO: Should probably change this when exception handling is implemented
+			panic(err)
 		}
 
 		absolutePathStr := NewString(absoluteFilePath)
@@ -117,13 +124,14 @@ func kernelRequireRelative() object.BuiltInMethod {
 
 		// File has already been loaded
 		if requiredFiles.Get(absolutePathStr) != nil {
+			log.InternalDebugF("Kernel#require_relative - File %s is already loaded, skipping", absoluteFilePath)
 			return FALSE
 		}
 
 		sourceContent, err := os.ReadFile(absoluteFilePath + ".rb")
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
-				return NewLoadError(fmt.Sprintf("cannot load such file -- %s", absoluteFilePath))
+				panic(fmt.Errorf("cannot load such file -- %s", absoluteFilePath))
 			}
 
 			panic(err)
@@ -131,12 +139,13 @@ func kernelRequireRelative() object.BuiltInMethod {
 
 		instructions := Compile(absoluteFilePath, string(sourceContent))
 
-		requiredBlock := &object.ClosedBlock{Block: &object.Block{Instructions: instructions}}
+		log.InternalDebugF("Kernel#require_relative - Successfully compiled file %s", absoluteFilePath)
+
+		requiredBlock := &object.ClosedBlock{Block: &object.Block{Instructions: instructions}, File: absoluteFilePath}
 
 		yield(requiredBlock)
 
 		requiredFiles.Set(absolutePathStr, TRUE)
-		println(absoluteFilePath)
 
 		return TRUE
 	}

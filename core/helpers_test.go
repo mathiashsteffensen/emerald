@@ -9,6 +9,7 @@ import (
 	"emerald/parser/lexer"
 	"emerald/vm"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -42,7 +43,12 @@ func runCoreTests(t *testing.T, tests []coreTestCase) {
 				t.Fatalf("compiler error: %s", err)
 			}
 
-			machine := vm.New(comp.Bytecode())
+			file, err := filepath.Abs("kernel.rb")
+			if err != nil {
+				panic(err)
+			}
+
+			machine := vm.New(file, comp.Bytecode())
 			machine.Run()
 
 			stackElem := machine.LastPoppedStackElem()
@@ -295,12 +301,11 @@ func testInstanceObject(expected string, actual object.EmeraldValue) error {
 		class = actual.(*object.Class)
 		expected = ""
 	} else {
-		actualInstance, ok := actual.(*object.Instance)
-		if !ok {
+		if actual.Type() != object.INSTANCE_VALUE {
 			return fmt.Errorf("expected instance got=%T", actual)
 		}
 
-		class = actualInstance.Class().Super().(*object.Class)
+		class = actual.Class().Super().(*object.Class)
 	}
 
 	if class.Name != expected {
