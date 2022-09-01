@@ -29,11 +29,13 @@ func NewBlock(instructions []byte, numLocals int, numArgs int) *Block {
 type ClosedBlock struct {
 	*Block
 	FreeVariables []EmeraldValue
+	Context       *Context
 }
 
-func NewClosedBlock(block *Block, free []EmeraldValue) *ClosedBlock {
+func NewClosedBlock(ctx *Context, block *Block, free []EmeraldValue) *ClosedBlock {
 	return &ClosedBlock{
 		Block:         block,
 		FreeVariables: free,
+		Context:       ctx,
 	}
 }

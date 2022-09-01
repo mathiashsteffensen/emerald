@@ -38,10 +38,10 @@ func (hash *HashInstance) Set(key object.EmeraldValue, value object.EmeraldValue
 }
 
 func hashIndexAccessor() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		key := args[0]
 
-		if value := self.(*HashInstance).Get(key); value != nil {
+		if value := ctx.Self.(*HashInstance).Get(key); value != nil {
 			return value
 		}
 
@@ -50,11 +50,11 @@ func hashIndexAccessor() object.BuiltInMethod {
 }
 
 func hashEach() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		hash := self.(*HashInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		hash := ctx.Self.(*HashInstance)
 
 		for hashKey, value := range hash.Values {
-			yield(block, hash.Keys[hashKey], value)
+			ctx.Yield(hash.Keys[hashKey], value)
 		}
 
 		return hash

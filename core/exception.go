@@ -14,7 +14,7 @@ func (err *ExceptionInstance) ClassName() string { return Exception.Name }
 
 func InitException() {
 	Exception = DefineClass(Object, "Exception", Object)
-	
+
 	DefineSingletonMethod(Exception, "new", exceptionNew(NewException))
 
 	DefineMethod(Exception, "to_s", exceptionToS())
@@ -28,13 +28,13 @@ func NewException(msg string) object.EmeraldError {
 }
 
 func exceptionToS() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(self.(object.EmeraldError).Inspect())
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(ctx.Self.(object.EmeraldError).Inspect())
 	}
 }
 
 func exceptionNew(initializer func(msg string) object.EmeraldError) object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		var msg string
 
 		if len(args) != 0 {

@@ -22,20 +22,20 @@ func InitModule() {
 }
 
 func moduleDefineMethod() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		self.DefineMethod(block, args...)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		ctx.Self.DefineMethod(ctx.Block, args...)
 
 		return args[0]
 	}
 }
 
 func moduleAttrReader() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
 			name, instanceVarName := nameAndInstanceVarFromObject(arg)
 
-			self.BuiltInMethodSet()[name] = func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				value := self.InstanceVariableGet(instanceVarName, self, self)
+			ctx.Self.BuiltInMethodSet()[name] = func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+				value := ctx.Self.InstanceVariableGet(instanceVarName, ctx.Self, ctx.Self)
 
 				if value == nil {
 					return NULL
@@ -50,12 +50,12 @@ func moduleAttrReader() object.BuiltInMethod {
 }
 
 func moduleAttrWriter() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
 			name, instanceVarName := nameAndInstanceVarFromObject(arg)
 
-			self.BuiltInMethodSet()[fmt.Sprintf("%s=", name)] = func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				target.InstanceVariableSet(instanceVarName, args[0])
+			ctx.Self.BuiltInMethodSet()[fmt.Sprintf("%s=", name)] = func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+				ctx.Self.InstanceVariableSet(instanceVarName, args[0])
 
 				return args[0]
 			}
@@ -66,16 +66,9 @@ func moduleAttrWriter() object.BuiltInMethod {
 }
 
 func moduleAttrAccessor() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		_, err := self.SEND(ctx, yield, "attr_reader", self, block, args...)
-		if err != nil {
-			return NewStandardError(err.Error())
-		}
-
-		_, err = self.SEND(ctx, yield, "attr_writer", self, block, args...)
-		if err != nil {
-			return NewStandardError(err.Error())
-		}
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		Send(ctx.Self, "attr_reader", NULL, args...)
+		Send(ctx.Self, "attr_writer", NULL, args...)
 
 		return NULL
 	}

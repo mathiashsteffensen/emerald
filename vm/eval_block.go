@@ -3,24 +3,21 @@ package vm
 import (
 	"emerald/core"
 	"emerald/object"
-	"log"
+	"fmt"
 )
 
-func (vm *VM) evalBuiltIn(receiver object.EmeraldValue, builtin *object.WrappedBuiltInMethod, block object.EmeraldValue, args []object.EmeraldValue) object.EmeraldValue {
-	return builtin.Method(vm.ctx, receiver, block, vm.Yield, args...)
-}
-
-func (vm *VM) Yield(block object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-	return vm.withExecutionContextForBlock(func() object.EmeraldValue {
-		return vm.rawEvalBlock(block, core.NULL, args...)
+func (vm *VM) Yield(args ...object.EmeraldValue) object.EmeraldValue {
+	blockToEvaluate := vm.ctx.Block
+	return vm.withExecutionContextForBlock(blockToEvaluate, func() object.EmeraldValue {
+		return vm.rawEvalBlock(blockToEvaluate, core.NULL, args...)
 	})
 }
 
-func (vm *VM) withExecutionContextForBlock(cb func() object.EmeraldValue) object.EmeraldValue {
+func (vm *VM) withExecutionContextForBlock(block object.EmeraldValue, cb func() object.EmeraldValue) object.EmeraldValue {
 	oldCtx := vm.ctx
 
-	if vm.ctx.Outer != nil {
-		vm.ctx = vm.ctx.Outer
+	if closedBlock, ok := block.(*object.ClosedBlock); ok && closedBlock.Context != nil {
+		vm.ctx = closedBlock.Context
 	}
 
 	val := cb()
@@ -32,10 +29,7 @@ func (vm *VM) withExecutionContextForBlock(cb func() object.EmeraldValue) object
 
 func (vm *VM) Send(self object.EmeraldValue, name string, block object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 	oldCtx := vm.ctx
-	vm.ctx = &object.Context{
-		Outer: oldCtx,
-		Self:  self,
-	}
+	vm.ctx = vm.newEnclosedContext(oldCtx.File, self, block)
 
 	method, err := self.ExtractMethod(name, self.Class(), self)
 	if err != nil {
@@ -53,14 +47,15 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 	switch bl := method.(type) {
 	case *object.WrappedBuiltInMethod:
 		// Builtin methods are easy, just call some Go code
-		return vm.evalBuiltIn(vm.ctx.Self, bl, core.NULL, args)
+		return vm.evalBuiltIn(bl, block, args)
 	case *object.ClosedBlock:
 		// Method receiver
 		vm.push(vm.ctx.Self)
+
 		// The VM accounts for the name of the method being called being on the stack when a method is evaluated
 		// So we just push something on the stack and nil is the cheapest
 		vm.push(core.NULL)
-		// Same for a block value
+
 		vm.push(block)
 
 		// Add the arguments to the stack
@@ -84,8 +79,19 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 		// Return value is left on the stack
 		return vm.pop()
 	default:
-		log.Panicf("Yielded to not a method?, got=%#v", bl)
+		panic(fmt.Errorf("yielded to not a method?, got=%s", bl.Inspect()))
 	}
 
 	return core.NULL
+}
+
+func (vm *VM) evalBuiltIn(builtin *object.WrappedBuiltInMethod, block object.EmeraldValue, args []object.EmeraldValue) object.EmeraldValue {
+	oldBlock := vm.ctx.Block
+	vm.ctx.Block = block
+
+	result := builtin.Method(vm.ctx, args...)
+
+	vm.ctx.Block = oldBlock
+
+	return result
 }

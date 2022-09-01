@@ -47,8 +47,8 @@ func (s SymbolInternStore) ResolveOrDefine(val string) object.EmeraldValue {
 }
 
 func symbolToS() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		val := self.Inspect()
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		val := ctx.Self.Inspect()
 
 		return NewString(val[1:])
 	}

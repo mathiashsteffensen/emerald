@@ -89,27 +89,26 @@ func (val *BaseEmeraldValue) RespondsTo(name string, self EmeraldValue) bool {
 	return err == nil
 }
 
+var EvalBlock func(block *ClosedBlock, args ...EmeraldValue) EmeraldValue
+
 func (val *BaseEmeraldValue) SEND(
 	ctx *Context,
-	yield YieldFunc,
 	name string,
-	self EmeraldValue,
-	block EmeraldValue,
 	args ...EmeraldValue,
-) (EmeraldValue, error) {
-	method, err := self.ExtractMethod(name, self.Class(), self)
+) EmeraldValue {
+	method, err := ctx.Self.ExtractMethod(name, ctx.Self.Class(), ctx.Self)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	switch method := method.(type) {
 	case *ClosedBlock:
-		return yield(method, args...), nil
+		return EvalBlock(method, args...)
 	case *WrappedBuiltInMethod:
-		return method.Method(ctx, self, block, yield, args...), nil
+		return method.Method(ctx, args...)
+	default:
+		panic("This is a bug in the Emerald VM, no idea how the fuck we got here, my b")
 	}
-
-	return nil, nil
 }
 
 func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error) {

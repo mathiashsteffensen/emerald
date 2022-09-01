@@ -45,14 +45,14 @@ func NewMatchData(regexp *RegexpInstance, match *regexp2.Match) *MatchDataInstan
 }
 
 func matchDataToS() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(self.(*MatchDataInstance).Groups[0].String())
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(ctx.Self.(*MatchDataInstance).Groups[0].String())
 	}
 }
 
 func matchDataToA() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		groups := self.(*MatchDataInstance).Groups
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		groups := ctx.Self.(*MatchDataInstance).Groups
 		captures := []object.EmeraldValue{}
 
 		for _, group := range groups {
@@ -64,8 +64,8 @@ func matchDataToA() object.BuiltInMethod {
 }
 
 func matchDataIndexAccessor() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		groups := self.(*MatchDataInstance).Groups
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		groups := ctx.Self.(*MatchDataInstance).Groups
 		index := args[0].(*IntegerInstance).Value
 
 		if index > int64(len(groups)-1) {
@@ -77,8 +77,8 @@ func matchDataIndexAccessor() object.BuiltInMethod {
 }
 
 func matchDataCaptures() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		groups := self.(*MatchDataInstance).Groups[1:]
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		groups := ctx.Self.(*MatchDataInstance).Groups[1:]
 		captures := []object.EmeraldValue{}
 
 		for _, group := range groups {
@@ -90,7 +90,7 @@ func matchDataCaptures() object.BuiltInMethod {
 }
 
 func matchDataRegexp() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return self.(*MatchDataInstance).Regexp
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return ctx.Self.(*MatchDataInstance).Regexp
 	}
 }

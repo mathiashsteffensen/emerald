@@ -35,13 +35,13 @@ func InitRegexp() {
 }
 
 func regexpNew() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewRegexp(args[0].(*StringInstance).Value)
 	}
 }
 
 func regexpLastMatch() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		lastMatch := heap.GetGlobalVariableString("$~")
 		if lastMatch == nil {
 			return NULL
@@ -51,14 +51,14 @@ func regexpLastMatch() object.BuiltInMethod {
 }
 
 func regexpInspect() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(fmt.Sprintf("/%s/", self.(*RegexpInstance).Source))
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(fmt.Sprintf("/%s/", ctx.Self.(*RegexpInstance).Source))
 	}
 }
 
 func regexpMatch() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return regexStringMatch(self.(*RegexpInstance), args[0].(*StringInstance))
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return regexStringMatch(ctx.Self.(*RegexpInstance), args[0].(*StringInstance))
 	}
 }
 

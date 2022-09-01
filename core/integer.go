@@ -2,7 +2,6 @@ package core
 
 import (
 	"emerald/object"
-	"fmt"
 	"strconv"
 )
 
@@ -29,108 +28,65 @@ func InitInteger() {
 	DefineMethod(Integer, "to_s", integerToS())
 	DefineMethod(Integer, "inspect", integerToS())
 	DefineMethod(Integer, "<=>", integerSpaceship())
-	DefineMethod(Integer, "==", integerEquals())
-	DefineMethod(Integer, "!=", integerNotEquals())
-	DefineMethod(Integer, "+", integerAdd())
-	DefineMethod(Integer, "-", integerSubtract())
-	DefineMethod(Integer, "*", integerMultiply())
-	DefineMethod(Integer, "/", integerDivide())
+	DefineMethod(Integer, "==", integerEquals)
+	DefineMethod(Integer, "!=", integerNotEquals)
+	DefineMethod(Integer, "+", integerAdd)
+	DefineMethod(Integer, "-", integerSubtract)
+	DefineMethod(Integer, "*", integerMultiply)
+	DefineMethod(Integer, "/", integerDivide)
 	DefineMethod(Integer, "times", integerTimes())
 }
 
 func integerToS() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		val := self.(*IntegerInstance).Value
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		val := ctx.Self.(*IntegerInstance).Value
 
 		return NewString(strconv.Itoa(int(val)))
 	}
 }
 
-func integerAdd() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		otherVal, err := requireOneIntegerArg("+", args)
-		if err != nil {
-			return err
-		}
+var integerAdd = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+	return NewInteger(left + right)
+})
 
-		return NewInteger(self.(*IntegerInstance).Value + otherVal.Value)
+var integerSubtract = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+	return NewInteger(left - right)
+})
+
+var integerMultiply = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+	return NewInteger(left * right)
+})
+
+var integerDivide = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+	if left%right == 0 {
+		return NewInteger(left / right)
+	} else {
+		return NewFloat(float64(left) / float64(right))
 	}
-}
+})
 
-func integerSubtract() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		otherVal, err := requireOneIntegerArg("-", args)
-		if err != nil {
-			return err
-		}
+var integerEquals = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+	return NativeBoolToBooleanObject(left == right)
+})
 
-		return NewInteger(self.(*IntegerInstance).Value - otherVal.Value)
-	}
-}
-
-func integerMultiply() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		otherVal, err := requireOneIntegerArg("*", args)
-		if err != nil {
-			return err
-		}
-
-		return NewInteger(self.(*IntegerInstance).Value * otherVal.Value)
-	}
-}
-
-func integerDivide() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		right, err := requireOneIntegerArg("/", args)
-		if err != nil {
-			return err
-		}
-
-		left := self.(*IntegerInstance)
-
-		if left.Value%right.Value == 0 {
-			return NewInteger(left.Value / right.Value)
-		} else {
-			return NewFloat(float64(left.Value) / float64(right.Value))
-		}
-	}
-}
-
-func integerEquals() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		otherVal, err := requireOneIntegerArg("==", args)
-		if err != nil {
-			return err
-		}
-
-		return NativeBoolToBooleanObject(self.(*IntegerInstance).Value == otherVal.Value)
-	}
-}
-
-func integerNotEquals() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		otherVal, err := requireOneIntegerArg("!=", args)
-		if err != nil {
-			return err
-		}
-
-		return NativeBoolToBooleanObject(self.(*IntegerInstance).Value != otherVal.Value)
-	}
-}
+var integerNotEquals = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+	return NativeBoolToBooleanObject(left != right)
+})
 
 func integerTimes() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		for i := int64(0); i < self.(*IntegerInstance).Value; i++ {
-			yield(block, NewInteger(i))
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		for i := int64(0); i < ctx.Self.(*IntegerInstance).Value; i++ {
+			ctx.Yield(NewInteger(i))
 		}
 
-		return self
+		return ctx.Self
 	}
 }
 
 func integerSpaceship() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		left := target.(*IntegerInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		left := ctx.Self.(*IntegerInstance)
+
 		if right, ok := args[0].(*IntegerInstance); ok {
 			var result int64
 
@@ -151,16 +107,8 @@ func integerSpaceship() object.BuiltInMethod {
 	}
 }
 
-func requireOneIntegerArg(method string, args []object.EmeraldValue) (*IntegerInstance, object.EmeraldValue /* StandardError or nil */) {
-	if len(args) != 1 {
-		return nil, NewStandardError(fmt.Sprintf("Integer#%s expects single argument, got %d", method, len(args)))
+func integerInfixOperator(cb func(left int64, right int64) object.EmeraldValue) object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return cb(ctx.Self.(*IntegerInstance).Value, args[0].(*IntegerInstance).Value)
 	}
-
-	otherVal, ok := args[0].(*IntegerInstance)
-
-	if !ok {
-		return nil, NewStandardError(fmt.Sprintf("Integer#%s can only be passed an integer, got=%s", method, args[0].Inspect()))
-	}
-
-	return otherVal, nil
 }

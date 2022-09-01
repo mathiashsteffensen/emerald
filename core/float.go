@@ -34,14 +34,14 @@ func NewFloat(val float64) *FloatInstance {
 }
 
 func floatToS() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(strconv.FormatFloat(target.(*FloatInstance).Value, 'f', -1, 64))
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(strconv.FormatFloat(ctx.Self.(*FloatInstance).Value, 'f', -1, 64))
 	}
 }
 
 func floatAdd() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		left := target.(*FloatInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		left := ctx.Self.(*FloatInstance)
 
 		var newValue float64
 
@@ -57,8 +57,8 @@ func floatAdd() object.BuiltInMethod {
 }
 
 func floatSubtract() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		left := target.(*FloatInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		left := ctx.Self.(*FloatInstance)
 
 		var newValue float64
 
@@ -74,8 +74,8 @@ func floatSubtract() object.BuiltInMethod {
 }
 
 func floatMultiply() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		left := target.(*FloatInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		left := ctx.Self.(*FloatInstance)
 
 		var newValue float64
 
@@ -91,8 +91,8 @@ func floatMultiply() object.BuiltInMethod {
 }
 
 func floatDivide() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		left := target.(*FloatInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		left := ctx.Self.(*FloatInstance)
 
 		var newValue float64
 
@@ -108,8 +108,8 @@ func floatDivide() object.BuiltInMethod {
 }
 
 func floatSpaceship() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		left := target.(*FloatInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		left := ctx.Self.(*FloatInstance)
 		if right, ok := args[0].(*FloatInstance); ok {
 			var result int64
 

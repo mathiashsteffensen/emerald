@@ -21,7 +21,7 @@ type VM struct {
 	framesIndex int
 }
 
-func New(bytecode *compiler.Bytecode) *VM {
+func New(file string, bytecode *compiler.Bytecode) *VM {
 	mainBlock := &object.ClosedBlock{Block: &object.Block{Instructions: bytecode.Instructions}}
 	mainFrame := NewFrame(mainBlock, 0)
 
@@ -29,16 +29,20 @@ func New(bytecode *compiler.Bytecode) *VM {
 	frames[0] = mainFrame
 
 	vm := &VM{
-		ctx:         &object.Context{Self: core.MainObject},
 		stack:       make([]object.EmeraldValue, StackSize),
 		sp:          0,
 		frames:      frames,
 		framesIndex: 1,
 	}
 
-	core.Send = func(self object.EmeraldValue, name string, block object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return vm.Send(self, name, block, args...)
+	vm.ctx = vm.newContext(file, core.MainObject, core.NULL)
+
+	object.EvalBlock = func(block *object.ClosedBlock, args ...object.EmeraldValue) object.EmeraldValue {
+		return vm.withExecutionContextForBlock(block, func() object.EmeraldValue {
+			return vm.rawEvalBlock(block, core.NULL, args...)
+		})
 	}
+	core.Send = vm.Send
 
 	return vm
 }
@@ -210,7 +214,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		block := vm.pop().(*object.Block)
 		name := vm.stack[vm.sp-1].(*core.SymbolInstance)
 
-		vm.ctx.Self.DefineMethod(object.NewClosedBlock(block, []object.EmeraldValue{}), name)
+		vm.ctx.Self.DefineMethod(object.NewClosedBlock(nil, block, []object.EmeraldValue{}), name)
 	case compiler.OpSend:
 		numArgs := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
@@ -230,22 +234,16 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 
 		setConst(outerCtx.Self, name, newSelf)
 
-		vm.ctx = &object.Context{
-			Outer: outerCtx,
-			Self:  newSelf,
-		}
+		vm.ctx = vm.newEnclosedContext(outerCtx.File, newSelf, outerCtx.Block)
 	case compiler.OpCloseClass:
 		to := vm.ctx.Outer
 
 		vm.ctx = to
 	case compiler.OpSetExecutionTarget:
 		oldContext := vm.ctx
-		newTarget := vm.pop()
+		newSelf := vm.pop()
 
-		vm.ctx = &object.Context{
-			Outer: oldContext,
-			Self:  newTarget,
-		}
+		vm.ctx = vm.newEnclosedContext(oldContext.File, newSelf, oldContext.Block)
 	case compiler.OpResetExecutionTarget:
 		vm.ctx = vm.ctx.Outer
 	case compiler.OpCloseBlock:
@@ -282,7 +280,7 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 
 	vm.sp = vm.sp - numFreeVars
 
-	vm.push(object.NewClosedBlock(block, free))
+	vm.push(object.NewClosedBlock(vm.ctx, block, free))
 }
 
 func (vm *VM) callFunction(numArgs int) {
@@ -297,7 +295,7 @@ func (vm *VM) callFunction(numArgs int) {
 		panic(err)
 	}
 
-	vm.withExecutionContext(receiver, func() {
+	vm.withExecutionContext(receiver, block, func() {
 		switch method := method.(type) {
 		case *object.ClosedBlock:
 			frame := NewFrame(method, basePointer)
@@ -308,7 +306,7 @@ func (vm *VM) callFunction(numArgs int) {
 				return vm.framesIndex >= originalFrameIndex
 			})
 		case *object.WrappedBuiltInMethod:
-			result := vm.evalBuiltIn(receiver, method, block, vm.stack[basePointer:vm.sp])
+			result := vm.evalBuiltIn(method, block, vm.stack[basePointer:vm.sp])
 			vm.sp = basePointer - 3
 			vm.push(result)
 		}
@@ -318,25 +316,23 @@ func (vm *VM) callFunction(numArgs int) {
 func (vm *VM) evalInfixOperator(op string) {
 	left := vm.pop()
 
-	result, sendErr := left.SEND(vm.ctx, vm.Yield, op, left, nil, vm.StackTop())
-	if sendErr != nil {
-		vm.stack[vm.sp-1] = core.NewStandardError(sendErr.Error())
-	} else {
-		vm.stack[vm.sp-1] = result
-	}
+	var result object.EmeraldValue
+
+	vm.withExecutionContext(left, core.NULL, func() {
+		result = left.SEND(vm.ctx, op, vm.StackTop())
+	})
+
+	vm.stack[vm.sp-1] = result
 }
 
 func (vm *VM) Context() *object.Context {
 	return vm.ctx
 }
 
-func (vm *VM) withExecutionContext(self object.EmeraldValue, cb func()) {
+func (vm *VM) withExecutionContext(self object.EmeraldValue, block object.EmeraldValue, cb func()) {
 	oldCtx := vm.ctx
 
-	vm.ctx = &object.Context{
-		Outer: vm.ctx,
-		Self:  self,
-	}
+	vm.ctx = vm.newEnclosedContext(oldCtx.File, self, block)
 
 	cb()
 

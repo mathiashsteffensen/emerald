@@ -101,7 +101,9 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 		evaluated := machine.LastPoppedStackElem()
 
 		if evaluated != nil {
-			evaluated, _ = evaluated.SEND(machine.Context(), machine.Yield, "inspect", evaluated, nil)
+			ctx := machine.Context()
+			ctx.Self = evaluated
+			evaluated = evaluated.SEND(machine.Context(), "inspect", nil)
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
 		}

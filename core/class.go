@@ -8,61 +8,75 @@ import (
 var Class *object.Class
 
 func InitClass() {
-	Class = object.NewClass(
-		"Class",
-		nil,
-		nil,
-		object.BuiltInMethodSet{
-			"ancestors": func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return NewArray(self.Ancestors())
-			},
-			"methods": func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				methods := []object.EmeraldValue{}
+	Class = object.NewClass("Class", nil, nil, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-				for _, method := range self.Methods(self) {
-					methods = append(methods, NewSymbol(method))
-				}
+	DefineSingletonMethod(Class, "new", classSingletonNew())
 
-				return NewArray(methods)
-			},
-			"name": func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				var namespaces bytes.Buffer
+	DefineMethod(Class, "new", classNew())
+	DefineMethod(Class, "name", className())
+	DefineMethod(Class, "ancestors", classAncestors())
+	DefineMethod(Class, "methods", classMethods())
+}
 
-				parent := self.ParentNamespace()
-				for parent != nil &&
-					parent != Object &&
-					(parent.Type() == object.CLASS_VALUE || parent.Type() == object.MODULE_VALUE) {
+func classAncestors() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewArray(ctx.Self.Ancestors())
+	}
+}
 
-					switch parent := parent.(type) {
-					case *object.Module:
-						namespaces.WriteString(parent.Name)
-					case *object.Class:
-						namespaces.WriteString(parent.Name)
-					}
+func classMethods() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		methods := []object.EmeraldValue{}
 
-					namespaces.WriteString("::")
+		for _, method := range ctx.Self.Methods(ctx.Self) {
+			methods = append(methods, NewSymbol(method))
+		}
 
-					parent = parent.ParentNamespace()
-				}
+		return NewArray(methods)
+	}
+}
 
-				namespaces.WriteString(self.(*object.Class).Name)
+func className() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		var namespaces bytes.Buffer
 
-				return NewString(namespaces.String())
-			},
-			"new": func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				instance := self.(*object.Class).New()
+		parent := ctx.Self.ParentNamespace()
+		for parent != nil &&
+			parent != Object &&
+			(parent.Type() == object.CLASS_VALUE || parent.Type() == object.MODULE_VALUE) {
 
-				if instance.RespondsTo("initialize", instance) {
-					Send(instance, "initialize", block, args...)
-				}
+			switch parent := parent.(type) {
+			case *object.Module:
+				namespaces.WriteString(parent.Name)
+			case *object.Class:
+				namespaces.WriteString(parent.Name)
+			}
 
-				return instance
-			},
-		},
-		object.BuiltInMethodSet{
-			"new": func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-				return object.NewClass("", Object, Object.Class(), object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-			},
-		},
-	)
+			namespaces.WriteString("::")
+
+			parent = parent.ParentNamespace()
+		}
+
+		namespaces.WriteString(ctx.Self.(*object.Class).Name)
+
+		return NewString(namespaces.String())
+	}
+}
+
+func classNew() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		instance := ctx.Self.(*object.Class).New()
+
+		if instance.RespondsTo("initialize", instance) {
+			Send(instance, "initialize", ctx.Block, args...)
+		}
+
+		return instance
+	}
+}
+
+func classSingletonNew() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return object.NewClass("", Object, Object.Class(), object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	}
 }

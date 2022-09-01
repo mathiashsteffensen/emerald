@@ -34,26 +34,26 @@ func InitString() {
 }
 
 func stringToS() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return self
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return ctx.Self
 	}
 }
 
 func stringInspect() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(fmt.Sprintf(`"%s"`, self.(*StringInstance).Value))
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(fmt.Sprintf(`"%s"`, ctx.Self.(*StringInstance).Value))
 	}
 }
 
 func stringToSym() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewSymbol(self.Inspect())
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewSymbol(ctx.Self.Inspect())
 	}
 }
 
 func stringEquals() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		left := self.(*StringInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		left := ctx.Self.(*StringInstance)
 		right, ok := args[0].(*StringInstance)
 
 		if ok {
@@ -65,8 +65,8 @@ func stringEquals() object.BuiltInMethod {
 }
 
 func stringAdd() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		selfString := self.(*StringInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		selfString := ctx.Self.(*StringInstance)
 
 		argString, ok := args[0].(*StringInstance)
 		if !ok {
@@ -86,13 +86,13 @@ func stringAdd() object.BuiltInMethod {
 }
 
 func stringUpcase() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(strings.ToUpper(target.(*StringInstance).Value))
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(strings.ToUpper(ctx.Self.(*StringInstance).Value))
 	}
 }
 
 func stringMatch() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return regexStringMatch(args[0].(*RegexpInstance), self.(*StringInstance))
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return regexStringMatch(args[0].(*RegexpInstance), ctx.Self.(*StringInstance))
 	}
 }

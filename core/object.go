@@ -31,34 +31,34 @@ func InitObject() {
 }
 
 func objectToS() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(target.Inspect())
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(ctx.Self.Inspect())
 	}
 }
 
 func mainObjectToS() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString("main")
 	}
 }
 
 func objectEquals() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NativeBoolToBooleanObject(self == args[0])
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NativeBoolToBooleanObject(ctx.Self == args[0])
 	}
 }
 
 func objectNotEquals() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, _yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NativeBoolToBooleanObject(self != args[0])
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NativeBoolToBooleanObject(ctx.Self != args[0])
 	}
 }
 
 func objectMethods() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		methods := []object.EmeraldValue{}
 
-		for _, method := range self.Methods(self) {
+		for _, method := range ctx.Self.Methods(ctx.Self) {
 			methods = append(methods, NewSymbol(method))
 		}
 

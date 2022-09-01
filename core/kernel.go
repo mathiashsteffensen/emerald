@@ -29,8 +29,8 @@ func InitKernel() {
 }
 
 func kernelClass() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		class := self.Class()
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		class := ctx.Self.Class()
 
 		for class.Type() != object.CLASS_VALUE {
 			class = class.Super()
@@ -41,7 +41,7 @@ func kernelClass() object.BuiltInMethod {
 }
 
 func kernelKindOf() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		if len(args) != 1 {
 			return NewArgumentError(len(args), 1)
 		}
@@ -52,7 +52,7 @@ func kernelKindOf() object.BuiltInMethod {
 			return NewTypeError("class or module required")
 		}
 
-		for _, ancestor := range self.Class().Ancestors() {
+		for _, ancestor := range ctx.Self.Class().Ancestors() {
 			if ancestor == args[0] {
 				return TRUE
 			}
@@ -63,28 +63,25 @@ func kernelKindOf() object.BuiltInMethod {
 }
 
 func kernelPuts() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		strings := []any{}
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		var strArr []any
 
 		for _, arg := range args {
-			val, err := arg.SEND(ctx, yield, "to_s", arg, nil)
-			if err != nil {
-				return NewStandardError(err.Error())
-			}
+			val := Send(arg, "to_s", NULL)
 
-			strings = append(strings, val.Inspect())
+			strArr = append(strArr, val.Inspect())
 		}
 
-		fmt.Println(strings...)
+		fmt.Println(strArr...)
 
 		return NULL
 	}
 }
 
 func kernelInclude() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		if len(args) == 0 {
-			return NewStandardError("wrong number of arguments (given 0, expected 1+)")
+			panic(errors.New("wrong number of arguments (given 0, expected 1+)"))
 		}
 
 		for _, arg := range args {
@@ -94,18 +91,18 @@ func kernelInclude() object.BuiltInMethod {
 
 			mod, ok := arg.(*object.Module)
 			if !ok {
-				return NewStandardError(fmt.Sprintf("wrong argument type %s (expected Module)", arg.Inspect()))
+				panic(fmt.Errorf("wrong argument type %s (expected Module)", arg.Inspect()))
 			}
 
-			self.Include(mod)
+			ctx.Self.Include(mod)
 		}
 
-		return self
+		return ctx.Self
 	}
 }
 
 func kernelRequireRelative() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		path := args[0].(*StringInstance).Value
 		fileParts := strings.Split(ctx.File, "/")
 		fileParts[len(fileParts)-1] = ""
@@ -141,9 +138,18 @@ func kernelRequireRelative() object.BuiltInMethod {
 
 		log.InternalDebugF("Kernel#require_relative - Successfully compiled file %s", absoluteFilePath)
 
-		requiredBlock := &object.ClosedBlock{Block: &object.Block{Instructions: instructions}, File: absoluteFilePath}
+		requiredBlock := object.NewClosedBlock(&object.Context{
+			Outer: nil,
+			File:  absoluteFilePath,
+			Self:  MainObject,
+			Block: NULL,
+			Yield: ctx.Yield,
+			BlockGiven: func() bool {
+				return false
+			},
+		}, &object.Block{Instructions: instructions}, []object.EmeraldValue{})
 
-		yield(requiredBlock)
+		object.EvalBlock(requiredBlock)
 
 		requiredFiles.Set(absolutePathStr, TRUE)
 
@@ -152,8 +158,8 @@ func kernelRequireRelative() object.BuiltInMethod {
 }
 
 func kernelInspect() object.BuiltInMethod {
-	return func(ctx *object.Context, target object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(target.Inspect())
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewString(ctx.Self.Inspect())
 	}
 }
 

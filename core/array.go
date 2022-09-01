@@ -32,8 +32,8 @@ func NewArray(val []object.EmeraldValue) *ArrayInstance {
 }
 
 func arrayIndexAccessor() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := self.(*ArrayInstance).Value
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := ctx.Self.(*ArrayInstance).Value
 
 		intArg, ok := args[0].(*IntegerInstance)
 		if !ok {
@@ -51,8 +51,8 @@ func arrayIndexAccessor() object.BuiltInMethod {
 }
 
 func arrayPush() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := self.(*ArrayInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := ctx.Self.(*ArrayInstance)
 
 		arr.Value = append(arr.Value, args[0])
 
@@ -61,11 +61,11 @@ func arrayPush() object.BuiltInMethod {
 }
 
 func arrayEach() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := self.(*ArrayInstance)
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := ctx.Self.(*ArrayInstance)
 
 		for _, val := range arr.Value {
-			yield(block, val)
+			ctx.Yield(val)
 		}
 
 		return arr
@@ -73,14 +73,14 @@ func arrayEach() object.BuiltInMethod {
 }
 
 func arrayToS() object.BuiltInMethod {
-	return func(ctx *object.Context, self object.EmeraldValue, block object.EmeraldValue, yield object.YieldFunc, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		var out bytes.Buffer
 
 		out.WriteString("[")
 
-		values := self.(*ArrayInstance).Value
+		values := ctx.Self.(*ArrayInstance).Value
 		for i, value := range values {
-			out.WriteString(value.Inspect())
+			out.WriteString(Send(value, "inspect", NULL).Inspect())
 
 			if i != len(values)-1 {
 				out.WriteString(", ")
