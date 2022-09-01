@@ -11,10 +11,32 @@ var Enumerable *object.Module
 func InitEnumerable() {
 	Enumerable = DefineModule(Object, "Enumerable")
 
-	DefineMethod(Enumerable, "map", enumerableMap())
+	DefineMethod(Enumerable, "first", enumerableFirst())
 	DefineMethod(Enumerable, "find", enumerableFind())
 	DefineMethod(Enumerable, "find_index", enumerableFindIndex())
+	DefineMethod(Enumerable, "map", enumerableMap())
+	DefineMethod(Enumerable, "reduce", enumerableReduce())
+	DefineMethod(Enumerable, "inject", enumerableReduce())
 	DefineMethod(Enumerable, "sum", enumerableSum())
+}
+
+func enumerableFirst() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		var value object.EmeraldValue
+		wrappedBlock := &object.WrappedBuiltInMethod{
+			Method: func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+				// TODO: This doesn't stop iterating after the first element has been found, should probably implement a break keyword or something
+				if value == nil {
+					value = args[0]
+				}
+				return NULL
+			},
+		}
+
+		Send(ctx.Self, "each", wrappedBlock)
+
+		return value
+	}
 }
 
 func enumerableMap() object.BuiltInMethod {
@@ -128,6 +150,43 @@ func enumerableSum() object.BuiltInMethod {
 		}
 
 		Send(ctx.Self, "each", wrappedBlock)
+
+		return accumulated
+	}
+}
+
+// https://apidock.com/ruby/Enumerable/reduce
+// TODO: Support symbol argument
+func enumerableReduce() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		var accumulated object.EmeraldValue
+
+		self := ctx.Self
+		block := ctx.Block
+
+		argGiven := len(args) != 0
+		if argGiven {
+			accumulated = args[0]
+		} else {
+			accumulated = Send(self, "first", NULL)
+		}
+
+		passedFirst := false
+
+		wrappedBlock := &object.WrappedBuiltInMethod{
+			Method: func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+				if argGiven || passedFirst {
+					args = append([]object.EmeraldValue{accumulated}, args...)
+					accumulated = object.EvalBlock(block.(*object.ClosedBlock), args...)
+				} else {
+					passedFirst = true
+				}
+
+				return NULL
+			},
+		}
+
+		Send(self, "each", wrappedBlock)
 
 		return accumulated
 	}

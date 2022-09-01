@@ -2,6 +2,21 @@ package core_test
 
 import "testing"
 
+func TestArray_first(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "[12, 24, 49].first",
+			expected: 12,
+		},
+		{
+			input:    "[36, 24, 49].first",
+			expected: 36,
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestArray_find(t *testing.T) {
 	tests := []coreTestCase{
 		{
@@ -30,6 +45,23 @@ func TestArray_map(t *testing.T) {
 			name:     "increment",
 			input:    "[12, 24, 49].map { |i| i + 1 }",
 			expected: []any{13, 25, 50},
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
+func TestArray_reduce(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			name:     "with just a block",
+			input:    "[1, 3, 5].reduce { |sum, n| sum + n }",
+			expected: 9,
+		},
+		{
+			name:     "with an initial value argument just a block",
+			input:    "[1, 3, 5].reduce 50 { |sum, n| sum + n }",
+			expected: 59,
 		},
 	}
 
