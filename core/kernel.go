@@ -5,9 +5,11 @@ import (
 	"emerald/object"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var Kernel *object.Module
@@ -23,6 +25,7 @@ func InitKernel() {
 	DefineMethod(Kernel, "kind_of?", kernelKindOf())
 	DefineMethod(Kernel, "is_a?", kernelKindOf())
 	DefineMethod(Kernel, "include", kernelInclude())
+	DefineMethod(Kernel, "sleep", kernelSleep())
 
 	// Should be made private when that function has been implemented
 	DefineMethod(Kernel, "puts", kernelPuts())
@@ -59,6 +62,26 @@ func kernelKindOf() object.BuiltInMethod {
 		}
 
 		return FALSE
+	}
+}
+
+func kernelSleep() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		var sleepArg time.Duration
+
+		switch arg := args[0].(type) {
+		case *IntegerInstance:
+			sleepArg = time.Duration(arg.Value) * time.Second
+		case *FloatInstance:
+			sleepArg = time.Duration(arg.Value) * time.Second
+		}
+
+		start := time.Now()
+		time.Sleep(sleepArg)
+		end := time.Now()
+		slept := math.Round(end.Sub(start).Seconds())
+
+		return NewInteger(int64(slept))
 	}
 }
 
