@@ -12,7 +12,7 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
 		return err
 	}
 
-	symbol := core.NewSymbol(node.Name.(*ast.IdentifierExpression).Value)
+	symbol := core.NewSymbol(node.Name.(ast.IdentifierExpression).Value)
 
 	c.emit(OpPushConstant, c.addConstant(symbol))
 	c.emit(OpPushConstant, c.addConstant(block))
@@ -26,7 +26,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int, err
 
 	numParams := len(node.Parameters)
 	for _, p := range node.Parameters {
-		c.symbolTable.Define(p.(*ast.IdentifierExpression).Value)
+		c.symbolTable.Define(p.(ast.IdentifierExpression).Value)
 	}
 
 	err := c.Compile(node.Body)

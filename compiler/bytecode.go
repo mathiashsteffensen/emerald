@@ -56,6 +56,9 @@ const (
 	// OpNull pushes core.NULL onto the stack
 	OpNull
 
+	// OpYield takes an argument that is the number of arguments to yield to the current given block, if any
+	OpYield
+
 	OpArray
 	OpHash
 	OpJump
@@ -150,6 +153,7 @@ var definitions = map[Opcode]*Definition{
 	OpTrue:                 {"OpTrue", []int{}},
 	OpFalse:                {"OpFalse", []int{}},
 	OpNull:                 {"OpNull", []int{}},
+	OpYield:                {"OpYield", []int{1}},
 	OpArray:                {"OpArray", []int{2}},
 	OpHash:                 {"OpHash", []int{2}},
 	OpMinus:                {"OpMinus", []int{}},

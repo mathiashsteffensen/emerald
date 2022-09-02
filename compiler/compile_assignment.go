@@ -14,7 +14,7 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) error {
 	}
 
 	switch name := node.Name.(type) {
-	case *ast.IdentifierExpression:
+	case ast.IdentifierExpression:
 		if unicode.IsUpper(rune(name.Value[0])) {
 			c.emit(OpConstantSet, c.addConstant(core.NewSymbol(name.Value)))
 			return nil

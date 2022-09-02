@@ -59,6 +59,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.MODULE, p.parseModuleLiteral)
 	p.registerPrefix(lexer.SELF, p.parseSelf)
 	p.registerPrefix(lexer.REGEXP, p.parseRegexpLiteral)
+	p.registerPrefix(lexer.YIELD, p.parseYield)
 
 	p.infixParseFns = make(map[lexer.TokenType]infixParseFn)
 	p.registerInfix(lexer.PLUS, p.parseInfixExpression)
@@ -368,10 +369,6 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	return expression
 }
 
-func (p *Parser) parseCallArguments() []ast.Expression {
-	return p.parseExpressionList(lexer.RPAREN)
-}
-
 func (p *Parser) parseExpressionList(delim lexer.TokenType) []ast.Expression {
 	args := []ast.Expression{}
 
@@ -472,7 +469,7 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 
 	p.nextToken()
 
-	class.Name = p.parseIdentifierExpression().(*ast.IdentifierExpression)
+	class.Name = p.parseIdentifierExpression().(ast.IdentifierExpression)
 
 	p.nextIfSemicolonOrNewline()
 
@@ -498,8 +495,8 @@ func (p *Parser) parseStaticClassLiteral() ast.Expression {
 }
 
 func (p *Parser) parseIndexAccessor(left ast.Expression) ast.Expression {
-	node := &ast.MethodCall{Token: p.curToken, Left: left, CallExpression: &ast.CallExpression{}}
-	node.Method = &ast.IdentifierExpression{Value: "[]"}
+	node := &ast.MethodCall{Token: p.curToken, Left: left, CallExpression: ast.CallExpression{}}
+	node.Method = ast.IdentifierExpression{Value: "[]"}
 
 	node.Arguments = p.parseExpressionList(lexer.RBRACKET)
 

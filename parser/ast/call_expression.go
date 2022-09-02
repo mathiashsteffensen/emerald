@@ -8,14 +8,14 @@ import (
 
 type CallExpression struct {
 	Token     lexer.Token // The '(' token
-	Method    *IdentifierExpression
+	Method    IdentifierExpression
 	Arguments []Expression
 	Block     *BlockLiteral
 }
 
-func (ce *CallExpression) expressionNode()      {}
-func (ce *CallExpression) TokenLiteral() string { return ce.Token.Literal }
-func (ce *CallExpression) String() string {
+func (ce CallExpression) expressionNode()      {}
+func (ce CallExpression) TokenLiteral() string { return ce.Token.Literal }
+func (ce CallExpression) String() string {
 	var out bytes.Buffer
 
 	args := []string{}

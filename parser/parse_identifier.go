@@ -6,37 +6,49 @@ import (
 )
 
 func (p *Parser) parseIdentifierExpression() ast.Expression {
-	node := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
+	node := ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 
-	if p.peekTokenDoesntSignifyCallArguments() {
-		return p.parseIdentifierOrAssignment(node)
-	} else {
-		callExpression := &ast.CallExpression{
-			Token:  p.curToken,
-			Method: node,
+	if p.peekTokenIs(lexer.LBRACE) {
+		callExpression := ast.CallExpression{
+			Token:     p.curToken,
+			Method:    node,
+			Arguments: []ast.Expression{},
 		}
 
-		callExpression.Arguments = p.parseMethodArgsWithoutParentheses()
 		callExpression.Block = p.parseBlockLiteral()
 
 		return callExpression
 	}
+
+	if p.peekTokenDoesntSignifyCallArguments() {
+		return p.parseIdentifierOrAssignment(node)
+	}
+
+	callExpression := ast.CallExpression{
+		Token:  p.curToken,
+		Method: node,
+	}
+
+	callExpression.Arguments = p.parseMethodArgsWithoutParentheses()
+	callExpression.Block = p.parseBlockLiteral()
+
+	return callExpression
 }
 
 func (p *Parser) parseInstanceVariable() ast.Expression {
-	node := &ast.InstanceVariable{IdentifierExpression: &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
+	node := &ast.InstanceVariable{IdentifierExpression: ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
 
 	return p.parseIdentifierOrAssignment(node)
 }
 
 func (p *Parser) parseGlobalVariable() ast.Expression {
-	node := &ast.GlobalVariable{IdentifierExpression: &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
+	node := &ast.GlobalVariable{IdentifierExpression: ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
 
 	return p.parseIdentifierOrAssignment(node)
 }
 
 func (p *Parser) parseSelf() ast.Expression {
-	return &ast.Self{IdentifierExpression: &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
+	return &ast.Self{IdentifierExpression: ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}}
 }
 
 func (p *Parser) parseIdentifierOrAssignment(identNode ast.Expression) ast.Expression {

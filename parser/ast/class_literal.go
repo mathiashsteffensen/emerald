@@ -8,7 +8,7 @@ import (
 type ClassLiteral struct {
 	Token lexer.Token // The class token
 	Body  *BlockStatement
-	Name  *IdentifierExpression
+	Name  IdentifierExpression
 }
 
 func (cl *ClassLiteral) expressionNode()      {}

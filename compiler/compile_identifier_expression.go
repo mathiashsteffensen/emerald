@@ -8,7 +8,7 @@ import (
 
 func (c *Compiler) compileIdentifierExpression(node ast.Expression) {
 	switch node := node.(type) {
-	case *ast.IdentifierExpression:
+	case ast.IdentifierExpression:
 		if unicode.IsUpper(rune(node.Value[0])) {
 			c.emit(OpConstantGet, c.addConstant(core.NewSymbol(node.Value)))
 		} else {

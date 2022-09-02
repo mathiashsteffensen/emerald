@@ -87,6 +87,8 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.push(core.FALSE)
 	case compiler.OpNull:
 		vm.push(core.NULL)
+	case compiler.OpYield:
+		vm.executeOpYield(ins, ip)
 	case compiler.OpPushConstant:
 		constIndex := vm.readUint16(ins, ip)
 

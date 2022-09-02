@@ -8,7 +8,7 @@ import (
 type ModuleLiteral struct {
 	Token lexer.Token // The module token
 	Body  *BlockStatement
-	Name  *IdentifierExpression
+	Name  IdentifierExpression
 }
 
 func (cl *ModuleLiteral) expressionNode()      {}

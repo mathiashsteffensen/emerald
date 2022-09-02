@@ -4,51 +4,51 @@ import "testing"
 
 func TestMethodCall(t *testing.T) {
 	tests := []vmTestCase{
-		//{
-		//	name:     "built in instance method",
-		//	input:    `"string".to_sym`,
-		//	expected: ":string",
-		//},
-		//{
-		//	name: "creating instance and instance method",
-		//	input: `
-		//	class Greeter
-		//		def hello
-		//			"hello"
-		//		end
-		//	end
-		//
-		//	instance = Greeter.new
-		//
-		//	instance.hello
-		//	`,
-		//	expected: "hello",
-		//},
-		//{
-		//	name: "creating class with static method",
-		//	input: `
-		//	class Greeter
-		//		class << self
-		//			def hello
-		//				"hello"
-		//			end
-		//		end
-		//	end
-		//
-		//	Greeter.hello
-		//	`,
-		//	expected: "hello",
-		//},
-		//{
-		//	name:     "passing a block to a builtin method",
-		//	input:    "[0,1,2].map { |i| i }",
-		//	expected: []any{0, 1, 2},
-		//},
-		//{
-		//	name:     "passing a block to a builtin method v2",
-		//	input:    "[0,1,2].map { |i| i + 2 }",
-		//	expected: []any{2, 3, 4},
-		//},
+		{
+			name:     "built in instance method",
+			input:    `"string".to_sym`,
+			expected: ":string",
+		},
+		{
+			name: "creating instance and instance method",
+			input: `
+			class Greeter
+				def hello
+					"hello"
+				end
+			end
+		
+			instance = Greeter.new
+		
+			instance.hello
+			`,
+			expected: "hello",
+		},
+		{
+			name: "creating class with static method",
+			input: `
+			class Greeter
+				class << self
+					def hello
+						"hello"
+					end
+				end
+			end
+		
+			Greeter.hello
+			`,
+			expected: "hello",
+		},
+		{
+			name:     "passing a block to a builtin method",
+			input:    "[0,1,2].map { |i| i }",
+			expected: []any{0, 1, 2},
+		},
+		{
+			name:     "passing a block to a builtin method v2",
+			input:    "[0,1,2].map { |i| i + 2 }",
+			expected: []any{2, 3, 4},
+		},
 		{
 			name: "calling a top level method within a block passed to a builtin method",
 			input: `

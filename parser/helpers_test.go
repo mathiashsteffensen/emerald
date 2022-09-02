@@ -30,10 +30,10 @@ func testExpressionStatement[T ast.Expression](t *testing.T, stmt ast.Statement,
 	if !ok {
 		t.Fatalf("stmt is not ast.ExpressionStatement. got=%T", stmt)
 	}
-	
+
 	exp, ok := exprStmt.Expression.(T)
 	if !ok {
-		t.Fatalf("stmt.Expression is not ast.MethodCall. got=%T", exprStmt.Expression)
+		t.Fatalf("stmt.Expression is not expected type, got=%T", exprStmt.Expression)
 	}
 
 	cb(exp)
@@ -103,7 +103,7 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 }
 
 func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
-	ident, ok := exp.(*ast.IdentifierExpression)
+	ident, ok := exp.(ast.IdentifierExpression)
 	if !ok {
 		t.Errorf("exp not *ast.Identifier. got=%T", exp)
 		return false

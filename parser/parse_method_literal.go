@@ -12,7 +12,7 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 		return nil
 	}
 
-	methodIdent := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
+	methodIdent := ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 	p.nextIfSemicolonOrNewline()
 
 	if p.peekTokenIs(lexer.ASSIGN) {
@@ -26,7 +26,7 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 	if p.peekTokenIs(lexer.LPAREN) {
 		p.nextToken()
 
-		method.Parameters = p.parseCallArguments()
+		method.Parameters = p.parseExpressionList(lexer.RPAREN)
 	} else {
 		method.Parameters = make([]ast.Expression, 0)
 	}

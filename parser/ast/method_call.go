@@ -8,12 +8,12 @@ import (
 type MethodCall struct {
 	Left  Expression
 	Token lexer.Token // The . token
-	*CallExpression
+	CallExpression
 }
 
-func (pa *MethodCall) expressionNode()      {}
-func (pa *MethodCall) TokenLiteral() string { return pa.Token.Literal }
-func (pa *MethodCall) String() string {
+func (pa MethodCall) expressionNode()      {}
+func (pa MethodCall) TokenLiteral() string { return pa.Token.Literal }
+func (pa MethodCall) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("(")

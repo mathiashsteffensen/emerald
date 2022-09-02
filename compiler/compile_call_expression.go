@@ -5,7 +5,7 @@ import (
 	"emerald/parser/ast"
 )
 
-func (c *Compiler) compileCallExpression(node *ast.CallExpression) error {
+func (c *Compiler) compileCallExpression(node ast.CallExpression) error {
 	method := core.NewSymbol(node.Method.Value)
 
 	c.emit(OpPushConstant, c.addConstant(method))

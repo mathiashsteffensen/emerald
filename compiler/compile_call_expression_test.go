@@ -32,6 +32,24 @@ func TestCompileCallExpression(t *testing.T) {
 			},
 		},
 		{
+			input: "call { |n| n + 2 } ",
+			expectedConstants: []any{
+				":call",
+				2,
+				[]Instructions{
+					Make(OpGetLocal, 0),
+					Make(OpReturnValue),
+				},
+			},
+			expectedInstructions: []Instructions{
+				Make(OpSelf),
+				Make(OpPushConstant, 0),
+				Make(OpCloseBlock, 2),
+				Make(OpSend),
+				Make(OpPop),
+			},
+		},
+		{
 			input: `
 			def many_arg(a, b, c); a; b; c; end
 			many_arg(24, 25, 26)

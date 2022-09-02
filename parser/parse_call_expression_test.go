@@ -27,6 +27,12 @@ func TestCallExpressionParsing(t *testing.T) {
 			true,
 		},
 		{
+			"with parentheses and a braces block",
+			`add(1, 19, 27) {	do_stuff }`,
+			[]any{1, 19, 27},
+			true,
+		},
+		{
 			"without parentheses & not passing a block",
 			"add 1, 6, 9",
 			[]any{1, 6, 9},
@@ -48,7 +54,7 @@ func TestCallExpressionParsing(t *testing.T) {
 					program.Statements[0])
 			}
 
-			exp, ok := stmt.Expression.(*ast.CallExpression)
+			exp, ok := stmt.Expression.(ast.CallExpression)
 			if !ok {
 				t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
 					stmt.Expression)

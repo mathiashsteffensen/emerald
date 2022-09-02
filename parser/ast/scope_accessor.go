@@ -8,7 +8,7 @@ import (
 type ScopeAccessor struct {
 	Left  Expression
 	Token lexer.Token // The :: token
-	*CallExpression
+	CallExpression
 }
 
 func (pa *ScopeAccessor) expressionNode()      {}

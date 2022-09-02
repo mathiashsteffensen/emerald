@@ -112,13 +112,18 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 	case *ast.Self:
 		c.emit(OpSelf)
-	case *ast.IdentifierExpression:
+	case ast.Yield:
+		err := c.compileYield(node)
+		if err != nil {
+			return err
+		}
+	case ast.IdentifierExpression:
 		c.compileIdentifierExpression(node)
 	case *ast.InstanceVariable:
 		c.compileIdentifierExpression(node)
 	case *ast.GlobalVariable:
 		c.compileIdentifierExpression(node)
-	case *ast.CallExpression:
+	case ast.CallExpression:
 		c.emit(OpSelf) // Method calls without a receiver has an implicit self receiver
 		err := c.compileCallExpression(node)
 		if err != nil {
