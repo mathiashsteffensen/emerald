@@ -12,16 +12,16 @@ func TestCompileMethodCall(t *testing.T) {
 			MyClass.new
 			`,
 			expectedConstants: []any{
+				":Object",
 				":MyClass",
-				"class:MyClass",
 				":MyClass",
 				":new",
 			},
 			expectedInstructions: []Instructions{
-				Make(OpConstantGetOrSet, 0, 1),
-				Make(OpOpenClass),
+				Make(OpConstantGet, 0),
+				Make(OpOpenClass, 1),
 				Make(OpNull),
-				Make(OpCloseClass),
+				Make(OpUnwrapContext),
 				Make(OpPop),
 				Make(OpConstantGet, 2),
 				Make(OpPushConstant, 3),
@@ -76,8 +76,8 @@ func TestCompileMethodCall(t *testing.T) {
 			class Math; end
 			[0].map { |i| Math.instance.add_two(i) }`,
 			expectedConstants: []any{
+				":Object",
 				":Math",
-				"class:Math",
 				0,
 				":map",
 				":Math",
@@ -96,10 +96,10 @@ func TestCompileMethodCall(t *testing.T) {
 				},
 			},
 			expectedInstructions: []Instructions{
-				Make(OpConstantGetOrSet, 0, 1),
-				Make(OpOpenClass),
+				Make(OpConstantGet, 0),
+				Make(OpOpenClass, 1),
 				Make(OpNull),
-				Make(OpCloseClass),
+				Make(OpUnwrapContext),
 				Make(OpPop),
 				Make(OpPushConstant, 2),
 				Make(OpArray, 1),
@@ -123,8 +123,8 @@ func TestCompileMethodCall(t *testing.T) {
 				MyClass.new.one(:two)
 			`,
 			expectedConstants: []any{
+				":Object",
 				":MyClass",
-				"class:MyClass",
 				":one",
 				":two",
 				":three",
@@ -149,8 +149,8 @@ func TestCompileMethodCall(t *testing.T) {
 				":two",
 			},
 			expectedInstructions: []Instructions{
-				Make(OpConstantGetOrSet, 0, 1),
-				Make(OpOpenClass),
+				Make(OpConstantGet, 0),
+				Make(OpOpenClass, 1),
 				Make(OpPushConstant, 2),
 				Make(OpPushConstant, 3),
 				Make(OpPushConstant, 4),
@@ -158,7 +158,7 @@ func TestCompileMethodCall(t *testing.T) {
 				Make(OpPushConstant, 5),
 				Make(OpCloseBlock, 8, 0),
 				Make(OpSend),
-				Make(OpCloseClass),
+				Make(OpUnwrapContext),
 				Make(OpPop),
 				Make(OpConstantGet, 9),
 				Make(OpPushConstant, 10),
@@ -184,8 +184,8 @@ func TestCompileMethodCall(t *testing.T) {
 				MyClass.instance
 			`,
 			expectedConstants: []any{
+				":Object",
 				":MyClass",
-				"class:MyClass",
 				":@instance",
 				":@instance",
 				":new",
@@ -210,14 +210,14 @@ func TestCompileMethodCall(t *testing.T) {
 				":instance",
 			},
 			expectedInstructions: []Instructions{
-				Make(OpConstantGetOrSet, 0, 1),
-				Make(OpOpenClass),
+				Make(OpConstantGet, 0),
+				Make(OpOpenClass, 1),
 				Make(OpStaticTrue),
 				Make(OpPushConstant, 6),
 				Make(OpPushConstant, 7),
 				Make(OpDefineMethod),
 				Make(OpStaticFalse),
-				Make(OpCloseClass),
+				Make(OpUnwrapContext),
 				Make(OpPop),
 				Make(OpConstantGet, 8),
 				Make(OpPushConstant, 9),
@@ -245,8 +245,8 @@ func TestCompileMethodCall(t *testing.T) {
 				Logger.level = :debug
 			`,
 			expectedConstants: []any{
+				":Object",
 				":Logger",
-				"class:Logger",
 				":@level",
 				":level=",
 				[]Instructions{
@@ -259,14 +259,14 @@ func TestCompileMethodCall(t *testing.T) {
 				":debug",
 			},
 			expectedInstructions: []Instructions{
-				Make(OpConstantGetOrSet, 0, 1),
-				Make(OpOpenClass),
+				Make(OpConstantGet, 0),
+				Make(OpOpenClass, 1),
 				Make(OpStaticTrue),
 				Make(OpPushConstant, 3),
 				Make(OpPushConstant, 4),
 				Make(OpDefineMethod),
 				Make(OpStaticFalse),
-				Make(OpCloseClass),
+				Make(OpUnwrapContext),
 				Make(OpPop),
 				Make(OpConstantGet, 5),
 				Make(OpPushConstant, 6),

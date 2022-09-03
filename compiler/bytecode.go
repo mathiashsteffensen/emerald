@@ -71,8 +71,6 @@ const (
 	// OpConstantGet gets a constant from the current namespace.
 	// By calling .NamespaceDefinitionGet on the current execution context
 	OpConstantGet
-	// OpConstantGetOrSet either gets a constant from the current namespace, if it is defined, otherwise defines it
-	OpConstantGetOrSet
 	// OpScopedConstantGet looks up constant in the element on top of the stack
 	OpScopedConstantGet
 
@@ -99,22 +97,17 @@ const (
 	// the next object on the stack is the symbol representing the name of the method to invoke
 	OpSend
 
-	// OpSetExecutionTarget takes the value at the top of the stack
-	// and sets it as execution target
-	// While replacing it in the stack with the previous target
-	// so the previous target is the top of the stack
-	OpSetExecutionTarget
-
-	// OpResetExecutionTarget takes the value at the second-most top of the stack
-	// and sets it as execution target
-	OpResetExecutionTarget
-
-	// OpOpenClass takes the value at the top of the stack
-	// and sets it as definition context while setting its SingletonClass as execution context.
+	// OpOpenClass takes an argument with a constant index pointing to a symbol name of the class to be set as self,
+	// If no class exists with the specified name, it creates one.
+	// the value at the top of the stack is the parent class.
 	OpOpenClass
 
-	// OpCloseClass resets the execution context to its outer context
-	OpCloseClass
+	// OpOpenModule takes an argument with a constant index pointing to a symbol name of the module to be set as self
+	// If no module exists with the specified name, it creates one.
+	OpOpenModule
+
+	// OpUnwrapContext sets the execution context to its outer context
+	OpUnwrapContext
 
 	// Modifies whether the execution context is static.
 	OpStaticTrue
@@ -135,54 +128,52 @@ const (
 )
 
 var definitions = map[Opcode]*Definition{
-	OpPushConstant:         {"OpPushConstant", []int{2}},
-	OpAdd:                  {"OpAdd", []int{}},
-	OpPop:                  {"OpPop", []int{}},
-	OpSub:                  {"OpSub", []int{}},
-	OpMul:                  {"OpMul", []int{}},
-	OpDiv:                  {"OpDiv", []int{}},
-	OpMatch:                {"OpMatch", []int{}},
-	OpSpaceship:            {"OpSpaceship", []int{}},
-	OpEqual:                {"OpEqual", []int{}},
-	OpNotEqual:             {"OpNotEqual", []int{}},
-	OpGreaterThan:          {"OpGreaterThan", []int{}},
-	OpGreaterThanOrEq:      {"OpGreaterThanOrEq", []int{}},
-	OpLessThan:             {"OpLessThan", []int{}},
-	OpLessThanOrEq:         {"OpLessThanOrEq", []int{}},
-	OpSelf:                 {"OpSelf", []int{}},
-	OpTrue:                 {"OpTrue", []int{}},
-	OpFalse:                {"OpFalse", []int{}},
-	OpNull:                 {"OpNull", []int{}},
-	OpYield:                {"OpYield", []int{1}},
-	OpArray:                {"OpArray", []int{2}},
-	OpHash:                 {"OpHash", []int{2}},
-	OpMinus:                {"OpMinus", []int{}},
-	OpBang:                 {"OpBang", []int{}},
-	OpJump:                 {"OpJump", []int{2}},
-	OpJumpTruthy:           {"OpJumpTruthy", []int{2}},
-	OpJumpNotTruthy:        {"OpJumpNotTruthy", []int{2}},
-	OpGetGlobal:            {"OpGetGlobal", []int{2}},
-	OpSetGlobal:            {"OpSetGlobal", []int{2}},
-	OpGetLocal:             {"OpGetLocal", []int{1}},
-	OpSetLocal:             {"OpSetLocal", []int{1}},
-	OpGetFree:              {"OpGetFree", []int{1}},
-	OpReturn:               {"OpReturn", []int{}},
-	OpReturnValue:          {"OpReturnValue", []int{}},
-	OpDefineMethod:         {"OpDefineMethod", []int{}},
-	OpSend:                 {"OpSend", []int{1}},
-	OpOpenClass:            {"OpOpenClass", []int{}},
-	OpCloseClass:           {"OpCloseClass", []int{}},
-	OpSetExecutionTarget:   {"OpSetExecutionTarget", []int{}},
-	OpResetExecutionTarget: {"OpResetExecutionTarget", []int{}},
-	OpStaticTrue:           {"OpStaticTrue", []int{}},
-	OpStaticFalse:          {"OpStaticFalse", []int{}},
-	OpCloseBlock:           {"OpCloseBlock", []int{2, 1}},
-	OpInstanceVarSet:       {"OpInstanceVarSet", []int{2}},
-	OpInstanceVarGet:       {"OpInstanceVarGet", []int{2}},
-	OpConstantSet:          {"OpConstantSet", []int{2}},
-	OpConstantGet:          {"OpConstantGet", []int{2}},
-	OpConstantGetOrSet:     {"OpConstantGetOrSet", []int{2, 2}},
-	OpScopedConstantGet:    {"OpScopedConstantGet", []int{2}},
+	OpPushConstant:      {"OpPushConstant", []int{2}},
+	OpAdd:               {"OpAdd", []int{}},
+	OpPop:               {"OpPop", []int{}},
+	OpSub:               {"OpSub", []int{}},
+	OpMul:               {"OpMul", []int{}},
+	OpDiv:               {"OpDiv", []int{}},
+	OpMatch:             {"OpMatch", []int{}},
+	OpSpaceship:         {"OpSpaceship", []int{}},
+	OpEqual:             {"OpEqual", []int{}},
+	OpNotEqual:          {"OpNotEqual", []int{}},
+	OpGreaterThan:       {"OpGreaterThan", []int{}},
+	OpGreaterThanOrEq:   {"OpGreaterThanOrEq", []int{}},
+	OpLessThan:          {"OpLessThan", []int{}},
+	OpLessThanOrEq:      {"OpLessThanOrEq", []int{}},
+	OpSelf:              {"OpSelf", []int{}},
+	OpTrue:              {"OpTrue", []int{}},
+	OpFalse:             {"OpFalse", []int{}},
+	OpNull:              {"OpNull", []int{}},
+	OpYield:             {"OpYield", []int{1}},
+	OpArray:             {"OpArray", []int{2}},
+	OpHash:              {"OpHash", []int{2}},
+	OpMinus:             {"OpMinus", []int{}},
+	OpBang:              {"OpBang", []int{}},
+	OpJump:              {"OpJump", []int{2}},
+	OpJumpTruthy:        {"OpJumpTruthy", []int{2}},
+	OpJumpNotTruthy:     {"OpJumpNotTruthy", []int{2}},
+	OpGetGlobal:         {"OpGetGlobal", []int{2}},
+	OpSetGlobal:         {"OpSetGlobal", []int{2}},
+	OpGetLocal:          {"OpGetLocal", []int{1}},
+	OpSetLocal:          {"OpSetLocal", []int{1}},
+	OpGetFree:           {"OpGetFree", []int{1}},
+	OpReturn:            {"OpReturn", []int{}},
+	OpReturnValue:       {"OpReturnValue", []int{}},
+	OpDefineMethod:      {"OpDefineMethod", []int{}},
+	OpSend:              {"OpSend", []int{1}},
+	OpOpenClass:         {"OpOpenClass", []int{2}},
+	OpOpenModule:        {"OpOpenModule", []int{2}},
+	OpUnwrapContext:     {"OpUnwrapContext", []int{}},
+	OpStaticTrue:        {"OpStaticTrue", []int{}},
+	OpStaticFalse:       {"OpStaticFalse", []int{}},
+	OpCloseBlock:        {"OpCloseBlock", []int{2, 1}},
+	OpInstanceVarSet:    {"OpInstanceVarSet", []int{2}},
+	OpInstanceVarGet:    {"OpInstanceVarGet", []int{2}},
+	OpConstantSet:       {"OpConstantSet", []int{2}},
+	OpConstantGet:       {"OpConstantGet", []int{2}},
+	OpScopedConstantGet: {"OpScopedConstantGet", []int{2}},
 }
 
 func Lookup(op byte) (*Definition, error) {

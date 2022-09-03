@@ -165,8 +165,6 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.executeOpConstantGet(ins, ip)
 	case compiler.OpConstantSet:
 		vm.executeOpConstantSet(ins, ip)
-	case compiler.OpConstantGetOrSet:
-		vm.executeOpConstantGetOrSet(ins, ip)
 	case compiler.OpScopedConstantGet:
 		vm.executeOpScopedConstantGet(ins, ip)
 	case compiler.OpInstanceVarSet:
@@ -223,31 +221,31 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.callFunction(int(numArgs))
 	case compiler.OpOpenClass:
 		outerCtx := vm.ctx
-		newSelf := vm.pop()
+		nameIndex := vm.readUint16(ins, ip)
+		name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
+		parent := vm.pop()
 
-		var name string
-
-		switch newSelf := newSelf.(type) {
-		case *object.Class:
-			name = newSelf.Name
-		case *object.Module:
-			name = newSelf.Name
+		class, err := getConst(vm.ctx.Self, name)
+		if err != nil {
+			class = core.DefineClass(vm.ctx.Self, name, parent.(*object.Class))
 		}
 
-		setConst(outerCtx.Self, name, newSelf)
+		vm.ctx = vm.newEnclosedContext(outerCtx.File, class, outerCtx.Block)
+	case compiler.OpOpenModule:
+		outerCtx := vm.ctx
+		nameIndex := vm.readUint16(ins, ip)
+		name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 
-		vm.ctx = vm.newEnclosedContext(outerCtx.File, newSelf, outerCtx.Block)
-	case compiler.OpCloseClass:
+		module, err := getConst(vm.ctx.Self, name)
+		if err != nil {
+			module = core.DefineModule(vm.ctx.Self, name)
+		}
+
+		vm.ctx = vm.newEnclosedContext(outerCtx.File, module, outerCtx.Block)
+	case compiler.OpUnwrapContext:
 		to := vm.ctx.Outer
 
 		vm.ctx = to
-	case compiler.OpSetExecutionTarget:
-		oldContext := vm.ctx
-		newSelf := vm.pop()
-
-		vm.ctx = vm.newEnclosedContext(oldContext.File, newSelf, oldContext.Block)
-	case compiler.OpResetExecutionTarget:
-		vm.ctx = vm.ctx.Outer
 	case compiler.OpCloseBlock:
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		numFreeVars := compiler.ReadUint8(ins[ip+3:])

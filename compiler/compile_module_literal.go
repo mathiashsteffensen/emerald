@@ -2,32 +2,23 @@ package compiler
 
 import (
 	"emerald/core"
-	"emerald/object"
 	"emerald/parser/ast"
 )
 
 func (c *Compiler) compileModuleLiteral(node *ast.ModuleLiteral) error {
 	name := node.Name.Value
-	class := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{}, core.Module)
 
-	c.emitConstantGetOrSet(name, class)
-	c.emit(OpOpenClass)
+	c.emit(OpOpenModule, c.addConstant(core.NewSymbol(name)))
 
-	if len(node.Body.Statements) == 0 {
-		c.emit(OpNull)
-	} else {
-		err := c.Compile(node.Body)
-		if err != nil {
-			return err
-		}
+	err := c.compileStatementsWithReturnValue(node.Body.Statements)
+	if err != nil {
+		return err
 	}
 
 	if c.lastInstructionIs(OpPop) {
-		lastPos := c.scopes[c.scopeIndex].lastInstruction.Position
-		c.replaceInstruction(lastPos, Make(OpCloseClass))
-		c.scopes[c.scopeIndex].lastInstruction.Opcode = OpCloseClass
+		c.replaceLastInstructionWith(OpUnwrapContext)
 	} else {
-		c.emit(OpCloseClass)
+		c.emit(OpUnwrapContext)
 	}
 
 	return nil

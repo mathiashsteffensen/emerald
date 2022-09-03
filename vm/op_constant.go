@@ -29,29 +29,6 @@ func (vm *VM) executeOpConstantSet(ins compiler.Instructions, ip int) {
 	setConst(vm.ctx.Self, name, value)
 }
 
-func (vm *VM) executeOpConstantGetOrSet(ins compiler.Instructions, ip int) {
-	nameIndex := vm.readUint16(ins, ip)
-	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
-	valueIndex := compiler.ReadUint16(ins[ip+3:])
-	vm.currentFrame().ip += 2
-
-	self := vm.ctx.Self
-
-	value, err := getConst(self, name)
-	if err != nil {
-		value = heap.GetConstant(valueIndex)
-
-		// If self is an instance, define the constant on the class
-		if self.Type() == object.INSTANCE_VALUE {
-			self = self.Class().Super()
-		}
-
-		setConst(self, name, value)
-	}
-
-	vm.push(value)
-}
-
 func (vm *VM) executeOpScopedConstantGet(ins compiler.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
 	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
@@ -68,26 +45,36 @@ func (vm *VM) executeOpScopedConstantGet(ins compiler.Instructions, ip int) {
 
 func getConst(self object.EmeraldValue, name string) (object.EmeraldValue, error) {
 	value := self.NamespaceDefinitionGet(name)
-	if value == nil {
-		// If it's an instance, check the class namespace
-		if self.Type() == object.INSTANCE_VALUE {
-			value = self.Class().Super().NamespaceDefinitionGet(name)
-		}
-
-		// If it's a singleton class, check the class namespace
-		if self.Type() == object.STATIC_CLASS_VALUE {
-			value = self.(*object.SingletonClass).Instance.NamespaceDefinitionGet(name)
-		}
-
-		if value == nil {
-			// Try MainObject as a last resort
-			value = core.MainObject.NamespaceDefinitionGet(name)
-
-			if value == nil {
-				return nil, fmt.Errorf("uninitialized constant %s", name)
-			}
-		}
+	if value != nil {
+		return value, nil
 	}
+
+	// If it's an instance, check the class namespace
+	if self.Type() == object.INSTANCE_VALUE {
+		value = self.Class().Super().NamespaceDefinitionGet(name)
+	}
+
+	// If it's a singleton class, check the class namespace
+	if self.Type() == object.STATIC_CLASS_VALUE {
+		value = self.(*object.SingletonClass).Instance.NamespaceDefinitionGet(name)
+	}
+
+	if value == nil {
+		// Try MainObject & Object as a last resort
+		value = core.MainObject.NamespaceDefinitionGet(name)
+		if value != nil {
+			return value, nil
+		}
+
+		value = core.Object.NamespaceDefinitionGet(name)
+		if value != nil {
+			return value, nil
+		}
+
+		return nil, fmt.Errorf("uninitialized constant %s", name)
+
+	}
+
 	return value, nil
 }
 

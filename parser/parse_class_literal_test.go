@@ -6,7 +6,7 @@ import (
 )
 
 func TestClassLiteral(t *testing.T) {
-	input := `class Integer
+	input := `class Math < BasicObject
 		def add(x, y)
 			x + y
 		end
@@ -14,43 +14,27 @@ func TestClassLiteral(t *testing.T) {
 
 	program := testParseAST(t, input)
 
-	if len(program.Statements) != 1 {
-		t.Fatalf("expected program to have 1 statement got=%d", len(program.Statements))
-	}
+	expectStatementLength(t, program.Statements, 1)
 
-	class, ok := program.Statements[0].(*ast.ExpressionStatement).Expression.(*ast.ClassLiteral)
-	if !ok {
-		t.Fatalf("expression is not class literal, got=%T", program.Statements[0].(*ast.ExpressionStatement).Expression)
-	}
+	testExpressionStatement(t, program.Statements[0], func(class *ast.ClassLiteral) {
+		if class.Name.String() != "Math" {
+			t.Fatalf("class name was not Math got=%s", class.Name.String())
+		}
 
-	if class.Name.String() != "Integer" {
-		t.Fatalf("class name was not integer got=%s", class.Name.String())
-	}
+		if class.Parent.String() != "BasicObject" {
+			t.Fatalf("parent class name was not BasicObject got=%s", class.Name.String())
+		}
 
-	if len(class.Body.Statements) != 1 {
-		t.Fatalf(
-			"expected class body to have 1 statement got=%d (%+v)",
-			len(class.Body.Statements),
-			class.Body.Statements,
-		)
-	}
+		expectStatementLength(t, class.Body.Statements, 1)
 
-	method, ok := class.Body.Statements[0].(*ast.ExpressionStatement).Expression.(*ast.MethodLiteral)
-	if !ok {
-		t.Fatalf("expression is not method literal, got=%T", class.Body.Statements[0].(*ast.ExpressionStatement).Expression)
-	}
+		testExpressionStatement(t, class.Body.Statements[0], func(method *ast.MethodLiteral) {
+			if method.Name.String() != "add" {
+				t.Fatalf("method name was not add got=%s", method.Name.String())
+			}
 
-	if method.Name.String() != "add" {
-		t.Fatalf("method name was not add got=%s", method.Name.String())
-	}
-
-	if len(method.Body.Statements) != 1 {
-		t.Fatalf(
-			"expected method body to have 1 statement got=%d (%+v)",
-			len(class.Body.Statements),
-			class.Body.Statements,
-		)
-	}
+			expectStatementLength(t, method.Body.Statements, 1)
+		})
+	})
 }
 
 func TestStaticClassLiteral(t *testing.T) {

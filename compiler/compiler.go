@@ -202,6 +202,21 @@ func (c *Compiler) Compile(node ast.Node) error {
 	return nil
 }
 
+func (c *Compiler) compileStatementsWithReturnValue(statements []ast.Statement) error {
+	if len(statements) == 0 {
+		c.emit(OpNull)
+	} else {
+		for _, s := range statements {
+			err := c.Compile(s)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func (c *Compiler) Bytecode() *Bytecode {
 	return &Bytecode{
 		Instructions: c.currentInstructions(),
@@ -256,6 +271,12 @@ func (c *Compiler) replaceInstruction(pos int, newInstruction []byte) {
 	}
 }
 
+func (c *Compiler) replaceLastInstructionWith(op Opcode) {
+	lastPos := c.scopes[c.scopeIndex].lastInstruction.Position
+	c.replaceInstruction(lastPos, Make(op))
+	c.scopes[c.scopeIndex].lastInstruction.Opcode = op
+}
+
 func (c *Compiler) changeOperand(opPos int, operand int) {
 	op := Opcode(c.currentInstructions()[opPos])
 	newInstruction := Make(op, operand)
@@ -272,10 +293,10 @@ func (c *Compiler) emit(op Opcode, operands ...int) int {
 	return pos
 }
 
-func (c *Compiler) emitConstantGetOrSet(name string, value object.EmeraldValue) {
+func (c *Compiler) emitConstantGet(name string) {
 	symbol := core.NewSymbol(name)
 
-	c.emit(OpConstantGetOrSet, c.addConstant(symbol), c.addConstant(value))
+	c.emit(OpConstantGet, c.addConstant(symbol))
 }
 
 func (c *Compiler) emitSymbol(symbol heap.Symbol) {

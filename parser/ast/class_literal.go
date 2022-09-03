@@ -6,9 +6,10 @@ import (
 )
 
 type ClassLiteral struct {
-	Token lexer.Token // The class token
-	Body  *BlockStatement
-	Name  IdentifierExpression
+	Token  lexer.Token // The class token
+	Name   IdentifierExpression
+	Parent Expression
+	Body   *BlockStatement
 }
 
 func (cl *ClassLiteral) expressionNode()      {}

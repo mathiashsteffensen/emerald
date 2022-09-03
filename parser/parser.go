@@ -460,24 +460,6 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 	return arr
 }
 
-func (p *Parser) parseClassLiteral() ast.Expression {
-	if p.peekTokenIs(lexer.APPEND) {
-		return p.parseStaticClassLiteral()
-	}
-
-	class := &ast.ClassLiteral{Token: p.curToken}
-
-	p.nextToken()
-
-	class.Name = p.parseIdentifierExpression().(ast.IdentifierExpression)
-
-	p.nextIfSemicolonOrNewline()
-
-	class.Body = p.parseBlockStatement(lexer.END)
-
-	return class
-}
-
 func (p *Parser) parseStaticClassLiteral() ast.Expression {
 	class := &ast.StaticClassLiteral{Token: p.curToken}
 

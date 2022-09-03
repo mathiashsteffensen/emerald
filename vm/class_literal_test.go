@@ -46,6 +46,21 @@ func TestClassLiteral(t *testing.T) {
 			MyMod::MyClass`,
 			expected: "class:MyClass",
 		},
+		{
+			name: "inheriting class",
+			input: `
+				class Parent
+					def number
+						5
+					end
+				end
+				
+				class Child < Parent; end
+
+				Child.new.number
+			`,
+			expected: 5,
+		},
 	}
 
 	runVmTests(t, tests)

@@ -10,7 +10,7 @@ func (c *Compiler) compileIdentifierExpression(node ast.Expression) {
 	switch node := node.(type) {
 	case ast.IdentifierExpression:
 		if unicode.IsUpper(rune(node.Value[0])) {
-			c.emit(OpConstantGet, c.addConstant(core.NewSymbol(node.Value)))
+			c.emitConstantGet(node.Value)
 		} else {
 			symbol, ok := c.symbolTable.Resolve(node.Value)
 			if ok {

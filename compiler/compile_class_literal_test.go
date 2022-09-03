@@ -8,40 +8,43 @@ func TestCompileClassLiteral(t *testing.T) {
 			name:  "defining a new class",
 			input: "class MyClass; end",
 			expectedConstants: []any{
+				":Object",
 				":MyClass",
-				"class:MyClass",
 			},
 			expectedInstructions: []Instructions{
-				Make(OpConstantGetOrSet, 0, 1),
-				Make(OpOpenClass),
+				Make(OpConstantGet, 0),
+				Make(OpOpenClass, 1),
 				Make(OpNull),
-				Make(OpCloseClass),
+				Make(OpUnwrapContext),
 				Make(OpPop),
 			},
 		},
 		{
 			name: "defining a namespaced class",
-			input: "module MyMod; class MyClass; end; end\n" +
-				"MyMod::MyClass",
+			input: `
+				module MyMod
+					class MyClass; end
+				end
+				
+				MyMod::MyClass
+			`,
 			expectedConstants: []any{
 				":MyMod",
-				"module:MyMod",
+				":Object",
 				":MyClass",
-				"class:MyClass",
 				":MyMod",
 				":MyClass",
 			},
 			expectedInstructions: []Instructions{
-				Make(OpConstantGetOrSet, 0, 1),
-				Make(OpOpenClass),
-				Make(OpConstantGetOrSet, 2, 3),
-				Make(OpOpenClass),
+				Make(OpOpenModule, 0),
+				Make(OpConstantGet, 1),
+				Make(OpOpenClass, 2),
 				Make(OpNull),
-				Make(OpCloseClass),
-				Make(OpCloseClass),
+				Make(OpUnwrapContext),
+				Make(OpUnwrapContext),
 				Make(OpPop),
-				Make(OpConstantGet, 4),
-				Make(OpScopedConstantGet, 5),
+				Make(OpConstantGet, 3),
+				Make(OpScopedConstantGet, 4),
 				Make(OpPop),
 			},
 		},
@@ -61,8 +64,8 @@ func TestCompileClassLiteral(t *testing.T) {
 			end
 			`,
 			expectedConstants: []any{
+				":Object",
 				":MyClass",
-				"class:MyClass",
 				10,
 				":my_method",
 				[]Instructions{
@@ -77,8 +80,8 @@ func TestCompileClassLiteral(t *testing.T) {
 				},
 			},
 			expectedInstructions: []Instructions{
-				Make(OpConstantGetOrSet, 0, 1),
-				Make(OpOpenClass),
+				Make(OpConstantGet, 0),
+				Make(OpOpenClass, 1),
 				Make(OpPushConstant, 3),
 				Make(OpPushConstant, 4),
 				Make(OpDefineMethod),
@@ -88,7 +91,7 @@ func TestCompileClassLiteral(t *testing.T) {
 				Make(OpPushConstant, 7),
 				Make(OpDefineMethod),
 				Make(OpStaticFalse),
-				Make(OpCloseClass),
+				Make(OpUnwrapContext),
 				Make(OpPop),
 			},
 		},
@@ -103,10 +106,10 @@ func TestCompileClassLiteral(t *testing.T) {
 			end
 			`,
 			expectedConstants: []any{
+				":Object",
 				":MyClass",
-				"class:MyClass",
+				":Object",
 				":MyClass",
-				"class:MyClass",
 				10,
 				":my_method",
 				[]Instructions{
@@ -115,17 +118,17 @@ func TestCompileClassLiteral(t *testing.T) {
 				},
 			},
 			expectedInstructions: []Instructions{
-				Make(OpConstantGetOrSet, 0, 1),
-				Make(OpOpenClass),
+				Make(OpConstantGet, 0),
+				Make(OpOpenClass, 1),
 				Make(OpNull),
-				Make(OpCloseClass),
+				Make(OpUnwrapContext),
 				Make(OpPop),
-				Make(OpConstantGetOrSet, 2, 3),
-				Make(OpOpenClass),
+				Make(OpConstantGet, 2),
+				Make(OpOpenClass, 3),
 				Make(OpPushConstant, 5),
 				Make(OpPushConstant, 6),
 				Make(OpDefineMethod),
-				Make(OpCloseClass),
+				Make(OpUnwrapContext),
 				Make(OpPop),
 			},
 		},
