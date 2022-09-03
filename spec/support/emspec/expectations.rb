@@ -1,6 +1,6 @@
 module EMSpec
     module Expectations
-        class RootExpectation
+        class Expectation
             attr_reader :expected
 
             def initialize(expected)
@@ -9,8 +9,15 @@ module EMSpec
 
             def to(matcher)
                 if !matcher.matches?(expected)
-                    matcher.error(expected)
+                    log_failure(matcher.error(expected))
+                    nil
                 end
+            end
+
+            def log_failure(msg)
+                puts "Spec failed"
+                puts "  " + current_context.name
+                puts "      " + msg
             end
         end
 
@@ -26,16 +33,16 @@ module EMSpec
             end
 
             def error(expected)
-                puts "Expected " + expected.inspect + " to equal " + actual.inspect
+                "Expected " + expected.inspect + " to equal " + actual.inspect
             end
         end
 
         def expect(expected)
-            Expectation.new(expected)
+            EMSpec::Expectations::Expectation.new(expected)
         end
 
         def eq(actual)
-            EqualityMatcher.new(actual)
+            EMSpec::Expectations::EqualityMatcher.new(actual)
         end
     end
 end

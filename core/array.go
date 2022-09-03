@@ -18,6 +18,7 @@ func InitArray() {
 	Array.Include(Enumerable)
 
 	DefineMethod(Array, "[]", arrayIndexAccessor())
+	DefineMethod(Array, "==", arrayEquals())
 	DefineMethod(Array, "push", arrayPush())
 	DefineMethod(Array, "each", arrayEach())
 	DefineMethod(Array, "to_s", arrayToS())
@@ -69,6 +70,24 @@ func arrayEach() object.BuiltInMethod {
 		}
 
 		return arr
+	}
+}
+
+func arrayEquals() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := ctx.Self.(*ArrayInstance)
+		otherArr, ok := args[0].(*ArrayInstance)
+		if !ok {
+			return FALSE
+		}
+
+		for i, value := range arr.Value {
+			if !IsTruthy(Send(value, "==", NULL, otherArr.Value[i])) {
+				return FALSE
+			}
+		}
+
+		return TRUE
 	}
 }
 

@@ -6,20 +6,25 @@ import (
 )
 
 func TestParseScopeAccessor(t *testing.T) {
-	program := testParseAST(t, "MyMod::MyClass")
+	program := testParseAST(t, "MyMod::MyOtherMod::MyClass")
 
 	expectStatementLength(t, program.Statements, 1)
 
-	scopeAccesor, ok := program.Statements[0].(*ast.ExpressionStatement).Expression.(*ast.ScopeAccessor)
+	scopeAccessor, ok := program.Statements[0].(*ast.ExpressionStatement).Expression.(*ast.ScopeAccessor)
 	if !ok {
 		t.Fatalf("Expression was not scope accessor got=%#v", program.Statements[0].(*ast.ExpressionStatement).Expression)
 	}
 
-	if scopeAccesor.Left.String() != "MyMod" {
-		t.Errorf("expected receiver to be MyMod, got=%s", scopeAccesor.Left.String())
+	if left, ok := scopeAccessor.Left.(*ast.ScopeAccessor); !ok {
+		t.Errorf("Left was not scope accessor got=%T", scopeAccessor.Left)
+	} else {
+		testIdentifier(t, left.Left, "MyMod")
+		testIdentifier(t, left.Method, "MyOtherMod")
 	}
 
-	if scopeAccesor.Method.String() != "MyClass" {
-		t.Errorf("expected receiver to be MyClass, got=%s", scopeAccesor.Method.String())
+	if scopeAccessor.Left.String() != "MyMod::MyOtherMod" {
+		t.Errorf("expected receiver to be MyMod, got=%s", scopeAccessor.Left.String())
 	}
+
+	testIdentifier(t, scopeAccessor.Method, "MyClass")
 }

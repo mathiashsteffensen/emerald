@@ -14,8 +14,10 @@ module EMSpec
 	        file = ARGV[2] 
 	        
 	        if file
-	        	puts "Running " file
+	        	puts "Running " + file
 	        	require_relative "../../" + file
+	        else
+	        	puts "Don't know how to run all specs yet :/"
 	        end
 	    end
 	end

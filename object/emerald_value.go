@@ -32,7 +32,7 @@ type (
 		DefinedMethodSet() DefinedMethodSet
 		DefineMethod(block EmeraldValue, args ...EmeraldValue)
 		ExtractMethod(name string, extractFrom EmeraldValue, self EmeraldValue) (EmeraldValue, error)
-		Methods(self EmeraldValue) []string
+		Methods() []string
 		RespondsTo(name string, self EmeraldValue) bool
 		SEND(
 			ctx *Context,

@@ -61,11 +61,17 @@ func main() {
 
 	argv := []object.EmeraldValue{}
 
-	types.NewSlice[string](os.Args[0:]...).Each(func(arg string) {
+	types.NewSlice[string](os.Args...).Each(func(arg string) {
 		argv = append(argv, core.NewString(arg))
 	})
 
 	core.MainObject.NamespaceDefinitionSet("ARGV", core.NewArray(argv))
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.FatalF("Execution failed with error: %s\n", r)
+		}
+	}()
 
 	machine := vm.New(absFile, c.Bytecode())
 	machine.Run()

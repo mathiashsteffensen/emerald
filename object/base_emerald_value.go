@@ -14,7 +14,15 @@ type BaseEmeraldValue struct {
 	namespaceDefinitions map[string]EmeraldValue
 }
 
-func (val *BaseEmeraldValue) IncludedModules() []EmeraldValue { return val.includedModules }
+func (val *BaseEmeraldValue) IncludedModules() []EmeraldValue {
+	direct := val.includedModules
+
+	for _, module := range direct {
+		direct = append(direct, module.IncludedModules()...)
+	}
+
+	return direct
+}
 
 func (val *BaseEmeraldValue) Include(mod EmeraldValue) {
 	val.includedModules = append(val.includedModules, mod)
@@ -58,7 +66,7 @@ func (val *BaseEmeraldValue) DefineMethod(block EmeraldValue, args ...EmeraldVal
 	val.DefinedMethodSet()[name] = block.(*ClosedBlock)
 }
 
-func (val *BaseEmeraldValue) Methods(self EmeraldValue) []string {
+func (val *BaseEmeraldValue) Methods() []string {
 	methods := []string{}
 
 	for key := range val.BuiltInMethodSet() {

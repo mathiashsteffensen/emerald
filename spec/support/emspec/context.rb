@@ -9,15 +9,9 @@ module EMSpec
 			@child = child
 		end
 
-		class Tracker
-			def current_context
-				@current_context ||= Context.new("EMSpec", nil, [])
-			end
-		end
-
 		module Helpers
 			def context(name)
-				current_context.child = Context.new(name, @current_context, nil)
+				@current_context = EMSpec::Context.new(name, @current_context, nil)
 
 				with_child { yield }
 			end
@@ -27,7 +21,7 @@ module EMSpec
 			end
 
 			def current_context
-				@current_context ||= Context.new("EMSpec", nil, nil)
+				@current_context ||= EMSpec::Context.new("EMSpec", nil, nil)
 			end
 
 			def with_child

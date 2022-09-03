@@ -49,7 +49,7 @@ func TestNextToken(t *testing.T) {
 	[0, 1]
 	nil &&= ||= module
 	begin rescue ensure
-	$: $LOAD_PATH Integer::MAX <=>
+	$: $LOAD_PATH Integer::Math::MAX <=>
 	/^[w]|abc/ =~ yield`
 
 	tests := []struct {
@@ -256,6 +256,8 @@ func TestNextToken(t *testing.T) {
 		{GLOBAL_IDENT, "$:"},
 		{GLOBAL_IDENT, "$LOAD_PATH"},
 		{IDENT, "Integer"},
+		{SCOPE, "::"},
+		{IDENT, "Math"},
 		{SCOPE, "::"},
 		{IDENT, "MAX"},
 		{SPACESHIP, "<=>"},

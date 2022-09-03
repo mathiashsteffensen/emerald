@@ -135,7 +135,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 	case *ast.ScopeAccessor:
-		c.compileScopeAccessor(node)
+		err := c.compileScopeAccessor(node)
+		if err != nil {
+			return err
+		}
 	case *ast.InfixExpression:
 		err := c.compileInfixExpression(node)
 		if err != nil {

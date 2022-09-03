@@ -116,3 +116,14 @@ func TestArray_index(t *testing.T) {
 
 	runCoreTests(t, tests)
 }
+
+func TestArray_equals(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "[2, 4, 8] == [2, 4, 8]",
+			expected: true,
+		},
+	}
+
+	runCoreTests(t, tests)
+}

@@ -4,6 +4,7 @@ import (
 	"emerald/types"
 	"fmt"
 	"os"
+	"time"
 )
 
 type Level int
@@ -93,7 +94,8 @@ func Fatal(msg string) {
 }
 
 func FatalF(format string, args ...any) {
-	writeToChanF(WarnLevel, format, args...)
+	writeToChanF(FatalLevel, format, args...)
+	time.Sleep(200 * time.Millisecond)
 	os.Exit(1)
 }
 

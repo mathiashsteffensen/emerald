@@ -15,28 +15,11 @@ func InitClass() {
 	DefineMethod(Class, "new", classNew())
 	DefineMethod(Class, "name", className())
 	DefineMethod(Class, "ancestors", classAncestors())
-	DefineMethod(Class, "methods", classMethods())
 }
 
 func classAncestors() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewArray(ctx.Self.Ancestors())
-	}
-}
-
-func classMethods() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		methods := []object.EmeraldValue{}
-
-		ancestors := ctx.Self.Ancestors()
-
-		for _, ancestor := range ancestors {
-			for _, method := range ancestor.Methods(ancestor) {
-				methods = append(methods, NewSymbol(method))
-			}
-		}
-
-		return NewArray(methods)
 	}
 }
 
