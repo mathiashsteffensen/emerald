@@ -28,8 +28,12 @@ func classMethods() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		methods := []object.EmeraldValue{}
 
-		for _, method := range ctx.Self.Methods(ctx.Self) {
-			methods = append(methods, NewSymbol(method))
+		ancestors := ctx.Self.Ancestors()
+
+		for _, ancestor := range ancestors {
+			for _, method := range ancestor.Methods(ancestor) {
+				methods = append(methods, NewSymbol(method))
+			}
 		}
 
 		return NewArray(methods)

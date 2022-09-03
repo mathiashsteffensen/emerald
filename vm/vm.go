@@ -216,7 +216,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		block := vm.pop().(*object.Block)
 		name := vm.stack[vm.sp-1].(*core.SymbolInstance)
 
-		vm.ctx.Self.DefineMethod(object.NewClosedBlock(nil, block, []object.EmeraldValue{}), name)
+		vm.ctx.Self.DefineMethod(object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File), name)
 	case compiler.OpSend:
 		numArgs := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFrame().ip += 1
@@ -282,7 +282,7 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 
 	vm.sp = vm.sp - numFreeVars
 
-	vm.push(object.NewClosedBlock(vm.ctx, block, free))
+	vm.push(object.NewClosedBlock(vm.ctx, block, free, ""))
 }
 
 func (vm *VM) callFunction(numArgs int) {
@@ -304,6 +304,11 @@ func (vm *VM) callFunction(numArgs int) {
 			vm.pushFrame(frame)
 			vm.sp = frame.basePointer + method.NumLocals
 			originalFrameIndex := vm.framesIndex
+
+			if method.File != "" {
+				vm.ctx.File = method.File
+			}
+
 			vm.runWhile(func() bool {
 				return vm.framesIndex >= originalFrameIndex
 			})

@@ -2,7 +2,9 @@ package main
 
 import (
 	"emerald/compiler"
+	"emerald/core"
 	"emerald/log"
+	"emerald/object"
 	"emerald/parser"
 	"emerald/parser/lexer"
 	"emerald/types"
@@ -27,9 +29,7 @@ func main() {
 		defer profile.Start().Stop()
 	}
 
-	args := types.NewSlice(os.Args[1:]...)
-
-	file := args.Find(func(arg string) bool {
+	file := types.NewSlice[string](os.Args[1:]...).Find(func(arg string) bool {
 		return !strings.HasPrefix(arg, "--")
 	})
 
@@ -58,6 +58,14 @@ func main() {
 
 	err = c.Compile(program)
 	checkError("Compilation failed", err)
+
+	argv := []object.EmeraldValue{}
+
+	types.NewSlice[string](os.Args[0:]...).Each(func(arg string) {
+		argv = append(argv, core.NewString(arg))
+	})
+
+	core.MainObject.NamespaceDefinitionSet("ARGV", core.NewArray(argv))
 
 	machine := vm.New(absFile, c.Bytecode())
 	machine.Run()

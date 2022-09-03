@@ -69,17 +69,6 @@ func (val *BaseEmeraldValue) Methods(self EmeraldValue) []string {
 		methods = append(methods, key)
 	}
 
-	for _, mod := range val.IncludedModules() {
-		methods = append(methods, mod.Methods(mod)...)
-	}
-
-	super := self.Super()
-	reflected := reflect.ValueOf(super)
-
-	if super != nil && reflected.IsValid() && !reflected.IsNil() {
-		methods = append(methods, super.Methods(super)...)
-	}
-
 	return methods
 }
 

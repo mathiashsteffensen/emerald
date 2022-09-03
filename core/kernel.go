@@ -170,7 +170,7 @@ func kernelRequireRelative() object.BuiltInMethod {
 			BlockGiven: func() bool {
 				return false
 			},
-		}, &object.Block{Instructions: instructions}, []object.EmeraldValue{})
+		}, &object.Block{Instructions: instructions}, []object.EmeraldValue{}, "")
 
 		object.EvalBlock(requiredBlock)
 

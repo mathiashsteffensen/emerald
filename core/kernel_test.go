@@ -7,6 +7,7 @@ func TestKernel_require_relative(t *testing.T) {
 		{
 			input: `
 				require_relative("fixtures/require_test")
+				MyClass.run_require
 				require_relative("../spec/fixtures/require_test")
 			`,
 			expected: true,

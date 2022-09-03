@@ -1,30 +1,16 @@
 module EMSpec
     module Expectations
         class RootExpectation
-            attr_reader :expected, :expectation
+            attr_reader :expected
 
             def initialize(expected)
                 @expected = expected
             end
 
-            def to(expectation)
-
-            end
-        end
-
-        class Expectation
-            attr_reader :matcher
-
-            def initialize(matcher)
-                @matcher = matcher
-            end
-
-            def matches?(expected)
-                matcher.call(expected)
-            end
-
-            def error(expected)
-                matcher.error(expected)
+            def to(matcher)
+                if !matcher.matches?(expected)
+                    matcher.error(expected)
+                end
             end
         end
 
@@ -35,7 +21,7 @@ module EMSpec
                 @actual = actual
             end
 
-            def call(expected)
+            def matches?(expected)
                 expected == actual
             end
 
@@ -44,8 +30,12 @@ module EMSpec
             end
         end
 
+        def expect(expected)
+            Expectation.new(expected)
+        end
+
         def eq(actual)
-            Expectation.new(EqualityMatcher.new(actual))
+            EqualityMatcher.new(actual)
         end
     end
 end
