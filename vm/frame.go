@@ -19,17 +19,17 @@ func (f *Frame) Instructions() compiler.Instructions {
 	return f.block.Instructions
 }
 
-func (vm *VM) currentFrame() *Frame {
-	return vm.frames[vm.framesIndex-1]
+func (fiber *Fiber) currentFrame() *Frame {
+	return fiber.frames[fiber.framesIndex-1]
 }
 
 // Adds a new call frame to the VM
-func (vm *VM) pushFrame(f *Frame) {
-	vm.frames[vm.framesIndex] = f
-	vm.framesIndex++
+func (fiber *Fiber) pushFrame(f *Frame) {
+	fiber.frames[fiber.framesIndex] = f
+	fiber.framesIndex++
 }
 
-func (vm *VM) popFrame() *Frame {
-	vm.framesIndex--
-	return vm.frames[vm.framesIndex]
+func (fiber *Fiber) popFrame() *Frame {
+	fiber.framesIndex--
+	return fiber.frames[fiber.framesIndex]
 }

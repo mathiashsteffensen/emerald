@@ -14,25 +14,20 @@ const (
 
 // VM is our virtual machine responsible for the fetch, decode, execute cycle
 type VM struct {
-	ctx         *object.Context
-	stack       []object.EmeraldValue
-	sp          int // Always points to the next value. Top of stack is stack[sp-1]
-	frames      []*Frame
-	framesIndex int
+	ctx        *object.Context
+	fibers     []*Fiber
+	fiberIndex int
 }
 
 func New(file string, bytecode *compiler.Bytecode) *VM {
 	mainBlock := &object.ClosedBlock{Block: &object.Block{Instructions: bytecode.Instructions}}
 	mainFrame := NewFrame(mainBlock, 0)
 
-	frames := make([]*Frame, MaxFrames)
-	frames[0] = mainFrame
+	rootFiber := NewFiber(mainFrame)
 
 	vm := &VM{
-		stack:       make([]object.EmeraldValue, StackSize),
-		sp:          0,
-		frames:      frames,
-		framesIndex: 1,
+		fibers:     []*Fiber{rootFiber},
+		fiberIndex: 0,
 	}
 
 	vm.ctx = vm.newContext(file, core.MainObject, core.NULL)
@@ -49,7 +44,7 @@ func New(file string, bytecode *compiler.Bytecode) *VM {
 
 func (vm *VM) Run() {
 	vm.runWhile(func() bool {
-		return vm.currentFrame().ip < len(vm.currentFrame().Instructions())-1
+		return vm.currentFiber().currentFrame().ip < len(vm.currentFiber().currentFrame().Instructions())-1
 	})
 }
 
@@ -61,7 +56,7 @@ func (vm *VM) runWhile(condition func() bool) {
 	)
 
 	for condition() {
-		vm.currentFrame().ip++
+		vm.currentFiber().currentFrame().ip++
 
 		ip, ins, op = vm.fetch()
 
@@ -70,8 +65,8 @@ func (vm *VM) runWhile(condition func() bool) {
 }
 
 func (vm *VM) fetch() (int, compiler.Instructions, compiler.Opcode) {
-	ip := vm.currentFrame().ip
-	ins := vm.currentFrame().Instructions()
+	ip := vm.currentFiber().currentFrame().ip
+	ins := vm.currentFiber().currentFrame().Instructions()
 	return ip, ins, compiler.Opcode(ins[ip])
 }
 
@@ -119,7 +114,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.evalInfixOperator("!=")
 	case compiler.OpJump:
 		pos := int(compiler.ReadUint16(ins[ip+1:]))
-		vm.currentFrame().ip = pos - 1
+		vm.currentFiber().currentFrame().ip = pos - 1
 	case compiler.OpJumpNotTruthy:
 		vm.conditionalJump(!core.IsTruthy(vm.StackTop()), ins, ip)
 	case compiler.OpJumpTruthy:
@@ -136,18 +131,18 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		heap.SetGlobalVariable(globalIndex, vm.StackTop())
 	case compiler.OpGetLocal:
 		localIndex := vm.readUint8(ins, ip)
-		frame := vm.currentFrame()
-		vm.push(vm.stack[frame.basePointer+int(localIndex)])
+		frame := vm.currentFiber().currentFrame()
+		vm.push(vm.stack()[frame.basePointer+int(localIndex)])
 	case compiler.OpSetLocal:
 		localIndex := compiler.ReadUint8(ins[ip+1:])
-		vm.currentFrame().ip += 1
-		frame := vm.currentFrame()
-		vm.stack[frame.basePointer+int(localIndex)] = vm.StackTop()
+		vm.currentFiber().currentFrame().ip += 1
+		frame := vm.currentFiber().currentFrame()
+		vm.stack()[frame.basePointer+int(localIndex)] = vm.StackTop()
 	case compiler.OpGetFree:
 		freeIndex := compiler.ReadUint8(ins[ip+1:])
-		vm.currentFrame().ip += 1
+		vm.currentFiber().currentFrame().ip += 1
 
-		vm.push(vm.currentFrame().block.FreeVariables[freeIndex])
+		vm.push(vm.currentFiber().currentFrame().block.FreeVariables[freeIndex])
 	case compiler.OpInstanceVarGet:
 		constIndex := vm.readUint16(ins, ip)
 
@@ -169,7 +164,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.executeOpScopedConstantGet(ins, ip)
 	case compiler.OpInstanceVarSet:
 		constIndex := compiler.ReadUint16(ins[ip+1:])
-		vm.currentFrame().ip += 2
+		vm.currentFiber().currentFrame().ip += 2
 
 		name := heap.GetConstant(constIndex)
 		val := vm.StackTop()
@@ -178,20 +173,20 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		target.InstanceVariableSet(name.(*core.SymbolInstance).Value, val)
 	case compiler.OpArray:
 		numElements := int(compiler.ReadUint16(ins[ip+1:]))
-		vm.currentFrame().ip += 2
+		vm.currentFiber().currentFrame().ip += 2
 
-		array := vm.buildArray(vm.sp-numElements, vm.sp)
-		vm.sp = vm.sp - numElements
+		array := vm.buildArray(vm.currentFiber().sp-numElements, vm.currentFiber().sp)
+		vm.currentFiber().sp = vm.currentFiber().sp - numElements
 
 		vm.push(array)
 	case compiler.OpHash:
 		numElements := int(compiler.ReadUint16(ins[ip+1:]))
-		vm.currentFrame().ip += 2
+		vm.currentFiber().currentFrame().ip += 2
 
-		startIndex := vm.sp - numElements
+		startIndex := vm.currentFiber().sp - numElements
 
-		hash := vm.buildHash(startIndex, vm.sp)
-		vm.sp = startIndex
+		hash := vm.buildHash(startIndex, vm.currentFiber().sp)
+		vm.currentFiber().sp = startIndex
 
 		vm.push(hash)
 	case compiler.OpBang:
@@ -199,25 +194,25 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 	case compiler.OpMinus:
 		vm.executeMinusOperator()
 	case compiler.OpReturn:
-		frame := vm.popFrame()
-		vm.sp = frame.basePointer - 3
+		frame := vm.currentFiber().popFrame()
+		vm.currentFiber().sp = frame.basePointer - 3
 
 		vm.push(core.NULL)
 	case compiler.OpReturnValue:
-		returnValue := vm.stack[vm.sp-1]
+		returnValue := vm.stack()[vm.currentFiber().sp-1]
 
-		frame := vm.popFrame()
-		vm.sp = frame.basePointer - 3
+		frame := vm.currentFiber().popFrame()
+		vm.currentFiber().sp = frame.basePointer - 3
 
 		vm.push(returnValue)
 	case compiler.OpDefineMethod:
 		block := vm.pop().(*object.Block)
-		name := vm.stack[vm.sp-1].(*core.SymbolInstance)
+		name := vm.stack()[vm.currentFiber().sp-1].(*core.SymbolInstance)
 
 		vm.ctx.Self.DefineMethod(object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File), name)
 	case compiler.OpSend:
 		numArgs := compiler.ReadUint8(ins[ip+1:])
-		vm.currentFrame().ip += 1
+		vm.currentFiber().currentFrame().ip += 1
 		vm.callFunction(int(numArgs))
 	case compiler.OpOpenClass:
 		outerCtx := vm.ctx
@@ -249,7 +244,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 	case compiler.OpCloseBlock:
 		constIndex := compiler.ReadUint16(ins[ip+1:])
 		numFreeVars := compiler.ReadUint8(ins[ip+3:])
-		vm.currentFrame().ip += 3
+		vm.currentFiber().currentFrame().ip += 3
 
 		vm.closeBlock(int(constIndex), int(numFreeVars))
 	case compiler.OpStaticTrue:
@@ -275,20 +270,20 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 
 	free := make([]object.EmeraldValue, numFreeVars)
 	for i := 0; i < numFreeVars; i++ {
-		free[i] = vm.stack[vm.sp-numFreeVars+i]
+		free[i] = vm.stack()[vm.currentFiber().sp-numFreeVars+i]
 	}
 
-	vm.sp = vm.sp - numFreeVars
+	vm.currentFiber().sp = vm.currentFiber().sp - numFreeVars
 
 	vm.push(object.NewClosedBlock(vm.ctx, block, free, ""))
 }
 
 func (vm *VM) callFunction(numArgs int) {
-	basePointer := vm.sp - numArgs
+	basePointer := vm.currentFiber().sp - numArgs
 
-	receiver := vm.stack[basePointer-3]
-	name := vm.stack[basePointer-2].(*core.SymbolInstance)
-	block := vm.stack[basePointer-1]
+	receiver := vm.stack()[basePointer-3]
+	name := vm.stack()[basePointer-2].(*core.SymbolInstance)
+	block := vm.stack()[basePointer-1]
 
 	method, err := receiver.Class().ExtractMethod(name.Value, receiver.Class(), receiver)
 	if err != nil {
@@ -299,20 +294,20 @@ func (vm *VM) callFunction(numArgs int) {
 		switch method := method.(type) {
 		case *object.ClosedBlock:
 			frame := NewFrame(method, basePointer)
-			vm.pushFrame(frame)
-			vm.sp = frame.basePointer + method.NumLocals
-			originalFrameIndex := vm.framesIndex
+			vm.currentFiber().pushFrame(frame)
+			vm.currentFiber().sp = frame.basePointer + method.NumLocals
+			originalFrameIndex := vm.currentFiber().framesIndex
 
 			if method.File != "" {
 				vm.ctx.File = method.File
 			}
 
 			vm.runWhile(func() bool {
-				return vm.framesIndex >= originalFrameIndex
+				return vm.currentFiber().framesIndex >= originalFrameIndex
 			})
 		case *object.WrappedBuiltInMethod:
-			result := vm.evalBuiltIn(method, block, vm.stack[basePointer:vm.sp])
-			vm.sp = basePointer - 3
+			result := vm.evalBuiltIn(method, block, vm.stack()[basePointer:vm.currentFiber().sp])
+			vm.currentFiber().sp = basePointer - 3
 			vm.push(result)
 		}
 	})
@@ -327,7 +322,7 @@ func (vm *VM) evalInfixOperator(op string) {
 		result = left.SEND(vm.ctx, op, vm.StackTop())
 	})
 
-	vm.stack[vm.sp-1] = result
+	vm.stack()[vm.currentFiber().sp-1] = result
 }
 
 func (vm *VM) Context() *object.Context {
@@ -346,31 +341,31 @@ func (vm *VM) withExecutionContext(self object.EmeraldValue, block object.Emeral
 
 // StackTop fetches the object at the top of the stack
 func (vm *VM) StackTop() object.EmeraldValue {
-	if vm.sp == 0 {
+	if vm.currentFiber().sp == 0 {
 		return nil
 	}
 
-	return vm.stack[vm.sp-1]
+	return vm.stack()[vm.currentFiber().sp-1]
 }
 
 func (vm *VM) LastPoppedStackElem() object.EmeraldValue {
-	return vm.stack[vm.sp]
+	return vm.stack()[vm.currentFiber().sp]
 }
 
 // push an obj on to the stack
 func (vm *VM) push(obj object.EmeraldValue) {
-	if vm.sp >= StackSize {
+	if vm.currentFiber().sp >= StackSize {
 		panic(fmt.Errorf("stack overflow: max stack size of %d exceeded", StackSize))
 	}
 
-	vm.stack[vm.sp] = obj
-	vm.sp++
+	vm.stack()[vm.currentFiber().sp] = obj
+	vm.currentFiber().sp++
 }
 
 // pop an obj from the top of the stack
 func (vm *VM) pop() object.EmeraldValue {
 	o := vm.StackTop()
-	vm.sp--
+	vm.currentFiber().sp--
 	return o
 }
 
@@ -378,7 +373,7 @@ func (vm *VM) buildArray(startIndex, endIndex int) object.EmeraldValue {
 	elements := make([]object.EmeraldValue, endIndex-startIndex)
 
 	for i := startIndex; i < endIndex; i++ {
-		elements[i-startIndex] = vm.stack[i]
+		elements[i-startIndex] = vm.stack()[i]
 	}
 
 	return core.NewArray(elements)
@@ -388,30 +383,30 @@ func (vm *VM) buildHash(startIndex, endIndex int) object.EmeraldValue {
 	hash := core.NewHash()
 
 	for i := startIndex; i < endIndex; i += 2 {
-		hash.Set(vm.stack[i], vm.stack[i+1])
+		hash.Set(vm.stack()[i], vm.stack()[i+1])
 	}
 
 	return hash
 }
 
 func (vm *VM) conditionalJump(condition bool, ins compiler.Instructions, ip int) {
-	vm.currentFrame().ip += 2
+	vm.currentFiber().currentFrame().ip += 2
 
 	if condition {
 		newPosition := int(compiler.ReadUint16(ins[ip+1:]))
-		vm.currentFrame().ip = newPosition - 1
-		vm.sp--
+		vm.currentFiber().currentFrame().ip = newPosition - 1
+		vm.currentFiber().sp--
 	}
 }
 
 func (vm *VM) readUint8(ins compiler.Instructions, ip int) uint8 {
 	val := compiler.ReadUint8(ins[ip+1:])
-	vm.currentFrame().ip += 1
+	vm.currentFiber().currentFrame().ip += 1
 	return val
 }
 
 func (vm *VM) readUint16(ins compiler.Instructions, ip int) uint16 {
 	val := compiler.ReadUint16(ins[ip+1:])
-	vm.currentFrame().ip += 2
+	vm.currentFiber().currentFrame().ip += 2
 	return val
 }

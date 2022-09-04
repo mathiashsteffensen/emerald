@@ -13,8 +13,28 @@ type Fiber struct {
 	// All fibers have their own stack allocated.
 	// This allocates a []object.EmeraldValue of size StackSize.
 	stack []object.EmeraldValue
+	// Always points to the next value. Top of stack is stack[sp-1]
+	sp int
+	// Call frames
+	frames      []*Frame
+	framesIndex int
 }
 
-func NewFiber() *Fiber {
-	return &Fiber{stack: make([]object.EmeraldValue, StackSize)}
+func NewFiber(mainFrame *Frame) *Fiber {
+	frames := make([]*Frame, MaxFrames)
+	frames[0] = mainFrame
+
+	return &Fiber{
+		stack:       make([]object.EmeraldValue, StackSize),
+		frames:      frames,
+		framesIndex: 1,
+	}
+}
+
+func (vm *VM) currentFiber() *Fiber {
+	return vm.fibers[vm.fiberIndex]
+}
+
+func (vm *VM) stack() []object.EmeraldValue {
+	return vm.currentFiber().stack
 }

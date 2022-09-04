@@ -64,16 +64,16 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 		}
 
 		// Prepare the call frame
-		startFrameIndex := vm.framesIndex
-		basePointer := vm.sp - len(args)
-		vm.pushFrame(NewFrame(bl, basePointer))
+		startFrameIndex := vm.currentFiber().framesIndex
+		basePointer := vm.currentFiber().sp - len(args)
+		vm.currentFiber().pushFrame(NewFrame(bl, basePointer))
 
 		// Prepare the vm stack pointer
-		vm.sp = basePointer + bl.NumLocals
+		vm.currentFiber().sp = basePointer + bl.NumLocals
 
 		// Execute
 		vm.runWhile(func() bool {
-			return vm.framesIndex > startFrameIndex
+			return vm.currentFiber().framesIndex > startFrameIndex
 		})
 
 		// Return value is left on the stack

@@ -40,12 +40,12 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 			stackElem := safePop(t, vm)
 			testExpectedObject(t, tt.expected, stackElem)
 
-			if vm.sp != 0 {
+			if vm.currentFiber().sp != 0 {
 				if str, ok := tt.expected.(string); ok && strings.HasPrefix(str, "error:") {
 					return
 				}
 
-				t.Errorf("stack pointer was not reset after running test, this indicates a memory leak in the VM, was %d", vm.sp)
+				t.Errorf("stack pointer was not reset after running test, this indicates a memory leak in the VM, was %d", vm.currentFiber().sp)
 			}
 
 			heap.Reset()
