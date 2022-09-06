@@ -1,6 +1,7 @@
 package core
 
 import (
+	"emerald/heap"
 	"emerald/object"
 )
 
@@ -41,15 +42,31 @@ func DefineSingletonMethod(receiver object.EmeraldValue, name string, method obj
 	receiver.Class().BuiltInMethodSet()[name] = method
 }
 
+func EnforceArity(args []object.EmeraldValue, minArgs int, maxArgs int) ([]object.EmeraldValue, object.EmeraldError) {
+	argsWithoutNilPointers := []object.EmeraldValue{}
+	for _, arg := range args {
+		if arg != nil {
+			argsWithoutNilPointers = append(argsWithoutNilPointers, arg)
+		}
+	}
+	numArgsGiven := len(argsWithoutNilPointers)
+
+	if numArgsGiven < minArgs || numArgsGiven > maxArgs {
+		err := NewArgumentError(numArgsGiven, maxArgs)
+		Raise(err)
+		return argsWithoutNilPointers, err
+	}
+
+	return argsWithoutNilPointers, nil
+}
+
+func Raise(err object.EmeraldError) {
+	heap.SetGlobalVariableString("$!", err)
+}
+
 func NativeBoolToBooleanObject(input bool) object.EmeraldValue {
 	if input {
 		return TRUE
 	}
 	return FALSE
-}
-
-func IsError(obj object.EmeraldValue) bool {
-	_, ok := obj.(object.EmeraldError)
-
-	return ok
 }

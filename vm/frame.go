@@ -2,6 +2,7 @@ package vm
 
 import (
 	"emerald/compiler"
+	"emerald/core"
 	"emerald/object"
 )
 
@@ -31,5 +32,31 @@ func (fiber *Fiber) pushFrame(f *Frame) {
 
 func (fiber *Fiber) popFrame() *Frame {
 	fiber.framesIndex--
-	return fiber.frames[fiber.framesIndex]
+	frame := fiber.frames[fiber.framesIndex]
+	fiber.sp = frame.basePointer - 3
+	if fiber.sp < 0 {
+		fiber.sp = 0
+	}
+	return frame
+}
+
+func (f *Frame) blockRescuingException(exception object.EmeraldError) *object.ClosedBlock {
+	for _, rescueBlock := range f.block.RescueBlocks {
+		caughtClassName := rescueBlock.CaughtErrorClasses.Find(func(className string) bool {
+			class := core.Object.NamespaceDefinitionGet(className)
+
+			return core.IsTruthy(core.Send(exception, "is_a?", core.NULL, class))
+		})
+
+		if caughtClassName != nil {
+			block := object.NewBlock(rescueBlock.Instructions, 0, 0)
+			return object.NewClosedBlock(f.block.Context, block, []object.EmeraldValue{}, f.block.File)
+		}
+	}
+
+	return nil
+}
+
+func (f *Frame) rescuesException(exception object.EmeraldError) bool {
+	return f.blockRescuingException(exception) != nil
 }

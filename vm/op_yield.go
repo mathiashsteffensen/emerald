@@ -6,5 +6,8 @@ func (vm *VM) executeOpYield(ins compiler.Instructions, ip int) {
 	numArgs := vm.readUint8(ins, ip)
 	args := vm.stack()[vm.currentFiber().sp-int(numArgs) : vm.currentFiber().sp]
 
-	vm.push(vm.ctx.Yield(args...))
+	result := vm.ctx.Yield(args...)
+	if vm.inRescue || !vm.ExceptionIsRaised() {
+		vm.push(result)
+	}
 }

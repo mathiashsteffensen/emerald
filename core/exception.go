@@ -29,7 +29,7 @@ func NewException(msg string) object.EmeraldError {
 
 func exceptionToS() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(ctx.Self.(object.EmeraldError).Inspect())
+		return NewString(ctx.Self.(object.EmeraldError).Message())
 	}
 }
 

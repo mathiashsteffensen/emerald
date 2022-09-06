@@ -52,7 +52,37 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int, err
 		c.emitSymbol(s)
 	}
 
-	return object.NewBlock(instructions, numLocals, numParams), len(freeSymbols), nil
+	block := object.NewBlock(instructions, numLocals, numParams)
+
+	for _, rescueBlock := range node.RescueBlocks {
+		c.enterScope()
+
+		err = c.Compile(rescueBlock.Body)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		if c.lastInstructionIs(OpPop) {
+			c.replaceLastPopWithReturn()
+		}
+
+		// Everything in Ruby returns something
+		// If function doesn't have a return value, return null
+		if !c.lastInstructionIs(OpReturnValue) {
+			c.emit(OpReturn)
+		}
+
+		var errorClasses []string
+		instructions = c.leaveScope()
+
+		for _, errorClass := range rescueBlock.CaughtErrorClasses {
+			errorClasses = append(errorClasses, errorClass.String())
+		}
+
+		block.RescueBlocks = append(block.RescueBlocks, object.NewRescueBlock(instructions, errorClasses...))
+	}
+
+	return block, len(freeSymbols), nil
 }
 
 func (c *Compiler) replaceLastPopWithReturn() {

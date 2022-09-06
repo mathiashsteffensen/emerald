@@ -68,6 +68,10 @@ func stringAdd() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		selfString := ctx.Self.(*StringInstance)
 
+		if _, err := EnforceArity(args, 1, 1); err != nil {
+			return NULL
+		}
+
 		argString, ok := args[0].(*StringInstance)
 		if !ok {
 			var typ string
@@ -78,7 +82,7 @@ func stringAdd() object.BuiltInMethod {
 				typ = args[0].Class().Super().(*object.Class).Name
 			}
 
-			return NewStandardError(fmt.Sprintf("no implicit conversion of %s to String", typ))
+			return NewTypeError(fmt.Sprintf("no implicit conversion of %s to String", typ))
 		}
 
 		return NewString(selfString.Value + argString.Value)

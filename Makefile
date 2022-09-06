@@ -39,7 +39,7 @@ install:
 
 test:
 	@echo "Running test suite" && echo "" && \
- 	go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ --timeout=1s -coverprofile=./tmp/coverage.out && \
+ 	EM_DEBUG=1 go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ --timeout=1s -coverprofile=./tmp/coverage.out && \
  	go tool cover -html=tmp/coverage.out -o tmp/coverage.html && echo ""
 
 ci-test:

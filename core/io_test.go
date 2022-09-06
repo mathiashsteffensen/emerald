@@ -12,7 +12,7 @@ func TestIO_sysopen(t *testing.T) {
 				io.close
 				b
 			`,
-			expected: 99,
+			expected: 100,
 		},
 	}
 
@@ -30,7 +30,7 @@ func TestIO_open(t *testing.T) {
 				io.close
 				b
 			`,
-			expected: 99,
+			expected: 100,
 		},
 		{
 			name: "when called with a block",
@@ -40,7 +40,7 @@ func TestIO_open(t *testing.T) {
 					io.getbyte
 				end
 			`,
-			expected: 99,
+			expected: 100,
 		},
 	}
 

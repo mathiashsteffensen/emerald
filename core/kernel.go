@@ -20,6 +20,7 @@ func InitKernel() {
 	Kernel = DefineModule(nil, "Kernel")
 
 	DefineMethod(Kernel, "inspect", kernelInspect())
+	DefineMethod(Kernel, "raise", kernelRaise())
 	DefineMethod(Kernel, "require_relative", kernelRequireRelative())
 	DefineMethod(Kernel, "class", kernelClass())
 	DefineMethod(Kernel, "kind_of?", kernelKindOf())
@@ -52,7 +53,8 @@ func kernelKindOf() object.BuiltInMethod {
 		class := args[0]
 
 		if class.Type() != object.CLASS_VALUE && class.Type() != object.MODULE_VALUE {
-			return NewTypeError("class or module required")
+			Raise(NewTypeError("class or module required"))
+			return NULL
 		}
 
 		for _, ancestor := range ctx.Self.Class().Ancestors() {
@@ -87,15 +89,13 @@ func kernelSleep() object.BuiltInMethod {
 
 func kernelPuts() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		var strArr []any
-
 		for _, arg := range args {
 			val := Send(arg, "to_s", NULL)
 
-			strArr = append(strArr, val.Inspect())
+			if err := writeToStdout(val.Inspect()); err != nil {
+				return err
+			}
 		}
-
-		fmt.Println(strArr...)
 
 		return NULL
 	}
@@ -121,6 +121,25 @@ func kernelInclude() object.BuiltInMethod {
 		}
 
 		return ctx.Self
+	}
+}
+
+func kernelRaise() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		args, err := EnforceArity(args, 1, 2)
+		if err != nil {
+			return err
+		}
+
+		switch len(args) {
+		case 1:
+			Raise(NewRuntimeError(args[0].(*StringInstance).Value))
+		case 2:
+			exception := Send(args[0], "new", NULL, args[1])
+			Raise(exception.(object.EmeraldError))
+		}
+
+		return NULL
 	}
 }
 
@@ -151,7 +170,8 @@ func kernelRequireRelative() object.BuiltInMethod {
 		sourceContent, err := os.ReadFile(absoluteFilePath + ".rb")
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
-				panic(fmt.Errorf("cannot load such file -- %s", absoluteFilePath))
+				Raise(NewLoadError(fmt.Sprintf("cannot load such file -- %s", absoluteFilePath)))
+				return NULL
 			}
 
 			panic(err)
@@ -195,4 +215,24 @@ func requiredFilesHash() *HashInstance {
 	} else {
 		return requiredFiles.(*HashInstance)
 	}
+}
+
+func writeToStdout(str string) object.EmeraldError {
+	_, err := os.Stdout.WriteString(str)
+	if err != nil {
+		return raiseStdoutWriteFailed()
+	}
+
+	_, err = os.Stdout.WriteString("\n")
+	if err != nil {
+		return raiseStdoutWriteFailed()
+	}
+
+	return nil
+}
+
+func raiseStdoutWriteFailed() object.EmeraldError {
+	err := NewException("Failed to write to STDOUT")
+	Raise(err)
+	return err
 }

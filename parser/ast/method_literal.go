@@ -9,9 +9,7 @@ import (
 type MethodLiteral struct {
 	Token lexer.Token // The 'def' token
 	*BlockLiteral
-	Name         Expression
-	RescueBlocks []*RescueBlock
-	EnsureBlock  *EnsureBlock
+	Name Expression
 }
 
 func (fl *MethodLiteral) expressionNode()      {}

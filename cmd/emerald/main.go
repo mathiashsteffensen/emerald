@@ -3,6 +3,7 @@ package main
 import (
 	"emerald/compiler"
 	"emerald/core"
+	"emerald/heap"
 	"emerald/log"
 	"emerald/object"
 	"emerald/parser"
@@ -29,7 +30,8 @@ func main() {
 		defer profile.Start().Stop()
 	}
 
-	file := types.NewSlice[string](os.Args[1:]...).Find(func(arg string) bool {
+	osArgs := types.NewSlice[string](os.Args[1:]...)
+	file := osArgs.Find(func(arg string) bool {
 		return !strings.HasPrefix(arg, "--")
 	})
 
@@ -48,10 +50,7 @@ func main() {
 	program := p.ParseAST()
 
 	if len(p.Errors()) != 0 {
-		for _, err := range p.Errors() {
-			fmt.Printf("parser error: %s\n", err)
-		}
-		os.Exit(1)
+		log.FatalF("parser error: %s\n", p.Errors()[0])
 	}
 
 	c := compiler.New()
@@ -61,7 +60,7 @@ func main() {
 
 	argv := []object.EmeraldValue{}
 
-	types.NewSlice[string](os.Args...).Each(func(arg string) {
+	types.NewSlice[string](osArgs.Value[1:]...).Each(func(arg string) {
 		argv = append(argv, core.NewString(arg))
 	})
 
@@ -69,12 +68,17 @@ func main() {
 
 	defer func() {
 		if r := recover(); r != nil {
-			log.FatalF("Execution failed with error: %s\n", r)
+			log.StackTrace(r)
 		}
 	}()
 
 	machine := vm.New(absFile, c.Bytecode())
 	machine.Run()
+
+	if exception := heap.GetGlobalVariableString("$!"); exception != nil {
+		exception := exception.(object.EmeraldError)
+		log.FatalF("%s: %s", exception.ClassName(), exception.Message())
+	}
 
 	log.Shutdown()
 }

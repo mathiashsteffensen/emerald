@@ -11,11 +11,14 @@ module EMSpec
 		include Context::Helpers
 
 	    def run
-	        file = ARGV[2] 
+	        file = ARGV[0] 
+
+	        puts ARGV
 	        
 	        if file
 	        	puts "Running " + file
 	        	require_relative "../../" + file
+	        	puts "Done!"
 	        else
 	        	puts "Don't know how to run all specs yet :/"
 	        end

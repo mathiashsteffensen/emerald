@@ -2,7 +2,9 @@ package repl
 
 import (
 	"emerald/compiler"
+	"emerald/heap"
 	"emerald/log"
+	"emerald/object"
 	"emerald/parser"
 	"emerald/parser/ast"
 	"emerald/parser/lexer"
@@ -10,6 +12,8 @@ import (
 	"fmt"
 	"github.com/chzyer/readline"
 	"io"
+	"os"
+	"time"
 )
 
 const PROMPT_FMT = "iem(main):%03d:0> "
@@ -93,10 +97,21 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 
 		if config.OutputBytecode {
 			log.InternalDebugF("Emerald bytecode: \n%s", code.Instructions[0:])
+			time.Sleep(200 * time.Millisecond)
 		}
 
-		machine := vm.New("repl.rb", code)
+		currentWorkingDir, err := os.Getwd()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		machine := vm.New(currentWorkingDir, code)
 		machine.Run()
+
+		if exception := heap.GetGlobalVariableString("$!"); exception != nil {
+			exception := exception.(object.EmeraldError)
+			log.FatalF("%s: %s", exception.ClassName(), exception.Message())
+		}
 
 		evaluated := machine.LastPoppedStackElem()
 

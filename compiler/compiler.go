@@ -55,7 +55,7 @@ func init() {
 		ast := p.ParseAST()
 
 		if len(p.Errors()) != 0 {
-			panic(fmt.Errorf("failed to parse source file %s", fileName))
+			core.Raise(core.NewException(fmt.Sprintf("failed to parse source file %s\n\n%s", fileName, p.Errors()[0])))
 		}
 
 		c := New()

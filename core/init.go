@@ -26,6 +26,7 @@ func init() {
 	// Initialize exception hierarchy
 	InitException()
 	InitStandardError()
+	InitRuntimeError()
 	InitArgumentError()
 	InitTypeError()
 	InitLoadError()

@@ -76,8 +76,10 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 			return vm.currentFiber().framesIndex > startFrameIndex
 		})
 
-		// Return value is left on the stack
-		return vm.pop()
+		if vm.inRescue || !vm.ExceptionIsRaised() {
+			// Return value is left on the stack
+			return vm.pop()
+		}
 	default:
 		panic(fmt.Errorf("yielded to not a method?, got=%s", bl.Inspect()))
 	}

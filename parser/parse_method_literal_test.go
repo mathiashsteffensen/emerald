@@ -7,10 +7,11 @@ import (
 
 func TestMethodLiteralExpression(t *testing.T) {
 	tests := []struct {
-		name         string
-		input        string
-		expectedName string
-		expectedArgs []string
+		name                 string
+		input                string
+		expectedName         string
+		expectedArgs         []string
+		expectedRescueBlocks int
 	}{
 		{
 			"with a single argument",
@@ -21,6 +22,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{"arg"},
+			0,
 		},
 		{
 			"with no arguments",
@@ -31,6 +33,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{},
+			0,
 		},
 		{
 			"with multiple arguments",
@@ -41,12 +44,14 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{"fmt", "val"},
+			0,
 		},
 		{
 			"one-liner",
 			"def method(fmt, val); printf(fmt, val); end",
 			"method",
 			[]string{"fmt", "val"},
+			0,
 		},
 		{
 			"with a rescue block",
@@ -59,6 +64,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{},
+			1,
 		},
 		{
 			"with multiple rescue blocks",
@@ -73,6 +79,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{},
+			2,
 		},
 		{
 			"with an ensure block",
@@ -85,6 +92,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{},
+			0,
 		},
 		{
 			"with a rescue & an ensure block",
@@ -99,6 +107,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{},
+			1,
 		},
 		{
 			"with multiple rescue blocks with error classes",
@@ -113,6 +122,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{},
+			2,
 		},
 		{
 			"assignment method",
@@ -123,6 +133,20 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"level=",
 			[]string{"new"},
+			0,
+		},
+		{
+			"accessing global variable in rescue block",
+			`
+				def suppress_argument_errors
+					yield
+				rescue ArgumentError
+					$suppressed = $suppressed + 1
+				end
+			`,
+			"suppress_argument_errors",
+			[]string{},
+			1,
 		},
 	}
 
@@ -155,6 +179,10 @@ func TestMethodLiteralExpression(t *testing.T) {
 
 			for i, parameter := range literal.Parameters {
 				testIdentifier(t, parameter, tt.expectedArgs[i])
+			}
+
+			if len(literal.RescueBlocks) != tt.expectedRescueBlocks {
+				t.Fatalf("Expected method literal to have %d rescue blocks, but got %d", len(literal.RescueBlocks), tt.expectedRescueBlocks)
 			}
 		})
 	}

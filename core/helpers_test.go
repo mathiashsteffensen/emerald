@@ -3,6 +3,7 @@ package core_test
 import (
 	"emerald/compiler"
 	"emerald/core"
+	"emerald/heap"
 	"emerald/object"
 	"emerald/parser"
 	"emerald/parser/ast"
@@ -35,6 +36,8 @@ func runCoreTests(t *testing.T, tests []coreTestCase) {
 				module.Class().(*object.SingletonClass).ResetForSpec()
 			}
 
+			heap.Reset()
+
 			program := parse(t, tt.input)
 			comp := compiler.New()
 
@@ -51,9 +54,23 @@ func runCoreTests(t *testing.T, tests []coreTestCase) {
 			machine := vm.New(file, comp.Bytecode())
 			machine.Run()
 
+			ensureNoExceptionUnlessExpected(t, tt.expected)
+
 			stackElem := machine.LastPoppedStackElem()
 			testExpectedObject(t, tt.expected, stackElem)
 		})
+	}
+}
+
+func ensureNoExceptionUnlessExpected(t *testing.T, expected any) {
+	if expectedString, ok := expected.(string); ok && strings.HasPrefix(expectedString, "error:") {
+		return
+	}
+
+	exception := heap.GetGlobalVariableString("$!")
+
+	if exception != nil && exception != core.NULL {
+		t.Fatalf("Unexpected uncaught exception %s", exception.Inspect())
 	}
 }
 
@@ -113,7 +130,7 @@ func testExpectedObject(
 		}
 
 		if strings.HasPrefix(expected, "error:") {
-			err := testErrorObject(expected[6:], actual)
+			err := testErrorObject(expected[6:], heap.GetGlobalVariableString("$!"))
 			if err != nil {
 				t.Errorf("testErrorObject failed: %s", err)
 			}
@@ -322,7 +339,7 @@ func testErrorObject(expected string, actual object.EmeraldValue) error {
 
 	emeraldError, ok := actual.(object.EmeraldError)
 	if !ok {
-		return fmt.Errorf("object was not EmeraldError, got=%s", actual.Inspect())
+		return fmt.Errorf("object was not EmeraldError, got=%T", actual)
 	}
 
 	if emeraldError.ClassName() != className {

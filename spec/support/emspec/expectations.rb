@@ -9,15 +9,8 @@ module EMSpec
 
             def to(matcher)
                 if !matcher.matches?(expected)
-                    log_failure(matcher.error(expected))
-                    nil
+                    raise matcher.error(expected)
                 end
-            end
-
-            def log_failure(msg)
-                puts "Spec failed"
-                puts "  " + current_context.name
-                puts "      " + msg
             end
         end
 

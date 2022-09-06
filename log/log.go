@@ -4,6 +4,8 @@ import (
 	"emerald/types"
 	"fmt"
 	"os"
+	"runtime/debug"
+	"strings"
 	"time"
 )
 
@@ -97,6 +99,13 @@ func FatalF(format string, args ...any) {
 	writeToChanF(FatalLevel, format, args...)
 	time.Sleep(200 * time.Millisecond)
 	os.Exit(1)
+}
+
+func StackTrace(r any) {
+	goStack := string(debug.Stack())
+	stackLines := strings.Split(goStack, "\n")
+
+	FatalF("Emerald VM panicked %s:\n%s", r, strings.Join(stackLines[7:37], "\n"))
 }
 
 func ExperimentalWarning() {

@@ -2,12 +2,27 @@ package core_test
 
 import "testing"
 
+func TestKernel_raise(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			name:     "raising with just a string",
+			input:    `raise "You done fucked up this time"`,
+			expected: "error:RuntimeError:You done fucked up this time",
+		},
+		{
+			name:     "raising with a specific error class",
+			input:    `raise TypeError, "I wanted an Integer yo"`,
+			expected: "error:TypeError:I wanted an Integer yo",
+		},
+	}
+	runCoreTests(t, tests)
+}
+
 func TestKernel_require_relative(t *testing.T) {
 	tests := []coreTestCase{
 		{
 			input: `
 				require_relative("fixtures/require_test")
-				MyClass.run_require
 				require_relative("../spec/fixtures/require_test")
 			`,
 			expected: true,
@@ -20,12 +35,11 @@ func TestKernel_require_relative(t *testing.T) {
 			`,
 			expected: false,
 		},
-		// TODO: Uncomment when exception handling has been implemented
-		//{
-		//	name:     "when file doesn't exist",
-		//	input:    `require_relative("../lib/main")`,
-		//	expected: "error:LoadError:cannot load such file -- /home/mathias/code/emerald/lib/main",
-		//},
+		{
+			name:     "when file doesn't exist",
+			input:    `require_relative("../lib/main")`,
+			expected: "error:LoadError:cannot load such file -- /home/mathias/code/emerald/lib/main",
+		},
 	}
 
 	runCoreTests(t, tests)

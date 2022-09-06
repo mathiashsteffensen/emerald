@@ -4,6 +4,7 @@ import (
 	"emerald/compiler"
 	"emerald/core"
 	"emerald/heap"
+	"emerald/log"
 	"emerald/object"
 	"fmt"
 )
@@ -17,6 +18,7 @@ type VM struct {
 	ctx        *object.Context
 	fibers     []*Fiber
 	fiberIndex int
+	inRescue   bool
 }
 
 func New(file string, bytecode *compiler.Bytecode) *VM {
@@ -44,7 +46,9 @@ func New(file string, bytecode *compiler.Bytecode) *VM {
 
 func (vm *VM) Run() {
 	vm.runWhile(func() bool {
-		return vm.currentFiber().currentFrame().ip < len(vm.currentFiber().currentFrame().Instructions())-1
+		poppedLastFrame := vm.currentFiber().framesIndex == 0
+
+		return !poppedLastFrame && vm.currentFiber().currentFrame().ip < len(vm.currentFiber().currentFrame().Instructions())-1
 	})
 }
 
@@ -56,6 +60,13 @@ func (vm *VM) runWhile(condition func() bool) {
 	)
 
 	for condition() {
+		if !vm.inRescue && vm.ExceptionIsRaised() {
+			rescued := vm.popFramesUntilExceptionRescuedOrProgramTerminates()
+			if !rescued {
+				break
+			}
+		}
+
 		vm.currentFiber().currentFrame().ip++
 
 		ip, ins, op = vm.fetch()
@@ -194,15 +205,13 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 	case compiler.OpMinus:
 		vm.executeMinusOperator()
 	case compiler.OpReturn:
-		frame := vm.currentFiber().popFrame()
-		vm.currentFiber().sp = frame.basePointer - 3
+		vm.currentFiber().popFrame()
 
 		vm.push(core.NULL)
 	case compiler.OpReturnValue:
 		returnValue := vm.stack()[vm.currentFiber().sp-1]
 
-		frame := vm.currentFiber().popFrame()
-		vm.currentFiber().sp = frame.basePointer - 3
+		vm.currentFiber().popFrame()
 
 		vm.push(returnValue)
 	case compiler.OpDefineMethod:
@@ -287,12 +296,18 @@ func (vm *VM) callFunction(numArgs int) {
 
 	method, err := receiver.Class().ExtractMethod(name.Value, receiver.Class(), receiver)
 	if err != nil {
-		panic(err)
+		core.Raise(core.NewException(fmt.Sprintf("undefined method %s for %s", name.Value, receiver.Inspect())))
 	}
+
+	log.InternalDebugF("Calling method %s#%s", receiver.Inspect(), name.Value)
 
 	vm.withExecutionContext(receiver, block, func() {
 		switch method := method.(type) {
 		case *object.ClosedBlock:
+			if _, err := core.EnforceArity(vm.stack()[basePointer:vm.currentFiber().sp], method.NumArgs, method.NumArgs); err != nil {
+				return
+			}
+
 			frame := NewFrame(method, basePointer)
 			vm.currentFiber().pushFrame(frame)
 			vm.currentFiber().sp = frame.basePointer + method.NumLocals

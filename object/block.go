@@ -1,14 +1,28 @@
 package object
 
 import (
+	"emerald/types"
 	"fmt"
 )
+
+type RescueBlock struct {
+	Instructions       []byte
+	CaughtErrorClasses *types.Slice[string]
+}
+
+func NewRescueBlock(ins []byte, errorClasses ...string) RescueBlock {
+	return RescueBlock{
+		Instructions:       ins,
+		CaughtErrorClasses: types.NewSlice(errorClasses...),
+	}
+}
 
 type Block struct {
 	*BaseEmeraldValue
 	Instructions []byte
 	NumLocals    int
 	NumArgs      int
+	RescueBlocks []RescueBlock
 }
 
 func (b *Block) Class() EmeraldValue       { return nil }

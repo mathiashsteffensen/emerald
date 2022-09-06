@@ -31,6 +31,10 @@ func NewFiber(mainFrame *Frame) *Fiber {
 	}
 }
 
+func (vm *VM) withFiber(cb func(fiber *Fiber)) {
+	cb(vm.currentFiber())
+}
+
 func (vm *VM) currentFiber() *Fiber {
 	return vm.fibers[vm.fiberIndex]
 }

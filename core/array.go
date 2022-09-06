@@ -38,7 +38,8 @@ func arrayIndexAccessor() object.BuiltInMethod {
 
 		intArg, ok := args[0].(*IntegerInstance)
 		if !ok {
-			return NewNoConversionTypeError("Integer", args[0].Class().Super().(*object.Class).Name)
+			Raise(NewNoConversionTypeError("Integer", args[0].Class().Super().(*object.Class).Name))
+			return NULL
 		}
 
 		index := intArg.Value

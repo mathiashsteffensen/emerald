@@ -25,6 +25,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			core.Object.ResetForSpec()
+			heap.Reset()
 
 			program := parse(tt.input)
 			comp := compiler.New()
@@ -35,7 +36,9 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 			}
 
 			vm := New("test", comp.Bytecode())
-			safeRun(t, vm)
+			vm.Run()
+
+			ensureNoExceptionUnlessExpected(t, tt.expected)
 
 			stackElem := safePop(t, vm)
 			testExpectedObject(t, tt.expected, stackElem)
@@ -47,20 +50,8 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 
 				t.Errorf("stack pointer was not reset after running test, this indicates a memory leak in the VM, was %d", vm.currentFiber().sp)
 			}
-
-			heap.Reset()
 		})
 	}
-}
-
-func safeRun(t *testing.T, vm *VM) {
-	defer func() {
-		if r := recover(); r != nil {
-			t.Fatalf("vm error: %s", r)
-		}
-	}()
-
-	vm.Run()
 }
 
 func safePop(t *testing.T, vm *VM) object.EmeraldValue {
@@ -73,12 +64,25 @@ func safePop(t *testing.T, vm *VM) object.EmeraldValue {
 	return vm.LastPoppedStackElem()
 }
 
+func ensureNoExceptionUnlessExpected(t *testing.T, expected any) {
+	if expectedString, ok := expected.(string); ok && strings.HasPrefix(expectedString, "error:") {
+		return
+	}
+
+	exception := heap.GetGlobalVariableString("$!")
+
+	if exception != nil && exception != core.NULL {
+		t.Fatalf("Unexpected uncaught exception %s", exception.Inspect())
+	}
+}
+
 func testExpectedObject(
 	t *testing.T,
 	expected any,
 	actual object.EmeraldValue,
 ) {
 	t.Helper()
+
 	switch expected := expected.(type) {
 	case int:
 		err := testIntegerObject(int64(expected), actual)
@@ -115,7 +119,7 @@ func testExpectedObject(
 					}
 				} else {
 					if strings.HasPrefix(expected, "error:") {
-						err := testErrorObject(expected[6:], actual)
+						err := testErrorObject(expected[6:], heap.GetGlobalVariableString("$!"))
 						if err != nil {
 							t.Errorf("testErrorObject failed: %s", err)
 						}
@@ -278,13 +282,21 @@ func testInstanceObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testErrorObject(expected string, actual object.EmeraldValue) error {
-	actualInstance, ok := actual.(object.EmeraldError)
+	split := strings.Split(expected, ":")
+	className := split[0]
+	msg := split[1]
+
+	emeraldError, ok := actual.(object.EmeraldError)
 	if !ok {
-		return fmt.Errorf("expected StandardErrorInstance got=%T", actual)
+		return fmt.Errorf("object was not EmeraldError, got=%T", actual)
 	}
 
-	if actualInstance.Message() != expected {
-		return fmt.Errorf("expected error to have message %s, got=%s", expected, actualInstance.Message())
+	if emeraldError.ClassName() != className {
+		return fmt.Errorf("unexpected error class \nwant=%s\ngot=%s", className, emeraldError.ClassName())
+	}
+
+	if emeraldError.Message() != msg {
+		return fmt.Errorf("unexpected error msg \nwant=%s\ngot=%s", msg, emeraldError.Message())
 	}
 
 	return nil
