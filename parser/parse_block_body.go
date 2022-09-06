@@ -31,7 +31,7 @@ func (p *Parser) parseBlockBody() (*ast.BlockStatement, []*ast.RescueBlock, *ast
 func (p *Parser) parseBlockMainBodyPart() []ast.Statement {
 	stmts := []ast.Statement{}
 
-	for !p.curTokenIs(lexer.END) && !p.curTokenIs(lexer.RESCUE) && !p.curTokenIs(lexer.ENSURE) {
+	for !p.curTokenIs(lexer.END) && !p.curTokenIs(lexer.RESCUE) && !p.curTokenIs(lexer.ENSURE) && !p.curTokenIs(lexer.EOF) {
 		stmt := p.parseStatement()
 
 		if stmt != nil {
@@ -39,6 +39,10 @@ func (p *Parser) parseBlockMainBodyPart() []ast.Statement {
 		}
 
 		p.nextToken()
+	}
+
+	if p.curTokenIs(lexer.EOF) {
+		p.peekErrorMultiple(lexer.RESCUE, lexer.ENSURE, lexer.END)
 	}
 
 	return stmts

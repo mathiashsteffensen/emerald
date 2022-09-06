@@ -8,6 +8,7 @@ import (
 	"emerald/parser"
 	"emerald/parser/ast"
 	"emerald/parser/lexer"
+	"emerald/types"
 	"emerald/vm"
 	"fmt"
 	"github.com/chzyer/readline"
@@ -26,16 +27,16 @@ type Config struct {
 func Start(in io.ReadCloser, out io.Writer, config Config) {
 	readline.SetHistoryPath("/tmp/iem.hst")
 
-	buffer, err := readline.New(fmt.Sprintf(PROMPT_FMT, 1))
+	lineReader, err := readline.New(fmt.Sprintf(PROMPT_FMT, 1))
 	if err != nil {
-		panic(fmt.Sprintf("Failed to initialize REPL buffer %s", err))
+		panic(fmt.Sprintf("Failed to initialize REPL lineReader %s", err))
 	}
 
-	defer buffer.Close()
+	defer lineReader.Close()
 
-	buffer.Config.Stdin = in
-	buffer.Config.Stdout = out
-	buffer.Config.Stderr = out
+	lineReader.Config.Stdin = in
+	lineReader.Config.Stdout = out
+	lineReader.Config.Stderr = out
 
 	lineCount := 1
 
@@ -43,10 +44,12 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 
 	astNodes := []*ast.AST{}
 
+	var buffer string
+
 	for {
 		fmt.Fprintf(out, PROMPT_FMT, lineCount)
 
-		line, err = buffer.Readline()
+		line, err = lineReader.Readline()
 		if err != nil {
 			if err.Error() == "Interrupt" {
 				continue
@@ -61,20 +64,32 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			}
 		}
 
-		buffer.SaveHistory(line)
+		lineReader.SaveHistory(buffer + line)
 
 		if line == "quit" || line == "exit" {
 			fmt.Fprintf(out, "See you next time!\n")
 			break
 		}
 
-		l := lexer.New(lexer.NewInput("repl.rb", line))
+		l := lexer.New(lexer.NewInput("repl.rb", buffer+line))
 		p := parser.New(l)
 		program := p.ParseAST()
 
 		if len(p.Errors()) != 0 {
-			printParserErrors(out, p.Errors())
+			errors := types.NewSlice(p.Errors()...)
+
+			if errors.Includes("expected next token to be END, got EOF instead") ||
+				errors.Includes("expected next token to be one of [RESCUE, ENSURE, END], got EOF instead") {
+				buffer += line + "\n"
+				lineReader.SetPrompt(lineReader.Config.Prompt + "	")
+			} else {
+				printParserErrors(out, p.Errors())
+				lineReader.Config.Prompt = fmt.Sprintf(PROMPT_FMT, 1)
+			}
+
 			continue
+		} else {
+			buffer = ""
 		}
 
 		if config.AstMode {
@@ -97,7 +112,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 
 		if config.OutputBytecode {
 			log.InternalDebugF("Emerald bytecode: \n%s", code.Instructions[0:])
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(50 * time.Millisecond)
 		}
 
 		currentWorkingDir, err := os.Getwd()

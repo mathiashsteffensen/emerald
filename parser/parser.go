@@ -166,6 +166,8 @@ func (p *Parser) parseBlockStatement(endToken lexer.TokenType) *ast.BlockStateme
 		p.nextToken()
 	}
 
+	p.expectCur(endToken)
+
 	return block
 }
 
@@ -501,6 +503,15 @@ func (p *Parser) peekTokenIsMultiple(types ...lexer.TokenType) bool {
 	}
 
 	return false
+}
+
+func (p *Parser) expectCur(t lexer.TokenType) bool {
+	if p.curTokenIs(t) {
+		return true
+	} else {
+		p.peekError(t)
+		return false
+	}
 }
 
 func (p *Parser) expectPeek(t lexer.TokenType) bool {
