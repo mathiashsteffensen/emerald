@@ -4,7 +4,6 @@ import (
 	"emerald/compiler"
 	"emerald/core"
 	"emerald/heap"
-	"emerald/log"
 	"emerald/object"
 	"fmt"
 )
@@ -299,7 +298,8 @@ func (vm *VM) callFunction(numArgs int) {
 		core.Raise(core.NewException(fmt.Sprintf("undefined method %s for %s", name.Value, receiver.Inspect())))
 	}
 
-	log.InternalDebugF("Calling method %s#%s", receiver.Inspect(), name.Value)
+	// Handy for debugging, but makes the VM quite slow when writing to STDOUT in a hot loop
+	// log.InternalDebugF("Calling method %s#%s", receiver.Inspect(), name.Value)
 
 	vm.withExecutionContext(receiver, block, func() {
 		switch method := method.(type) {

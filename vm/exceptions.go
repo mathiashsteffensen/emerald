@@ -10,7 +10,7 @@ import (
 func (vm *VM) ExceptionIsRaised() bool {
 	globalException := heap.GetGlobalVariableString("$!")
 
-	if globalException == nil || globalException == core.NULL {
+	if globalException == nil && globalException != core.NULL {
 		return false
 	}
 

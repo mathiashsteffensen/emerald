@@ -13,6 +13,36 @@ func TestString_to_sym(t *testing.T) {
 	runCoreTests(t, tests)
 }
 
+func TestString_add(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    `"hello" + " " + "world"`,
+			expected: "hello world",
+		},
+		{
+			input:    `"wdaw" + 2`,
+			expected: "error:TypeError:no implicit conversion of Integer into String",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
+func TestString_multiply(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    `"w" * 5`,
+			expected: "wwwww",
+		},
+		{
+			input:    `"w" * ""`,
+			expected: "error:TypeError:no implicit conversion of String into Integer",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestString_match(t *testing.T) {
 	tests := []coreTestCase{
 		{

@@ -3,6 +3,7 @@ package core
 import (
 	"emerald/heap"
 	"emerald/object"
+	"fmt"
 )
 
 // Send is a function for calling methods that is dependency injected by the emerald/vm package
@@ -58,6 +59,17 @@ func EnforceArity(args []object.EmeraldValue, minArgs int, maxArgs int) ([]objec
 	}
 
 	return argsWithoutNilPointers, nil
+}
+
+func EnforceArgumentType(typ *object.Class, arg object.EmeraldValue) object.EmeraldValue {
+	argClass := arg.Class().Super().(*object.Class)
+	if argClass.Name != typ.Name {
+		err := NewTypeError(fmt.Sprintf("no implicit conversion of %s into %s", argClass.Name, typ.Name))
+		Raise(err)
+		return err
+	}
+
+	return nil
 }
 
 func Raise(err object.EmeraldError) {

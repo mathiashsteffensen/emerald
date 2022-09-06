@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"emerald/object"
 	"fmt"
 	"strings"
@@ -28,6 +29,7 @@ func InitString() {
 	DefineMethod(String, "to_sym", stringToSym())
 	DefineMethod(String, "==", stringEquals())
 	DefineMethod(String, "+", stringAdd())
+	DefineMethod(String, "*", stringMultiply())
 	DefineMethod(String, "upcase", stringUpcase())
 	DefineMethod(String, "match", stringMatch())
 	DefineMethod(String, "=~", stringMatch())
@@ -72,20 +74,36 @@ func stringAdd() object.BuiltInMethod {
 			return NULL
 		}
 
-		argString, ok := args[0].(*StringInstance)
-		if !ok {
-			var typ string
-
-			if args[0].Type() == object.CLASS_VALUE {
-				typ = args[0].(*object.Class).Name
-			} else {
-				typ = args[0].Class().Super().(*object.Class).Name
-			}
-
-			return NewTypeError(fmt.Sprintf("no implicit conversion of %s to String", typ))
+		if err := EnforceArgumentType(String, args[0]); err != nil {
+			return err
 		}
 
+		argString := args[0].(*StringInstance)
+
 		return NewString(selfString.Value + argString.Value)
+	}
+}
+
+func stringMultiply() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		selfString := ctx.Self.(*StringInstance)
+
+		if _, err := EnforceArity(args, 1, 1); err != nil {
+			return err
+		}
+		if err := EnforceArgumentType(Integer, args[0]); err != nil {
+			return err
+		}
+
+		arg := args[0].(*IntegerInstance)
+
+		var newString bytes.Buffer
+
+		for i := int64(0); i < arg.Value; i++ {
+			newString.WriteString(selfString.Value)
+		}
+
+		return NewString(newString.String())
 	}
 }
 

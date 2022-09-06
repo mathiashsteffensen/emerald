@@ -22,12 +22,26 @@ func InitEnumerable() {
 
 func enumerableFirst() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		var value object.EmeraldValue
+		if _, err := EnforceArity(args, 0, 1); err != nil {
+			return err
+		}
+
+		var numElements = int64(1)
+
+		if len(args) == 1 {
+			if err := EnforceArgumentType(Integer, args[0]); err != nil {
+				return err
+			}
+
+			numElements = args[0].(*IntegerInstance).Value
+		}
+
+		var values []object.EmeraldValue
 		wrappedBlock := &object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 				// TODO: This doesn't stop iterating after the first element has been found, should probably implement a break keyword or something
-				if value == nil {
-					value = args[0]
+				if int64(len(values)) != numElements {
+					values = append(values, args[0])
 				}
 				return NULL
 			},
@@ -35,7 +49,11 @@ func enumerableFirst() object.BuiltInMethod {
 
 		Send(ctx.Self, "each", wrappedBlock)
 
-		return value
+		if numElements == 1 {
+			return values[0]
+		} else {
+			return NewArray(values)
+		}
 	}
 }
 

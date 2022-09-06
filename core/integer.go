@@ -109,6 +109,13 @@ func integerSpaceship() object.BuiltInMethod {
 
 func integerInfixOperator(cb func(left int64, right int64) object.EmeraldValue) object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, 1, 1); err != nil {
+			return err
+		}
+		if err := EnforceArgumentType(Integer, args[0]); err != nil {
+			return err
+		}
+
 		return cb(ctx.Self.(*IntegerInstance).Value, args[0].(*IntegerInstance).Value)
 	}
 }

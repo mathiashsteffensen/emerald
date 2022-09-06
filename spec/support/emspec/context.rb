@@ -1,7 +1,7 @@
 module EMSpec
 	class << self
 		def _current_context
-			$current_context ||= EMSpec::Context.new("EMSpec", nil, nil)
+			$current_context ||= EMSpec::Context.new("EMSpec", nil, -1)
 		end
 	end
 
@@ -17,7 +17,7 @@ module EMSpec
 			def context(name)
 				$current_context = EMSpec::Context.new(name, current_context, current_context.level + 1)
 
-				with_context_reset { yield; nil }
+				with_context_reset { yield }
 			end
 
 			def describe(name)
@@ -35,15 +35,21 @@ module EMSpec
 			end
 
 			def with_context_reset
-				$current_context = current_context.child
+				name = current_context.name
+
+				if name.is_a?(Class)
+					name = name.name
+				end
+
+				indent = "	" * current_context.level
+				puts(indent + name)
 				yield
 				$current_context = current_context.parent
 			end
 
 			def log_failure(msg)
-                puts "Spec failed"
-                puts "  " + current_context.name
-                puts "      " + msg
+				indent = "	" * (current_context.level + 1)
+                puts indent + "FAILED"
             end
 		end
 	end
