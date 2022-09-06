@@ -27,6 +27,8 @@ To start the Emerald VM in interactive mode:
 This is still quite far away from being a real implementation.
 The below is a list of the features on the roadmap and the ones that have already been implemented.
 
+NOTE: To say they have been implemented does not mean any features are guaranteed to be compatible with the reference Ruby implementation.
+
 - [x] everything is an object
     - [x] allow method calls on everything
     - [x] operators are method calls
@@ -171,7 +173,7 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] `===` (case equality)
     - [x] `=~` (pattern match)
     - [ ] `!~` (does not match)
-    - [ ] `<=>` (comparison or spaceship operator)
+    - [x] `<=>` (comparison or spaceship operator)
     - [x] `<=` (less or equal)
     - [x] `>=` (greater or equal)
     - [ ] assignment operators
@@ -189,7 +191,8 @@ The below is a list of the features on the roadmap and the ones that have alread
         - [x] `||=`
         - [x] `&&=`
 - [ ] error handling
-    - [ ] begin/rescue
+    - [ ] begin
+    - [x] rescue
     - [ ] ensure
     - [ ] retry
 - [ ] constants
@@ -208,7 +211,7 @@ The below is a list of the features on the roadmap and the ones that have alread
     - [ ] protected
     - [ ] public
     - [x] inheritance
-    - [ ] constructors
+    - [x] constructors
     - [x] new
     - [x] `self`
     - [x] singleton classes (also known as the metaclass or eigenclass) `class << self`
