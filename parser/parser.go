@@ -80,6 +80,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.DOT, p.parseMethodCall)
 	p.registerInfix(lexer.LBRACKET, p.parseIndexAccessor)
 	p.registerInfix(lexer.SCOPE, p.parseScopeAccessor)
+	p.registerInfix(lexer.IF, p.parseIfModifier)
 
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
@@ -334,41 +335,6 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	}
 
 	return exp
-}
-
-func (p *Parser) parseIfExpression() ast.Expression {
-	expression := &ast.IfExpression{Token: p.curToken}
-
-	p.nextToken()
-
-	expression.Condition = p.parseExpression(MODIFIER)
-
-	p.nextIfSemicolonOrNewline()
-
-	expression.Consequence = &ast.BlockStatement{Token: p.curToken}
-	expression.Consequence.Statements = []ast.Statement{}
-
-	p.nextToken()
-
-	for !p.curTokenIs(lexer.END) && !p.curTokenIs(lexer.ELSE) && !p.curTokenIs(lexer.EOF) {
-		stmt := p.parseStatement()
-
-		if stmt != nil {
-			expression.Consequence.Statements = append(expression.Consequence.Statements, stmt)
-		}
-
-		p.nextToken()
-	}
-
-	if p.curTokenIs(lexer.ELSE) {
-		p.nextIfSemicolonOrNewline()
-
-		expression.Alternative = p.parseBlockStatement(lexer.END)
-	}
-
-	p.nextIfSemicolonOrNewline()
-
-	return expression
 }
 
 func (p *Parser) parseExpressionList(delim lexer.TokenType) []ast.Expression {

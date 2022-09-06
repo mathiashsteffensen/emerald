@@ -15,6 +15,7 @@ func TestConditionals(t *testing.T) {
 		{"", "if 1 > 2; 10; else; 20; end", 20},
 		{"", "if 1 > 2; 10; end", nil},
 		{"", "if (if false 10 end) 10 else 20 end", 20},
+		{"", "5 if true", 5},
 	}
 	runVmTests(t, tests)
 }

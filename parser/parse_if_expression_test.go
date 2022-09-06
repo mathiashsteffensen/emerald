@@ -33,17 +33,16 @@ func TestIfExpression(t *testing.T) {
 			conditionTest{5, "<", 98},
 			false,
 		},
-		// TODO: Uncomment and ensure passes when implementing if modifiers
-		//{
-		//	"false if 5 < 98",
-		//	conditionTest{5, "<", 98},
-		//	false,
-		//},
-		//{
-		//	"true if 10 * 5",
-		//	conditionTest{10, "*", 5},
-		//	true,
-		//},
+		{
+			"false if 5 < 98",
+			conditionTest{5, "<", 98},
+			false,
+		},
+		{
+			"true if 10 * 5",
+			conditionTest{10, "*", 5},
+			true,
+		},
 	}
 
 	for _, tt := range tests {
