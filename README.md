@@ -51,7 +51,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [x] with block arguments
 - [ ] conditionals
     - [x] if
-    - [ ] if modifier
+    - [x] if modifier
     - [x] if/else
     - [ ] if/elif/else
     - [ ] ternary `? : `
