@@ -36,7 +36,7 @@ func TestIO_open(t *testing.T) {
 			name: "when called with a block",
 			input: `
 				file_descriptor = IO.sysopen "fixtures/require_test.rb"
-				IO.open file_descriptor do |io|
+				IO.open(file_descriptor) do |io|
 					io.getbyte
 				end
 			`,

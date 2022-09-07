@@ -1,4 +1,4 @@
-#!/usr/bin/env emerald
+#!/usr/bin/env -S emerald --logHeapUsage
 
 require_relative "../support/emspec"
 

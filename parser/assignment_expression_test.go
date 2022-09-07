@@ -46,16 +46,7 @@ func TestAssignmentExpression(t *testing.T) {
 					program.Statements[0])
 			}
 
-			ident, ok := stmt.Expression.(*ast.AssignmentExpression)
-			if !ok {
-				t.Fatalf("exp not *ast.AssignmentExpression. got=%T", stmt.Expression)
-			}
-			if ident.Name.String() != tt.expectedName {
-				t.Errorf("ident.Name not %s. got=%s", tt.expectedName, ident.Name.String())
-			}
-			if ident.Value.String() != tt.expectedVal {
-				t.Errorf("ident.Value not %s. got=%s", tt.expectedVal, ident.Value.String())
-			}
+			testAssignmentExpression(t, stmt.Expression, tt.expectedName, tt.expectedVal)
 		})
 	}
 }

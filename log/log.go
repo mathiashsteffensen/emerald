@@ -13,7 +13,7 @@ type Level int
 
 const (
 	InternalDebugLevel Level = iota
-	// DebugLevel
+	DebugLevel
 	WarnLevel
 	FatalLevel
 )
@@ -25,6 +25,8 @@ func (l Level) String() string {
 	switch l {
 	case InternalDebugLevel:
 		return "INTERNAL"
+	case DebugLevel:
+		return "DEBUG"
 	case WarnLevel:
 		return "WARN"
 	case FatalLevel:
@@ -60,18 +62,11 @@ func Shutdown() {
 }
 
 func writeToChan(level Level, msg string) {
-	msgChan <- message{
-		level:  level,
-		format: msg,
-	}
+	write(level, msg)
 }
 
 func writeToChanF(level Level, format string, args ...any) {
-	msgChan <- message{
-		level:  level,
-		format: format,
-		args:   args,
-	}
+	writef(level, format, args...)
 }
 
 func InternalDebug(msg string) {
@@ -80,6 +75,14 @@ func InternalDebug(msg string) {
 
 func InternalDebugF(format string, args ...any) {
 	writeToChanF(InternalDebugLevel, format, args...)
+}
+
+func Debug(msg string) {
+	writeToChan(DebugLevel, msg)
+}
+
+func DebugF(format string, args ...any) {
+	writeToChanF(DebugLevel, format, args...)
 }
 
 func Warn(msg string) {
@@ -118,7 +121,7 @@ func ExperimentalWarning() {
 
 func write(level Level, msg string) {
 	if level >= currentLevel {
-		fmt.Printf("[%s] %s\n", level.String(), msg)
+		fmt.Printf("[%s] %s\n", level, msg)
 	}
 }
 

@@ -72,7 +72,7 @@ func ensureNoExceptionUnlessExpected(t *testing.T, expected any) {
 	exception := heap.GetGlobalVariableString("$!")
 
 	if exception != nil && exception != core.NULL {
-		t.Fatalf("Unexpected uncaught exception %s", exception.Inspect())
+		t.Fatalf("Unexpected uncaught exception %s: %s", exception.Inspect(), exception.(object.EmeraldError).Message())
 	}
 }
 

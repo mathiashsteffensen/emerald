@@ -4,6 +4,7 @@ import (
 	"emerald/compiler"
 	"emerald/core"
 	"emerald/heap"
+	"emerald/log"
 	"emerald/object"
 	"fmt"
 )
@@ -299,7 +300,7 @@ func (vm *VM) callFunction(numArgs int) {
 	}
 
 	// Handy for debugging, but makes the VM quite slow when writing to STDOUT in a hot loop
-	// log.InternalDebugF("Calling method %s#%s", receiver.Inspect(), name.Value)
+	log.InternalDebugF("Calling method %s#%s", receiver.Inspect(), name.Value)
 
 	vm.withExecutionContext(receiver, block, func() {
 		switch method := method.(type) {
@@ -356,11 +357,7 @@ func (vm *VM) withExecutionContext(self object.EmeraldValue, block object.Emeral
 
 // StackTop fetches the object at the top of the stack
 func (vm *VM) StackTop() object.EmeraldValue {
-	if vm.currentFiber().sp == 0 {
-		return nil
-	}
-
-	return vm.stack()[vm.currentFiber().sp-1]
+	return vm.currentFiber().StackTop()
 }
 
 func (vm *VM) LastPoppedStackElem() object.EmeraldValue {
@@ -369,19 +366,12 @@ func (vm *VM) LastPoppedStackElem() object.EmeraldValue {
 
 // push an obj on to the stack
 func (vm *VM) push(obj object.EmeraldValue) {
-	if vm.currentFiber().sp >= StackSize {
-		panic(fmt.Errorf("stack overflow: max stack size of %d exceeded", StackSize))
-	}
-
-	vm.stack()[vm.currentFiber().sp] = obj
-	vm.currentFiber().sp++
+	vm.currentFiber().push(obj)
 }
 
 // pop an obj from the top of the stack
 func (vm *VM) pop() object.EmeraldValue {
-	o := vm.StackTop()
-	vm.currentFiber().sp--
-	return o
+	return vm.currentFiber().pop()
 }
 
 func (vm *VM) buildArray(startIndex, endIndex int) object.EmeraldValue {

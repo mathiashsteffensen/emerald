@@ -81,7 +81,7 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 			return vm.pop()
 		}
 	default:
-		panic(fmt.Errorf("yielded to not a method?, got=%s", bl.Inspect()))
+		core.Raise(core.NewException(fmt.Sprintf("yielded to not a method?, got=%s", bl.Inspect())))
 	}
 
 	return core.NULL

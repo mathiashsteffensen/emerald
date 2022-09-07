@@ -20,6 +20,7 @@ func InitArray() {
 	DefineMethod(Array, "[]", arrayIndexAccessor())
 	DefineMethod(Array, "==", arrayEquals())
 	DefineMethod(Array, "push", arrayPush())
+	DefineMethod(Array, "pop", arrayPop())
 	DefineMethod(Array, "each", arrayEach())
 	DefineMethod(Array, "to_s", arrayToS())
 	DefineMethod(Array, "inspect", arrayToS())
@@ -59,6 +60,23 @@ func arrayPush() object.BuiltInMethod {
 		arr.Value = append(arr.Value, args[0])
 
 		return arr
+	}
+}
+
+func arrayPop() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := ctx.Self.(*ArrayInstance)
+
+		if len(arr.Value) == 0 {
+			return NULL
+		}
+
+		index := len(arr.Value) - 1
+		element := arr.Value[index]
+
+		arr.Value = arr.Value[:index]
+
+		return element
 	}
 }
 

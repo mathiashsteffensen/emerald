@@ -11,9 +11,7 @@ module EMSpec
 		include Context::Helpers
 
 	    def run
-	        file = ARGV[0] 
-
-	        puts ARGV
+	        file = ARGV[0]
 	        
 	        if file
 	        	puts "Running " + file

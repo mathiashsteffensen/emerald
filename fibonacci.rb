@@ -14,4 +14,8 @@ def bench_fib_iterative(n)
     end
 end
 
-bench_fib_iterative(160_800)
+5.times do
+    bench_fib_iterative(160_800)
+end
+
+sleep 3

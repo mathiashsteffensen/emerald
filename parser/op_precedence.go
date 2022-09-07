@@ -20,6 +20,7 @@ const (
 )
 
 var precedences = map[lexer.TokenType]int{
+	lexer.WHILE:     MODIFIER,
 	lexer.IF:        MODIFIER,
 	lexer.BOOL_OR:   BOOL_OR,
 	lexer.BOOL_AND:  BOOL_AND,

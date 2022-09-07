@@ -54,27 +54,7 @@ func TestCallExpressionParsing(t *testing.T) {
 					program.Statements[0])
 			}
 
-			exp, ok := stmt.Expression.(ast.CallExpression)
-			if !ok {
-				t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
-					stmt.Expression)
-			}
-
-			if !testIdentifier(t, exp.Method, "add") {
-				return
-			}
-
-			if len(exp.Arguments) != len(tt.expectedArgs) {
-				t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
-			}
-
-			for i, arg := range tt.expectedArgs {
-				testLiteralExpression(t, exp.Arguments[i], arg)
-			}
-
-			if tt.expectBlock && exp.Block == nil {
-				t.Fatalf("exp was not passed a block")
-			}
+			testCallExpression(t, stmt.Expression, "add", tt.expectedArgs, tt.expectBlock)
 		})
 	}
 }

@@ -4,6 +4,7 @@ import (
 	ast "emerald/parser/ast"
 	"emerald/parser/lexer"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -20,8 +21,7 @@ func testParseAST(t *testing.T, input string) *ast.AST {
 
 func expectStatementLength(t *testing.T, stmt []ast.Statement, length int) {
 	if len(stmt) != length {
-		t.Fatalf("AST does not contain %d statements. got=%d\n",
-			length, len(stmt))
+		t.Fatalf("AST does not contain %d statements. got=%d\n\n%s", length, len(stmt), (&ast.BlockStatement{Statements: stmt}).String())
 	}
 }
 
@@ -37,6 +37,50 @@ func testExpressionStatement[T ast.Expression](t *testing.T, stmt ast.Statement,
 	}
 
 	cb(exp)
+}
+
+func testAssignmentExpression(t *testing.T, expr ast.Expression, expectedName, expectedValue string) {
+	ident, ok := expr.(*ast.AssignmentExpression)
+	if !ok {
+		t.Fatalf("exp not *ast.AssignmentExpression. got=%T", expr)
+	}
+	if ident.Name.String() != expectedName {
+		t.Errorf("ident.Name not %s. got=%s", expectedName, ident.Name.String())
+	}
+	if ident.Value.String() != expectedValue {
+		t.Errorf("ident.Value not %s. got=%s", expectedValue, ident.Value.String())
+	}
+}
+
+func testCallExpression(t *testing.T, expr ast.Expression, name string, args []any, block bool) {
+	exp, ok := expr.(ast.CallExpression)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T", expr)
+	}
+
+	testIdentifier(t, exp.Method, name)
+
+	if len(exp.Arguments) != len(args) {
+		t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
+	}
+
+	for i, arg := range args {
+		testLiteralExpression(t, exp.Arguments[i], arg)
+	}
+
+	if block && exp.Block == nil {
+		t.Fatalf("exp was not passed a block")
+	}
+}
+
+func testMethodCall(t *testing.T, expr ast.Expression, receiver string, name string, args []any, block bool) {
+	exp, ok := expr.(*ast.MethodCall)
+	if !ok {
+		t.Fatalf("stmt.Expression is not *ast.MethodCall. got=%T", expr)
+	}
+
+	testIdentifier(t, exp.Left, receiver)
+	testCallExpression(t, exp.CallExpression, name, args, block)
 }
 
 func testInfixExpression(t *testing.T, exp ast.Expression, left any, operator string, right any) bool {
@@ -73,12 +117,29 @@ func testLiteralExpression(
 	case int64:
 		return testIntegerLiteral(t, exp, v)
 	case string:
+		if strings.HasPrefix(v, "s:") {
+			return testStringLiteral(t, exp, v[2:])
+		}
 		return testIdentifier(t, exp, v)
 	case bool:
 		return testBooleanLiteral(t, exp, v)
 	}
 	t.Errorf("type of exp not handled. got=%T", exp)
 	return false
+}
+
+func testStringLiteral(t *testing.T, expr ast.Expression, expected string) bool {
+	str, ok := expr.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("expr is not *ast.StringLiteral. got=%T", expr)
+	}
+
+	if str.Value != expected {
+		t.Errorf("str.Value not %s. got=%s", expected, str.Value)
+		return false
+	}
+
+	return true
 }
 
 func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {

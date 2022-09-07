@@ -43,7 +43,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [ ] keyword arguments
     - [ ] block arguments
     - [ ] hash as last argument without braces
-    - [ ] yield
+    - [x] yield
 - [x] method calls
     - [x] with parens
     - [x] without parens
@@ -63,7 +63,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [x] `&&`
 - [ ] control flow
     - [ ] for loop
-    - [ ] while loop
+    - [x] while loop
     - [ ] until loop
     - [ ] break
     - [ ] next

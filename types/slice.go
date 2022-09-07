@@ -38,6 +38,16 @@ func (slice Slice[T]) Find(cb func(T) bool) *T {
 	return nil
 }
 
+func (slice Slice[T]) FindIndex(cb func(T) bool) *int {
+	for i, val := range slice.Value {
+		if cb(val) {
+			return &i
+		}
+	}
+
+	return nil
+}
+
 func (slice Slice[T]) Includes(value T) bool {
 	for _, val := range slice.Value {
 		if val == value {

@@ -149,6 +149,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+	case *ast.WhileExpression:
+		err := c.compileWhileExpression(node)
+		if err != nil {
+			return err
+		}
 	case *ast.IntegerLiteral:
 		integer := core.NewInteger(node.Value)
 		c.emit(OpPushConstant, c.addConstant(integer))

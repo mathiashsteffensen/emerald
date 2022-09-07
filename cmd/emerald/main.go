@@ -15,10 +15,13 @@ import (
 	"github.com/pkg/profile"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"time"
 )
 
 var profilingEnabled = flag.Bool("profile", false, "EM_DEBUG=1 emerald --profile lib/main.rb")
+var logHeapUsage = flag.Bool("logHeapUsage", false, "EM_DEBUG=1 emerald --logHeapUsage lib/main.rb")
 
 func main() {
 	log.ExperimentalWarning()
@@ -31,15 +34,17 @@ func main() {
 	}
 
 	osArgs := types.NewSlice[string](os.Args[1:]...)
-	file := osArgs.Find(func(arg string) bool {
+	fileIndex := osArgs.FindIndex(func(arg string) bool {
 		return !strings.HasPrefix(arg, "--")
 	})
 
-	if file == nil {
+	if fileIndex == nil {
 		log.Fatal("No file to run")
 	}
 
-	absFile, err := filepath.Abs(*file)
+	file := osArgs.Value[*fileIndex]
+
+	absFile, err := filepath.Abs(file)
 	checkError("Failed to make path absolute?", err)
 
 	bytes, err := os.ReadFile(absFile)
@@ -60,17 +65,17 @@ func main() {
 
 	argv := []object.EmeraldValue{}
 
-	types.NewSlice[string](osArgs.Value[1:]...).Each(func(arg string) {
+	types.NewSlice[string](osArgs.Value[*fileIndex+1:]...).Each(func(arg string) {
 		argv = append(argv, core.NewString(arg))
 	})
 
 	core.MainObject.NamespaceDefinitionSet("ARGV", core.NewArray(argv))
 
-	defer func() {
-		if r := recover(); r != nil {
-			log.StackTrace(r)
-		}
-	}()
+	defer recoverWithStacktrace()
+
+	if *logHeapUsage {
+		go logHeapUsageRoutine()
+	}
 
 	machine := vm.New(absFile, c.Bytecode())
 	machine.Run()
@@ -80,7 +85,30 @@ func main() {
 		log.FatalF("%s: %s", exception.ClassName(), exception.Message())
 	}
 
+	if machine.StackTop() != nil {
+		log.InternalDebug("StackTop was not nil")
+	}
+
 	log.Shutdown()
+}
+
+func logHeapUsageRoutine() {
+	m := runtime.MemStats{}
+
+	for {
+		time.Sleep(200 * time.Millisecond)
+
+		runtime.ReadMemStats(&m)
+		heapAlloc := float64(m.HeapAlloc) / 1024 / 1024 // In MB
+
+		log.DebugF("Heap size: %fMB", heapAlloc)
+	}
+}
+
+func recoverWithStacktrace() {
+	if r := recover(); r != nil {
+		log.StackTrace(r)
+	}
 }
 
 func checkError(msg string, err error) {

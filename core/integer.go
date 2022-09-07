@@ -34,6 +34,7 @@ func InitInteger() {
 	DefineMethod(Integer, "-", integerSubtract)
 	DefineMethod(Integer, "*", integerMultiply)
 	DefineMethod(Integer, "/", integerDivide)
+	DefineMethod(Integer, "to_f", integerToF())
 	DefineMethod(Integer, "times", integerTimes())
 }
 
@@ -80,6 +81,12 @@ func integerTimes() object.BuiltInMethod {
 		}
 
 		return ctx.Self
+	}
+}
+
+func integerToF() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewFloat(float64(ctx.Self.(*IntegerInstance).Value))
 	}
 }
 

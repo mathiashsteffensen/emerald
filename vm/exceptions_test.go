@@ -63,16 +63,39 @@ func TestErrorHandling(t *testing.T) {
 				def say_hello(name)
 					puts("Hello " + name + "!")
 				end
-	
+		
 				$suppressed = 0
-	
+		
 				def suppress_errors
 					yield
 				rescue StandardError
 					$suppressed = $suppressed + 1
 				end
-
+		
 				suppress_errors { say_hello }
+		
+				$suppressed
+			`,
+			expected: 1,
+		},
+		{
+			name: "Rescue clause in block",
+			input: `
+				def say_hello(name)
+					puts("Hello " + name + "!")
+				end
+
+				def yielder
+					yield
+				end
+	
+				$suppressed = 0
+
+				yielder do 
+					say_hello
+				rescue StandardError
+					$suppressed = $suppressed + 1
+				end
 	
 				$suppressed
 			`,

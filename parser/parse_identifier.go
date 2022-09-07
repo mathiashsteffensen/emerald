@@ -8,7 +8,7 @@ import (
 func (p *Parser) parseIdentifierExpression() ast.Expression {
 	node := ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 
-	if p.peekTokenIs(lexer.LBRACE) {
+	if p.peekTokenIs(lexer.LBRACE) || p.peekTokenIs(lexer.DO) {
 		callExpression := ast.CallExpression{
 			Token:     p.curToken,
 			Method:    node,
