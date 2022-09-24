@@ -1,6 +1,8 @@
 package core
 
-import "emerald/object"
+import (
+	"emerald/object"
+)
 
 var Hash *object.Class
 
@@ -10,6 +12,7 @@ func InitHash() {
 	Hash.Include(Enumerable)
 
 	DefineMethod(Hash, "[]", hashIndexAccessor())
+	DefineMethod(Hash, "==", hashEquals())
 	DefineMethod(Hash, "each", hashEach())
 }
 
@@ -58,5 +61,36 @@ func hashEach() object.BuiltInMethod {
 		}
 
 		return hash
+	}
+}
+
+func hashEquals() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		args, err := EnforceArity(args, 1, 1)
+
+		if err != nil {
+			return err
+		}
+
+		otherObj := args[0]
+		if otherObj.Class().Super() != Hash {
+			return FALSE
+		}
+
+		hash := ctx.Self.(*HashInstance)
+		otherHash := otherObj.(*HashInstance)
+
+		for key, value := range hash.Values {
+			otherValue, ok := otherHash.Values[key]
+			if !ok {
+				return FALSE
+			}
+
+			if Send(value, "==", NULL, otherValue) != TRUE {
+				return FALSE
+			}
+		}
+
+		return TRUE
 	}
 }

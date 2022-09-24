@@ -67,6 +67,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.MINUS, p.parseInfixExpression)
 	p.registerInfix(lexer.SLASH, p.parseInfixExpression)
 	p.registerInfix(lexer.ASTERISK, p.parseInfixExpression)
+	p.registerInfix(lexer.ASSIGN, p.parseAssignmentExpression)
 	p.registerInfix(lexer.MATCH, p.parseInfixExpression)
 	p.registerInfix(lexer.SPACESHIP, p.parseInfixExpression)
 	p.registerInfix(lexer.EQ, p.parseInfixExpression)
@@ -77,6 +78,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.GT_OR_EQ, p.parseInfixExpression)
 	p.registerInfix(lexer.BOOL_AND, p.parseInfixExpression)
 	p.registerInfix(lexer.BOOL_OR, p.parseInfixExpression)
+	p.registerInfix(lexer.BOOL_AND_ASSIGN, p.parseInfixExpression)
+	p.registerInfix(lexer.BOOL_OR_ASSIGN, p.parseInfixExpression)
 	p.registerInfix(lexer.LPAREN, p.parseCallExpression)
 	p.registerInfix(lexer.DOT, p.parseMethodCall)
 	p.registerInfix(lexer.LBRACKET, p.parseIndexAccessor)
@@ -175,13 +178,30 @@ func (p *Parser) parseBlockStatement(endToken lexer.TokenType) *ast.BlockStateme
 }
 
 func (p *Parser) parseStatement() ast.Statement {
+	var result ast.Statement
+
 	switch p.curToken.Type {
 	case lexer.NEWLINE:
-		return nil
+		result = nil
 	case lexer.RETURN:
-		return p.parseReturnStatement()
+		result = p.parseReturnStatement()
+	case lexer.BREAK:
+		result = p.parseBreakStatement()
 	default:
-		return p.parseExpressionStatement()
+		result = p.parseExpressionStatement()
+	}
+
+	p.nextIfSemicolonOrNewline()
+
+	return result
+}
+
+func (p *Parser) parseBoolModifierFromStatement(stmt ast.Statement) ast.Expression {
+	switch p.curToken.Type {
+	case lexer.IF:
+		return p.parseIfModifierFromStatement(stmt)
+	default:
+		return nil
 	}
 }
 
@@ -192,15 +212,12 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 	stmt.ReturnValue = p.parseExpression(LOWEST)
 
-	p.nextIfSemicolonOrNewline()
-
 	return stmt
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 	stmt.Expression = p.parseExpression(LOWEST)
-	p.nextIfSemicolonOrNewline()
 	return stmt
 }
 
@@ -444,15 +461,6 @@ func (p *Parser) parseStaticClassLiteral() ast.Expression {
 	class.Body = p.parseBlockStatement(lexer.END)
 
 	return class
-}
-
-func (p *Parser) parseIndexAccessor(left ast.Expression) ast.Expression {
-	node := &ast.MethodCall{Token: p.curToken, Left: left, CallExpression: ast.CallExpression{}}
-	node.Method = ast.IdentifierExpression{Value: "[]"}
-
-	node.Arguments = p.parseExpressionList(lexer.RBRACKET)
-
-	return node
 }
 
 func (p *Parser) curTokenIs(t lexer.TokenType) bool {

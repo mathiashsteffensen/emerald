@@ -129,6 +129,14 @@ func TestOperatorPrecedence(t *testing.T) {
 			"obj.value(a, b).otherValue",
 			"((obj.value(a, b)).otherValue)",
 		},
+		{
+			"true && var = 2",
+			"(true && (var = 2))",
+		},
+		{
+			"val = 2 && 5",
+			"(val = (2 && 5))",
+		},
 	}
 
 	for _, tt := range tests {

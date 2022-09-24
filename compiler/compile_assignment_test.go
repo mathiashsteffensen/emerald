@@ -135,7 +135,7 @@ func TestCompileAssignment(t *testing.T) {
 			},
 		},
 		{
-			name:              "boolean and evaluating to true and assigning to variable",
+			name:              "boolean and evaluating to true and assigning to variable 1",
 			input:             "true && var = 15",
 			expectedConstants: []any{15},
 			expectedInstructions: []Instructions{
@@ -150,7 +150,7 @@ func TestCompileAssignment(t *testing.T) {
 			},
 		},
 		{
-			name:              "boolean or evaluating to false and assigning to variable",
+			name:              "boolean or evaluating to false and assigning to variable 1",
 			input:             "false || var = 15",
 			expectedConstants: []any{15},
 			expectedInstructions: []Instructions{
@@ -165,7 +165,7 @@ func TestCompileAssignment(t *testing.T) {
 			},
 		},
 		{
-			name:              "boolean and evaluating to true and assigning to variable",
+			name:              "boolean and evaluating to true and assigning to variable 2",
 			input:             "var = true; var &&= 15",
 			expectedConstants: []any{15},
 			expectedInstructions: []Instructions{
@@ -183,7 +183,7 @@ func TestCompileAssignment(t *testing.T) {
 			},
 		},
 		{
-			name:              "boolean or evaluating to false and assigning to variable",
+			name:              "boolean or evaluating to false and assigning to variable 2",
 			input:             "var = false; var ||= 15",
 			expectedConstants: []any{15},
 			expectedInstructions: []Instructions{

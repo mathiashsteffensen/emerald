@@ -25,10 +25,25 @@ func expectStatementLength(t *testing.T, stmt []ast.Statement, length int) {
 	}
 }
 
+func testBreakStatement(t *testing.T, stmt ast.Statement, value any) {
+	breakStmt, ok := stmt.(*ast.BreakStatement)
+	if !ok {
+		t.Fatalf("stmt is not *ast.BreakStatement. got=%T", stmt)
+	}
+
+	if value == nil && breakStmt.Value != nil {
+		t.Fatalf("Expected break without a value but got %s", breakStmt.Value)
+	} else if value == nil {
+		return
+	}
+
+	testLiteralExpression(t, breakStmt.Value, value)
+}
+
 func testExpressionStatement[T ast.Expression](t *testing.T, stmt ast.Statement, cb func(expression T)) {
 	exprStmt, ok := stmt.(*ast.ExpressionStatement)
 	if !ok {
-		t.Fatalf("stmt is not ast.ExpressionStatement. got=%T", stmt)
+		t.Fatalf("stmt is not *ast.ExpressionStatement. got=%T", stmt)
 	}
 
 	exp, ok := exprStmt.Expression.(T)
@@ -58,7 +73,9 @@ func testCallExpression(t *testing.T, expr ast.Expression, name string, args []a
 		t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T", expr)
 	}
 
-	testIdentifier(t, exp.Method, name)
+	if exp.Method.String() != name {
+		t.Fatalf("Method name was not %s, got=%s", name, exp.Method.String())
+	}
 
 	if len(exp.Arguments) != len(args) {
 		t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
@@ -117,8 +134,14 @@ func testLiteralExpression(
 	case int64:
 		return testIntegerLiteral(t, exp, v)
 	case string:
+		if strings.HasPrefix(v, ":") {
+			return testSymbolLiteral(t, exp, v[1:])
+		}
 		if strings.HasPrefix(v, "s:") {
 			return testStringLiteral(t, exp, v[2:])
+		}
+		if strings.HasPrefix(v, "@") {
+			return testInstanceVar(t, exp, v)
 		}
 		return testIdentifier(t, exp, v)
 	case bool:
@@ -126,6 +149,20 @@ func testLiteralExpression(
 	}
 	t.Errorf("type of exp not handled. got=%T", exp)
 	return false
+}
+
+func testSymbolLiteral(t *testing.T, expr ast.Expression, expected string) bool {
+	sym, ok := expr.(*ast.SymbolLiteral)
+	if !ok {
+		t.Fatalf("expr is not *ast.SymbolLiteral. got=%T", expr)
+	}
+
+	if sym.Value != expected {
+		t.Errorf("sym.Value not %s. got=%s", expected, sym.Value)
+		return false
+	}
+
+	return true
 }
 
 func testStringLiteral(t *testing.T, expr ast.Expression, expected string) bool {
@@ -143,20 +180,41 @@ func testStringLiteral(t *testing.T, expr ast.Expression, expected string) bool 
 }
 
 func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
-	integ, ok := il.(*ast.IntegerLiteral)
+	integer, ok := il.(*ast.IntegerLiteral)
 	if !ok {
 		t.Errorf("il not *ast.IntegerLiteral. got=%T", il)
 		return false
 	}
 
-	if integ.Value != value {
-		t.Errorf("integ.Value not %d. got=%d", value, integ.Value)
+	if integer.Value != value {
+		t.Errorf("integer.Value not %d. got=%d", value, integer.Value)
 		return false
 	}
 
-	if integ.TokenLiteral() != fmt.Sprintf("%d", value) {
-		t.Errorf("integ.TokenLiteral not %d. got=%s", value,
-			integ.TokenLiteral())
+	if integer.TokenLiteral() != fmt.Sprintf("%d", value) {
+		t.Errorf("integer.TokenLiteral not %d. got=%s", value,
+			integer.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func testInstanceVar(t *testing.T, exp ast.Expression, value string) bool {
+	ident, ok := exp.(*ast.InstanceVariable)
+	if !ok {
+		t.Errorf("exp not *ast.InstanceVariable. got=%T", exp)
+		return false
+	}
+
+	if ident.Value != value {
+		t.Errorf("ident.Value not %s. got=%s", value, ident.Value)
+		return false
+	}
+
+	if ident.TokenLiteral() != value {
+		t.Errorf("ident.TokenLiteral not %s. got=%s", value,
+			ident.TokenLiteral())
 		return false
 	}
 

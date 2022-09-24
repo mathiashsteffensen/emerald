@@ -41,11 +41,13 @@ func (p *Parser) parseIfExpression() ast.Expression {
 }
 
 func (p *Parser) parseIfModifier(consequence ast.Expression) ast.Expression {
-	expression := &ast.IfExpression{Token: p.curToken, Consequence: &ast.BlockStatement{
-		Statements: []ast.Statement{&ast.ExpressionStatement{
-			Expression: consequence,
-		}},
-	}}
+	return p.parseIfModifierFromStatement(&ast.ExpressionStatement{
+		Expression: consequence,
+	})
+}
+
+func (p *Parser) parseIfModifierFromStatement(stmt ast.Statement) ast.Expression {
+	expression := &ast.IfExpression{Token: p.curToken, Consequence: &ast.BlockStatement{Statements: []ast.Statement{stmt}}}
 
 	p.nextToken()
 

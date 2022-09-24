@@ -33,3 +33,26 @@ func TestHash_find(t *testing.T) {
 
 	runCoreTests(t, cases)
 }
+
+func TestHash_equals(t *testing.T) {
+	cases := []coreTestCase{
+		{
+			input:    "{} == {}",
+			expected: true,
+		},
+		{
+			input:    "{\"key\" => 2} == { key: 2 }",
+			expected: false,
+		},
+		{
+			input:    "{ key: 2 } == { key: 2 }",
+			expected: true,
+		},
+		{
+			input:    "{ key: 2, other_key: 3 } == { key: 2, other_key: 4 }",
+			expected: false,
+		},
+	}
+
+	runCoreTests(t, cases)
+}

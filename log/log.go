@@ -18,7 +18,7 @@ const (
 	FatalLevel
 )
 
-var currentLevel = WarnLevel
+var currentLevel = DebugLevel
 var trueEnvValues = types.NewSlice("true", "on", "1")
 
 func (l Level) String() string {

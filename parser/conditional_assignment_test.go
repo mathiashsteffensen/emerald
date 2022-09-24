@@ -15,25 +15,25 @@ func TestConditionalAssignment(t *testing.T) {
 		{
 			input:      "var &&= false",
 			identifier: "var",
-			operator:   "&&",
+			operator:   "&&=",
 			val:        false,
 		},
 		{
 			input:      "var ||= false",
 			identifier: "var",
-			operator:   "||",
+			operator:   "||=",
 			val:        false,
 		},
 		{
 			input:      "@var &&= false",
 			identifier: "@var",
-			operator:   "&&",
+			operator:   "&&=",
 			val:        false,
 		},
 		{
 			input:      "@var ||= false",
 			identifier: "@var",
-			operator:   "||",
+			operator:   "||=",
 			val:        false,
 		},
 	}
@@ -42,35 +42,11 @@ func TestConditionalAssignment(t *testing.T) {
 		t.Run(tt.input, func(t *testing.T) {
 			program := testParseAST(t, tt.input)
 
-			if len(program.Statements) != 1 {
-				t.Fatalf("expected program to have %d statements, got=%d", 1, len(program.Statements))
-			}
+			expectStatementLength(t, program.Statements, 1)
 
 			exp := program.Statements[0].(*ast.ExpressionStatement)
 
-			infix, ok := exp.Expression.(*ast.InfixExpression)
-			if !ok {
-				t.Fatalf("expression was not *ast.InfixExpression, got=%T", exp.Expression)
-			}
-
-			if infix.Operator != tt.operator {
-				t.Errorf("wrong operator want=%s, got=%s", tt.operator, infix.Operator)
-			}
-
-			if infix.Left.String() != tt.identifier {
-				t.Errorf("expected variable name to be %s, got=%s", tt.identifier, infix.Left)
-			}
-
-			assignment, ok := infix.Right.(*ast.AssignmentExpression)
-			if !ok {
-				t.Fatalf("expected right side of infix to be *ast.AssignmentExpression, got=%T", infix.Right)
-			}
-
-			if assignment.Name.String() != tt.identifier {
-				t.Errorf("expected variable name to be %s, got=%s", tt.identifier, assignment.Name)
-			}
-
-			testLiteralExpression(t, assignment.Value, tt.val)
+			testInfixExpression(t, exp.Expression, tt.identifier, tt.operator, tt.val)
 		})
 	}
 }

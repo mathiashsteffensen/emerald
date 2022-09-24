@@ -7,39 +7,44 @@ import (
 const (
 	_ int = iota
 	LOWEST
-	MODIFIER   // val = 10 if true
-	BOOL_OR    // ||
-	BOOL_AND   // &&
-	COMPARATOR // ==
-	ORDERING   // > or <
-	SUM        // +
-	PRODUCT    // *
-	PREFIX     // -X or !X
-	CALL       // myFunction(X)
-	ACCESSOR   // myHash.property
+	MODIFIER    // val = 10 if true
+	BOOL_ASSIGN // ||=
+	BOOL_OR     // ||
+	BOOL_AND    // &&
+	COMPARATOR  // ==
+	ORDERING    // > or <
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -X or !X
+	ASSIGN      // =
+	CALL        // myFunction(X)
+	ACCESSOR    // myHash.property
 )
 
 var precedences = map[lexer.TokenType]int{
-	lexer.WHILE:     MODIFIER,
-	lexer.IF:        MODIFIER,
-	lexer.BOOL_OR:   BOOL_OR,
-	lexer.BOOL_AND:  BOOL_AND,
-	lexer.MATCH:     COMPARATOR,
-	lexer.SPACESHIP: COMPARATOR,
-	lexer.EQ:        COMPARATOR,
-	lexer.NOT_EQ:    COMPARATOR,
-	lexer.LT:        ORDERING,
-	lexer.GT:        ORDERING,
-	lexer.LT_OR_EQ:  ORDERING,
-	lexer.GT_OR_EQ:  ORDERING,
-	lexer.PLUS:      SUM,
-	lexer.MINUS:     SUM,
-	lexer.SLASH:     PRODUCT,
-	lexer.ASTERISK:  PRODUCT,
-	lexer.LPAREN:    CALL,
-	lexer.LBRACKET:  CALL,
-	lexer.DOT:       ACCESSOR,
-	lexer.SCOPE:     ACCESSOR,
+	lexer.WHILE:           MODIFIER,
+	lexer.IF:              MODIFIER,
+	lexer.BOOL_OR_ASSIGN:  BOOL_ASSIGN,
+	lexer.BOOL_AND_ASSIGN: BOOL_ASSIGN,
+	lexer.ASSIGN:          ASSIGN,
+	lexer.BOOL_OR:         BOOL_OR,
+	lexer.BOOL_AND:        BOOL_AND,
+	lexer.MATCH:           COMPARATOR,
+	lexer.SPACESHIP:       COMPARATOR,
+	lexer.EQ:              COMPARATOR,
+	lexer.NOT_EQ:          COMPARATOR,
+	lexer.LT:              ORDERING,
+	lexer.GT:              ORDERING,
+	lexer.LT_OR_EQ:        ORDERING,
+	lexer.GT_OR_EQ:        ORDERING,
+	lexer.PLUS:            SUM,
+	lexer.MINUS:           SUM,
+	lexer.SLASH:           PRODUCT,
+	lexer.ASTERISK:        PRODUCT,
+	lexer.LPAREN:          CALL,
+	lexer.LBRACKET:        CALL,
+	lexer.DOT:             ACCESSOR,
+	lexer.SCOPE:           ACCESSOR,
 }
 
 func (p *Parser) peekPrecedence() int {

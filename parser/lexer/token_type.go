@@ -73,6 +73,7 @@ const (
 	RETURN TokenType = "RETURN"
 	NULL   TokenType = "NULL"
 	WHILE  TokenType = "WHILE"
+	BREAK  TokenType = "BREAK"
 )
 
 var keywords = map[string]TokenType{
@@ -93,6 +94,7 @@ var keywords = map[string]TokenType{
 	"return": RETURN,
 	"nil":    NULL,
 	"while":  WHILE,
+	"break":  BREAK,
 }
 
 func lookupIdent(ident string) TokenType {

@@ -49,7 +49,7 @@ module EMSpec
 
 			def log_failure(msg)
 				indent = "	" * (current_context.level + 1)
-                puts indent + "FAILED"
+                puts indent + "FAILED: " + msg
             end
 		end
 	end

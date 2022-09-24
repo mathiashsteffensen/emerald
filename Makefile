@@ -22,7 +22,7 @@ define benchmark_build_time =
 endef
 
 default:
-	@make lint test build
+	@make lint test-all build
 
 emerald: ./**/*.go ./cmd/emerald/main.go
 	$(benchmark_build_time)
@@ -38,6 +38,10 @@ install:
 	cp ./iem /usr/local/bin/iem
 
 test:
+	@echo "Running test ${RUN}" && echo "" && \
+	EM_DEBUG=1 go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ -run=${RUN}
+
+test-all:
 	@echo "Running test suite" && echo "" && \
  	EM_DEBUG=1 go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ --timeout=1s -coverprofile=./tmp/coverage.out && \
  	go tool cover -html=tmp/coverage.out -o tmp/coverage.html && echo ""

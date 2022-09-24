@@ -50,7 +50,7 @@ func TestNextToken(t *testing.T) {
 	nil &&= ||= module
 	begin rescue ensure
 	$: $LOAD_PATH Integer::Math::MAX <=>
-	/^[w]|abc/ =~ yield while`
+	/^[w]|abc/ =~ yield while break`
 
 	tests := []struct {
 		expectedType    TokenType
@@ -266,6 +266,7 @@ func TestNextToken(t *testing.T) {
 		{MATCH, "=~"},
 		{YIELD, "yield"},
 		{WHILE, "while"},
+		{BREAK, "break"},
 		{EOF, ""},
 	}
 

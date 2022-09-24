@@ -16,9 +16,11 @@ func (ls *AssignmentExpression) TokenLiteral() string { return ls.Token.Literal 
 func (ls *AssignmentExpression) String() string {
 	var out bytes.Buffer
 
+	out.WriteString("(")
 	out.WriteString(ls.Name.String())
 	out.WriteString(" = ")
 	out.WriteString(ls.Value.String())
+	out.WriteString(")")
 
 	return out.String()
 }
