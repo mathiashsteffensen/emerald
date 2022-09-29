@@ -37,7 +37,7 @@ func timeNew() object.BuiltInMethod {
 
 func timeToF() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewFloat(float64(ctx.Self.(*TimeInstance).Value.UnixMilli()) / 1000.0)
+		return NewFloat(float64(ctx.Self.(*TimeInstance).Value.UnixMicro()) / 1_000_000.0)
 	}
 }
 
