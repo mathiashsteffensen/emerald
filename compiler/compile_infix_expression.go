@@ -45,26 +45,6 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) error {
 			Consequence: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Left}}},
 			Alternative: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Right}}},
 		})
-	case "&&=":
-		assignment := &ast.AssignmentExpression{
-			Name:  node.Left,
-			Value: node.Right,
-		}
-		return c.compileIfExpression(&ast.IfExpression{
-			Condition:   node.Left,
-			Consequence: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: assignment}}},
-			Alternative: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Left}}},
-		})
-	case "||=":
-		assignment := &ast.AssignmentExpression{
-			Name:  node.Left,
-			Value: node.Right,
-		}
-		return c.compileIfExpression(&ast.IfExpression{
-			Condition:   node.Left,
-			Consequence: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Left}}},
-			Alternative: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: assignment}}},
-		})
 	default:
 		return fmt.Errorf("unknown infix operator %s", node.Operator)
 	}

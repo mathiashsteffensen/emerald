@@ -6,9 +6,9 @@ import (
 )
 
 func TestArrayLiteralParsing(t *testing.T) {
-	input := `[0, identifier, 2]`
+	input := `[0, condition, 2]`
 
-	expected := []any{0, "identifier", 2}
+	expected := []any{0, "condition", 2}
 
 	program := testParseAST(t, input)
 

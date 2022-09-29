@@ -57,16 +57,12 @@ func TestMethodCallParsing(t *testing.T) {
 			t.Fatalf("block was not passed 2 rescue clauses, got=%d", len(exp.Block.RescueBlocks))
 		}
 
-		rescue := exp.Block.RescueBlocks[0]
-
-		err := testRescueBlock(rescue, 1, "e", "NoMemoryError", "SystemError")
+		err := testRescueBlock(exp.Block.RescueBlocks[0], 1, "e", "NoMemoryError", "SystemError")
 		if err != nil {
 			t.Errorf("first rescue failed: %s", err)
 		}
 
-		rescue = exp.Block.RescueBlocks[1]
-
-		err = testRescueBlock(rescue, 1, "e", "Exception")
+		err = testRescueBlock(exp.Block.RescueBlocks[1], 1, "e", "Exception")
 		if err != nil {
 			t.Errorf("first rescue failed: %s", err)
 		}

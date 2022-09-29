@@ -78,8 +78,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.GT_OR_EQ, p.parseInfixExpression)
 	p.registerInfix(lexer.BOOL_AND, p.parseInfixExpression)
 	p.registerInfix(lexer.BOOL_OR, p.parseInfixExpression)
-	p.registerInfix(lexer.BOOL_AND_ASSIGN, p.parseInfixExpression)
-	p.registerInfix(lexer.BOOL_OR_ASSIGN, p.parseInfixExpression)
+	p.registerInfix(lexer.BOOL_AND_ASSIGN, p.parseBoolAndAssign)
+	p.registerInfix(lexer.BOOL_OR_ASSIGN, p.parseBoolOrAssign)
 	p.registerInfix(lexer.LPAREN, p.parseCallExpression)
 	p.registerInfix(lexer.DOT, p.parseMethodCall)
 	p.registerInfix(lexer.LBRACKET, p.parseIndexAccessor)
@@ -331,18 +331,6 @@ func (p *Parser) parseRegexpLiteral() ast.Expression {
 		Token: p.curToken,
 		Value: p.curToken.Literal,
 	}
-}
-
-func (p *Parser) parseAssignmentExpression(left ast.Expression) ast.Expression {
-	node := &ast.AssignmentExpression{Token: p.curToken}
-
-	node.Name = left
-
-	p.nextToken()
-
-	node.Value = p.parseExpression(LOWEST)
-
-	return node
 }
 
 func (p *Parser) parseGroupedExpression() ast.Expression {

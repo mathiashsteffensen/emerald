@@ -6,23 +6,21 @@ import (
 )
 
 func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
-	node := &ast.MethodCall{Token: p.curToken, Left: left, CallExpression: ast.CallExpression{}}
-
-	methodIdent := &ast.IdentifierExpression{Value: p.peekToken.Literal, Token: p.peekToken}
+	node := &ast.MethodCall{
+		Token: p.curToken,
+		Left:  left,
+		CallExpression: ast.CallExpression{
+			Method: ast.IdentifierExpression{Value: p.peekToken.Literal, Token: p.peekToken},
+		},
+	}
 
 	p.nextToken()
 
 	if p.peekTokenIs(lexer.ASSIGN) {
-		methodIdent.Value = methodIdent.Value + p.peekToken.Literal
-		methodIdent.Token.Literal = methodIdent.TokenLiteral() + p.peekToken.Literal
-		p.nextToken()
-		p.nextToken()
-		node.Arguments = []ast.Expression{p.parseExpression(LOWEST)}
-	} else {
-		node.Arguments = p.parseCallArguments()
+		return node
 	}
 
-	node.Method = *methodIdent
+	node.Arguments = p.parseCallArguments()
 	node.Block = p.parseBlockLiteral()
 
 	if p.curTokenIs(lexer.DOT) {
@@ -55,7 +53,7 @@ var endOfMethodArgsWithoutParenthesesTokens = []lexer.TokenType{
 	lexer.RBRACE,          // When last expression in a single line block
 	lexer.RBRACKET,        // When last item in array
 	lexer.RPAREN,          // When part of a grouped expression
-	lexer.COMMA,           // When part of a list i.e. [identifier, 2] does not have arguments
+	lexer.COMMA,           // When part of a list i.e. [condition, 2] does not have arguments
 	lexer.ASSIGN,          // When an assignment
 	lexer.BOOL_OR_ASSIGN,  // When an assignment
 	lexer.BOOL_AND_ASSIGN, // When an assignment

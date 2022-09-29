@@ -13,7 +13,7 @@ func TestReturnStatements(t *testing.T) {
 	}{
 		{"returning a number", "return 5;", 5},
 		{"returning a boolean", "return true;", true},
-		{"returning an identifier", "return foobar;", "foobar"},
+		{"returning an condition", "return foobar;", "foobar"},
 	}
 
 	for _, tt := range tests {

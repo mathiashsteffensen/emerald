@@ -2,8 +2,23 @@ package core_test
 
 import "testing"
 
+func TestHash_index_setter(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "{}[:key] = :value",
+			expected: ":value",
+		},
+		{
+			input:    "hash = {}; hash[:key] = :value; hash[:key]",
+			expected: ":value",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestHash_map(t *testing.T) {
-	cases := []coreTestCase{
+	tests := []coreTestCase{
 		{
 			name:     "when block takes a single argument",
 			input:    "{key: 2}.map { |key| key.to_s }",
@@ -16,7 +31,7 @@ func TestHash_map(t *testing.T) {
 		},
 	}
 
-	runCoreTests(t, cases)
+	runCoreTests(t, tests)
 }
 
 func TestHash_find(t *testing.T) {

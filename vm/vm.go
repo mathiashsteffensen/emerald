@@ -298,7 +298,7 @@ func (vm *VM) callFunction(numArgs int) {
 		core.Raise(core.NewException(fmt.Sprintf("undefined method %s for %s", name.Value, receiver.Inspect())))
 	}
 
-	// Handy for debugging, but makes the VM quite slow when writing to STDOUT in a hot loop
+	// Handy for debugging, but makes the VM quite slow when logging in a hot loop
 	// log.InternalDebugF("Calling method %s#%s", receiver.Inspect(), name.Value)
 
 	vm.withExecutionContext(receiver, block, func() {

@@ -25,6 +25,20 @@ func expectStatementLength(t *testing.T, stmt []ast.Statement, length int) {
 	}
 }
 
+func testIfElseExpression(t *testing.T, expr *ast.IfExpression, condition, consequence, alternative string) {
+	if strings.Trim(expr.Condition.String(), "\n\r\t ") != condition {
+		t.Errorf("Unexpected condition want=%s got=%s", condition, expr.Condition.String())
+	}
+
+	if strings.Trim(expr.Consequence.String(), "\n\r\t ") != consequence {
+		t.Errorf("Unexpected consequence want=%s got=%s", consequence, expr.Consequence.String())
+	}
+
+	if strings.Trim(expr.Alternative.String(), "\n\r\t ") != alternative {
+		t.Errorf("Unexpected alternative want=%s got=%s", alternative, expr.Alternative.String())
+	}
+}
+
 func testBreakStatement(t *testing.T, stmt ast.Statement, value any) {
 	breakStmt, ok := stmt.(*ast.BreakStatement)
 	if !ok {

@@ -11,23 +11,29 @@ type MethodCall struct {
 	CallExpression
 }
 
-func (pa MethodCall) expressionNode()      {}
-func (pa MethodCall) TokenLiteral() string { return pa.Token.Literal }
-func (pa MethodCall) String() string {
+func (m MethodCall) Dup() *MethodCall {
+	return &MethodCall{
+		Left:           m.Left,
+		Token:          m.Token,
+		CallExpression: m.CallExpression,
+	}
+}
+func (m MethodCall) TokenLiteral() string { return m.Token.Literal }
+func (m MethodCall) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("(")
-	out.WriteString(pa.Left.String())
-	out.WriteString(pa.TokenLiteral())
-	out.WriteString(pa.Method.String())
+	out.WriteString(m.Left.String())
+	out.WriteString(m.TokenLiteral())
+	out.WriteString(m.Method.String())
 
-	if len(pa.Arguments) != 0 {
+	if len(m.Arguments) != 0 {
 		out.WriteString("(")
 
-		for i, argument := range pa.Arguments {
+		for i, argument := range m.Arguments {
 			out.WriteString(argument.String())
 
-			if i != len(pa.Arguments)-1 {
+			if i != len(m.Arguments)-1 {
 				out.WriteString(", ")
 			}
 		}
@@ -35,9 +41,9 @@ func (pa MethodCall) String() string {
 		out.WriteString(")")
 	}
 
-	if pa.Block != nil {
+	if m.Block != nil {
 		out.WriteString(" ")
-		out.WriteString(pa.Block.String())
+		out.WriteString(m.Block.String())
 	}
 
 	out.WriteString(")")

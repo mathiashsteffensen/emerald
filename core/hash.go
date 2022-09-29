@@ -12,6 +12,7 @@ func InitHash() {
 	Hash.Include(Enumerable)
 
 	DefineMethod(Hash, "[]", hashIndexAccessor())
+	DefineMethod(Hash, "[]=", hashIndexSetter())
 	DefineMethod(Hash, "==", hashEquals())
 	DefineMethod(Hash, "each", hashEach())
 }
@@ -42,13 +43,27 @@ func (hash *HashInstance) Set(key object.EmeraldValue, value object.EmeraldValue
 
 func hashIndexAccessor() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		key := args[0]
+		if _, err := EnforceArity(args, 1, 1); err != nil {
+			return err
+		}
 
-		if value := ctx.Self.(*HashInstance).Get(key); value != nil {
+		if value := ctx.Self.(*HashInstance).Get(args[0]); value != nil {
 			return value
 		}
 
 		return NULL
+	}
+}
+
+func hashIndexSetter() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, 2, 2); err != nil {
+			return err
+		}
+
+		ctx.Self.(*HashInstance).Set(args[0], args[1])
+
+		return args[1]
 	}
 }
 
