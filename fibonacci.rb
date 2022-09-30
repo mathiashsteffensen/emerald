@@ -9,7 +9,7 @@ def cache
 end
 
 def fib_iterative(n)
-    cache[n] ||= Range.new(0, n).inject([1,0]) { |acc, w| [acc[1], acc[0]+acc[1]] }[0]
+    cache[n] ||= Range.new(0, n).reduce([1,0]) { |acc, w| [acc[1], acc[0]+acc[1]] }[0]
 end
 
 def bench_fib_iterative(n)

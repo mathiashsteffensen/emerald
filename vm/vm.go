@@ -17,7 +17,6 @@ type VM struct {
 	ctx        *object.Context
 	fibers     []*Fiber
 	fiberIndex int
-	inRescue   bool
 }
 
 func New(file string, bytecode *compiler.Bytecode) *VM {
@@ -59,7 +58,7 @@ func (vm *VM) runWhile(condition func() bool) {
 	)
 
 	for condition() {
-		if !vm.inRescue && vm.ExceptionIsRaised() {
+		if !vm.currentFiber().inRescue && vm.ExceptionIsRaised() {
 			rescued := vm.popFramesUntilExceptionRescuedOrProgramTerminates()
 			if !rescued {
 				break
@@ -202,17 +201,11 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 	case compiler.OpBang:
 		vm.executeBangOperator()
 	case compiler.OpMinus:
-		vm.executeMinusOperator()
+		vm.executeOpMinus()
 	case compiler.OpReturn:
-		vm.currentFiber().popFrame()
-
-		vm.push(core.NULL)
+		vm.executeOpReturn()
 	case compiler.OpReturnValue:
-		returnValue := vm.stack()[vm.currentFiber().sp-1]
-
-		vm.currentFiber().popFrame()
-
-		vm.push(returnValue)
+		vm.executeOpReturnValue()
 	case compiler.OpDefineMethod:
 		block := vm.pop().(*object.Block)
 		name := vm.stack()[vm.currentFiber().sp-1].(*core.SymbolInstance)
@@ -223,17 +216,22 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.currentFiber().currentFrame().ip += 1
 		vm.callFunction(int(numArgs))
 	case compiler.OpOpenClass:
-		outerCtx := vm.ctx
+		// Fetch the symbol name from the heap
 		nameIndex := vm.readUint16(ins, ip)
 		name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
+
+		// Parent class is top off stack
 		parent := vm.pop()
 
+		// Check if the class is already defined
 		class, err := getConst(vm.ctx.Self, name)
 		if err != nil {
+			// If not create a new class object
 			class = core.DefineClass(vm.ctx.Self, name, parent.(*object.Class))
 		}
 
-		vm.ctx = vm.newEnclosedContext(outerCtx.File, class, outerCtx.Block)
+		// Create and set a new Context with this class as Self
+		vm.ctx = vm.newEnclosedContext(vm.ctx.File, class, vm.ctx.Block)
 	case compiler.OpOpenModule:
 		outerCtx := vm.ctx
 		nameIndex := vm.readUint16(ins, ip)

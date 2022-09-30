@@ -22,6 +22,8 @@ type Fiber struct {
 	// Call frames
 	frames      []*Frame
 	framesIndex int
+
+	inRescue bool
 }
 
 func NewFiber(mainFrame *Frame) *Fiber {

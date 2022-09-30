@@ -2,6 +2,17 @@ package core_test
 
 import "testing"
 
+func TestArray_push(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "arr = []; arr.push(2, 3, 4); arr",
+			expected: []any{2, 3, 4},
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestArray_first(t *testing.T) {
 	tests := []coreTestCase{
 		{
@@ -59,7 +70,7 @@ func TestArray_reduce(t *testing.T) {
 			expected: 9,
 		},
 		{
-			name:     "with an initial value argument just a block",
+			name:     "with an initial value argument & a block",
 			input:    "[1, 3, 5].reduce 50 { |sum, n| sum + n }",
 			expected: 59,
 		},

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (vm *VM) executeMinusOperator() {
+func (vm *VM) executeOpMinus() {
 	operand := vm.pop()
 
 	switch operand := operand.(type) {

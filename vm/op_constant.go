@@ -49,13 +49,12 @@ func getConst(self object.EmeraldValue, name string) (object.EmeraldValue, error
 		return value, nil
 	}
 
-	// If it's an instance, check the class namespace
-	if self.Type() == object.INSTANCE_VALUE {
+	switch self.Type() {
+	case object.INSTANCE_VALUE:
+		// If it's an instance, check the class namespace
 		value = self.Class().Super().NamespaceDefinitionGet(name)
-	}
-
-	// If it's a singleton class, check the class namespace
-	if self.Type() == object.STATIC_CLASS_VALUE {
+	case object.STATIC_CLASS_VALUE:
+		// If it's a singleton class, check the class namespace
 		value = self.(*object.SingletonClass).Instance.NamespaceDefinitionGet(name)
 	}
 

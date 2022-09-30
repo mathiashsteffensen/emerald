@@ -76,7 +76,7 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 			return vm.currentFiber().framesIndex > startFrameIndex
 		})
 
-		if vm.inRescue || !vm.ExceptionIsRaised() {
+		if vm.currentFiber().inRescue || !vm.ExceptionIsRaised() {
 			// Return value is left on the stack
 			return vm.pop()
 		}
