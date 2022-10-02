@@ -11,11 +11,9 @@ func (c *Compiler) compileStringLiteral(node *ast.StringLiteral) {
 }
 
 func (c *Compiler) compileStringTemplate(node *ast.StringTemplate) error {
-	beforeOpCount := c.opCount
-
 	err := c.compileStringTemplateString(node.Chain)
 
-	c.emit(OpStringJoin, c.opCount-beforeOpCount)
+	c.emit(OpStringJoin, node.Count())
 
 	return err
 }

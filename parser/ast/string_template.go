@@ -1,11 +1,18 @@
 package ast
 
-import "bytes"
+import (
+	"bytes"
+	"reflect"
+)
 
 type StringTemplateChainString struct {
 	*StringLiteral
 	Next  *StringTemplateChainExpression
 	First bool
+}
+
+func (s StringTemplateChainString) next() Next {
+	return s.Next
 }
 
 func (s *StringTemplateChainString) String() string {
@@ -31,6 +38,10 @@ type StringTemplateChainExpression struct {
 	Next *StringTemplateChainString
 }
 
+func (s StringTemplateChainExpression) next() Next {
+	return s.Next
+}
+
 func (s *StringTemplateChainExpression) String() string {
 	var out bytes.Buffer
 
@@ -49,6 +60,23 @@ func (s *StringTemplateChainExpression) String() string {
 
 type StringTemplate struct {
 	Chain *StringTemplateChainString
+}
+
+type Next interface {
+	next() Next
+}
+
+func (s StringTemplate) Count() int {
+	var next Next = s.Chain
+
+	count := 0
+
+	for !reflect.ValueOf(next).IsNil() {
+		count += 1
+		next = next.next()
+	}
+
+	return count
 }
 
 func (s *StringTemplate) expressionNode() {}
