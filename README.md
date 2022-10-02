@@ -7,8 +7,7 @@ Emerald is a Ruby compiler & virtual machine written in Go.
 Run the following from your command line:
 ```bash
 git clone git@github.com:mathiashsteffensen/emerald.git && \
-cd emerald && \
-make build
+cd emerald && ./scripts/install
 ```
 
 This will build an `emerald` & an `iem` executable in the current directory.
@@ -120,7 +119,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
         - [ ] `\M-\cx` same as above
         - [ ] `\c\M-x` same as above
         - [ ] `\c?` or `\C-?` delete, ASCII 7Fh (DEL)
-    - [ ] interpolation `#{}`
+    - [x] interpolation `#{}`
     - [ ] automatic concatenation
 - [ ] arrays
     - [x] array literal `[1,2]`
