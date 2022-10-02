@@ -16,8 +16,11 @@ func (bs *BreakStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(bs.TokenLiteral())
-	out.WriteString(" ")
-	out.WriteString(bs.Value.String())
+
+	if bs.Value != nil {
+		out.WriteString(" ")
+		out.WriteString(bs.Value.String())
+	}
 
 	return out.String()
 }

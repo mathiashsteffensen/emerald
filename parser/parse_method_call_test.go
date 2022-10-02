@@ -17,13 +17,14 @@ func TestMethodCallParsing(t *testing.T) {
 			puts("This will always run")
 		end.first
 
-		Logger.info msg, tags
+		Logger.instance.info msg, tags
 		Logger.level = :debug
+		Logger.debug()
 	`
 
 	program := testParseAST(t, input)
 
-	expectStatementLength(t, program.Statements, 3)
+	expectStatementLength(t, program.Statements, 4)
 
 	testExpressionStatement(t, program.Statements[0], func(exp *ast.MethodCall) {
 		var ok bool
@@ -77,26 +78,22 @@ func TestMethodCallParsing(t *testing.T) {
 	})
 
 	testExpressionStatement(t, program.Statements[1], func(exp *ast.MethodCall) {
-		if !testIdentifier(t, exp.Left, "Logger") {
-			return
-		}
-		if !testIdentifier(t, exp.Method, "info") {
-			return
-		}
-		if !testIdentifier(t, exp.Arguments[0], "msg") {
-			return
-		}
-		if !testIdentifier(t, exp.Arguments[1], "tags") {
-			return
-		}
+		testExpression(t, exp.Left, func(exp *ast.MethodCall) {
+			testIdentifier(t, exp.Left, "Logger")
+			testIdentifier(t, exp.Method, "instance")
+		})
+		testIdentifier(t, exp.Method, "info")
+		testIdentifier(t, exp.Arguments[0], "msg")
+		testIdentifier(t, exp.Arguments[1], "tags")
 	})
 
 	testExpressionStatement(t, program.Statements[2], func(exp *ast.MethodCall) {
-		if !testIdentifier(t, exp.Left, "Logger") {
-			return
-		}
-		if !testIdentifier(t, exp.Method, "level=") {
-			return
-		}
+		testIdentifier(t, exp.Left, "Logger")
+		testIdentifier(t, exp.Method, "level=")
+	})
+
+	testExpressionStatement(t, program.Statements[3], func(exp *ast.MethodCall) {
+		testIdentifier(t, exp.Left, "Logger")
+		testIdentifier(t, exp.Method, "debug")
 	})
 }

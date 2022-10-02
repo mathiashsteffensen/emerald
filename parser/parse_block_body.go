@@ -42,7 +42,7 @@ func (p *Parser) parseBlockMainBodyPart() []ast.Statement {
 	}
 
 	if p.curTokenIs(lexer.EOF) {
-		p.peekErrorMultiple(lexer.RESCUE, lexer.ENSURE, lexer.END)
+		p.unexpectedEofError()
 	}
 
 	return stmts

@@ -8,9 +8,7 @@ import (
 func (p *Parser) parseMethodLiteral() ast.Expression {
 	method := &ast.MethodLiteral{Token: p.curToken, BlockLiteral: &ast.BlockLiteral{}}
 
-	if !p.expectPeek(lexer.IDENT) {
-		return nil
-	}
+	p.nextToken()
 
 	methodIdent := ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 	p.nextIfSemicolonOrNewline()

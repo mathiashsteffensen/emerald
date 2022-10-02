@@ -102,10 +102,13 @@ func (p *Parser) addError(msg string) {
 	p.errors = append(p.errors, msg)
 }
 
+func (p *Parser) unexpectedEofError() {
+	p.addError("syntax error, unexpected end-of-input")
+}
+
 func (p *Parser) peekError(t lexer.TokenType) {
-	msg := fmt.Sprintf("expected next token to be %s, got %s instead",
-		t, p.peekToken.Type)
-	p.addError(msg)
+	p.addError(fmt.Sprintf("expected next token to be %s, got %s instead",
+		t, p.peekToken.Type))
 }
 
 func (p *Parser) peekErrorMultiple(types ...lexer.TokenType) {
@@ -123,10 +126,10 @@ func (p *Parser) peekErrorMultiple(types ...lexer.TokenType) {
 	p.addError(msg)
 }
 
-func (p *Parser) noPrefixParseFnError(t lexer.TokenType) {
+func (p *Parser) noPrefixParseFnError() {
 	msg := fmt.Sprintf(
 		"no prefix parse function for %s found at line %d, column %d\n%s",
-		t,
+		p.curToken.Type,
 		p.curToken.Line,
 		p.curToken.Column,
 		p.l.Snapshot(p.curToken),
@@ -222,14 +225,11 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	prefix := p.prefixParseFns[p.curToken.Type]
-
-	if prefix == nil {
-		p.noPrefixParseFnError(p.curToken.Type)
+	if p.curToken.Type == lexer.EOF {
 		return nil
 	}
 
-	leftExp := prefix()
+	leftExp := p.parseAsPrefix()
 
 	for !p.peekTokenIs(lexer.SEMICOLON) && !p.peekTokenIs(lexer.NEWLINE) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
@@ -243,13 +243,23 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	return leftExp
 }
 
+func (p *Parser) parseAsPrefix() ast.Expression {
+	prefix := p.prefixParseFns[p.curToken.Type]
+
+	if prefix == nil {
+		p.noPrefixParseFnError()
+		return nil
+	}
+
+	return prefix()
+}
+
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
 	if err != nil {
-		msg := fmt.Sprintf("could not parse %q as integer", p.curToken.Literal)
-		p.errors = append(p.errors, msg)
+		p.addError(fmt.Sprintf("could not parse %q as integer", p.curToken.Literal))
 		return nil
 	}
 
@@ -263,26 +273,13 @@ func (p *Parser) parseFloatLiteral() ast.Expression {
 
 	value, err := strconv.ParseFloat(p.curToken.Literal, 64)
 	if err != nil {
-		msg := fmt.Sprintf("could not parse %q as float", p.curToken.Literal)
-		p.errors = append(p.errors, msg)
+		p.addError(fmt.Sprintf("could not parse %q as float", p.curToken.Literal))
 		return nil
 	}
 
 	lit.Value = value
 
 	return lit
-}
-
-func (p *Parser) parseSymbolLiteral() ast.Expression {
-	symbol := &ast.SymbolLiteral{Token: p.curToken}
-
-	if !p.expectPeekMultiple(true, lexer.IDENT, lexer.STRING) {
-		return nil
-	}
-
-	symbol.Value = p.curToken.Literal
-
-	return symbol
 }
 
 func (p *Parser) parsePrefixExpression() ast.Expression {
@@ -322,13 +319,6 @@ func (p *Parser) parseNullExpression() ast.Expression {
 	return &ast.NullExpression{Token: p.curToken}
 }
 
-func (p *Parser) parseRegexpLiteral() ast.Expression {
-	return &ast.RegexpLiteral{
-		Token: p.curToken,
-		Value: p.curToken.Literal,
-	}
-}
-
 func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.nextToken()
 
@@ -363,60 +353,6 @@ func (p *Parser) parseExpressionList(delim lexer.TokenType) []ast.Expression {
 	}
 
 	return args
-}
-
-func (p *Parser) parseHashLiteral() ast.Expression {
-	value := make(map[ast.Expression]ast.Expression)
-
-	p.nextIfNewline()
-
-	for p.curToken.Type != lexer.RBRACE {
-		if p.peekTokenIs(lexer.RBRACE) {
-			p.nextToken()
-			break
-		}
-
-		p.nextToken()
-
-		var key ast.Expression
-
-		if p.peekTokenIs(lexer.COLON) {
-			switch p.curToken.Type {
-			case lexer.IDENT:
-				key = &ast.SymbolLiteral{Token: p.curToken, Value: p.curToken.Literal}
-			case lexer.STRING:
-				key = &ast.SymbolLiteral{Token: p.curToken, Value: p.curToken.Literal}
-			default:
-				p.peekError(lexer.ARROW)
-				return nil
-			}
-			p.nextToken()
-		} else {
-			key = p.parseExpression(LOWEST)
-			if !p.expectPeek(lexer.ARROW) {
-				return nil
-			}
-		}
-
-		p.nextToken()
-
-		value[key] = p.parseExpression(LOWEST)
-
-		if !p.peekTokenIs(lexer.COMMA) {
-			p.nextIfNewline()
-			if !p.expectPeek(lexer.RBRACE) {
-				return nil
-			}
-		} else {
-			p.nextToken()
-			p.nextIfNewline()
-		}
-	}
-
-	return &ast.HashLiteral{
-		Value: value,
-		Token: p.curToken,
-	}
 }
 
 func (p *Parser) parseArrayLiteral() ast.Expression {

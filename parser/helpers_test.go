@@ -19,6 +19,21 @@ func testParseAST(t *testing.T, input string) *ast.AST {
 	return program
 }
 
+func testParseError(t *testing.T, input, expectedError string) {
+	l := lexer.New(lexer.NewInput("test.rb", input))
+
+	p := New(l)
+	p.ParseAST()
+
+	if len(p.Errors()) == 0 {
+		t.Fatalf("Expected parser to have errors, but had none")
+	}
+
+	if p.Errors()[0] != expectedError {
+		t.Fatalf("Expected parser to have error=%q but got=%q", expectedError, p.Errors()[0])
+	}
+}
+
 func expectStatementLength(t *testing.T, stmt []ast.Statement, length int) {
 	if len(stmt) != length {
 		t.Fatalf("AST does not contain %d statements. got=%d\n\n%s", length, len(stmt), (&ast.BlockStatement{Statements: stmt}).String())
@@ -60,9 +75,13 @@ func testExpressionStatement[T ast.Expression](t *testing.T, stmt ast.Statement,
 		t.Fatalf("stmt is not *ast.ExpressionStatement. got=%T", stmt)
 	}
 
-	exp, ok := exprStmt.Expression.(T)
+	testExpression(t, exprStmt.Expression, cb)
+}
+
+func testExpression[T ast.Expression](t *testing.T, expr ast.Expression, cb func(expression T)) {
+	exp, ok := expr.(T)
 	if !ok {
-		t.Fatalf("stmt.Expression is not expected type, got=%T", exprStmt.Expression)
+		t.Fatalf("Expression is not expected type, got=%T", expr)
 	}
 
 	cb(exp)
@@ -238,7 +257,7 @@ func testInstanceVar(t *testing.T, exp ast.Expression, value string) bool {
 func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 	ident, ok := exp.(ast.IdentifierExpression)
 	if !ok {
-		t.Errorf("exp not *ast.Identifier. got=%T", exp)
+		t.Errorf("exp not *ast.Identifier(%s). got=%T", value, exp)
 		return false
 	}
 
@@ -309,6 +328,28 @@ func testRescueBlock(actual *ast.RescueBlock, expStmts int, expErrVarName string
 	}
 
 	return nil
+}
+
+func testHashLiteral(t *testing.T, expr ast.Expression, items map[string]any) {
+	hash, ok := expr.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("Expected HashLiteral but got %T", expr)
+	}
+
+	for expectedKey, expectedValue := range items {
+		keyFound := false
+
+		for actualKey, actualValue := range hash.Value {
+			if actualKey.String() == expectedKey {
+				keyFound = true
+				testLiteralExpression(t, actualValue, expectedValue)
+			}
+		}
+
+		if !keyFound {
+			t.Fatalf("HashLiteral did not have expected key %q, hash %#v", expectedKey, hash.Value)
+		}
+	}
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {

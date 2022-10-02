@@ -23,10 +23,6 @@ func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
 	node.Arguments = p.parseCallArguments()
 	node.Block = p.parseBlockLiteral()
 
-	if p.curTokenIs(lexer.DOT) {
-		return p.parseMethodCall(node)
-	}
-
 	return node
 }
 

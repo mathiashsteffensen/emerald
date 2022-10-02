@@ -15,7 +15,8 @@ func (p *Parser) parseBreakStatement() ast.Statement {
 		return &ast.ExpressionStatement{Expression: p.parseBoolModifierFromStatement(node)}
 	}
 
-	node.Value = p.parseExpression(LOWEST)
+	node.Value = p.parseAsPrefix()
+	p.nextToken()
 
 	if p.curPrecedence() == MODIFIER {
 		return &ast.ExpressionStatement{Expression: p.parseBoolModifierFromStatement(node)}
