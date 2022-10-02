@@ -49,6 +49,7 @@ const (
 	ARROW     TokenType = "=>"
 	LPAREN    TokenType = "("
 	RPAREN    TokenType = ")"
+	LTEMPLATE TokenType = "#{"
 	LBRACE    TokenType = "{"
 	RBRACE    TokenType = "}"
 	LBRACKET  TokenType = "["

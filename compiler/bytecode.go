@@ -56,6 +56,11 @@ const (
 	// OpNull pushes core.NULL onto the stack
 	OpNull
 
+	// OpStringJoin Takes an argument with the number of objects to fetch from the stack
+	// It then calls #to_s on them & joins the strings
+	// (Used by string templating)
+	OpStringJoin
+
 	// OpYield takes an argument that is the number of arguments to yield to the current given block, if any
 	OpYield
 
@@ -174,6 +179,7 @@ var definitions = map[Opcode]*Definition{
 	OpConstantSet:       {"OpConstantSet", []int{2}},
 	OpConstantGet:       {"OpConstantGet", []int{2}},
 	OpScopedConstantGet: {"OpScopedConstantGet", []int{2}},
+	OpStringJoin:        {"OpStringJoin", []int{1}},
 }
 
 func Lookup(op byte) (*Definition, error) {

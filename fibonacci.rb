@@ -1,7 +1,8 @@
 def measure_time(name)
     start = Time.now.to_f
     yield
-    puts(name + " completed in " + (Time.now.to_f - start).to_s + "s")
+    time = Time.now.to_f - start
+    puts("#{name} completed in #{time}s")
 end
 
 def cache

@@ -14,12 +14,14 @@ type Lexer struct {
 	currentChar  byte // current char under examination
 	outputChan   chan Token
 	lastEmitted  Token
+
+	inTemplate bool
 }
 
 func New(input *Input) *Lexer {
 	l := &Lexer{
 		inputChan:  make(chan *Input, 100),
-		outputChan: make(chan Token, 100),
+		outputChan: make(chan Token, 500),
 		Line:       1,
 		Column:     -1,
 	}
@@ -153,6 +155,32 @@ func (l *Lexer) Run() {
 				tok = l.newToken(LBRACE, l.currentChar)
 			case '}':
 				tok = l.newToken(RBRACE, l.currentChar)
+
+				// If we are in a template i.e.
+				// "This is a #{template <We are here>}"
+				if l.inTemplate {
+					// Emit the RBRACE token immediately
+					l.sendToken(tok)
+
+					// Returns true if we are about to start another template
+					// If we aren't we need to make sure to send ending string token
+					if !l.lexDoubleQuotedString(&tok) {
+						// Slight optimization, we only send the token if the ending string has characters
+						//
+						// This ending string doesn't have characters, so we end up only joining 2 strings
+						// "This is a #{template <We are here>}"
+						//
+						// This ending string has characters, so we have to join 3 strings
+						// "This is a #{template <We are here>} blah blah"
+						if tok.Literal != "" {
+							l.sendToken(tok)
+						}
+
+						l.readChar()
+					}
+
+					continue
+				}
 			case '[':
 				tok = l.newToken(LBRACKET, l.currentChar)
 			case ']':
@@ -168,8 +196,9 @@ func (l *Lexer) Run() {
 			case '.':
 				tok = l.newToken(DOT, l.currentChar)
 			case '"':
-				tok.Type = STRING
-				tok.Literal = l.readString()
+				if l.lexDoubleQuotedString(&tok) {
+					continue
+				}
 			case '&':
 				if l.peekChar() == '&' {
 					char := l.currentChar
@@ -315,10 +344,14 @@ func (l *Lexer) peekChar() byte {
 		select {
 		case nextInput := <-l.inputChan:
 			l.currentInput = nextInput
+
+			l.position = 0
+			l.nextPosition = 1
+
+			return 0
 		default:
 			return 0
 		}
-		return 0
 	} else {
 		return l.currentInput.content[l.nextPosition]
 	}
@@ -334,17 +367,6 @@ func (l *Lexer) readNumber() string {
 	position := l.position
 	for isDigit(l.currentChar) || l.currentChar == '_' {
 		l.readChar()
-	}
-	return l.currentInput.content[position:l.position]
-}
-
-func (l *Lexer) readString() string {
-	position := l.position + 1
-	for {
-		l.readChar()
-		if l.currentChar == '"' || l.currentChar == 0 {
-			break
-		}
 	}
 	return l.currentInput.content[position:l.position]
 }
@@ -370,13 +392,5 @@ func (l *Lexer) readIdentifier() string {
 		l.readChar()
 	}
 
-	return l.currentInput.content[position:l.position]
-}
-
-func (l *Lexer) ReadWhile(condition func() bool) string {
-	position := l.position + 1
-	for condition() {
-		l.readChar()
-	}
 	return l.currentInput.content[position:l.position]
 }

@@ -1,11 +1,14 @@
 package lexer
 
 import (
+	"strconv"
 	"testing"
+	"time"
 )
 
-func TestNextToken(t *testing.T) {
-	input := `five = 5.0;
+func TestLexer_Run(t *testing.T) {
+	input := `/r/
+	five = 5.0;
 	ten = 1_0;
 
 	class Integer
@@ -14,13 +17,13 @@ func TestNextToken(t *testing.T) {
 		end
 	end
 
-	@result = add(five, ten);
+	@result = add!(five, ten);
 
-	@result.method
+	@result.method?
 
 	print(result)
 	!-*5;
-	5 < 10 > 5;
+	5 < 10 > 5 / 5;
 
 	[] << 5
 	[].each { |w| do_stuff(w) }
@@ -50,12 +53,16 @@ func TestNextToken(t *testing.T) {
 	nil &&= ||= module
 	begin rescue ensure
 	$: $LOAD_PATH Integer::Math::MAX <=>
-	/^[w]|abc/ =~ yield while break`
+	/^[w]|abc/ =~ yield while break
+	#{this is a comment}
+	"this is a #{template}" "this is a #{template} also" "this is a #{template} also #{boop + 2}" ½`
 
 	tests := []struct {
 		expectedType    TokenType
 		expectedLiteral string
 	}{
+		{REGEXP, "r"},
+		{NEWLINE, "\n"},
 		{IDENT, "five"},
 		{ASSIGN, "="},
 		{FLOAT, "5.0"},
@@ -87,7 +94,7 @@ func TestNextToken(t *testing.T) {
 		{NEWLINE, "\n"},
 		{INSTANCE_VAR, "@result"},
 		{ASSIGN, "="},
-		{IDENT, "add"},
+		{IDENT, "add!"},
 		{LPAREN, "("},
 		{IDENT, "five"},
 		{COMMA, ","},
@@ -98,7 +105,7 @@ func TestNextToken(t *testing.T) {
 		{NEWLINE, "\n"},
 		{INSTANCE_VAR, "@result"},
 		{DOT, "."},
-		{IDENT, "method"},
+		{IDENT, "method?"},
 		{NEWLINE, "\n"},
 		{NEWLINE, "\n"},
 		{IDENT, "print"},
@@ -116,6 +123,8 @@ func TestNextToken(t *testing.T) {
 		{LT, "<"},
 		{INT, "10"},
 		{GT, ">"},
+		{INT, "5"},
+		{SLASH, "/"},
 		{INT, "5"},
 		{SEMICOLON, ";"},
 		{NEWLINE, "\n"},
@@ -267,22 +276,78 @@ func TestNextToken(t *testing.T) {
 		{YIELD, "yield"},
 		{WHILE, "while"},
 		{BREAK, "break"},
+		{NEWLINE, "\n"},
+		{NEWLINE, "\n"},
+		{STRING, "this is a "},
+		{LTEMPLATE, "#{"},
+		{IDENT, "template"},
+		{RBRACE, "}"},
+		{STRING, "this is a "},
+		{LTEMPLATE, "#{"},
+		{IDENT, "template"},
+		{RBRACE, "}"},
+		{STRING, " also"},
+		{STRING, "this is a "},
+		{LTEMPLATE, "#{"},
+		{IDENT, "template"},
+		{RBRACE, "}"},
+		{STRING, " also "},
+		{LTEMPLATE, "#{"},
+		{IDENT, "boop"},
+		{PLUS, "+"},
+		{INT, "2"},
+		{RBRACE, "}"},
+		{ILLEGAL, "Â"},
+		{ILLEGAL, "½"},
 		{EOF, ""},
 	}
 
 	l := New(NewInput("test.rb", input))
 
+	l.Feed(NewInput("test.rb", ""))
+
 	l.Run()
 
+	defer l.Close()
+
 	for i, tt := range tests {
-		tok := l.NextToken()
-		if tok.Type != tt.expectedType {
-			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
-				i, tt.expectedType, tok.Type)
-		}
-		if tok.Literal != tt.expectedLiteral {
-			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
-				i, tt.expectedLiteral, tok.Literal)
-		}
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			select {
+			case tok := <-l.outputChan:
+				testToken(t, tok, tt.expectedLiteral, tt.expectedType)
+			case <-time.After(100 * time.Millisecond):
+				t.Fatalf("Failed to receive token after 100ms, expected=%q (%q)", tt.expectedLiteral, tt.expectedType)
+			}
+		})
+	}
+}
+
+func TestLexer_Snapshot(t *testing.T) {
+	input := "w + w"
+
+	l := New(NewInput("test.rb", input))
+
+	l.Run()
+
+	tok := l.NextToken()
+
+	testToken(t, tok, "w", IDENT)
+
+	l.NextToken()
+	tok = l.NextToken()
+
+	snapshot := l.Snapshot(tok)
+
+	if snapshot == "w + w" {
+		t.Fatalf("Snapshot was just source code without annotation")
+	}
+}
+
+func testToken(t *testing.T, tok Token, literal string, typ TokenType) {
+	if tok.Type != typ {
+		t.Fatalf("tokentype wrong. expected=%q, got=%q (%q) ", typ, tok.Literal, tok.Type)
+	}
+	if tok.Literal != literal {
+		t.Fatalf("literal wrong. expected=%q, got=%q", literal, tok.Literal)
 	}
 }

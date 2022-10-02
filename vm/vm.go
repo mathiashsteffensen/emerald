@@ -91,6 +91,8 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.push(core.FALSE)
 	case compiler.OpNull:
 		vm.push(core.NULL)
+	case compiler.OpStringJoin:
+		vm.executeOpStringJoin(ins, ip)
 	case compiler.OpYield:
 		vm.executeOpYield(ins, ip)
 	case compiler.OpPushConstant:

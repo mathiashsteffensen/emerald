@@ -16,12 +16,11 @@ type EmittedInstruction struct {
 }
 
 type Compiler struct {
-	instructions        Instructions
-	symbolTable         *heap.SymbolTable
-	lastInstruction     EmittedInstruction
-	previousInstruction EmittedInstruction
-	scopes              []CompilationScope
-	scopeIndex          int
+	instructions Instructions
+	opCount      int
+	symbolTable  *heap.SymbolTable
+	scopes       []CompilationScope
+	scopeIndex   int
 }
 
 type ConstructorOption func(c *Compiler)
@@ -34,11 +33,9 @@ func New(options ...ConstructorOption) *Compiler {
 	}
 
 	c := &Compiler{
-		instructions:        Instructions{},
-		symbolTable:         heap.GlobalSymbolTable,
-		lastInstruction:     EmittedInstruction{},
-		previousInstruction: EmittedInstruction{},
-		scopes:              []CompilationScope{mainScope},
+		instructions: Instructions{},
+		symbolTable:  heap.GlobalSymbolTable,
+		scopes:       []CompilationScope{mainScope},
 	}
 
 	for _, option := range options {
@@ -169,8 +166,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.NullExpression:
 		c.emit(OpNull)
 	case *ast.StringLiteral:
-		str := core.NewString(node.Value)
-		c.emit(OpPushConstant, c.addConstant(str))
+		c.compileStringLiteral(node)
+	case *ast.StringTemplate:
+		err := c.compileStringTemplate(node)
+		if err != nil {
+			return err
+		}
 	case *ast.SymbolLiteral:
 		sym := core.NewSymbol(node.Value)
 		c.emit(OpPushConstant, c.addConstant(sym))
@@ -297,6 +298,8 @@ func (c *Compiler) emit(op Opcode, operands ...int) int {
 	pos := c.addInstruction(ins)
 
 	c.setLastInstruction(op, pos)
+
+	c.opCount += 1
 
 	return pos
 }
