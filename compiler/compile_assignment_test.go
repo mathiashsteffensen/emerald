@@ -6,8 +6,8 @@ func TestCompileAssignment(t *testing.T) {
 	tests := []compilerTestCase{
 		{
 			input: `
-			one = 1
-			two = 2
+				one = 1
+				two = 2
 			`,
 			expectedConstants: []any{1, 2},
 			expectedInstructions: []Instructions{
@@ -16,6 +16,17 @@ func TestCompileAssignment(t *testing.T) {
 				Make(OpPop),
 				Make(OpPushConstant, 1),
 				Make(OpSetGlobal, 1),
+				Make(OpPop),
+			},
+		},
+		{
+			input: `
+				One = 1
+			`,
+			expectedConstants: []any{1, ":One"},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpConstantSet, 1),
 				Make(OpPop),
 			},
 		},
