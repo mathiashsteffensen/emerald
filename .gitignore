@@ -7,8 +7,8 @@ iem
 !stdlib/iem
 
 # tmp files
-tmp
-
+tmp/*
+!tmp/.gitkeep
 
 # Added by cargo
 
