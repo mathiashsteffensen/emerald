@@ -80,9 +80,3 @@ func NewClass(
 
 	return class
 }
-
-func GetClassByName(name string) (*Class, bool) {
-	class, ok := Classes[name]
-
-	return class, ok
-}

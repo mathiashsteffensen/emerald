@@ -13,6 +13,36 @@ func TestArray_push(t *testing.T) {
 	runCoreTests(t, tests)
 }
 
+func TestArray_pop(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "[2, 3, 4].pop",
+			expected: 4,
+		},
+		{
+			input:    "arr = [2, 3, 4]; arr.pop; arr",
+			expected: []any{2, 3},
+		},
+		{
+			input:    "[].pop",
+			expected: nil,
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
+func TestArray_to_s(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "[2, 3, \"boop\"].to_s",
+			expected: "[2, 3, \"boop\"]",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestArray_first(t *testing.T) {
 	tests := []coreTestCase{
 		{
@@ -20,8 +50,12 @@ func TestArray_first(t *testing.T) {
 			expected: 12,
 		},
 		{
-			input:    "[36, 24, 49].first",
-			expected: 36,
+			input:    "[36, 24, 49].first(2)",
+			expected: []any{36, 24},
+		},
+		{
+			input:    "[36, 24, 49].first(2, 3)",
+			expected: "error:ArgumentError:wrong number of arguments (given 2, expected 1)",
 		},
 	}
 
@@ -33,6 +67,10 @@ func TestArray_find(t *testing.T) {
 		{
 			input:    "[12, 24, 49].find { |i| i / 6 / 2 == 2 }",
 			expected: 24,
+		},
+		{
+			input:    "[12, 24, 49].find { |i| i / 6 / 2 == 3 }",
+			expected: nil,
 		},
 	}
 
@@ -133,6 +171,18 @@ func TestArray_equals(t *testing.T) {
 		{
 			input:    "[2, 4, 8] == [2, 4, 8]",
 			expected: true,
+		},
+		{
+			input:    "[2, 4, 8] == 2",
+			expected: false,
+		},
+		{
+			input:    "[2, 4, 8] == [2, 4]",
+			expected: false,
+		},
+		{
+			input:    "[2, 4, 8] == [2, 4, 9]",
+			expected: false,
 		},
 	}
 

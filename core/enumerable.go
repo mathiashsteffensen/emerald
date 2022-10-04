@@ -59,13 +59,13 @@ func enumerableFirst() object.BuiltInMethod {
 
 func enumerableMap() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := NewArray(make([]object.EmeraldValue, 0))
+		arr := make([]object.EmeraldValue, 0)
 		block := ctx.Block
 
 		wrappedBlock := &object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-				arr.Value = append(
-					arr.Value,
+				arr = append(
+					arr,
 					object.EvalBlock(block.(*object.ClosedBlock), args...),
 				)
 				return NULL
@@ -74,7 +74,7 @@ func enumerableMap() object.BuiltInMethod {
 
 		Send(ctx.Self, "each", wrappedBlock)
 
-		return arr
+		return NewArray(arr)
 	}
 }
 

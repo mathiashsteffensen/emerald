@@ -10,6 +10,7 @@ module EMSpec
 
 		def initialize(name, parent, level)
 			@name = name
+			@parent = parent
 			@level = level
 		end
 

@@ -109,6 +109,10 @@ func TestIntegerOperators(t *testing.T) {
 			input:    "6.>=(2)",
 			expected: true,
 		},
+		{
+			input:    "6 + false",
+			expected: "error:TypeError:no implicit conversion of FalseClass into Integer",
+		},
 	}
 
 	runCoreTests(t, tests)
@@ -132,6 +136,10 @@ func TestInteger_spaceship(t *testing.T) {
 			input:    "-2 <=> 2",
 			expected: -1,
 		},
+		{
+			input:    `-2 <=> "boop"`,
+			expected: nil,
+		},
 	}
 
 	runCoreTests(t, tests)
@@ -142,6 +150,17 @@ func TestInteger_to_s(t *testing.T) {
 		{
 			input:    "1231.to_s",
 			expected: "1231",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
+func TestInteger_to_f(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "1231.to_f",
+			expected: 1231.0,
 		},
 	}
 

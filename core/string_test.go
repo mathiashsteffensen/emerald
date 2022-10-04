@@ -68,3 +68,14 @@ func TestString_upcase(t *testing.T) {
 
 	runCoreTests(t, tests)
 }
+
+func TestString_size(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    `"Hello".size`,
+			expected: 5,
+		},
+	}
+
+	runCoreTests(t, tests)
+}

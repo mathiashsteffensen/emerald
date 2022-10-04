@@ -8,6 +8,10 @@ func TestRegexp_inspect(t *testing.T) {
 			input:    "/abc/.inspect",
 			expected: "/abc/",
 		},
+		{
+			input:    `Regexp.new("abc").inspect`,
+			expected: "/abc/",
+		},
 	}
 
 	runCoreTests(t, tests)

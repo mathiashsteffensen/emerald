@@ -23,6 +23,7 @@ func TestKernel_require_relative(t *testing.T) {
 		{
 			input: `
 				require_relative("fixtures/require_test")
+				sleep 0.01
 				require_relative("../spec/fixtures/require_test")
 			`,
 			expected: true,
@@ -165,6 +166,15 @@ func TestKernel_include(t *testing.T) {
 
 			MyClass.hello`,
 			expected: "Hello",
+		},
+		{
+			name: "wrong argument type",
+			input: `
+				class C
+					include "boop"
+				end
+			`,
+			expected: "error:TypeError:wrong argument type String (expected Module)",
 		},
 	}
 

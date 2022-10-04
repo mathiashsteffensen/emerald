@@ -271,10 +271,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 
 func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 	constant := heap.GetConstant(uint16(constIndex))
-	block, ok := constant.(*object.Block)
-	if !ok {
-		panic(fmt.Errorf("not a block: %+v", constant))
-	}
+	block := constant.(*object.Block)
 
 	free := make([]object.EmeraldValue, numFreeVars)
 	for i := 0; i < numFreeVars; i++ {

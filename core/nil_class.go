@@ -2,7 +2,6 @@ package core
 
 import (
 	"emerald/object"
-	"reflect"
 )
 
 var NilClass *object.Class
@@ -28,16 +27,4 @@ func nilInspect() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString("nil")
 	}
-}
-
-func IsNull(obj object.EmeraldValue) bool {
-	if reflect.ValueOf(obj).IsNil() {
-		return false
-	}
-
-	if obj == NULL {
-		return true
-	}
-
-	return false
 }

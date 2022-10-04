@@ -50,7 +50,7 @@ func comparableMethod(spaceshipCallback func(int64) object.EmeraldValue) object.
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		spaceshipResult := Send(ctx.Self, "<=>", NULL, args...)
 
-		if IsNull(spaceshipResult) {
+		if spaceshipResult == NULL {
 			return spaceshipResult
 		}
 

@@ -17,6 +17,25 @@ func TestHash_index_setter(t *testing.T) {
 	runCoreTests(t, tests)
 }
 
+func TestHash_index_accessor(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "{ key: :value }[:key]",
+			expected: ":value",
+		},
+		{
+			input:    "{}[:key]",
+			expected: nil,
+		},
+		{
+			input:    "{}[]",
+			expected: "error:ArgumentError:wrong number of arguments (given 0, expected 1)",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestHash_map(t *testing.T) {
 	tests := []coreTestCase{
 		{
@@ -54,6 +73,10 @@ func TestHash_equals(t *testing.T) {
 		{
 			input:    "{} == {}",
 			expected: true,
+		},
+		{
+			input:    "{} == 2",
+			expected: false,
 		},
 		{
 			input:    "{\"key\" => 2} == { key: 2 }",

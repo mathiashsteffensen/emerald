@@ -30,9 +30,11 @@ func InitString() {
 	DefineMethod(String, "==", stringEquals())
 	DefineMethod(String, "+", stringAdd())
 	DefineMethod(String, "*", stringMultiply())
-	DefineMethod(String, "upcase", stringUpcase())
-	DefineMethod(String, "match", stringMatch())
 	DefineMethod(String, "=~", stringMatch())
+	DefineMethod(String, "match", stringMatch())
+	DefineMethod(String, "upcase", stringUpcase())
+	DefineMethod(String, "size", stringSize())
+	DefineMethod(String, "length", stringSize())
 }
 
 func stringToS() object.BuiltInMethod {
@@ -116,5 +118,13 @@ func stringUpcase() object.BuiltInMethod {
 func stringMatch() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		return regexStringMatch(args[0].(*RegexpInstance), ctx.Self.(*StringInstance))
+	}
+}
+
+func stringSize() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewInteger(
+			int64(len(ctx.Self.(*StringInstance).Value)),
+		)
 	}
 }

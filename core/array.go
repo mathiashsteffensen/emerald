@@ -44,11 +44,7 @@ func arrayIndexAccessor() object.BuiltInMethod {
 
 		arr := ctx.Self.(*ArrayInstance).Value
 
-		intArg, ok := args[0].(*IntegerInstance)
-		if !ok {
-			Raise(NewNoConversionTypeError("Integer", args[0].Class().Super().(*object.Class).Name))
-			return NULL
-		}
+		intArg := args[0].(*IntegerInstance)
 
 		index := intArg.Value
 
@@ -104,6 +100,10 @@ func arrayEquals() object.BuiltInMethod {
 		arr := ctx.Self.(*ArrayInstance)
 		otherArr, ok := args[0].(*ArrayInstance)
 		if !ok {
+			return FALSE
+		}
+
+		if len(arr.Value) != len(otherArr.Value) {
 			return FALSE
 		}
 

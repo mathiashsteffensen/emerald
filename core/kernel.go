@@ -46,8 +46,8 @@ func kernelClass() object.BuiltInMethod {
 
 func kernelKindOf() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if len(args) != 1 {
-			return NewArgumentError(len(args), 1)
+		if _, err := EnforceArity(args, 1, 1); err != nil {
+			return err
 		}
 
 		class := args[0]
@@ -103,8 +103,8 @@ func kernelPuts() object.BuiltInMethod {
 
 func kernelInclude() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if len(args) == 0 {
-			panic(errors.New("wrong number of arguments (given 0, expected 1+)"))
+		if _, err := EnforceArity(args, 1, 255); err != nil {
+			return err
 		}
 
 		for _, arg := range args {
@@ -114,7 +114,7 @@ func kernelInclude() object.BuiltInMethod {
 
 			mod, ok := arg.(*object.Module)
 			if !ok {
-				panic(fmt.Errorf("wrong argument type %s (expected Module)", arg.Inspect()))
+				Raise(NewTypeError(fmt.Sprintf("wrong argument type %s (expected Module)", arg.Class().Super().(*object.Class).Name)))
 			}
 
 			ctx.Self.Include(mod)

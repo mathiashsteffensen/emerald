@@ -38,7 +38,7 @@ func TestClass_name(t *testing.T) {
 			expected: "Class",
 		},
 		{
-			name: "Namespaced class",
+			name: "Namespaced class in module",
 			input: `
 				module MyMod
 					class MyClass; end
@@ -47,6 +47,17 @@ func TestClass_name(t *testing.T) {
 				MyMod::MyClass.name
 			`,
 			expected: "MyMod::MyClass",
+		},
+		{
+			name: "Namespaced class in class",
+			input: `
+				class MyClass
+					class MyOtherClass; end
+				end
+
+				MyClass::MyOtherClass.name
+			`,
+			expected: "MyClass::MyOtherClass",
 		},
 	}
 
