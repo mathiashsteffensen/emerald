@@ -14,6 +14,7 @@ func InitObject() {
 	Object.Include(Kernel)
 
 	DefineMethod(Object, "to_s", objectToS())
+	DefineMethod(Object, "!@", objectBooleanNegate())
 	DefineMethod(Object, "==", objectEquals())
 	DefineMethod(Object, "!=", objectNotEquals())
 	DefineMethod(Object, "methods", objectMethods())
@@ -39,6 +40,12 @@ func objectToS() object.BuiltInMethod {
 func mainObjectToS() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString("main")
+	}
+}
+
+func objectBooleanNegate() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return FALSE
 	}
 }
 

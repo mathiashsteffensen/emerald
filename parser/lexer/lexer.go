@@ -271,6 +271,14 @@ func (l *Lexer) Run() {
 					tok.Literal = l.readIdentifier()
 					tok.Type = lookupIdent(tok.Literal)
 					l.sendToken(tok)
+
+					l.eatWhitespace()
+
+					if tok.Type == DEF && l.peekChar() == '@' && (l.currentChar == '-' || l.currentChar == '!') {
+						l.sendToken(l.combineCurrentAndPeek(IDENT))
+						l.readChar()
+					}
+
 					continue
 				} else if isDigit(l.currentChar) {
 					tok.Pos = l.position

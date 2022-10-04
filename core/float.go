@@ -19,6 +19,7 @@ func InitFloat() {
 	DefineMethod(Float, "-", floatSubtract())
 	DefineMethod(Float, "*", floatMultiply())
 	DefineMethod(Float, "/", floatDivide())
+	DefineMethod(Float, "-@", floatNegate())
 }
 
 type FloatInstance struct {
@@ -104,6 +105,12 @@ func floatDivide() object.BuiltInMethod {
 		}
 
 		return NewFloat(newValue)
+	}
+}
+
+func floatNegate() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewFloat(-ctx.Self.(*FloatInstance).Value)
 	}
 }
 

@@ -13,13 +13,28 @@ def fib_iterative(n)
 end
 
 def bench_fib_iterative(n)
-    measure_time("Iterative fibonacci " + n.to_s) do
+    measure_time "Iterative fibonacci #{n}" do
         fib_iterative n
     end
 end
 
+def boolean_negate(n)
+    n.times do
+        !nil && !false
+
+        !"boop" || !2 || !/re/
+    end
+end
+
+def bench_boolean_negate(n)
+    measure_time "Boolean negate #{n * 5}" do
+        boolean_negate n
+    end
+end
+
 5.times do
-    bench_fib_iterative(160_800)
+    # bench_fib_iterative(160_800)
+    bench_boolean_negate(1_000_000)
 end
 
 sleep 1

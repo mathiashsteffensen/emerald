@@ -109,10 +109,6 @@ func (val *BaseEmeraldValue) SEND(
 }
 
 func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error) {
-	if val == nil {
-		return nil, fmt.Errorf("invalid method call %s on %#v", name, target)
-	}
-
 	for _, ancestor := range extractFrom.Ancestors() {
 		if method, ok := ancestor.DefinedMethodSet()[name]; ok {
 			return method, nil

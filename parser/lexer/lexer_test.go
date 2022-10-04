@@ -12,9 +12,11 @@ func TestLexer_Run(t *testing.T) {
 	ten = 1_0;
 
 	class Integer
-		def add_num(y)
+		def -@(y)
 			self + y
 		end
+
+		def !@
 	end
 
 	@result = add!(five, ten);
@@ -78,7 +80,7 @@ func TestLexer_Run(t *testing.T) {
 		{IDENT, "Integer"},
 		{NEWLINE, "\n"},
 		{DEF, "def"},
-		{IDENT, "add_num"},
+		{IDENT, "-@"},
 		{LPAREN, "("},
 		{IDENT, "y"},
 		{RPAREN, ")"},
@@ -88,6 +90,10 @@ func TestLexer_Run(t *testing.T) {
 		{IDENT, "y"},
 		{NEWLINE, "\n"},
 		{END, "end"},
+		{NEWLINE, "\n"},
+		{NEWLINE, "\n"},
+		{DEF, "def"},
+		{IDENT, "!@"},
 		{NEWLINE, "\n"},
 		{END, "end"},
 		{NEWLINE, "\n"},

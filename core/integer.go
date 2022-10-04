@@ -34,6 +34,7 @@ func InitInteger() {
 	DefineMethod(Integer, "-", integerSubtract)
 	DefineMethod(Integer, "*", integerMultiply)
 	DefineMethod(Integer, "/", integerDivide)
+	DefineMethod(Integer, "-@", integerNegate())
 	DefineMethod(Integer, "to_f", integerToF())
 	DefineMethod(Integer, "times", integerTimes())
 }
@@ -73,6 +74,12 @@ var integerEquals = integerInfixOperator(func(left int64, right int64) object.Em
 var integerNotEquals = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
 	return NativeBoolToBooleanObject(left != right)
 })
+
+func integerNegate() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return NewInteger(-ctx.Self.(*IntegerInstance).Value)
+	}
+}
 
 func integerTimes() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {

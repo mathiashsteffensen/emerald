@@ -11,6 +11,7 @@ func InitFalseClass() {
 
 	DefineMethod(FalseClass, "to_s", falseToS())
 	DefineMethod(FalseClass, "inspect", falseToS())
+	DefineMethod(FalseClass, "!@", falseBooleanNegate())
 
 	FALSE = FalseClass.New()
 }
@@ -18,5 +19,11 @@ func InitFalseClass() {
 func falseToS() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString("false")
+	}
+}
+
+func falseBooleanNegate() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return TRUE
 	}
 }
