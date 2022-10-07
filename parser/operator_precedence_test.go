@@ -43,7 +43,7 @@ func TestOperatorPrecedence(t *testing.T) {
 		},
 		{
 			"3 + 4; -5 * 5",
-			"(3 + 4)((-5) * 5)",
+			"(3 + 4)\n((-5) * 5)\n",
 		},
 		{
 			"5 > 4 == 3 < 4",

@@ -29,11 +29,12 @@ func enumerableFirst() object.BuiltInMethod {
 		var numElements = int64(1)
 
 		if len(args) == 1 {
-			if err := EnforceArgumentType(Integer, args[0]); err != nil {
+			arg, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])
+			if err != nil {
 				return err
 			}
 
-			numElements = args[0].(*IntegerInstance).Value
+			numElements = arg.Value
 		}
 
 		var values []object.EmeraldValue

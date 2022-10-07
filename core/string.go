@@ -76,13 +76,12 @@ func stringAdd() object.BuiltInMethod {
 			return NULL
 		}
 
-		if err := EnforceArgumentType(String, args[0]); err != nil {
+		str, err := EnforceArgumentType[*StringInstance](String, args[0])
+		if err != nil {
 			return err
 		}
 
-		argString := args[0].(*StringInstance)
-
-		return NewString(selfString.Value + argString.Value)
+		return NewString(selfString.Value + str.Value)
 	}
 }
 
@@ -93,11 +92,11 @@ func stringMultiply() object.BuiltInMethod {
 		if _, err := EnforceArity(args, 1, 1); err != nil {
 			return err
 		}
-		if err := EnforceArgumentType(Integer, args[0]); err != nil {
+
+		arg, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])
+		if err != nil {
 			return err
 		}
-
-		arg := args[0].(*IntegerInstance)
 
 		var newString bytes.Buffer
 

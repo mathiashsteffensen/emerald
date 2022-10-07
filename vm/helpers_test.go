@@ -19,7 +19,7 @@ type vmTestCase struct {
 	expected any
 }
 
-func runVmTests(t *testing.T, tests []vmTestCase) {
+func runVmTests(t *testing.T, tests []vmTestCase, setupScripts ...string) {
 	t.Helper()
 
 	for _, tt := range tests {
@@ -27,7 +27,11 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 			core.Object.ResetForSpec()
 			heap.Reset()
 
-			program := parse(tt.input)
+			inputs := make([]string, len(setupScripts))
+			copy(inputs, setupScripts)
+			inputs = append(inputs, tt.input)
+
+			program := parse(strings.Join(inputs, "\n"))
 			comp := compiler.New()
 
 			err := comp.Compile(program)
@@ -151,6 +155,7 @@ func testExpectedObject(
 
 func parse(input string) *ast.AST {
 	l := lexer.New(lexer.NewInput("test.rb", input))
+
 	p := parser.New(l)
 	return p.ParseAST()
 }

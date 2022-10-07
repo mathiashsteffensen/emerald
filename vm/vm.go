@@ -212,7 +212,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		block := vm.pop().(*object.Block)
 		name := vm.stack()[vm.currentFiber().sp-1].(*core.SymbolInstance)
 
-		vm.ctx.Self.DefineMethod(object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File), name)
+		vm.ctx.Self.DefinedMethodSet()[name.Value] = object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File)
 	case compiler.OpSend:
 		numArgs := compiler.ReadUint8(ins[ip+1:])
 		vm.currentFiber().currentFrame().ip += 1
@@ -328,13 +328,7 @@ func (vm *VM) callFunction(numArgs int) {
 func (vm *VM) evalInfixOperator(op string) {
 	left := vm.pop()
 
-	var result object.EmeraldValue
-
-	vm.withExecutionContext(left, core.NULL, func() {
-		result = left.SEND(vm.ctx, op, vm.StackTop())
-	})
-
-	vm.stack()[vm.currentFiber().sp-1] = result
+	vm.stack()[vm.currentFiber().sp-1] = vm.Send(left, op, core.NULL, vm.StackTop())
 }
 
 func (vm *VM) Context() *object.Context {

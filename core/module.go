@@ -23,7 +23,16 @@ func InitModule() {
 
 func moduleDefineMethod() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		ctx.Self.DefineMethod(ctx.Block, args...)
+		if _, err := EnforceArity(args, 1, 1); err != nil {
+			return err
+		}
+
+		name, err := EnforceArgumentType[*SymbolInstance](Symbol, args[0])
+		if err != nil {
+			return err
+		}
+
+		ctx.Self.DefinedMethodSet()[name.Value] = ctx.Block.(*object.ClosedBlock)
 
 		return args[0]
 	}

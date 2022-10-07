@@ -38,13 +38,13 @@ func arrayIndexAccessor() object.BuiltInMethod {
 		if _, err := EnforceArity(args, 1, 1); err != nil {
 			return err
 		}
-		if err := EnforceArgumentType(Integer, args[0]); err != nil {
+		intArg, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])
+
+		if err != nil {
 			return err
 		}
 
 		arr := ctx.Self.(*ArrayInstance).Value
-
-		intArg := args[0].(*IntegerInstance)
 
 		index := intArg.Value
 

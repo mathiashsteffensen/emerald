@@ -1,9 +1,5 @@
 package object
 
-import (
-	"reflect"
-)
-
 type Class struct {
 	*BaseEmeraldValue
 	Name  string
@@ -24,9 +20,9 @@ func (c *Class) Ancestors() []EmeraldValue {
 	ancestors := []EmeraldValue{c}
 	ancestors = append(ancestors, c.IncludedModules()...)
 
-	super := c.Super()
-	reflected := reflect.ValueOf(super)
-	if super != nil && reflected.IsValid() && !reflected.IsNil() {
+	// Need to type assert to pointer otherwise reflection is required to check that the interface value is nil
+	super := c.Super().(*Class)
+	if super != nil {
 		ancestors = append(ancestors, super.Ancestors()...)
 	}
 

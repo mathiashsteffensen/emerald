@@ -2,6 +2,7 @@ package repl
 
 import (
 	"emerald/compiler"
+	"emerald/core"
 	"emerald/heap"
 	"emerald/log"
 	"emerald/object"
@@ -133,7 +134,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 		if evaluated != nil {
 			ctx := machine.Context()
 			ctx.Self = evaluated
-			evaluated = evaluated.SEND(machine.Context(), "inspect", nil)
+			evaluated = machine.Send(evaluated, "inspect", core.NULL)
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
 		}

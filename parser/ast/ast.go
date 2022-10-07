@@ -33,6 +33,9 @@ func (ast *AST) String() string {
 	var out bytes.Buffer
 	for _, s := range ast.Statements {
 		out.WriteString(s.String())
+		if len(ast.Statements) != 1 {
+			out.WriteString("\n")
+		}
 	}
 	return out.String()
 }

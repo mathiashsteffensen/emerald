@@ -61,15 +61,16 @@ func EnforceArity(args []object.EmeraldValue, minArgs int, maxArgs int) ([]objec
 	return argsWithoutNilPointers, nil
 }
 
-func EnforceArgumentType(typ *object.Class, arg object.EmeraldValue) object.EmeraldValue {
+func EnforceArgumentType[T object.EmeraldValue](typ *object.Class, arg object.EmeraldValue) (T, object.EmeraldError) {
 	argClass := arg.Class().Super().(*object.Class)
 	if argClass.Name != typ.Name {
 		err := NewTypeError(fmt.Sprintf("no implicit conversion of %s into %s", argClass.Name, typ.Name))
 		Raise(err)
-		return err
+		var empty T
+		return empty, err
 	}
 
-	return nil
+	return arg.(T), nil
 }
 
 func Raise(err object.EmeraldError) {

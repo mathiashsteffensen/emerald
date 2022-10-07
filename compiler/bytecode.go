@@ -61,9 +61,10 @@ const (
 	// (Used by string templating)
 	OpStringJoin
 
-	// OpYield takes an argument that is the number of arguments to yield to the current given block, if any
+	// OpYield takes an argument that is the number of arguments to yield to the currently given block, if any
 	OpYield
 
+	// OpArray takes an argument that is the number of objects to take from the stack and add to a newly allocated array
 	OpArray
 	OpHash
 	OpJump

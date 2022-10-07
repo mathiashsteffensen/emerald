@@ -45,7 +45,7 @@ All Opcode definitions can be found in the ./compiler/bytecode.go file.
 ### Virtual Machine
 The virtual machine is located in the ./vm package. It is a virtual stack machine and does not make use of any registers.
 This keeps the implementation & Opcode definitions simple, but it does mean that we need more bytecode to perform the same operations a register machine would.
-This ultimately means more (but simpler) execution cycles for the equivalent result.
+This ultimately means more execution cycles for the equivalent result.
 
 ## Supported language features
 This is still quite far away from being a real implementation.

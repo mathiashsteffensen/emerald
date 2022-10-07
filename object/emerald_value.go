@@ -30,15 +30,8 @@ type (
 		Include(mod EmeraldValue)
 		BuiltInMethodSet() BuiltInMethodSet
 		DefinedMethodSet() DefinedMethodSet
-		DefineMethod(block EmeraldValue, args ...EmeraldValue)
 		ExtractMethod(name string, extractFrom EmeraldValue, self EmeraldValue) (EmeraldValue, error)
 		Methods() []string
-		RespondsTo(name string, self EmeraldValue) bool
-		SEND(
-			ctx *Context,
-			name string,
-			args ...EmeraldValue,
-		) EmeraldValue
 		InstanceVariableGet(name string, extractFrom EmeraldValue, self EmeraldValue) EmeraldValue
 		InstanceVariableSet(name string, value EmeraldValue)
 		ParentNamespace() EmeraldValue

@@ -126,10 +126,11 @@ func integerInfixOperator(cb func(left int64, right int64) object.EmeraldValue) 
 		if _, err := EnforceArity(args, 1, 1); err != nil {
 			return err
 		}
-		if err := EnforceArgumentType(Integer, args[0]); err != nil {
+		right, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])
+		if err != nil {
 			return err
 		}
 
-		return cb(ctx.Self.(*IntegerInstance).Value, args[0].(*IntegerInstance).Value)
+		return cb(ctx.Self.(*IntegerInstance).Value, right.Value)
 	}
 }
