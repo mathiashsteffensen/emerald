@@ -16,7 +16,7 @@ func TestLexer_Run(t *testing.T) {
 			self + y
 		end
 
-		def !@
+		def !@ unless
 	end
 
 	@result = add!(five, ten);
@@ -94,6 +94,7 @@ func TestLexer_Run(t *testing.T) {
 		{NEWLINE, "\n"},
 		{DEF, "def"},
 		{IDENT, "!@"},
+		{UNLESS, "unless"},
 		{NEWLINE, "\n"},
 		{END, "end"},
 		{NEWLINE, "\n"},

@@ -46,7 +46,7 @@ func testIfElseExpression(t *testing.T, expr *ast.IfExpression, condition, conse
 	}
 
 	if strings.Trim(expr.Consequence.String(), "\n\r\t ") != consequence {
-		t.Errorf("Unexpected consequence want=%s got=%s", consequence, expr.Consequence.String())
+		t.Errorf("Unexpected alternative want=%s got=%s", consequence, expr.Consequence.String())
 	}
 
 	if strings.Trim(expr.Alternative.String(), "\n\r\t ") != alternative {

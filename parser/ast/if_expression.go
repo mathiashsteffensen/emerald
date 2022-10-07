@@ -20,7 +20,12 @@ func (ie *IfExpression) String() string {
 	out.WriteString("if ")
 	out.WriteString(ie.Condition.String())
 	out.WriteString("\n  ")
-	out.WriteString(ie.Consequence.String())
+
+	if ie.Consequence != nil {
+		out.WriteString(ie.Consequence.String())
+	} else {
+		out.WriteString("nil")
+	}
 
 	if ie.Alternative != nil {
 		out.WriteString("\nelse\n  ")

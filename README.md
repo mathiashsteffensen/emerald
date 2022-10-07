@@ -28,7 +28,7 @@ To start the Emerald VM in interactive mode:
 The lexer/tokenizer is located in the ./parser/lexer package. I have tried to keep it simple, but when implementing string templates (`This is a #{template}`), there are basically only 2 options.
 
 1. Don't have a separate lexer & parser.
-2. Turn the lexer into a pushdown automaton (i.e. it needs to have a stack) since templates can be infinitely nested (or as deep as the stack allows)
+2. Turn the lexer into a stack machine since templates can be infinitely nested (or as deep as the stack allows)
 
 And since I prefer the performance of having the parser & lexer separate (they run in parallel) I went with option 2,
 but this significantly increases the complexity of the lexer.
@@ -79,9 +79,9 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [x] if/else
     - [ ] if/elif/else
     - [ ] ternary `? : `
-    - [ ] unless
-    - [ ] unless modifier
-    - [ ] unless/else
+    - [x] unless
+    - [x] unless modifier
+    - [x] unless/else
     - [ ] case
     - [x] `||`
     - [x] `&&`

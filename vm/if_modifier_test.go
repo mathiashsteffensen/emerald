@@ -34,13 +34,15 @@ func TestIfModifier(t *testing.T) {
 					2 * 5 == 10 if should_we
 				end
 
+				call unless call? false
 				call if call? 2 * 9 + 17 == 35
 				call if call? false
 				call if call? true ||
+				
 									false
 				i
 			`,
-			expected: 3,
+			expected: 4,
 		},
 	}
 

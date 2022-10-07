@@ -72,10 +72,10 @@ const (
 	OpJumpNotTruthy
 
 	// OpConstantSet sets a constant in the current namespace.
-	// By calling .NamespaceDefinitionSet on the current execution context
+	// By calling .NamespaceDefinitionSet on self
 	OpConstantSet
 	// OpConstantGet gets a constant from the current namespace.
-	// By calling .NamespaceDefinitionGet on the current execution context
+	// By calling .NamespaceDefinitionGet on self
 	OpConstantGet
 	// OpScopedConstantGet looks up constant in the element on top of the stack
 	OpScopedConstantGet

@@ -47,6 +47,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.FALSE, p.parseBooleanExpression)
 	p.registerPrefix(lexer.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(lexer.IF, p.parseIfExpression)
+	p.registerPrefix(lexer.UNLESS, p.parseUnlessExpression)
 	p.registerPrefix(lexer.WHILE, p.parseWhileExpression)
 	p.registerPrefix(lexer.STRING, p.parseStringLiteral)
 	p.registerPrefix(lexer.LBRACE, p.parseHashLiteral)
@@ -85,6 +86,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.LBRACKET, p.parseIndexAccessor)
 	p.registerInfix(lexer.SCOPE, p.parseScopeAccessor)
 	p.registerInfix(lexer.IF, p.parseIfModifier)
+	p.registerInfix(lexer.UNLESS, p.parseUnlessModifier)
 	p.registerInfix(lexer.WHILE, p.parseWhileModifier)
 
 	// Read two tokens, so curToken and peekToken are both set
@@ -383,8 +385,13 @@ func (p *Parser) parseStaticClassLiteral() ast.Expression {
 	return class
 }
 
-func (p *Parser) curTokenIs(t lexer.TokenType) bool {
-	return p.curToken.Type == t
+func (p *Parser) curTokenIs(ts ...lexer.TokenType) bool {
+	for _, t := range ts {
+		if p.curToken.Type == t {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Parser) peekTokenIs(t lexer.TokenType) bool {

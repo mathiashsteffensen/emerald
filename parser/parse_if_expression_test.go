@@ -48,43 +48,20 @@ func TestIfExpression(t *testing.T) {
 	for _, tt := range tests {
 		program := testParseAST(t, tt.input)
 
-		if len(program.Statements) != 1 {
-			t.Fatalf("program.Body does not contain %d statements. got=%d\n",
-				1, len(program.Statements))
-		}
+		expectStatementLength(t, program.Statements, 1)
 
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
-				program.Statements[0])
-		}
+		testExpressionStatement(t, program.Statements[0], func(exp *ast.IfExpression) {
+			testInfixExpression(t, exp.Condition, tt.condition.left, tt.condition.op, tt.condition.right)
 
-		exp, ok := stmt.Expression.(*ast.IfExpression)
-		if !ok {
-			t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T (%+v)", stmt.Expression, stmt.Expression)
-		}
+			expectStatementLength(t, exp.Consequence.Statements, 1)
 
-		if !testInfixExpression(t, exp.Condition, tt.condition.left, tt.condition.op, tt.condition.right) {
-			return
-		}
-
-		if len(exp.Consequence.Statements) != 1 {
-			t.Errorf("consequence is not 1 statements. got=%d\n",
-				len(exp.Consequence.Statements))
-		}
-
-		consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T", exp.Consequence.Statements[0])
-		}
-
-		if !testLiteralExpression(t, consequence.Expression, tt.consequence) {
-			return
-		}
-
-		if exp.Alternative != nil {
-			t.Errorf("exp.Alternative.Statements was not nil. got=%+v", exp.Alternative)
-		}
+			testExpressionStatement(t, exp.Consequence.Statements[0], func(expression ast.Expression) {
+				testLiteralExpression(t, expression, tt.consequence)
+				if exp.Alternative != nil {
+					t.Errorf("exp.Alternative.Statements was not nil. got=%+v", exp.Alternative)
+				}
+			})
+		})
 	}
 }
 
@@ -148,60 +125,154 @@ func TestIfElseExpression(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			program := testParseAST(t, tt.input)
 
-			if len(program.Statements) != 1 {
-				t.Fatalf(
-					"program.Body does not contain %d statements. got=%d\n (%+v)",
-					1,
-					len(program.Statements),
-					program.Statements,
-				)
+			expectStatementLength(t, program.Statements, 1)
+
+			testExpressionStatement(t, program.Statements[0], func(expression *ast.IfExpression) {
+				testInfixExpression(t, expression.Condition, "x", "<", "y")
+
+				expectStatementLength(t, expression.Consequence.Statements, 1)
+				testExpressionStatement(t, expression.Consequence.Statements[0], func(expression ast.Expression) {
+					tt.expect(t, expression)
+				})
+
+				expectStatementLength(t, expression.Alternative.Statements, 1)
+				testExpressionStatement(t, expression.Alternative.Statements[0], func(expression ast.Expression) {
+					testIdentifier(t, expression, "y")
+				})
+			})
+		})
+	}
+}
+
+func TestUnlessExpression(t *testing.T) {
+	type conditionTest struct {
+		left  any
+		op    string
+		right any
+	}
+
+	type test struct {
+		input       string
+		condition   conditionTest
+		alternative any
+	}
+
+	tests := []test{
+		{
+			`
+			unless x < y
+				x
+			end
+			`,
+			conditionTest{"x", "<", "y"},
+			"x",
+		},
+		{
+			"unless 5 < 98; false; end",
+			conditionTest{5, "<", 98},
+			false,
+		},
+		{
+			"false unless 5 < 98",
+			conditionTest{5, "<", 98},
+			false,
+		},
+		{
+			"true unless 10 * 5",
+			conditionTest{10, "*", 5},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		program := testParseAST(t, tt.input)
+
+		expectStatementLength(t, program.Statements, 1)
+
+		testExpressionStatement(t, program.Statements[0], func(exp *ast.IfExpression) {
+			testInfixExpression(t, exp.Condition, tt.condition.left, tt.condition.op, tt.condition.right)
+			if exp.Consequence != nil {
+				t.Errorf("exp.Consequence was not nil. got=%+v", exp.Consequence)
 			}
 
-			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-			if !ok {
-				t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
-					program.Statements[0])
-			}
+			expectStatementLength(t, exp.Alternative.Statements, 1)
 
-			exp, ok := stmt.Expression.(*ast.IfExpression)
-			if !ok {
-				t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
-			}
+			testExpressionStatement(t, exp.Alternative.Statements[0], func(expression ast.Expression) {
+				testLiteralExpression(t, expression, tt.alternative)
+			})
+		})
+	}
+}
 
-			if !testInfixExpression(t, exp.Condition, "x", "<", "y") {
-				return
-			}
+func TestUnlessElseExpression(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect func(t *testing.T, evaluated ast.Expression)
+	}{
+		{
+			"one-liner",
+			"unless x < y;  x; else; y; end;",
+			func(t *testing.T, evaluated ast.Expression) {
+				testIdentifier(t, evaluated, "x")
+			},
+		},
+		{
+			"multi line",
+			`unless x < y
+				x
+			 else
+				y
+			end`,
+			func(t *testing.T, evaluated ast.Expression) {
+				testIdentifier(t, evaluated, "x")
+			},
+		},
+		{
+			"multi line with method call",
+			`unless x < y
+				Logger.info("Hello World!")
+			 else
+				y
+			end`,
+			func(t *testing.T, evaluated ast.Expression) {
+				if _, ok := evaluated.(*ast.MethodCall); !ok {
+					t.Fatalf("exp not method call got=%T", evaluated)
+				}
+			},
+		},
+		{
+			"multi line and nested",
+			`unless x < y
+				unless x
+					x
+				end
+			 else
+				y
+			end`,
+			func(t *testing.T, evaluated ast.Expression) {},
+		},
+	}
 
-			if len(exp.Consequence.Statements) != 1 {
-				t.Fatalf(
-					"consequence is not 1 statements. got=%d (%+v)\n",
-					len(exp.Consequence.Statements),
-					exp.Consequence.Statements,
-				)
-			}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			program := testParseAST(t, tt.input)
 
-			consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
-			if !ok {
-				t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
-					exp.Consequence.Statements[0])
-			}
+			expectStatementLength(t, program.Statements, 1)
 
-			tt.expect(t, consequence.Expression)
+			testExpressionStatement(t, program.Statements[0], func(expression *ast.IfExpression) {
+				testInfixExpression(t, expression.Condition, "x", "<", "y")
 
-			if len(exp.Alternative.Statements) != 1 {
-				t.Fatalf("exp.Alternative.Statements does not contain 1 statements. got=%d\n",
-					len(exp.Alternative.Statements))
-			}
+				expectStatementLength(t, expression.Alternative.Statements, 1)
+				testExpressionStatement(t, expression.Alternative.Statements[0], func(expression ast.Expression) {
+					tt.expect(t, expression)
+				})
 
-			alternative, ok := exp.Alternative.Statements[0].(*ast.ExpressionStatement)
-			if !ok {
-				t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
-					exp.Alternative.Statements[0])
-			}
-
-			if !testIdentifier(t, alternative.Expression, "y") {
-				return
-			}
+				expectStatementLength(t, expression.Consequence.Statements, 1)
+				testExpressionStatement(t, expression.Consequence.Statements[0], func(expression ast.Expression) {
+					testIdentifier(t, expression, "y")
+				})
+			})
 		})
 	}
 }

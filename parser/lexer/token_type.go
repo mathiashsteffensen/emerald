@@ -70,6 +70,7 @@ const (
 	SELF   TokenType = "SELF"
 	YIELD  TokenType = "YIELD"
 	IF     TokenType = "IF"
+	UNLESS TokenType = "UNLESS"
 	ELSE   TokenType = "ELSE"
 	RETURN TokenType = "RETURN"
 	NULL   TokenType = "NULL"
@@ -90,6 +91,7 @@ var keywords = map[string]TokenType{
 	"self":   SELF,
 	"yield":  YIELD,
 	"if":     IF,
+	"unless": UNLESS,
 	"else":   ELSE,
 	"end":    END,
 	"return": RETURN,
