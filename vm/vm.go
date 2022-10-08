@@ -121,6 +121,8 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.evalInfixOperator(">=")
 	case compiler.OpEqual:
 		vm.evalInfixOperator("==")
+	case compiler.OpCaseEqual:
+		vm.evalInfixOperator("===")
 	case compiler.OpNotEqual:
 		vm.evalInfixOperator("!=")
 	case compiler.OpJump:

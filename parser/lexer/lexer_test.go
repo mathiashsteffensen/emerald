@@ -55,7 +55,7 @@ func TestLexer_Run(t *testing.T) {
 	[0, 1]
 	nil &&= ||= module
 	begin rescue ensure
-	$: $LOAD_PATH Integer::Math::MAX <=>
+	$: $LOAD_PATH Integer::Math::MAX <=> ===
 	/^[w]|abc/ =~ yield while break
 	#{this is a comment}
 	"this is a #{template}" "this is a #{template} also" "this is a #{template} also #{boop.method}" ½`
@@ -281,6 +281,7 @@ func TestLexer_Run(t *testing.T) {
 		{SCOPE, "::"},
 		{IDENT, "MAX"},
 		{SPACESHIP, "<=>"},
+		{CASE_EQ, "==="},
 		{NEWLINE, "\n"},
 		{REGEXP, "^[w]|abc"},
 		{MATCH, "=~"},

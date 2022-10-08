@@ -72,6 +72,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.MATCH, p.parseInfixExpression)
 	p.registerInfix(lexer.SPACESHIP, p.parseInfixExpression)
 	p.registerInfix(lexer.EQ, p.parseInfixExpression)
+	p.registerInfix(lexer.CASE_EQ, p.parseInfixExpression)
 	p.registerInfix(lexer.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(lexer.LT, p.parseInfixExpression)
 	p.registerInfix(lexer.GT, p.parseInfixExpression)

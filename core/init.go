@@ -13,6 +13,7 @@ func init() {
 	InitFalseClass()
 	InitNilClass()
 	InitComparable()
+	InitNumeric()
 	InitInteger()
 	InitFloat()
 	InitString()

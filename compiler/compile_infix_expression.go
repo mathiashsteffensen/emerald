@@ -31,6 +31,8 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) error {
 		op = OpLessThanOrEq
 	case "==":
 		op = OpEqual
+	case "===":
+		op = OpCaseEqual
 	case "!=":
 		op = OpNotEqual
 	case "&&":

@@ -1,6 +1,8 @@
 package core_test
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestIntegerOperators(t *testing.T) {
 	tests := []coreTestCase{
@@ -112,6 +114,18 @@ func TestIntegerOperators(t *testing.T) {
 		{
 			input:    "6 + false",
 			expected: "error:TypeError:no implicit conversion of FalseClass into Integer",
+		},
+		{
+			input:    "6 === 6",
+			expected: true,
+		},
+		{
+			input:    "6 === 6.0",
+			expected: true,
+		},
+		{
+			input:    "6 === Integer",
+			expected: false,
 		},
 	}
 

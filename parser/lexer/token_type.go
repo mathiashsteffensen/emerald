@@ -28,6 +28,7 @@ const (
 	LT              TokenType = "<"
 	GT              TokenType = ">"
 	EQ              TokenType = "=="
+	CASE_EQ         TokenType = "==="
 	NOT_EQ          TokenType = "!="
 	MATCH           TokenType = "=~"
 	LT_OR_EQ        TokenType = "<="

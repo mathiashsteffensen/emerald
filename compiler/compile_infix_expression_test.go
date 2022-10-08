@@ -226,6 +226,17 @@ func TestCompileInfixExpression(t *testing.T) {
 				Make(OpPop),
 			},
 		},
+		{
+			name:              "case equality",
+			input:             `true === true`,
+			expectedConstants: []any{},
+			expectedInstructions: []Instructions{
+				Make(OpTrue),
+				Make(OpTrue),
+				Make(OpCaseEqual),
+				Make(OpPop),
+			},
+		},
 	}
 
 	runCompilerTests(t, tests)

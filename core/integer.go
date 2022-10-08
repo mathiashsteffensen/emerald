@@ -21,13 +21,14 @@ func NewInteger(val int64) object.EmeraldValue {
 }
 
 func InitInteger() {
-	Integer = DefineClass(Object, "Integer", Object)
+	Integer = DefineClass(Object, "Integer", Numeric)
 
 	Integer.Include(Comparable)
 
 	DefineMethod(Integer, "to_s", integerToS())
 	DefineMethod(Integer, "inspect", integerToS())
 	DefineMethod(Integer, "<=>", integerSpaceship())
+	DefineMethod(Integer, "===", integerCaseEq())
 	DefineMethod(Integer, "==", integerEquals)
 	DefineMethod(Integer, "!=", integerNotEquals)
 	DefineMethod(Integer, "+", integerAdd)
@@ -44,6 +45,25 @@ func integerToS() object.BuiltInMethod {
 		val := ctx.Self.(*IntegerInstance).Value
 
 		return NewString(strconv.Itoa(int(val)))
+	}
+}
+
+func integerCaseEq() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, 1, 1); err != nil {
+			return err
+		}
+
+		self := ctx.Self.(*IntegerInstance)
+
+		switch other := args[0].(type) {
+		case *IntegerInstance:
+			return NativeBoolToBooleanObject(other.Value == self.Value)
+		case *FloatInstance:
+			return NativeBoolToBooleanObject(int64(other.Value) == self.Value)
+		default:
+			return FALSE
+		}
 	}
 }
 

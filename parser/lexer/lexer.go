@@ -88,7 +88,16 @@ func (l *Lexer) Run() {
 			case '=':
 				switch l.peekChar() {
 				case '=':
-					tok = l.combineCurrentAndPeek(EQ)
+					first := string(l.currentChar)
+					l.readChar()
+
+					if l.peekChar() == '=' {
+						first += string(l.currentChar)
+						l.readChar()
+						tok = l.newTokenStr(CASE_EQ, first+string(l.currentChar))
+					} else {
+						tok = l.newTokenStr(EQ, first+string(l.currentChar))
+					}
 				case '>':
 					tok = l.combineCurrentAndPeek(ARROW)
 				case '~':

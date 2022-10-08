@@ -33,6 +33,7 @@ var precedences = map[lexer.TokenType]int{
 	lexer.MATCH:           COMPARATOR,
 	lexer.SPACESHIP:       COMPARATOR,
 	lexer.EQ:              COMPARATOR,
+	lexer.CASE_EQ:         COMPARATOR,
 	lexer.NOT_EQ:          COMPARATOR,
 	lexer.LT:              ORDERING,
 	lexer.GT:              ORDERING,

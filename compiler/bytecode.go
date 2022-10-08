@@ -37,6 +37,7 @@ const (
 	OpMatch
 	OpSpaceship
 	OpEqual
+	OpCaseEqual
 	OpNotEqual
 	OpGreaterThan
 	OpGreaterThanOrEq
@@ -143,6 +144,7 @@ var definitions = map[Opcode]*Definition{
 	OpMatch:             {"OpMatch", []int{}},
 	OpSpaceship:         {"OpSpaceship", []int{}},
 	OpEqual:             {"OpEqual", []int{}},
+	OpCaseEqual:         {"OpCaseEqual", []int{}},
 	OpNotEqual:          {"OpNotEqual", []int{}},
 	OpGreaterThan:       {"OpGreaterThan", []int{}},
 	OpGreaterThanOrEq:   {"OpGreaterThanOrEq", []int{}},
