@@ -77,7 +77,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [x] if
     - [x] if modifier
     - [x] if/else
-    - [ ] if/elif/else
+    - [x] if/elif/else
     - [ ] ternary `? : `
     - [x] unless
     - [x] unless modifier

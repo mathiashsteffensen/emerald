@@ -61,6 +61,38 @@ func TestCompileIfExpression(t *testing.T) {
 				Make(OpPop),
 			},
 		},
+		{
+			name: "with elsif",
+			input: `
+				if true
+					true
+				elsif true
+					true
+				elsif false
+					true
+				end
+			`,
+			expectedConstants: []any{},
+			expectedInstructions: []Instructions{
+				Make(OpTrue),
+				Make(OpJumpNotTruthy, 9),
+				Make(OpPop),
+				Make(OpTrue),
+				Make(OpJump, 28),
+				Make(OpTrue),
+				Make(OpJumpNotTruthy, 18),
+				Make(OpPop),
+				Make(OpTrue),
+				Make(OpJump, 28),
+				Make(OpFalse),
+				Make(OpJumpNotTruthy, 27),
+				Make(OpPop),
+				Make(OpTrue),
+				Make(OpJump, 28),
+				Make(OpNull),
+				Make(OpPop),
+			},
+		},
 	}
 	runCompilerTests(t, tests)
 }

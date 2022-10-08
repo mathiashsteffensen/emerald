@@ -37,6 +37,7 @@ func TestLexer_Run(t *testing.T) {
 
 	if (5 < 10)
 		return true;
+	elsif true
 	else
 		return false;
 	end
@@ -184,6 +185,9 @@ func TestLexer_Run(t *testing.T) {
 		{RETURN, "return"},
 		{TRUE, "true"},
 		{SEMICOLON, ";"},
+		{NEWLINE, "\n"},
+		{ELSIF, "elsif"},
+		{TRUE, "true"},
 		{NEWLINE, "\n"},
 		{ELSE, "else"},
 		{NEWLINE, "\n"},

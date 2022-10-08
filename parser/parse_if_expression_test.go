@@ -144,6 +144,35 @@ func TestIfElseExpression(t *testing.T) {
 	}
 }
 
+func TestIfElsifExpression(t *testing.T) {
+	input := `
+		if x < y
+			a
+		elsif true
+			b
+		elsif 2 + 2 == 4 
+			c
+		end
+	`
+
+	program := testParseAST(t, input)
+
+	expectStatementLength(t, program.Statements, 1)
+
+	testExpressionStatement(t, program.Statements[0], func(expression *ast.IfExpression) {
+		testInfixExpression(t, expression.Condition, "x", "<", "y")
+
+		if len(expression.ElseIfs) != 2 {
+			t.Fatalf("Expected 2 elsif statements but got %d", len(expression.ElseIfs))
+		}
+
+		testLiteralExpression(t, expression.ElseIfs[0].Condition, true)
+		if expression.ElseIfs[1].Condition.String() != "((2 + 2) == 4)" {
+			t.Errorf("Expected elsif condition to be ((2 + 2) == 4) but got %s", expression.ElseIfs[1].Condition.String())
+		}
+	})
+}
+
 func TestUnlessExpression(t *testing.T) {
 	type conditionTest struct {
 		left  any

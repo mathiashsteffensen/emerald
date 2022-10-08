@@ -19,7 +19,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	p.nextToken()
 
-	for !p.curTokenIs(lexer.END, lexer.ELSE, lexer.EOF) {
+	for !p.curTokenIs(lexer.END, lexer.ELSE, lexer.ELSIF, lexer.EOF) {
 		stmt := p.parseStatement()
 
 		if stmt != nil {
@@ -27,6 +27,29 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		}
 
 		p.nextToken()
+	}
+
+	for p.curTokenIs(lexer.ELSIF) {
+		elseIf := ast.ElseIf{Consequence: &ast.BlockStatement{Token: p.curToken}}
+
+		p.nextToken()
+
+		elseIf.Condition = p.parseExpression(LOWEST)
+
+		p.nextIfSemicolonOrNewline()
+		p.nextToken()
+
+		for !p.curTokenIs(lexer.END, lexer.ELSE, lexer.ELSIF, lexer.EOF) {
+			stmt := p.parseStatement()
+
+			if stmt != nil {
+				elseIf.Consequence.Statements = append(elseIf.Consequence.Statements, stmt)
+			}
+
+			p.nextToken()
+		}
+
+		expression.ElseIfs = append(expression.ElseIfs, elseIf)
 	}
 
 	if p.curTokenIs(lexer.ELSE) {

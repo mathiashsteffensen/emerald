@@ -5,10 +5,16 @@ import (
 	"emerald/parser/lexer"
 )
 
-type IfExpression struct {
-	Token       lexer.Token // The 'if' token
+type ElseIf struct {
 	Condition   Expression
 	Consequence *BlockStatement
+}
+
+type IfExpression struct {
+	Token       lexer.Token // The 'if' or 'unless' token
+	Condition   Expression
+	Consequence *BlockStatement
+	ElseIfs     []ElseIf
 	Alternative *BlockStatement
 }
 
@@ -19,12 +25,22 @@ func (ie *IfExpression) String() string {
 
 	out.WriteString("if ")
 	out.WriteString(ie.Condition.String())
-	out.WriteString("\n  ")
+	out.WriteString("\n	")
 
 	if ie.Consequence != nil {
 		out.WriteString(ie.Consequence.String())
 	} else {
-		out.WriteString("nil")
+		out.WriteString("	nil")
+	}
+
+	if ie.ElseIfs != nil {
+		out.WriteString("\n")
+		for _, elseIf := range ie.ElseIfs {
+			out.WriteString("elsif ")
+			out.WriteString(elseIf.Condition.String())
+			out.WriteString("\n	")
+			out.WriteString(elseIf.Consequence.String())
+		}
 	}
 
 	if ie.Alternative != nil {
