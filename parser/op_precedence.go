@@ -4,11 +4,14 @@ import (
 	"emerald/parser/lexer"
 )
 
+// https://docs.ruby-lang.org/en/3.1/syntax/precedence_rdoc.html
+
 const (
 	_ int = iota
 	LOWEST
 	MODIFIER    // val = 10 if true
 	BOOL_ASSIGN // ||=
+	TERNARY     // ?, :
 	BOOL_OR     // ||
 	BOOL_AND    // &&
 	COMPARATOR  // ==
@@ -28,6 +31,7 @@ var precedences = map[lexer.TokenType]int{
 	lexer.BOOL_OR_ASSIGN:  BOOL_ASSIGN,
 	lexer.BOOL_AND_ASSIGN: BOOL_ASSIGN,
 	lexer.ASSIGN:          ASSIGN,
+	lexer.QUESTION:        TERNARY,
 	lexer.BOOL_OR:         BOOL_OR,
 	lexer.BOOL_AND:        BOOL_AND,
 	lexer.MATCH:           COMPARATOR,

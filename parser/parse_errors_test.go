@@ -4,7 +4,6 @@ import "testing"
 
 func TestParseErrors(t *testing.T) {
 	testParseError(t, "def method", "syntax error, unexpected end-of-input")
-	testParseError(t, ":2", "expected next token to be one of [IDENT, STRING], got INT instead")
 	testParseError(t, "{ hello }", "expected next token to be =>, got } instead")
 	testParseError(
 		t,

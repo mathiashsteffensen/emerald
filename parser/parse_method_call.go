@@ -55,6 +55,7 @@ var endOfMethodArgsWithoutParenthesesTokens = []lexer.TokenType{
 	lexer.BOOL_AND_ASSIGN, // When an assignment
 	lexer.ARROW,           // When a hash key
 	lexer.BIT_OR,          // When last block argument
+	lexer.COLON,           // When in a ternary
 }
 
 func (p *Parser) peekTokenDoesntSignifyCallArguments() bool {

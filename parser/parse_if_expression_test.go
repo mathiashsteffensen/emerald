@@ -75,9 +75,14 @@ func TestIfElseExpression(t *testing.T) {
 			"one-liner",
 			"if x < y;  x; else; y; end;",
 			func(t *testing.T, evaluated ast.Expression) {
-				if !testIdentifier(t, evaluated, "x") {
-					return
-				}
+				testIdentifier(t, evaluated, "x")
+			},
+		},
+		{
+			"ternary",
+			"x < y ? x : y",
+			func(t *testing.T, evaluated ast.Expression) {
+				testIdentifier(t, evaluated, "x")
 			},
 		},
 		{
@@ -88,9 +93,7 @@ func TestIfElseExpression(t *testing.T) {
 				y
 			end`,
 			func(t *testing.T, evaluated ast.Expression) {
-				if !testIdentifier(t, evaluated, "x") {
-					return
-				}
+				testIdentifier(t, evaluated, "x")
 			},
 		},
 		{
@@ -115,9 +118,7 @@ func TestIfElseExpression(t *testing.T) {
 			 else
 				y
 			end`,
-			func(t *testing.T, evaluated ast.Expression) {
-
-			},
+			func(t *testing.T, evaluated ast.Expression) {},
 		},
 	}
 

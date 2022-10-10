@@ -111,6 +111,8 @@ func (l *Lexer) Run() {
 				} else {
 					tok = l.newToken(BANG, l.currentChar)
 				}
+			case '?':
+				tok = l.newToken(QUESTION, l.currentChar)
 			case '<':
 				if l.peekChar() == '=' {
 					char := l.currentChar
@@ -199,6 +201,18 @@ func (l *Lexer) Run() {
 					char := l.currentChar
 					l.readChar()
 					tok = Token{Type: SCOPE, Literal: string(char) + string(l.currentChar)}
+				} else if isLetter(l.peekChar()) {
+					char := l.currentChar
+					tok.Pos = l.position
+					tok.Column = l.Column
+					tok.Line = l.Line
+					tok.Type = SYMBOL
+
+					l.readChar()
+					tok.Literal = string(char) + l.readIdentifier()
+					l.sendToken(tok)
+
+					continue
 				} else {
 					tok = l.newToken(COLON, l.currentChar)
 				}

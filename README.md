@@ -74,12 +74,12 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [x] without parens
     - [x] without parens with args
     - [x] with block arguments
-- [ ] conditionals
+- [x] conditionals
     - [x] if
     - [x] if modifier
     - [x] if/else
     - [x] if/elif/else
-    - [ ] ternary `? : `
+    - [x] ternary `? : `
     - [x] unless
     - [x] unless modifier
     - [x] unless/else

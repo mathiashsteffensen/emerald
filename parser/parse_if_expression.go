@@ -129,3 +129,28 @@ func (p *Parser) parseUnlessModifierFromStatement(stmt ast.Statement) ast.Expres
 
 	return expression
 }
+
+func (p *Parser) parseTernary(condition ast.Expression) ast.Expression {
+	expression := &ast.IfExpression{
+		Token:       p.curToken,
+		Condition:   condition,
+		Consequence: &ast.BlockStatement{},
+		Alternative: &ast.BlockStatement{},
+	}
+
+	p.nextToken()
+
+	consequence := &ast.ExpressionStatement{Expression: p.parseExpression(LOWEST)}
+	expression.Consequence.Statements = append(expression.Consequence.Statements, consequence)
+
+	if !p.expectPeek(lexer.COLON) {
+		return nil
+	}
+
+	p.nextToken()
+
+	alternative := &ast.ExpressionStatement{Expression: p.parseExpression(LOWEST)}
+	expression.Alternative.Statements = append(expression.Alternative.Statements, alternative)
+
+	return expression
+}

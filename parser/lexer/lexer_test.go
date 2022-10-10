@@ -19,7 +19,7 @@ func TestLexer_Run(t *testing.T) {
 		def !@ unless
 	end
 
-	@result = add!(five, ten);
+	@result = add!(five, :ten);
 
 	@result.method?
 
@@ -53,7 +53,7 @@ func TestLexer_Run(t *testing.T) {
 	obj.hello.world
 	obj["hello"][0][value]
 	[0, 1]
-	nil &&= ||= module
+	nil &&= ||= module ?
 	begin rescue ensure
 	$: $LOAD_PATH Integer::Math::MAX <=> ===
 	/^[w]|abc/ =~ yield while break
@@ -106,7 +106,7 @@ func TestLexer_Run(t *testing.T) {
 		{LPAREN, "("},
 		{IDENT, "five"},
 		{COMMA, ","},
-		{IDENT, "ten"},
+		{SYMBOL, ":ten"},
 		{RPAREN, ")"},
 		{SEMICOLON, ";"},
 		{NEWLINE, "\n"},
@@ -270,6 +270,7 @@ func TestLexer_Run(t *testing.T) {
 		{BOOL_AND_ASSIGN, "&&="},
 		{BOOL_OR_ASSIGN, "||="},
 		{MODULE, "module"},
+		{QUESTION, "?"},
 		{NEWLINE, "\n"},
 		{BEGIN, "begin"},
 		{RESCUE, "rescue"},

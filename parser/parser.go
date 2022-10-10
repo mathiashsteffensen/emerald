@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"bytes"
+	"emerald/log"
 	ast "emerald/parser/ast"
 	"emerald/parser/lexer"
 	"fmt"
@@ -55,7 +55,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.NULL, p.parseNullExpression)
 	p.registerPrefix(lexer.DEF, p.parseMethodLiteral)
 	p.registerPrefix(lexer.CLASS, p.parseClassLiteral)
-	p.registerPrefix(lexer.COLON, p.parseSymbolLiteral)
+	p.registerPrefix(lexer.SYMBOL, p.parseSymbolLiteral)
 	p.registerPrefix(lexer.INSTANCE_VAR, p.parseInstanceVariable)
 	p.registerPrefix(lexer.GLOBAL_IDENT, p.parseGlobalVariable)
 	p.registerPrefix(lexer.MODULE, p.parseModuleLiteral)
@@ -90,6 +90,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.IF, p.parseIfModifier)
 	p.registerInfix(lexer.UNLESS, p.parseUnlessModifier)
 	p.registerInfix(lexer.WHILE, p.parseWhileModifier)
+	p.registerInfix(lexer.QUESTION, p.parseTernary)
 
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
@@ -103,6 +104,7 @@ func (p *Parser) Errors() []string {
 }
 
 func (p *Parser) addError(msg string) {
+	log.DebugF("SyntaxError: %s", msg)
 	p.errors = append(p.errors, msg)
 }
 
@@ -113,21 +115,6 @@ func (p *Parser) unexpectedEofError() {
 func (p *Parser) peekError(t lexer.TokenType) {
 	p.addError(fmt.Sprintf("expected next token to be %s, got %s instead",
 		t, p.peekToken.Type))
-}
-
-func (p *Parser) peekErrorMultiple(types ...lexer.TokenType) {
-	var typesBuffer bytes.Buffer
-
-	for i, tokenType := range types {
-		typesBuffer.WriteString(string(tokenType))
-
-		if i != len(types)-1 {
-			typesBuffer.WriteString(", ")
-		}
-	}
-
-	msg := fmt.Sprintf("expected next token to be one of [%s], got %s instead", typesBuffer.String(), p.peekToken.Type)
-	p.addError(msg)
 }
 
 func (p *Parser) noPrefixParseFnError() {
@@ -429,32 +416,20 @@ func (p *Parser) expectPeek(t lexer.TokenType) bool {
 	}
 }
 
-func (p *Parser) expectPeekMultiple(advance bool, types ...lexer.TokenType) bool {
-	if p.peekTokenIsMultiple(types...) {
-		if advance {
-			p.nextToken()
-		}
-		return true
-	}
-
-	p.peekErrorMultiple(types...)
-	return false
-}
-
 func (p *Parser) nextIfSemicolonOrNewline() {
-	if p.peekTokenIs(lexer.SEMICOLON) || p.peekTokenIs(lexer.NEWLINE) {
+	for p.peekTokenIs(lexer.SEMICOLON) || p.peekTokenIs(lexer.NEWLINE) {
 		p.nextToken()
 	}
 }
 
 func (p *Parser) nextIfCurSemicolonOrNewline() {
-	if p.curTokenIs(lexer.SEMICOLON) || p.curTokenIs(lexer.NEWLINE) {
+	for p.curTokenIs(lexer.SEMICOLON) || p.curTokenIs(lexer.NEWLINE) {
 		p.nextToken()
 	}
 }
 
 func (p *Parser) nextIfNewline() {
-	if p.peekTokenIs(lexer.NEWLINE) {
+	for p.peekTokenIs(lexer.NEWLINE) {
 		p.nextToken()
 	}
 }

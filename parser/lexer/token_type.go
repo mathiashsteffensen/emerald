@@ -15,6 +15,7 @@ const (
 	INT    TokenType = "INT"
 	FLOAT  TokenType = "FLOAT"
 	STRING TokenType = "STRING"
+	SYMBOL TokenType = "SYMBOL"
 	REGEXP TokenType = "REGEXP"
 
 	// Operators
@@ -42,6 +43,7 @@ const (
 	BIT_OR          TokenType = "|"
 	BOOL_OR         TokenType = "||"
 	BOOL_OR_ASSIGN  TokenType = "||="
+	QUESTION        TokenType = "?"
 
 	// Delimiters
 	COMMA     TokenType = ","
