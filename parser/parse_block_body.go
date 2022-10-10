@@ -19,10 +19,10 @@ func (p *Parser) parseBlockBody() (*ast.BlockStatement, []*ast.RescueBlock, *ast
 		rescues = p.parseBlockRescueParts()
 	}
 
-	var ensure *ast.EnsureBlock
+	var ensure *ast.EnsureBlock = nil
 
 	if p.curTokenIs(lexer.ENSURE) {
-		ensure = &ast.EnsureBlock{Body: p.parseBlockStatement(lexer.END)}
+		ensure = &ast.EnsureBlock{Token: p.curToken, Body: p.parseBlockStatement(lexer.END)}
 	}
 
 	return block, rescues, ensure

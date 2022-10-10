@@ -36,7 +36,7 @@ func testParseError(t *testing.T, input, expectedError string) {
 
 func expectStatementLength(t *testing.T, stmt []ast.Statement, length int) {
 	if len(stmt) != length {
-		t.Fatalf("AST does not contain %d statements. got=%d\n\n%s", length, len(stmt), (&ast.BlockStatement{Statements: stmt}).String())
+		t.Fatalf("Did contain %d statements. got=%d\n\n%s", length, len(stmt), (&ast.BlockStatement{Statements: stmt}).String())
 	}
 }
 
@@ -166,6 +166,8 @@ func testLiteralExpression(
 		return testIntegerLiteral(t, exp, int64(v))
 	case int64:
 		return testIntegerLiteral(t, exp, v)
+	case float64:
+		return testFloatLiteral(t, exp, v)
 	case string:
 		if strings.HasPrefix(v, ":") {
 			return testSymbolLiteral(t, exp, v[1:])
@@ -182,6 +184,19 @@ func testLiteralExpression(
 	}
 	t.Errorf("type of exp not handled. got=%T", exp)
 	return false
+}
+
+func testFloatLiteral(t *testing.T, expr ast.Expression, expected float64) bool {
+	float, ok := expr.(*ast.FloatLiteral)
+	if !ok {
+		t.Fatalf("expected float got=%#v", expr)
+	}
+
+	if float.Value != expected {
+		t.Fatalf("expected float to have value %f, got=%f", expected, float.Value)
+	}
+
+	return true
 }
 
 func testSymbolLiteral(t *testing.T, expr ast.Expression, expected string) bool {
@@ -350,6 +365,17 @@ func testHashLiteral(t *testing.T, expr ast.Expression, items map[string]any) {
 			t.Fatalf("HashLiteral did not have expected key %q, hash %#v", expectedKey, hash.Value)
 		}
 	}
+}
+
+func testWhenClause(t *testing.T, clause *ast.WhenClause, consequence any, matchers ...any) {
+	for i, matcher := range matchers {
+		testLiteralExpression(t, clause.Matchers[i], matcher)
+	}
+
+	expectStatementLength(t, clause.Consequence.Statements, 1)
+	testExpressionStatement(t, clause.Consequence.Statements[0], func(expression ast.Expression) {
+		testLiteralExpression(t, expression, consequence)
+	})
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {

@@ -132,6 +132,8 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.conditionalJump(!core.IsTruthy(vm.StackTop()), ins, ip)
 	case compiler.OpJumpTruthy:
 		vm.conditionalJump(core.IsTruthy(vm.StackTop()), ins, ip)
+	case compiler.OpCheckCaseEqual:
+		vm.executeOpCheckCaseEqual(ins, ip)
 	case compiler.OpGetGlobal:
 		globalIndex := vm.readUint16(ins, ip)
 		value := heap.GetGlobalVariable(globalIndex)

@@ -43,7 +43,11 @@ func (bl *BlockLiteral) String() string {
 		for _, block := range bl.RescueBlocks {
 			out.WriteString(block.String())
 		}
-		out.WriteString(bl.EnsureBlock.String())
+
+		if bl.EnsureBlock != nil {
+			out.WriteString(bl.EnsureBlock.String())
+		}
+
 		out.WriteString("end")
 	}
 

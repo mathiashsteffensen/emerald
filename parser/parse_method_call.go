@@ -75,6 +75,7 @@ func (p *Parser) parseMethodArgsWithoutParentheses() []ast.Expression {
 	for p.peekTokenIs(lexer.COMMA) {
 		p.nextToken()
 		p.nextToken()
+		p.nextIfCurSemicolonOrNewline()
 		args = append(args, p.parseExpression(LOWEST))
 	}
 

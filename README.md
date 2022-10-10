@@ -62,6 +62,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
 - [x] method definitions
     - [x] with parens
     - [x] without parens
+    - [ ] without parens with args
     - [x] return keyword
     - [ ] default values for parameters
     - [ ] keyword arguments
@@ -82,7 +83,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [x] unless
     - [x] unless modifier
     - [x] unless/else
-    - [ ] case
+    - [x] case
     - [x] `||`
     - [x] `&&`
 - [ ] control flow
@@ -194,7 +195,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [ ] `<<` (left shift, append)
     - [x] `==` (equal)
     - [x] `!=` (not equal)
-    - [ ] `===` (case equality)
+    - [x] `===` (case equality)
     - [x] `=~` (pattern match)
     - [ ] `!~` (does not match)
     - [x] `<=>` (comparison or spaceship operator)

@@ -3,6 +3,7 @@
 
 # Executables
 emerald
+!cmd/emerald
 iem
 !stdlib/iem
 

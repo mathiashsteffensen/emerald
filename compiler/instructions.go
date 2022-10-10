@@ -1,15 +1,15 @@
 package compiler
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 )
 
 // Instructions are simply an array of bytes
 type Instructions []byte
 
 func (ins Instructions) String() string {
-	var out bytes.Buffer
+	var out strings.Builder
 
 	i := 0
 	for i < len(ins) {

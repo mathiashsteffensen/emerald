@@ -73,6 +73,8 @@ const (
 	IF     TokenType = "IF"
 	ELSIF  TokenType = "ELSIF"
 	UNLESS TokenType = "UNLESS"
+	CASE   TokenType = "CASE"
+	WHEN   TokenType = "WHEN"
 	ELSE   TokenType = "ELSE"
 	RETURN TokenType = "RETURN"
 	NULL   TokenType = "NULL"
@@ -95,6 +97,8 @@ var keywords = map[string]TokenType{
 	"if":     IF,
 	"elsif":  ELSIF,
 	"unless": UNLESS,
+	"case":   CASE,
+	"when":   WHEN,
 	"else":   ELSE,
 	"end":    END,
 	"return": RETURN,

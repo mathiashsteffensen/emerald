@@ -71,6 +71,7 @@ const (
 	OpJump
 	OpJumpTruthy
 	OpJumpNotTruthy
+	OpCheckCaseEqual
 
 	// OpConstantSet sets a constant in the current namespace.
 	// By calling .NamespaceDefinitionSet on self
@@ -162,6 +163,7 @@ var definitions = map[Opcode]*Definition{
 	OpJump:              {"OpJump", []int{2}},
 	OpJumpTruthy:        {"OpJumpTruthy", []int{2}},
 	OpJumpNotTruthy:     {"OpJumpNotTruthy", []int{2}},
+	OpCheckCaseEqual:    {"OpCheckCaseEqual", []int{1, 2}},
 	OpGetGlobal:         {"OpGetGlobal", []int{2}},
 	OpSetGlobal:         {"OpSetGlobal", []int{2}},
 	OpGetLocal:          {"OpGetLocal", []int{1}},

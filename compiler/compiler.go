@@ -146,6 +146,14 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+	case *ast.CaseExpression:
+		err := c.compileCaseExpression(node)
+		if err != nil {
+			return err
+		}
+		if c.lastInstructionIs(OpPop) {
+			c.removeLastPop()
+		}
 	case *ast.WhileExpression:
 		err := c.compileWhileExpression(node)
 		if err != nil {
@@ -286,9 +294,9 @@ func (c *Compiler) replaceLastInstructionWith(op Opcode) {
 	c.scopes[c.scopeIndex].lastInstruction.Opcode = op
 }
 
-func (c *Compiler) changeOperand(opPos int, operand int) {
+func (c *Compiler) changeOperand(opPos int, operands ...int) {
 	op := Opcode(c.currentInstructions()[opPos])
-	newInstruction := Make(op, operand)
+	newInstruction := Make(op, operands...)
 
 	c.replaceInstruction(opPos, newInstruction)
 }

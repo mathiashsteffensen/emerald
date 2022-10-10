@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type MethodCall struct {
@@ -20,7 +20,7 @@ func (m MethodCall) Dup() *MethodCall {
 }
 func (m MethodCall) TokenLiteral() string { return m.Token.Literal }
 func (m MethodCall) String() string {
-	var out bytes.Buffer
+	var out strings.Builder
 
 	out.WriteString("(")
 	out.WriteString(m.Left.String())

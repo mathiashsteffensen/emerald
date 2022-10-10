@@ -14,6 +14,7 @@ func InitModule() {
 	DefineMethod(Module, "attr_reader", moduleAttrReader())
 	DefineMethod(Module, "attr_writer", moduleAttrWriter())
 	DefineMethod(Module, "attr_accessor", moduleAttrAccessor())
+	DefineMethod(Module, "===", moduleCaseEquals())
 
 	Class.SetSuper(Module)
 	Class.Class().(*object.SingletonClass).SetSuper(Module.Class())
@@ -80,6 +81,12 @@ func moduleAttrAccessor() object.BuiltInMethod {
 		Send(ctx.Self, "attr_writer", NULL, args...)
 
 		return NULL
+	}
+}
+
+func moduleCaseEquals() object.BuiltInMethod {
+	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+		return Send(args[0], "is_a?", NULL, ctx.Self)
 	}
 }
 

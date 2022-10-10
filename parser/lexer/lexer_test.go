@@ -24,7 +24,7 @@ func TestLexer_Run(t *testing.T) {
 	@result.method?
 
 	print(result)
-	!-*5;
+	!-*5; case when
 	5 < 10 > 5 / 5;
 
 	[] << 5
@@ -126,6 +126,8 @@ func TestLexer_Run(t *testing.T) {
 		{ASTERISK, "*"},
 		{INT, "5"},
 		{SEMICOLON, ";"},
+		{CASE, "case"},
+		{WHEN, "when"},
 		{NEWLINE, "\n"},
 		{INT, "5"},
 		{LT, "<"},

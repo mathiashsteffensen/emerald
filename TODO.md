@@ -1,0 +1,1 @@
+- [] Replace usage of `bytes.Buffer` with `strings.Builder`

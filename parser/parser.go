@@ -62,6 +62,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.SELF, p.parseSelf)
 	p.registerPrefix(lexer.REGEXP, p.parseRegexpLiteral)
 	p.registerPrefix(lexer.YIELD, p.parseYield)
+	p.registerPrefix(lexer.CASE, p.parseCaseExpression)
 
 	p.infixParseFns = make(map[lexer.TokenType]infixParseFn)
 	p.registerInfix(lexer.PLUS, p.parseInfixExpression)
@@ -162,13 +163,13 @@ func (p *Parser) ParseAST() *ast.AST {
 	return program
 }
 
-func (p *Parser) parseBlockStatement(endToken lexer.TokenType) *ast.BlockStatement {
+func (p *Parser) parseBlockStatement(endTokens ...lexer.TokenType) *ast.BlockStatement {
 	block := &ast.BlockStatement{Token: p.curToken}
 	block.Statements = []ast.Statement{}
 
 	p.nextToken()
 
-	for !p.curTokenIs(endToken) && !p.curTokenIs(lexer.EOF) {
+	for !p.curTokenIs(endTokens...) && !p.curTokenIs(lexer.EOF) {
 		stmt := p.parseStatement()
 
 		if stmt != nil {
@@ -178,7 +179,7 @@ func (p *Parser) parseBlockStatement(endToken lexer.TokenType) *ast.BlockStateme
 		p.nextToken()
 	}
 
-	p.expectCur(endToken)
+	p.expectCur(endTokens...)
 
 	return block
 }
@@ -409,11 +410,11 @@ func (p *Parser) peekTokenIsMultiple(types ...lexer.TokenType) bool {
 	return false
 }
 
-func (p *Parser) expectCur(t lexer.TokenType) bool {
-	if p.curTokenIs(t) {
+func (p *Parser) expectCur(ts ...lexer.TokenType) bool {
+	if p.curTokenIs(ts...) {
 		return true
 	} else {
-		p.peekError(t)
+		p.peekError(ts[0])
 		return false
 	}
 }
@@ -442,6 +443,12 @@ func (p *Parser) expectPeekMultiple(advance bool, types ...lexer.TokenType) bool
 
 func (p *Parser) nextIfSemicolonOrNewline() {
 	if p.peekTokenIs(lexer.SEMICOLON) || p.peekTokenIs(lexer.NEWLINE) {
+		p.nextToken()
+	}
+}
+
+func (p *Parser) nextIfCurSemicolonOrNewline() {
+	if p.curTokenIs(lexer.SEMICOLON) || p.curTokenIs(lexer.NEWLINE) {
 		p.nextToken()
 	}
 }
