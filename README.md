@@ -113,7 +113,6 @@ NOTE: To say they have been implemented does not mean any features are guarantee
 - [ ] strings
     - [x] double quoted
     - [ ] single quoted
-    - [ ] character literals (`?\n`, `?a`,...)
     - [ ] `%q{}`
     - [ ] `%Q{}`
     - [ ] heredoc
@@ -125,18 +124,17 @@ NOTE: To say they have been implemented does not mean any features are guarantee
             - [ ] double quotes `<<-"HEREDOC"`
             - [ ] backticks <<-\`HEREDOC\`"
     - [ ] escaped characters
-        - [ ] `\a` bell, ASCII 07h (BEL)
-        - [ ] 	`\b` backspace, ASCII 08h (BS)
-        - [ ] 	`\t` horizontal tab, ASCII 09h (TAB)
-        - [ ] 	`\n` newline (line feed), ASCII 0Ah (LF)
-        - [ ] 	`\v` vertical tab, ASCII 0Bh (VT)
-        - [ ] 	`\f` form feed, ASCII 0Ch (FF)
-        - [ ] 	`\r` carriage return, ASCII 0Dh (CR)
-        - [ ] 	`\e` escape, ASCII 1Bh (ESC)
-        - [ ] 	`\s` space, ASCII 20h (SPC)
-        - [ ] 	`\\` backslash, \
-        - [ ] 	`\nnn` octal bit pattern, where nnn is 1-3 octal digits ([0-7])
-        - [ ] 	`\xnn` hexadecimal bit pattern, where nn is 1-2 hexadecimal digits ([0-9a-fA-F])
+        - [x] `\a` bell, ASCII 07h (BEL)
+        - [x] `\b` backspace, ASCII 08h (BS)
+        - [x] `\t` horizontal tab, ASCII 09h (TAB)
+        - [x] `\n` newline (line feed), ASCII 0Ah (LF)
+        - [x] `\v` vertical tab, ASCII 0Bh (VT)
+        - [x] `\f` form feed, ASCII 0Ch (FF)
+        - [x] `\r` carriage return, ASCII 0Dh (CR)
+        - [x] `\s` space, ASCII 20h (SPC)
+        - [ ] `\\` backslash, \
+        - [ ] `\nnn` octal bit pattern, where nnn is 1-3 octal digits ([0-7])
+        - [ ] `\xnn` hexadecimal bit pattern, where nn is 1-2 hexadecimal digits ([0-9a-fA-F])
         - [ ] `\unnnn` Unicode character, where nnnn is exactly 4 hexadecimal digits ([0-9a-fA-F])
         - [ ] `\u{nnnn ...}` Unicode character(s), where each nnnn is 1-6 hexadecimal digits ([0-9a-fA-F])
         - [ ] `\cx` or `\C-x` control character, where x is an ASCII printable character
@@ -146,7 +144,6 @@ NOTE: To say they have been implemented does not mean any features are guarantee
         - [ ] `\c\M-x` same as above
         - [ ] `\c?` or `\C-?` delete, ASCII 7Fh (DEL)
     - [x] interpolation `#{}`
-    - [ ] automatic concatenation
 - [ ] arrays
     - [x] array literal `[1,2]`
     - [x] array indexing `arr[2]`

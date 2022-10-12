@@ -3,6 +3,8 @@ package parser
 import (
 	"emerald/parser/ast"
 	"emerald/parser/lexer"
+	"fmt"
+	"regexp"
 )
 
 func (p *Parser) parseStringLiteral() ast.Expression {
@@ -59,6 +61,35 @@ func (p *Parser) parseStringTemplateExpression() *ast.StringTemplateChainExpress
 	return templateExpression
 }
 
+type stringEscapeFunc func(str string) string
+
+func newStringEscapeFunc(escapeToken string, raw string) stringEscapeFunc {
+	re := regexp.MustCompile(fmt.Sprintf(`\\%s`, escapeToken))
+
+	return func(str string) string {
+		return re.ReplaceAllLiteralString(str, raw)
+	}
+}
+
+var stringEscapeFunctions = []stringEscapeFunc{
+	newStringEscapeFunc("n", "\n"),
+	newStringEscapeFunc("t", "\t"),
+	newStringEscapeFunc("a", "\a"),
+	newStringEscapeFunc("b", "\b"),
+	newStringEscapeFunc("v", "\v"),
+	newStringEscapeFunc("f", "\f"),
+	newStringEscapeFunc("r", "\r"),
+	newStringEscapeFunc("s", " "),
+}
+
+func escapeString(str string) string {
+	for _, function := range stringEscapeFunctions {
+		str = function(str)
+	}
+
+	return str
+}
+
 func (p *Parser) newString() *ast.StringLiteral {
-	return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
+	return &ast.StringLiteral{Token: p.curToken, Value: escapeString(p.curToken.Literal)}
 }

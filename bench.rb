@@ -39,7 +39,7 @@ def boolean_negate(n)
 end
 
 def bench_boolean_negate(n)
-    measure_time "Boolean negate #{n * 5}" do
+    measure_time "Boolean negate #{n}" do
         boolean_negate n
     end
 end
@@ -50,16 +50,31 @@ def string_add(n)
     end
 end
 
+def string_template(n)
+    a = "world"
+
+    n.times do
+        "hello #{a} ."
+    end
+end
+
 def bench_string_add(n)
-    measure_time "String add #{n * 3}" do
+    measure_time "String add #{n}" do
         string_add n
     end
 end
 
-5.times do
+def bench_string_template(n)
+    measure_time "String template #{n}" do
+        string_template n
+    end
+end
+
+1.times do
     # bench_fib_iterative(160_800)
     # bench_boolean_negate(1_000_000)
     bench_string_add 100_000
+    bench_string_template 100_000
 end
 
 sleep 1

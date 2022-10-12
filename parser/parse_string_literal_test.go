@@ -7,7 +7,7 @@ import (
 
 func TestStringLiteralExpression(t *testing.T) {
 	input := `
-		"hello world"
+		"hello \n\t\a\b\v\f\r\s world"
 		"This is a #{template}"
 		"This is a #{template} also #{boop.method}"
 	`
@@ -17,7 +17,7 @@ func TestStringLiteralExpression(t *testing.T) {
 	expectStatementLength(t, program.Statements, 3)
 
 	testExpressionStatement(t, program.Statements[0], func(expression *ast.StringLiteral) {
-		testStringLiteral(t, expression, "hello world")
+		testStringLiteral(t, expression, "hello \n\t\a\b\v\f\r  world")
 	})
 
 	testExpressionStatement(t, program.Statements[1], func(expression *ast.StringTemplate) {
