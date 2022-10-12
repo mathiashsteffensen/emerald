@@ -1,7 +1,7 @@
 package core
 
 import (
-	"bytes"
+	"strings"
 	"emerald/object"
 )
 
@@ -119,7 +119,7 @@ func arrayEquals() object.BuiltInMethod {
 
 func arrayToS() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		var out bytes.Buffer
+		var out strings.Builder
 
 		out.WriteString("[")
 

@@ -24,6 +24,7 @@ var rootCmd = &cobra.Command{
 	Use:   "emerald",
 	Short: "A Ruby implementation written in Go",
 	Long:  "Emerald is a Ruby compiler & Virtual Machine implemented in Go",
+	Args:  cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.ExperimentalWarning()
 

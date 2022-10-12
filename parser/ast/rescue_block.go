@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type RescueBlock struct {
@@ -13,12 +13,14 @@ type RescueBlock struct {
 }
 
 func (rb *RescueBlock) TokenLiteral() string { return rb.Token.Literal }
-func (rb *RescueBlock) String() string {
-	var out bytes.Buffer
+func (rb *RescueBlock) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString(rb.TokenLiteral())
+	indent := indents[0]
+
+	indented(&out, indent, rb.TokenLiteral())
 	out.WriteString("\n")
-	out.WriteString(rb.Body.String())
+	out.WriteString(rb.Body.String(indent + 1))
 
 	return out.String()
 }

@@ -1,8 +1,8 @@
 package object
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 )
 
 type Instance struct {
@@ -15,7 +15,7 @@ func (i *Instance) Class() EmeraldValue       { return i.class }
 func (i *Instance) Super() EmeraldValue       { return nil }
 func (i *Instance) Ancestors() []EmeraldValue { return append(i.class.Ancestors(), i) }
 func (i *Instance) Inspect() string {
-	var out bytes.Buffer
+	var out strings.Builder
 
 	out.WriteString("#<")
 	out.WriteString(i.Class().Super().(*Class).Name)

@@ -1,7 +1,6 @@
 package core
 
 import (
-	"bytes"
 	"emerald/object"
 	"fmt"
 	"strings"
@@ -98,7 +97,7 @@ func stringMultiply() object.BuiltInMethod {
 			return err
 		}
 
-		var newString bytes.Buffer
+		var newString strings.Builder
 
 		for i := int64(0); i < arg.Value; i++ {
 			newString.WriteString(selfString.Value)

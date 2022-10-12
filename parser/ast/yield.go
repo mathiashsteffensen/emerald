@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
 	"strings"
 )
@@ -13,15 +12,15 @@ type Yield struct {
 
 func (y Yield) expressionNode()      {}
 func (y Yield) TokenLiteral() string { return y.Token.Literal }
-func (y Yield) String() string {
-	var out bytes.Buffer
+func (y Yield) String(indents ...int) string {
+	var out strings.Builder
 
 	args := []string{}
 	for _, a := range y.Arguments {
-		args = append(args, a.String())
+		args = append(args, a.String(0))
 	}
 
-	out.WriteString("yield(")
+	indented(&out, indents[0], "yield(")
 	out.WriteString(strings.Join(args, ", "))
 	out.WriteString(")")
 

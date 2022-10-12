@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type HashLiteral struct {
@@ -12,16 +12,22 @@ type HashLiteral struct {
 
 func (hl *HashLiteral) expressionNode()      {}
 func (hl *HashLiteral) TokenLiteral() string { return hl.Token.Literal }
-func (hl *HashLiteral) String() string {
-	var out bytes.Buffer
+func (hl *HashLiteral) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString("{\n")
+	indent := indents[0]
 
-	for key, value := range hl.Value {
-		out.WriteString("  " + key.String() + ": " + value.String() + ",\n")
+	if len(hl.Value) == 0 {
+		indented(&out, indent, "{}")
+	} else {
+		indented(&out, indent, "{\n")
+
+		for key, value := range hl.Value {
+			out.WriteString(key.String(indent+1) + ": " + value.String(0) + ",\n")
+		}
+
+		indented(&out, indent, "}")
 	}
-
-	out.WriteString("}")
 
 	return out.String()
 }

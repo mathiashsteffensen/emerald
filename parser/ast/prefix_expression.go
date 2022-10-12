@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type PrefixExpression struct {
@@ -13,12 +13,12 @@ type PrefixExpression struct {
 
 func (pe *PrefixExpression) expressionNode()      {}
 func (pe *PrefixExpression) TokenLiteral() string { return pe.Token.Literal }
-func (pe *PrefixExpression) String() string {
-	var out bytes.Buffer
+func (pe *PrefixExpression) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString("(")
+	indented(&out, indents[0], "(")
 	out.WriteString(pe.Operator)
-	out.WriteString(pe.Right.String())
+	out.WriteString(pe.Right.String(0))
 	out.WriteString(")")
 
 	return out.String()

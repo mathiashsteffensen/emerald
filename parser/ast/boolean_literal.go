@@ -2,6 +2,7 @@ package ast
 
 import (
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type BooleanLiteral struct {
@@ -11,4 +12,6 @@ type BooleanLiteral struct {
 
 func (be *BooleanLiteral) expressionNode()      {}
 func (be *BooleanLiteral) TokenLiteral() string { return be.Token.Literal }
-func (be *BooleanLiteral) String() string       { return be.Token.Literal }
+func (be *BooleanLiteral) String(indents ...int) string {
+	return indented(&strings.Builder{}, indents[0], be.Token.Literal).String()
+}

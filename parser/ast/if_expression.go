@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type ElseIf struct {
@@ -20,35 +20,36 @@ type IfExpression struct {
 
 func (ie *IfExpression) expressionNode()      {}
 func (ie *IfExpression) TokenLiteral() string { return ie.Token.Literal }
-func (ie *IfExpression) String() string {
-	var out bytes.Buffer
+func (ie *IfExpression) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString("if ")
-	out.WriteString(ie.Condition.String())
-	out.WriteString("\n	")
+	indent := indents[0]
+
+	indented(&out, indent, "if ")
+	out.WriteString(ie.Condition.String(0))
+	out.WriteString("\n")
 
 	if ie.Consequence != nil {
-		out.WriteString(ie.Consequence.String())
+		out.WriteString(ie.Consequence.String(indent + 1))
 	} else {
-		out.WriteString("	nil")
+		indented(&out, indent+1, "nil\n")
 	}
 
 	if ie.ElseIfs != nil {
-		out.WriteString("\n")
 		for _, elseIf := range ie.ElseIfs {
-			out.WriteString("elsif ")
-			out.WriteString(elseIf.Condition.String())
-			out.WriteString("\n	")
-			out.WriteString(elseIf.Consequence.String())
+			indented(&out, indent, "elsif ")
+			out.WriteString(elseIf.Condition.String(0))
+			out.WriteString("\n")
+			out.WriteString(elseIf.Consequence.String(indent + 1))
 		}
 	}
 
 	if ie.Alternative != nil {
-		out.WriteString("\nelse\n  ")
-		out.WriteString(ie.Alternative.String())
+		indented(&out, indent, "else\n")
+		out.WriteString(ie.Alternative.String(indent + 1))
 	}
 
-	out.WriteString("\nend")
+	indented(&out, indent, "end")
 
 	return out.String()
 }

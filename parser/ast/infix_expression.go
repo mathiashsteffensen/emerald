@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type InfixExpression struct {
@@ -14,13 +14,13 @@ type InfixExpression struct {
 
 func (ie *InfixExpression) expressionNode()      {}
 func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
-func (ie *InfixExpression) String() string {
-	var out bytes.Buffer
+func (ie *InfixExpression) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString("(")
-	out.WriteString(ie.Left.String())
+	indented(&out, indents[0], "(")
+	out.WriteString(ie.Left.String(0))
 	out.WriteString(" " + ie.Operator + " ")
-	out.WriteString(ie.Right.String())
+	out.WriteString(ie.Right.String(0, indents[0]))
 	out.WriteString(")")
 
 	return out.String()

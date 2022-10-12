@@ -143,7 +143,7 @@ func TestOperatorPrecedence(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			program := testParseAST(t, tt.input)
 
-			actual := program.String()
+			actual := program.String(0)
 			if actual != tt.expected {
 				t.Errorf("expected=%q, got=%q", tt.expected, actual)
 			}

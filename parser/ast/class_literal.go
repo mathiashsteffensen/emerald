@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type ClassLiteral struct {
@@ -14,18 +14,16 @@ type ClassLiteral struct {
 
 func (cl *ClassLiteral) expressionNode()      {}
 func (cl *ClassLiteral) TokenLiteral() string { return cl.Token.Literal }
-func (cl *ClassLiteral) String() string {
-	var out bytes.Buffer
+func (cl *ClassLiteral) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString("class ")
-	out.WriteString(cl.Name.String())
+	indent := indents[0]
+
+	indented(&out, indent, "class ")
+	out.WriteString(cl.Name.String(0))
 	out.WriteString("\n")
-
-	for _, value := range cl.Body.Statements {
-		out.WriteString(value.String() + "\n")
-	}
-
-	out.WriteString("end")
+	out.WriteString(cl.Body.String(indent + 1))
+	indented(&out, indent, "end")
 
 	return out.String()
 }

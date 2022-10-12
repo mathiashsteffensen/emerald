@@ -2,6 +2,7 @@ package ast
 
 import (
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type IdentifierExpression struct {
@@ -11,4 +12,6 @@ type IdentifierExpression struct {
 
 func (ie IdentifierExpression) expressionNode()      {}
 func (ie IdentifierExpression) TokenLiteral() string { return ie.Token.Literal }
-func (ie IdentifierExpression) String() string       { return ie.Value }
+func (ie IdentifierExpression) String(indents ...int) string {
+	return indented(&strings.Builder{}, indents[0], ie.Value).String()
+}

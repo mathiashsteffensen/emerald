@@ -36,21 +36,21 @@ func testParseError(t *testing.T, input, expectedError string) {
 
 func expectStatementLength(t *testing.T, stmt []ast.Statement, length int) {
 	if len(stmt) != length {
-		t.Fatalf("Did contain %d statements. got=%d\n\n%s", length, len(stmt), (&ast.BlockStatement{Statements: stmt}).String())
+		t.Fatalf("Did contain %d statements. got=%d\n\n%s", length, len(stmt), (&ast.BlockStatement{Statements: stmt}).String(0))
 	}
 }
 
 func testIfElseExpression(t *testing.T, expr *ast.IfExpression, condition, consequence, alternative string) {
-	if strings.Trim(expr.Condition.String(), "\n\r\t ") != condition {
-		t.Errorf("Unexpected condition want=%s got=%s", condition, expr.Condition.String())
+	if strings.Trim(expr.Condition.String(0), "\n\r\t ") != condition {
+		t.Errorf("Unexpected condition want=%s got=%s", condition, expr.Condition.String(0))
 	}
 
-	if strings.Trim(expr.Consequence.String(), "\n\r\t ") != consequence {
-		t.Errorf("Unexpected alternative want=%s got=%s", consequence, expr.Consequence.String())
+	if strings.Trim(expr.Consequence.String(0), "\n\r\t ") != consequence {
+		t.Errorf("Unexpected alternative want=%s got=%s", consequence, expr.Consequence.String(0))
 	}
 
-	if strings.Trim(expr.Alternative.String(), "\n\r\t ") != alternative {
-		t.Errorf("Unexpected alternative want=%s got=%s", alternative, expr.Alternative.String())
+	if strings.Trim(expr.Alternative.String(0), "\n\r\t ") != alternative {
+		t.Errorf("Unexpected alternative want=%s got=%s", alternative, expr.Alternative.String(0))
 	}
 }
 
@@ -92,11 +92,11 @@ func testAssignmentExpression(t *testing.T, expr ast.Expression, expectedName, e
 	if !ok {
 		t.Fatalf("exp not *ast.AssignmentExpression. got=%T", expr)
 	}
-	if ident.Name.String() != expectedName {
-		t.Errorf("ident.Name not %s. got=%s", expectedName, ident.Name.String())
+	if ident.Name.String(0) != expectedName {
+		t.Errorf("ident.Name not %s. got=%s", expectedName, ident.Name.String(0))
 	}
-	if ident.Value.String() != expectedValue {
-		t.Errorf("ident.Value not %s. got=%s", expectedValue, ident.Value.String())
+	if ident.Value.String(0) != expectedValue {
+		t.Errorf("ident.Value not %s. got=%s", expectedValue, ident.Value.String(0))
 	}
 }
 
@@ -106,8 +106,8 @@ func testCallExpression(t *testing.T, expr ast.Expression, name string, args []a
 		t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T", expr)
 	}
 
-	if exp.Method.String() != name {
-		t.Fatalf("Method name was not %s, got=%s", name, exp.Method.String())
+	if exp.Method.String(0) != name {
+		t.Fatalf("Method name was not %s, got=%s", name, exp.Method.String(0))
 	}
 
 	if len(exp.Arguments) != len(args) {
@@ -321,12 +321,12 @@ func testRescueBlock(actual *ast.RescueBlock, expStmts int, expErrVarName string
 	}
 
 	for i, class := range actual.CaughtErrorClasses {
-		if class.String() != expErrClasses[i] {
+		if class.String(0) != expErrClasses[i] {
 			return fmt.Errorf("CaughtErrorClasses[%d] failed \nwant=%s\ngot=%s", i, expErrClasses[i], class)
 		}
 	}
 
-	if actual.ErrorVarName.String() != expErrVarName {
+	if actual.ErrorVarName.String(0) != expErrVarName {
 		return fmt.Errorf(
 			"wrong rescue block error var name \nwant='%s'\ngot='%s'",
 			expErrVarName,
@@ -355,7 +355,7 @@ func testHashLiteral(t *testing.T, expr ast.Expression, items map[string]any) {
 		keyFound := false
 
 		for actualKey, actualValue := range hash.Value {
-			if actualKey.String() == expectedKey {
+			if actualKey.String(0) == expectedKey {
 				keyFound = true
 				testLiteralExpression(t, actualValue, expectedValue)
 			}

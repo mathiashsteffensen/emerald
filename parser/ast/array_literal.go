@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type ArrayLiteral struct {
@@ -12,16 +12,25 @@ type ArrayLiteral struct {
 
 func (al *ArrayLiteral) expressionNode()      {}
 func (al *ArrayLiteral) TokenLiteral() string { return al.Token.Literal }
-func (al *ArrayLiteral) String() string {
-	var out bytes.Buffer
+func (al *ArrayLiteral) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString("[\n")
+	indent := indents[0]
 
-	for _, value := range al.Value {
-		out.WriteString(value.String() + ",\n")
+	indented(&out, indent, "[\n")
+
+	var newlineIndent int
+	if len(indents) != 1 {
+		newlineIndent = indents[1]
+	} else {
+		newlineIndent = indents[0]
 	}
 
-	out.WriteString("]")
+	for _, value := range al.Value {
+		out.WriteString(value.String(newlineIndent+1) + ",\n")
+	}
+
+	indented(&out, newlineIndent, "]")
 
 	return out.String()
 }

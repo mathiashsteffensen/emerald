@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
 	"strings"
 )
@@ -14,18 +13,19 @@ type MethodLiteral struct {
 
 func (ml *MethodLiteral) expressionNode()      {}
 func (ml *MethodLiteral) TokenLiteral() string { return ml.Token.Literal }
-func (ml *MethodLiteral) String() string {
-	var out bytes.Buffer
+func (ml *MethodLiteral) String(indents ...int) string {
+	var out strings.Builder
+
+	indent := indents[0]
 
 	params := []string{}
 
 	for _, p := range ml.Parameters {
-		params = append(params, p.String())
+		params = append(params, p.String(0))
 	}
 
-	out.WriteString(ml.TokenLiteral())
-	out.WriteString(" ")
-	out.WriteString(ml.Name.String())
+	indented(&out, indent, "def ")
+	out.WriteString(ml.Name.String(0))
 
 	if len(params) != 0 {
 		out.WriteString("(")
@@ -34,11 +34,12 @@ func (ml *MethodLiteral) String() string {
 	}
 
 	out.WriteString("\n")
-	out.WriteString(ml.Body.String())
+	out.WriteString(ml.Body.String(indent + 1))
 	for _, block := range ml.RescueBlocks {
-		out.WriteString(block.String())
+		out.WriteString(block.String(indent))
 	}
-	out.WriteString("end\n")
+
+	indented(&out, indent, "end")
 
 	return out.String()
 }

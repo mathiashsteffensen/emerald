@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"reflect"
+	"strings"
 )
 
 type StringTemplateChainString struct {
@@ -11,12 +11,12 @@ type StringTemplateChainString struct {
 	First bool
 }
 
-func (s StringTemplateChainString) next() Next {
+func (s *StringTemplateChainString) next() Next {
 	return s.Next
 }
 
-func (s *StringTemplateChainString) String() string {
-	str := s.StringLiteral.String()
+func (s *StringTemplateChainString) String(indents ...int) string {
+	str := s.StringLiteral.String(0)
 
 	if s.Next == nil {
 		return str[1:]
@@ -30,7 +30,7 @@ func (s *StringTemplateChainString) String() string {
 		startIndex = 1
 	}
 
-	return str[startIndex:len(str)-1] + s.Next.String()
+	return str[startIndex:len(str)-1] + s.Next.String(0)
 }
 
 type StringTemplateChainExpression struct {
@@ -38,21 +38,21 @@ type StringTemplateChainExpression struct {
 	Next *StringTemplateChainString
 }
 
-func (s StringTemplateChainExpression) next() Next {
+func (s *StringTemplateChainExpression) next() Next {
 	return s.Next
 }
 
-func (s *StringTemplateChainExpression) String() string {
-	var out bytes.Buffer
+func (s *StringTemplateChainExpression) String(indents ...int) string {
+	var out strings.Builder
 
 	out.WriteString("#{")
-	out.WriteString(s.Expression.String())
+	out.WriteString(s.Expression.String(0))
 	out.WriteString("}")
 
 	if s.Next == nil {
 		out.Write([]byte{'"'})
 	} else {
-		out.WriteString(s.Next.String())
+		out.WriteString(s.Next.String(0))
 	}
 
 	return out.String()
@@ -66,7 +66,7 @@ type Next interface {
 	next() Next
 }
 
-func (s StringTemplate) Count() int {
+func (s *StringTemplate) Count() int {
 	var next Next = s.Chain
 
 	count := 0
@@ -85,6 +85,6 @@ func (s *StringTemplate) TokenLiteral() string {
 	return s.Chain.TokenLiteral()
 }
 
-func (s *StringTemplate) String() string {
-	return s.Chain.String()
+func (s *StringTemplate) String(indents ...int) string {
+	return s.Chain.String(0)
 }

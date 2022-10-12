@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type BlockStatement struct {
@@ -12,11 +12,11 @@ type BlockStatement struct {
 
 func (bs *BlockStatement) statementNode()       {}
 func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
-func (bs *BlockStatement) String() string {
-	var out bytes.Buffer
+func (bs *BlockStatement) String(indents ...int) string {
+	var out strings.Builder
 
 	for _, s := range bs.Statements {
-		out.WriteString(s.String())
+		out.WriteString(s.String(indents...))
 		out.WriteString("\n")
 	}
 

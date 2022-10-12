@@ -1,1 +1,2 @@
-- [] Replace usage of `bytes.Buffer` with `strings.Builder`
+- [ ] Replace usage of `strings.Builder` with `strings.Builder`
+- [ ] Implement call stack tracing in VM

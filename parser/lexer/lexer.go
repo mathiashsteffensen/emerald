@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"bytes"
+	"strings"
 )
 
 type Lexer struct {
@@ -45,7 +45,7 @@ func (l *Lexer) Snapshot(token Token) string {
 		end = len(l.currentInput.content)
 	}
 
-	var buf bytes.Buffer
+	var buf strings.Builder
 
 	buf.WriteString(l.currentInput.content[start:end])
 	buf.WriteString("\n")

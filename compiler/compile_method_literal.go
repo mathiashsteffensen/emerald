@@ -76,7 +76,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int, err
 		instructions = c.leaveScope()
 
 		for _, errorClass := range rescueBlock.CaughtErrorClasses {
-			errorClasses = append(errorClasses, errorClass.String())
+			errorClasses = append(errorClasses, errorClass.String(0))
 		}
 
 		block.RescueBlocks = append(block.RescueBlocks, object.NewRescueBlock(instructions, errorClasses...))

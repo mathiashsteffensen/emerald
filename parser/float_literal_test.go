@@ -28,7 +28,7 @@ func TestFloatLiteral(t *testing.T) {
 		t.Fatalf("expected float to have value 15.25, got=%f", float.Value)
 	}
 
-	if float.String() != "15.25" {
-		t.Fatalf("expected float to have value 15.25, got=%s", float.String())
+	if float.String(1) != "	15.25" {
+		t.Fatalf("expected float to have value 15.25, got=%s", float.String(0))
 	}
 }

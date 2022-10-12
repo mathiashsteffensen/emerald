@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
 	"strings"
 )
@@ -15,18 +14,30 @@ type CallExpression struct {
 
 func (ce CallExpression) expressionNode()      {}
 func (ce CallExpression) TokenLiteral() string { return ce.Token.Literal }
-func (ce CallExpression) String() string {
-	var out bytes.Buffer
+func (ce CallExpression) String(indents ...int) string {
+	var out strings.Builder
 
 	args := []string{}
 	for _, a := range ce.Arguments {
-		args = append(args, a.String())
+		args = append(args, a.String(0))
 	}
 
-	out.WriteString(ce.Method.String())
+	out.WriteString(ce.Method.String(indents...))
 	out.WriteString("(")
 	out.WriteString(strings.Join(args, ", "))
 	out.WriteString(")")
+
+	if ce.Block != nil {
+		var blockIndent int
+		if len(indents) != 1 {
+			blockIndent = indents[1]
+		} else {
+			blockIndent = indents[0]
+		}
+
+		out.WriteString(" ")
+		out.WriteString(ce.Block.String(blockIndent))
+	}
 
 	return out.String()
 }

@@ -96,7 +96,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 		if config.AstMode {
 			astNodes = append(astNodes, program)
 			for _, node := range astNodes {
-				fmt.Fprintf(out, "%s\n", node.String())
+				fmt.Fprintf(out, "%s\n", node.String(0))
 			}
 			continue
 		}

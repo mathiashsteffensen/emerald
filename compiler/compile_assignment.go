@@ -20,7 +20,7 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) error {
 			return nil
 		}
 
-		stringName := name.String()
+		stringName := name.String(0)
 
 		symbol, ok := c.symbolTable.Resolve(stringName)
 		if !ok {

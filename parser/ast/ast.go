@@ -1,10 +1,10 @@
 package ast
 
-import "bytes"
+import "strings"
 
 type Node interface {
 	TokenLiteral() string
-	String() string
+	String(indents ...int) string
 }
 
 type Statement interface {
@@ -29,10 +29,10 @@ func (ast *AST) TokenLiteral() string {
 	}
 }
 
-func (ast *AST) String() string {
-	var out bytes.Buffer
+func (ast *AST) String(indents ...int) string {
+	var out strings.Builder
 	for _, s := range ast.Statements {
-		out.WriteString(s.String())
+		out.WriteString(s.String(indents...))
 		if len(ast.Statements) != 1 {
 			out.WriteString("\n")
 		}

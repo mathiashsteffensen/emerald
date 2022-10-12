@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type ScopeAccessor struct {
@@ -13,12 +13,12 @@ type ScopeAccessor struct {
 
 func (pa *ScopeAccessor) expressionNode()      {}
 func (pa *ScopeAccessor) TokenLiteral() string { return pa.Token.Literal }
-func (pa *ScopeAccessor) String() string {
-	var out bytes.Buffer
+func (pa *ScopeAccessor) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString(pa.Left.String())
+	out.WriteString(pa.Left.String(0))
 	out.WriteString(pa.TokenLiteral())
-	out.WriteString(pa.Method.String())
+	out.WriteString(pa.Method.String(0))
 
 	return out.String()
 }

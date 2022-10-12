@@ -11,7 +11,7 @@ func (c *Compiler) compileHashLiteral(node *ast.HashLiteral) error {
 		keys = append(keys, k)
 	}
 	sort.Slice(keys, func(i, j int) bool {
-		return keys[i].String() < keys[j].String()
+		return keys[i].String(0) < keys[j].String(0)
 	})
 	for _, k := range keys {
 		err := c.Compile(k)

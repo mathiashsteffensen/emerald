@@ -222,7 +222,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	leftExp := p.parseAsPrefix()
 
-	for !p.peekTokenIs(lexer.SEMICOLON) && !p.peekTokenIs(lexer.NEWLINE) && precedence < p.peekPrecedence() {
+	for !p.peekTokenIs(lexer.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
@@ -294,6 +294,8 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	}
 
 	precedence := p.curPrecedence()
+
+	p.nextIfNewline()
 
 	p.nextToken()
 

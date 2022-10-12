@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type ReturnStatement struct {
@@ -12,16 +12,13 @@ type ReturnStatement struct {
 
 func (rs *ReturnStatement) statementNode()       {}
 func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
-func (rs *ReturnStatement) String() string {
-	var out bytes.Buffer
+func (rs *ReturnStatement) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString(rs.TokenLiteral() + " ")
-
+	indented(&out, indents[0], "return ")
 	if rs.ReturnValue != nil {
-		out.WriteString(rs.ReturnValue.String())
+		out.WriteString(rs.ReturnValue.String(0))
 	}
-
-	out.WriteString(";")
 
 	return out.String()
 }

@@ -20,35 +20,37 @@ type CaseExpression struct {
 func (ce *CaseExpression) expressionNode()      {}
 func (ce *CaseExpression) TokenLiteral() string { return ce.Token.Literal }
 
-func (ce *CaseExpression) String() string {
+func (ce *CaseExpression) String(indents ...int) string {
 	var out strings.Builder
 
-	out.WriteString("case ")
-	out.WriteString(ce.Subject.String())
+	indent := indents[0]
+
+	indented(&out, indent, "case ")
+	out.WriteString(ce.Subject.String(0))
 	out.WriteString("\n")
 
 	for _, clause := range ce.WhenClauses {
-		out.WriteString("when ")
+		indented(&out, indent, "when ")
 
 		matchers := []string{}
 
 		for _, matcher := range clause.Matchers {
-			matchers = append(matchers, matcher.String())
+			matchers = append(matchers, matcher.String(0))
 		}
 
 		out.WriteString(strings.Join(matchers, ", "))
-		out.WriteString("\n	")
-		out.WriteString(clause.Consequence.String())
+		out.WriteString("\n")
+		out.WriteString(clause.Consequence.String(indent + 1))
 		out.WriteString("\n")
 	}
 
 	if ce.Alternative != nil {
-		out.WriteString("else\n")
-		out.WriteString(ce.Alternative.String())
+		indented(&out, indent, "else\n")
+		out.WriteString(ce.Alternative.String(indent + 1))
 		out.WriteString("\n")
 	}
 
-	out.WriteString("end\n")
+	indented(&out, indent, "end\n")
 
 	return out.String()
 }

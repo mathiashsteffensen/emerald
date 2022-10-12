@@ -168,8 +168,8 @@ func TestIfElsifExpression(t *testing.T) {
 		}
 
 		testLiteralExpression(t, expression.ElseIfs[0].Condition, true)
-		if expression.ElseIfs[1].Condition.String() != "((2 + 2) == 4)" {
-			t.Errorf("Expected elsif condition to be ((2 + 2) == 4) but got %s", expression.ElseIfs[1].Condition.String())
+		if expression.ElseIfs[1].Condition.String(0) != "((2 + 2) == 4)" {
+			t.Errorf("Expected elsif condition to be ((2 + 2) == 4) but got %s", expression.ElseIfs[1].Condition.String(0))
 		}
 	})
 }

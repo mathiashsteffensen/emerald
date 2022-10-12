@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type AssignmentExpression struct {
@@ -13,13 +13,13 @@ type AssignmentExpression struct {
 
 func (ls *AssignmentExpression) expressionNode()      {}
 func (ls *AssignmentExpression) TokenLiteral() string { return ls.Token.Literal }
-func (ls *AssignmentExpression) String() string {
-	var out bytes.Buffer
+func (ls *AssignmentExpression) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString("(")
-	out.WriteString(ls.Name.String())
+	indented(&out, indents[0], "(")
+	out.WriteString(ls.Name.String(0))
 	out.WriteString(" = ")
-	out.WriteString(ls.Value.String())
+	out.WriteString(ls.Value.String(0, indents[0]))
 	out.WriteString(")")
 
 	return out.String()

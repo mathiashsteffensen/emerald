@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type WhileExpression struct {
@@ -13,14 +13,17 @@ type WhileExpression struct {
 
 func (we *WhileExpression) expressionNode()      {}
 func (we *WhileExpression) TokenLiteral() string { return we.Token.Literal }
-func (we *WhileExpression) String() string {
-	var out bytes.Buffer
+func (we *WhileExpression) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString("while ")
-	out.WriteString(we.Condition.String())
-	out.WriteString("\n  ")
-	out.WriteString(we.Consequence.String())
-	out.WriteString("\nend")
+	indent := indents[0]
+
+	indented(&out, indent, "while ")
+	out.WriteString(we.Condition.String(0))
+	out.WriteString("\n")
+	out.WriteString(we.Consequence.String(indent + 1))
+	out.WriteString("\n")
+	indented(&out, indent, "end")
 
 	return out.String()
 }

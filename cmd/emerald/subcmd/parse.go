@@ -15,6 +15,7 @@ var ParseCmd = &cobra.Command{
 	Use:   "parse",
 	Short: "Run the emerald parser, outputs the stringified AST",
 	Long:  "Primarily just used for debugging and benchmarking",
+	Args:  cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, file := range args {
 			absFile, err := filepath.Abs(file)
@@ -35,7 +36,7 @@ var ParseCmd = &cobra.Command{
 				log.FatalF("parser error: %s\n", p.Errors()[0])
 			}
 
-			log.Debug("\n" + program.String())
+			log.Debug("\n" + program.String(0))
 
 			log.DebugF("Parsed file %s in %s", file, done)
 		}

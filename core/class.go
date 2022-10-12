@@ -1,7 +1,7 @@
 package core
 
 import (
-	"bytes"
+	"strings"
 	"emerald/object"
 )
 
@@ -25,7 +25,7 @@ func classAncestors() object.BuiltInMethod {
 
 func className() object.BuiltInMethod {
 	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		var namespaces bytes.Buffer
+		var namespaces strings.Builder
 
 		parent := ctx.Self.ParentNamespace()
 		for parent != nil &&

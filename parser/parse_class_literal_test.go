@@ -17,19 +17,19 @@ func TestClassLiteral(t *testing.T) {
 	expectStatementLength(t, program.Statements, 1)
 
 	testExpressionStatement(t, program.Statements[0], func(class *ast.ClassLiteral) {
-		if class.Name.String() != "Math" {
-			t.Fatalf("class name was not Math got=%s", class.Name.String())
+		if class.Name.String(0) != "Math" {
+			t.Fatalf("class name was not Math got=%s", class.Name.String(0))
 		}
 
-		if class.Parent.String() != "BasicObject" {
-			t.Fatalf("parent class name was not BasicObject got=%s", class.Name.String())
+		if class.Parent.String(0) != "BasicObject" {
+			t.Fatalf("parent class name was not BasicObject got=%s", class.Name.String(0))
 		}
 
 		expectStatementLength(t, class.Body.Statements, 1)
 
 		testExpressionStatement(t, class.Body.Statements[0], func(method *ast.MethodLiteral) {
-			if method.Name.String() != "add" {
-				t.Fatalf("method name was not add got=%s", method.Name.String())
+			if method.Name.String(0) != "add" {
+				t.Fatalf("method name was not add got=%s", method.Name.String(0))
 			}
 
 			expectStatementLength(t, method.Body.Statements, 1)
@@ -57,8 +57,8 @@ func TestStaticClassLiteral(t *testing.T) {
 		t.Fatalf("expression is not class literal, got=%T", program.Statements[0].(*ast.ExpressionStatement).Expression)
 	}
 
-	if class.Name.String() != "Logger" {
-		t.Fatalf("class name was not integer got=%s", class.Name.String())
+	if class.Name.String(0) != "Logger" {
+		t.Fatalf("class name was not integer got=%s", class.Name.String(0))
 	}
 
 	if len(class.Body.Statements) != 1 {
@@ -87,8 +87,8 @@ func TestStaticClassLiteral(t *testing.T) {
 		t.Fatalf("expression is not method literal, got=%T", class.Body.Statements[0].(*ast.ExpressionStatement).Expression)
 	}
 
-	if method.Name.String() != "info" {
-		t.Fatalf("method name was not add got=%s", method.Name.String())
+	if method.Name.String(0) != "info" {
+		t.Fatalf("method name was not add got=%s", method.Name.String(0))
 	}
 
 	if len(method.Body.Statements) != 1 {

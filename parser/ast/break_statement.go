@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type BreakStatement struct {
@@ -12,14 +12,14 @@ type BreakStatement struct {
 
 func (bs *BreakStatement) statementNode()       {}
 func (bs *BreakStatement) TokenLiteral() string { return bs.Token.Literal }
-func (bs *BreakStatement) String() string {
-	var out bytes.Buffer
+func (bs *BreakStatement) String(indents ...int) string {
+	var out strings.Builder
 
-	out.WriteString(bs.TokenLiteral())
+	indented(&out, indents[0], bs.TokenLiteral())
 
 	if bs.Value != nil {
 		out.WriteString(" ")
-		out.WriteString(bs.Value.String())
+		out.WriteString(bs.Value.String(0))
 	}
 
 	return out.String()

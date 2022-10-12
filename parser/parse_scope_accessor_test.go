@@ -22,8 +22,8 @@ func TestParseScopeAccessor(t *testing.T) {
 		testIdentifier(t, left.Method, "MyOtherMod")
 	}
 
-	if scopeAccessor.Left.String() != "MyMod::MyOtherMod" {
-		t.Errorf("expected receiver to be MyMod, got=%s", scopeAccessor.Left.String())
+	if scopeAccessor.Left.String(0) != "MyMod::MyOtherMod" {
+		t.Errorf("expected receiver to be MyMod, got=%s", scopeAccessor.Left.String(0))
 	}
 
 	testIdentifier(t, scopeAccessor.Method, "MyClass")

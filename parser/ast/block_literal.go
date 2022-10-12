@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"emerald/parser/lexer"
+	"strings"
 )
 
 type BlockLiteral struct {
@@ -15,40 +15,39 @@ type BlockLiteral struct {
 
 func (bl *BlockLiteral) expressionNode()      {}
 func (bl *BlockLiteral) TokenLiteral() string { return bl.Token.Literal }
-func (bl *BlockLiteral) String() string {
-	var out bytes.Buffer
+func (bl *BlockLiteral) String(indents ...int) string {
+	var out strings.Builder
+
+	indent := indents[0]
 
 	out.WriteString(bl.TokenLiteral())
 
 	if len(bl.Parameters) != 0 {
 		out.WriteString(" |")
 		for i, parameter := range bl.Parameters {
-			out.WriteString(parameter.String())
+			out.WriteString(parameter.String(0))
 			if i != len(bl.Parameters)-1 {
 				out.WriteString(", ")
 			}
 		}
-		out.WriteString("|\n")
+		out.WriteString("|")
 	}
 
-	for _, statement := range bl.Body.Statements {
-		out.WriteString("  ")
-		out.WriteString(statement.String())
-		out.WriteString("\n")
-	}
+	out.WriteString("\n")
+	out.WriteString(bl.Body.String(indent + 1))
 
 	if bl.TokenLiteral() == "{" {
-		out.WriteString("}")
+		indented(&out, indent, "}")
 	} else {
 		for _, block := range bl.RescueBlocks {
-			out.WriteString(block.String())
+			out.WriteString(block.String(indent))
 		}
 
 		if bl.EnsureBlock != nil {
-			out.WriteString(bl.EnsureBlock.String())
+			out.WriteString(bl.EnsureBlock.String(indent))
 		}
 
-		out.WriteString("end")
+		indented(&out, indent, "end")
 	}
 
 	return out.String()

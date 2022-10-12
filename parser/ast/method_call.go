@@ -19,19 +19,21 @@ func (m MethodCall) Dup() *MethodCall {
 	}
 }
 func (m MethodCall) TokenLiteral() string { return m.Token.Literal }
-func (m MethodCall) String() string {
+func (m MethodCall) String(indents ...int) string {
 	var out strings.Builder
 
-	out.WriteString("(")
-	out.WriteString(m.Left.String())
-	out.WriteString(m.TokenLiteral())
-	out.WriteString(m.Method.String())
+	indent := indents[0]
+
+	indented(&out, indent, "(")
+	out.WriteString(m.Left.String(0))
+	out.WriteString(".")
+	out.WriteString(m.Method.String(0))
 
 	if len(m.Arguments) != 0 {
 		out.WriteString("(")
 
 		for i, argument := range m.Arguments {
-			out.WriteString(argument.String())
+			out.WriteString(argument.String(0))
 
 			if i != len(m.Arguments)-1 {
 				out.WriteString(", ")
@@ -42,8 +44,15 @@ func (m MethodCall) String() string {
 	}
 
 	if m.Block != nil {
+		var blockIndent int
+		if len(indents) != 1 {
+			blockIndent = indents[1]
+		} else {
+			blockIndent = indents[0]
+		}
+
 		out.WriteString(" ")
-		out.WriteString(m.Block.String())
+		out.WriteString(m.Block.String(blockIndent))
 	}
 
 	out.WriteString(")")

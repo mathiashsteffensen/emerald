@@ -5,6 +5,7 @@ import "emerald/parser/ast"
 func (p *Parser) parseBoolOrAssign(left ast.Expression) ast.Expression {
 	precedence := p.curPrecedence()
 
+	p.nextIfNewline()
 	p.nextToken()
 
 	right := p.parseExpression(precedence)
