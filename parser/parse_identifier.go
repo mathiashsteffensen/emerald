@@ -20,6 +20,11 @@ func (p *Parser) parseIdentifierExpression() ast.Expression {
 		return callExpression
 	}
 
+	if p.peekTokenIs(lexer.ASSIGN) {
+		p.nextToken()
+		return p.parseAssignmentExpression(node)
+	}
+
 	if p.peekTokenDoesntSignifyCallArguments() {
 		return node
 	}

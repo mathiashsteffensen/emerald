@@ -137,6 +137,16 @@ func TestOperatorPrecedence(t *testing.T) {
 			"val = 2 && 5",
 			"(val = (2 && 5))",
 		},
+		{
+			"true && 2 + 2 == 4",
+			"(true && ((2 + 2) == 4))",
+		},
+		{
+			"i = i + 1 while i < 10",
+			`while (i < 10)
+	(i = (i + 1))
+end`,
+		},
 	}
 
 	for _, tt := range tests {

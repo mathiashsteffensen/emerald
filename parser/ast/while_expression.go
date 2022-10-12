@@ -22,7 +22,6 @@ func (we *WhileExpression) String(indents ...int) string {
 	out.WriteString(we.Condition.String(0))
 	out.WriteString("\n")
 	out.WriteString(we.Consequence.String(indent + 1))
-	out.WriteString("\n")
 	indented(&out, indent, "end")
 
 	return out.String()

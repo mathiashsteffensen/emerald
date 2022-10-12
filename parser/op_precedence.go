@@ -10,6 +10,7 @@ const (
 	_ int = iota
 	LOWEST
 	MODIFIER    // val = 10 if true
+	ASSIGN      // =
 	BOOL_ASSIGN // ||=
 	TERNARY     // ?, :
 	BOOL_OR     // ||
@@ -19,7 +20,6 @@ const (
 	SUM         // +
 	PRODUCT     // *
 	PREFIX      // -X or !X
-	ASSIGN      // =
 	CALL        // myFunction(X)
 	ACCESSOR    // myHash.property
 )

@@ -9,13 +9,13 @@ func (p *Parser) parseAssignmentExpression(left ast.Expression) ast.Expression {
 	case *ast.MethodCall:
 		p.nextToken()
 
-		return p.appendAssignmentToMethodCall(left, p.parseExpression(LOWEST))
+		return p.appendAssignmentToMethodCall(left, p.parseExpression(ASSIGN))
 	default:
 		node := &ast.AssignmentExpression{Token: p.curToken, Name: left}
 
 		p.nextToken()
 
-		node.Value = p.parseExpression(LOWEST)
+		node.Value = p.parseExpression(ASSIGN)
 
 		return node
 	}
