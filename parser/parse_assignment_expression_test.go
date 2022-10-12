@@ -30,6 +30,30 @@ func TestAssignmentExpression(t *testing.T) {
 			"$foobar",
 			"5",
 		},
+		{
+			"plus assign",
+			"$foobar += 5",
+			"$foobar",
+			"($foobar + 5)",
+		},
+		{
+			"minus assign",
+			"$foobar -= 5",
+			"$foobar",
+			"($foobar - 5)",
+		},
+		{
+			"slash assign",
+			"$foobar /= 5",
+			"$foobar",
+			"($foobar / 5)",
+		},
+		{
+			"asterisk assign",
+			"$foobar *= 5",
+			"$foobar",
+			"($foobar * 5)",
+		},
 	}
 
 	for _, tt := range tests {

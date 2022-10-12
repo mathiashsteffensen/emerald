@@ -19,7 +19,6 @@ const (
 	REGEXP TokenType = "REGEXP"
 
 	// Operators
-	ASSIGN          TokenType = "="
 	PLUS            TokenType = "+"
 	MINUS           TokenType = "-"
 	BANG            TokenType = "!"
@@ -34,15 +33,20 @@ const (
 	MATCH           TokenType = "=~"
 	LT_OR_EQ        TokenType = "<="
 	GT_OR_EQ        TokenType = ">="
+	ASSIGN          TokenType = "="
+	PLUS_ASSIGN     TokenType = "+="
+	MINUS_ASSIGN    TokenType = "-="
+	SLASH_ASSIGN    TokenType = "/="
+	ASTERISK_ASSIGN TokenType = "*="
+	BOOL_AND_ASSIGN TokenType = "&&="
+	BOOL_OR_ASSIGN  TokenType = "||="
 	APPEND          TokenType = "<<"
 	DOT             TokenType = "."
 	SCOPE           TokenType = "::"
 	BIT_AND         TokenType = "&"
 	BOOL_AND        TokenType = "&&"
-	BOOL_AND_ASSIGN TokenType = "&&="
 	BIT_OR          TokenType = "|"
 	BOOL_OR         TokenType = "||"
-	BOOL_OR_ASSIGN  TokenType = "||="
 	QUESTION        TokenType = "?"
 
 	// Delimiters

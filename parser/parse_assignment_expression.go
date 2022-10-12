@@ -32,3 +32,20 @@ func (p *Parser) appendAssignmentToMethodCall(left *ast.MethodCall, assignedExpr
 
 	return left
 }
+
+func (p *Parser) parseInfixOperatorAssignment(infixOp string) infixParseFn {
+	return func(left ast.Expression) ast.Expression {
+		node := &ast.AssignmentExpression{Token: p.curToken, Name: left}
+
+		p.nextToken()
+
+		node.Value = &ast.InfixExpression{
+			Token:    node.Token,
+			Left:     left,
+			Operator: infixOp,
+			Right:    p.parseExpression(ASSIGN),
+		}
+
+		return node
+	}
+}

@@ -56,7 +56,7 @@ func TestLexer_Run(t *testing.T) {
 	nil &&= ||= module ?
 	begin rescue ensure
 	$: $LOAD_PATH Integer::Math::MAX <=> ===
-	/^[w]|abc/ =~ yield while break
+	/^[w]|abc/ =~ yield while break += -= ident /= *=
 	#{this is a comment}
 	"this is a #{template}" "this is a #{template} also" "this is a #{template} also #{boop.method}" ½`
 
@@ -291,6 +291,11 @@ func TestLexer_Run(t *testing.T) {
 		{YIELD, "yield"},
 		{WHILE, "while"},
 		{BREAK, "break"},
+		{PLUS_ASSIGN, "+="},
+		{MINUS_ASSIGN, "-="},
+		{IDENT, "ident"},
+		{SLASH_ASSIGN, "/="},
+		{ASTERISK_ASSIGN, "*="},
 		{NEWLINE, "\n"},
 		{NEWLINE, "\n"},
 		{STRING, "this is a "},

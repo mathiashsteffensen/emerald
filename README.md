@@ -202,10 +202,10 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [x] `<=` (less or equal)
     - [x] `>=` (greater or equal)
     - [ ] assignment operators
-        - [ ] `+=`
-        - [ ] `-=`
-        - [ ] `/=`
-        - [ ] `*=`
+        - [x] `+=`
+        - [x] `-=`
+        - [x] `/=`
+        - [x] `*=`
         - [ ] `%=`
         - [ ] `**=`
         - [ ] `&=`

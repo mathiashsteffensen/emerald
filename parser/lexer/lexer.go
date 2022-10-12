@@ -150,18 +150,34 @@ func (l *Lexer) Run() {
 			case ',':
 				tok = l.newToken(COMMA, l.currentChar)
 			case '+':
-				tok = l.newToken(PLUS, l.currentChar)
+				if l.peekChar() == '=' {
+					tok = l.combineCurrentAndPeek(PLUS_ASSIGN)
+				} else {
+					tok = l.newToken(PLUS, l.currentChar)
+				}
 			case '-':
-				tok = l.newToken(MINUS, l.currentChar)
+				if l.peekChar() == '=' {
+					tok = l.combineCurrentAndPeek(MINUS_ASSIGN)
+				} else {
+					tok = l.newToken(MINUS, l.currentChar)
+				}
 			case '/':
 				if l.isRegexpStart() {
 					pattern := l.readRegexp()
 					tok = l.newTokenStr(REGEXP, pattern)
 				} else {
-					tok = l.newToken(SLASH, l.currentChar)
+					if l.peekChar() == '=' {
+						tok = l.combineCurrentAndPeek(SLASH_ASSIGN)
+					} else {
+						tok = l.newToken(SLASH, l.currentChar)
+					}
 				}
 			case '*':
-				tok = l.newToken(ASTERISK, l.currentChar)
+				if l.peekChar() == '=' {
+					tok = l.combineCurrentAndPeek(ASTERISK_ASSIGN)
+				} else {
+					tok = l.newToken(ASTERISK, l.currentChar)
+				}
 			case '{':
 				tok = l.newToken(LBRACE, l.currentChar)
 			case '}':
