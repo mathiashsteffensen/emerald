@@ -24,9 +24,9 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 	if p.peekTokenIs(lexer.LPAREN) {
 		p.nextToken()
 
-		method.Parameters = p.parseExpressionList(lexer.RPAREN)
+		method.Arguments, method.KeywordArguments = p.parseMethodLiteralArguments(lexer.RPAREN)
 	} else {
-		method.Parameters = make([]ast.Expression, 0)
+		method.Arguments, method.KeywordArguments = []*ast.IdentifierExpression{}, []*ast.IdentifierExpression{}
 	}
 
 	p.nextIfSemicolonOrNewline()
@@ -38,4 +38,64 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 	method.EnsureBlock = ensure
 
 	return method
+}
+
+func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType) (args []*ast.IdentifierExpression, kwargs []*ast.IdentifierExpression) {
+	if p.peekTokenIs(delim) {
+		p.nextToken()
+		return
+	}
+
+	startedKeywordArguments := false
+
+	if !p.expectPeek(lexer.IDENT) {
+		return nil, nil
+	}
+
+	if p.peekTokenIs(lexer.COLON) {
+		kwargs = append(kwargs, &ast.IdentifierExpression{
+			Token: p.curToken,
+			Value: p.curToken.Literal,
+		})
+		p.nextToken()
+		startedKeywordArguments = true
+	} else {
+		args = append(args, &ast.IdentifierExpression{
+			Token: p.curToken,
+			Value: p.curToken.Literal,
+		})
+	}
+
+	for p.peekTokenIs(lexer.COMMA) {
+		p.nextToken()
+
+		if !p.expectPeek(lexer.IDENT) {
+			return nil, nil
+		}
+
+		ident := &ast.IdentifierExpression{
+			Token: p.curToken,
+			Value: p.curToken.Literal,
+		}
+
+		if startedKeywordArguments {
+			if !p.expectPeek(lexer.COLON) {
+				return nil, nil
+			}
+
+			kwargs = append(kwargs, ident)
+		} else if p.peekTokenIsMultiple(lexer.COLON) {
+			kwargs = append(kwargs, ident)
+			p.nextToken()
+			startedKeywordArguments = true
+		} else {
+			args = append(args, ident)
+		}
+	}
+
+	if !p.expectPeek(delim) {
+		return nil, nil
+	}
+
+	return
 }

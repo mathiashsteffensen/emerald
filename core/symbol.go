@@ -18,12 +18,12 @@ type SymbolInstance struct {
 func (s *SymbolInstance) Inspect() string { return ":" + s.Value }
 
 func NewSymbol(val string) object.EmeraldValue {
-	return GlobalSymbolInternStore.ResolveOrDefine(val)
+	return GlobalSymbolInternPool.ResolveOrDefine(val)
 }
 
 type SymbolInternStore map[string]object.EmeraldValue
 
-var GlobalSymbolInternStore = SymbolInternStore{}
+var GlobalSymbolInternPool = SymbolInternStore{}
 
 func (s SymbolInternStore) Resolve(val string) (object.EmeraldValue, bool) {
 	sym, ok := s[val]
@@ -47,7 +47,7 @@ func (s SymbolInternStore) ResolveOrDefine(val string) object.EmeraldValue {
 }
 
 func symbolToS() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		val := ctx.Self.Inspect()
 
 		return NewString(val[1:])

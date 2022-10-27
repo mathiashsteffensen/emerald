@@ -43,7 +43,15 @@ func DefineSingletonMethod(receiver object.EmeraldValue, name string, method obj
 	receiver.Class().BuiltInMethodSet()[name] = method
 }
 
-func EnforceArity(args []object.EmeraldValue, minArgs int, maxArgs int) ([]object.EmeraldValue, object.EmeraldError) {
+func EnforceArity(
+	args []object.EmeraldValue,
+	kwargs map[string]object.EmeraldValue,
+	minArgs int,
+	maxArgs int,
+	requiredKwargs []string,
+) ([]object.EmeraldValue, object.EmeraldError) {
+	var err object.EmeraldError
+
 	argsWithoutNilPointers := []object.EmeraldValue{}
 	for _, arg := range args {
 		if arg != nil {
@@ -53,9 +61,17 @@ func EnforceArity(args []object.EmeraldValue, minArgs int, maxArgs int) ([]objec
 	numArgsGiven := len(argsWithoutNilPointers)
 
 	if numArgsGiven < minArgs || numArgsGiven > maxArgs {
-		err := NewArgumentError(numArgsGiven, maxArgs)
+		err = NewArgumentError(numArgsGiven, maxArgs)
 		Raise(err)
 		return argsWithoutNilPointers, err
+	}
+
+	for _, kwarg := range requiredKwargs {
+		if _, ok := kwargs[":"+kwarg]; !ok {
+			err = NewKeywordMissingArgumentError(kwarg)
+			Raise(err)
+			return argsWithoutNilPointers, err
+		}
 	}
 
 	return argsWithoutNilPointers, nil

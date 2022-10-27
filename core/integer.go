@@ -41,7 +41,7 @@ func InitInteger() {
 }
 
 func integerToS() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		val := ctx.Self.(*IntegerInstance).Value
 
 		return NewString(strconv.Itoa(int(val)))
@@ -49,8 +49,8 @@ func integerToS() object.BuiltInMethod {
 }
 
 func integerCaseEq() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, 1, 1); err != nil {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
 			return err
 		}
 
@@ -96,13 +96,13 @@ var integerNotEquals = integerInfixOperator(func(left int64, right int64) object
 })
 
 func integerNegate() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewInteger(-ctx.Self.(*IntegerInstance).Value)
 	}
 }
 
 func integerTimes() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for i := int64(0); i < ctx.Self.(*IntegerInstance).Value; i++ {
 			ctx.Yield(NewInteger(i))
 		}
@@ -112,13 +112,13 @@ func integerTimes() object.BuiltInMethod {
 }
 
 func integerToF() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewFloat(float64(ctx.Self.(*IntegerInstance).Value))
 	}
 }
 
 func integerSpaceship() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*IntegerInstance)
 
 		if right, ok := args[0].(*IntegerInstance); ok {
@@ -142,8 +142,8 @@ func integerSpaceship() object.BuiltInMethod {
 }
 
 func integerInfixOperator(cb func(left int64, right int64) object.EmeraldValue) object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, 1, 1); err != nil {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
 			return err
 		}
 		right, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])

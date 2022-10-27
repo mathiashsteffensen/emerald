@@ -59,7 +59,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
 - [ ] full UTF8 support
     - [ ] Unicode identifier
     - [ ] Unicode symbols
-- [x] method definitions
+- [ ] method definitions
     - [x] with parens
     - [x] without parens
     - [ ] without parens with args
@@ -67,13 +67,13 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [ ] default values for parameters
     - [ ] keyword arguments
     - [ ] block arguments
-    - [ ] hash as last argument without braces
     - [x] yield
-- [x] method calls
+- [ ] method calls
     - [x] with parens
     - [x] without parens
     - [x] without parens with args
     - [x] with block arguments
+    - [ ] keyword arguments
 - [x] conditionals
     - [x] if
     - [x] if modifier
@@ -243,4 +243,5 @@ NOTE: To say they have been implemented does not mean any features are guarantee
 - [x] modules
 - [x] object main
 - [x] comments '#'
+- [ ] backtraces (unwinding of the VM call stack for debugging)
 - [ ] C extension compatability

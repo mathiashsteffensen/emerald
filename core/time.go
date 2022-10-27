@@ -30,19 +30,19 @@ func init() {
 }
 
 func timeNew() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewTime(time.Now())
 	}
 }
 
 func timeToF() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewFloat(float64(ctx.Self.(*TimeInstance).Value.UnixMicro()) / 1_000_000.0)
 	}
 }
 
 func timeSubtract() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		newVal := ctx.Self.(*TimeInstance).Value.Sub(args[0].(*TimeInstance).Value)
 
 		return NewInteger(newVal.Milliseconds())

@@ -6,23 +6,17 @@ import (
 )
 
 func TestArrayLiteralParsing(t *testing.T) {
-	input := `[0, condition, 2]`
-
-	expected := []any{0, "condition", 2}
+	input := `[0, condition, 2]; []`
 
 	program := testParseAST(t, input)
 
-	stmt := program.Statements[0].(*ast.ExpressionStatement)
-	literal, ok := stmt.Expression.(*ast.ArrayLiteral)
-	if !ok {
-		t.Fatalf("exp not *ast.ArrayLiteral. got=%T", stmt.Expression)
-	}
+	expectStatementLength(t, program.Statements, 2)
 
-	if len(literal.Value) != len(expected) {
-		t.Fatalf("exp does not %d values got=%d", len(expected), len(literal.Value))
-	}
+	testExpressionStatement(t, program.Statements[0], func(literal *ast.ArrayLiteral) {
+		testArrayLiteral(t, literal, []any{0, "condition", 2})
+	})
 
-	for i, exp := range expected {
-		testLiteralExpression(t, literal.Value[i], exp)
-	}
+	testExpressionStatement(t, program.Statements[1], func(literal *ast.ArrayLiteral) {
+		testArrayLiteral(t, literal, []any{})
+	})
 }

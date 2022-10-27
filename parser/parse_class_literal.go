@@ -3,7 +3,6 @@ package parser
 import (
 	"emerald/parser/ast"
 	"emerald/parser/lexer"
-	"fmt"
 )
 
 func (p *Parser) parseClassLiteral() ast.Expression {
@@ -17,12 +16,7 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 
 	className := p.parseIdentifierExpression()
 
-	var ok bool
-	class.Name, ok = className.(ast.IdentifierExpression)
-	if !ok {
-		p.addError(fmt.Sprintf("Class name was not identifier, got %T", className))
-		return nil
-	}
+	class.Name = className.(ast.IdentifierExpression)
 
 	if p.peekTokenIs(lexer.LT) {
 		p.nextToken()

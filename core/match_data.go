@@ -45,13 +45,13 @@ func NewMatchData(regexp *RegexpInstance, match *regexp2.Match) *MatchDataInstan
 }
 
 func matchDataToS() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString(ctx.Self.(*MatchDataInstance).Groups[0].String())
 	}
 }
 
 func matchDataToA() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		groups := ctx.Self.(*MatchDataInstance).Groups
 		captures := []object.EmeraldValue{}
 
@@ -64,7 +64,7 @@ func matchDataToA() object.BuiltInMethod {
 }
 
 func matchDataIndexAccessor() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		groups := ctx.Self.(*MatchDataInstance).Groups
 		index := args[0].(*IntegerInstance).Value
 
@@ -77,7 +77,7 @@ func matchDataIndexAccessor() object.BuiltInMethod {
 }
 
 func matchDataCaptures() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		groups := ctx.Self.(*MatchDataInstance).Groups[1:]
 		captures := []object.EmeraldValue{}
 
@@ -90,7 +90,7 @@ func matchDataCaptures() object.BuiltInMethod {
 }
 
 func matchDataRegexp() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return ctx.Self.(*MatchDataInstance).Regexp
 	}
 }

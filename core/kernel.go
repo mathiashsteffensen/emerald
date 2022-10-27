@@ -33,7 +33,7 @@ func InitKernel() {
 }
 
 func kernelClass() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		class := ctx.Self.Class()
 
 		for class.Type() != object.CLASS_VALUE {
@@ -45,8 +45,8 @@ func kernelClass() object.BuiltInMethod {
 }
 
 func kernelKindOf() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, 1, 1); err != nil {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
 			return err
 		}
 
@@ -68,7 +68,7 @@ func kernelKindOf() object.BuiltInMethod {
 }
 
 func kernelSleep() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var sleepArg time.Duration
 
 		switch arg := args[0].(type) {
@@ -88,7 +88,7 @@ func kernelSleep() object.BuiltInMethod {
 }
 
 func kernelPuts() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
 			val := Send(arg, "to_s", NULL)
 
@@ -102,8 +102,8 @@ func kernelPuts() object.BuiltInMethod {
 }
 
 func kernelInclude() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, 1, 255); err != nil {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 1, 255, []string{}); err != nil {
 			return err
 		}
 
@@ -125,8 +125,8 @@ func kernelInclude() object.BuiltInMethod {
 }
 
 func kernelRaise() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		args, err := EnforceArity(args, 1, 2)
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		args, err := EnforceArity(args, kwargs, 1, 2, []string{})
 		if err != nil {
 			return err
 		}
@@ -144,7 +144,7 @@ func kernelRaise() object.BuiltInMethod {
 }
 
 func kernelRequireRelative() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		path := args[0].(*StringInstance).Value
 		fileParts := strings.Split(ctx.File, "/")
 		fileParts[len(fileParts)-1] = ""
@@ -162,7 +162,7 @@ func kernelRequireRelative() object.BuiltInMethod {
 		requiredFiles := requiredFilesHash()
 
 		// File has already been loaded
-		if requiredFiles.Get(absolutePathStr) != nil {
+		if requiredFiles.Get(absolutePathStr) != NULL {
 			log.InternalDebugF("Kernel#require_relative - File %s is already loaded, skipping", absoluteFilePath)
 			return FALSE
 		}
@@ -201,7 +201,7 @@ func kernelRequireRelative() object.BuiltInMethod {
 }
 
 func kernelInspect() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString(ctx.Self.Inspect())
 	}
 }

@@ -7,15 +7,17 @@ import (
 
 func TestCallExpressionParsing(t *testing.T) {
 	tests := []struct {
-		name         string
-		input        string
-		expectedArgs []any
-		expectBlock  bool
+		name           string
+		input          string
+		expectedArgs   []any
+		expectedKwargs []string
+		expectBlock    bool
 	}{
 		{
 			"with parentheses & not passing a block",
 			"add(1, 6, 9);",
 			[]any{1, 6, 9},
+			[]string{},
 			false,
 		},
 		{
@@ -24,18 +26,35 @@ func TestCallExpressionParsing(t *testing.T) {
 				do_stuff
 			end`,
 			[]any{1, 19, 27},
+			[]string{},
 			true,
 		},
 		{
 			"with parentheses and a braces block",
 			`add(1, 19, 27) {	do_stuff }`,
 			[]any{1, 19, 27},
+			[]string{},
 			true,
 		},
 		{
 			"without parentheses & not passing a block",
 			"add 1, 6, 9",
 			[]any{1, 6, 9},
+			[]string{},
+			false,
+		},
+		{
+			"with keyword args",
+			"add(base: 2, :other => 3)",
+			[]any{},
+			[]string{":base", ":other"},
+			false,
+		},
+		{
+			"with normal args & with keyword args",
+			"add(1, 2, base: 2, :other => 3)",
+			[]any{1, 2},
+			[]string{":base", ":other"},
 			false,
 		},
 	}
@@ -54,7 +73,7 @@ func TestCallExpressionParsing(t *testing.T) {
 					program.Statements[0])
 			}
 
-			testCallExpression(t, stmt.Expression, "add", tt.expectedArgs, tt.expectBlock)
+			testCallExpression(t, stmt.Expression, "add", tt.expectedArgs, tt.expectedKwargs, tt.expectBlock)
 		})
 	}
 }

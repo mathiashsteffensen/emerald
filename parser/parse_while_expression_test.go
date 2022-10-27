@@ -28,10 +28,10 @@ func TestParseWhileExpression(t *testing.T) {
 	})
 
 	testExpressionStatement(t, program.Statements[2], func(expression *ast.WhileExpression) {
-		testMethodCall(t, expression.Condition, "items", "pop", []any{}, false)
+		testMethodCall(t, expression.Condition, "items", "pop", []any{}, []string{}, false)
 		expectStatementLength(t, expression.Consequence.Statements, 1)
 		testExpressionStatement(t, expression.Consequence.Statements[0], func(expression ast.CallExpression) {
-			testCallExpression(t, expression, "puts", []any{"s:Hello"}, false)
+			testCallExpression(t, expression, "puts", []any{"s:Hello"}, []string{}, false)
 		})
 	})
 }

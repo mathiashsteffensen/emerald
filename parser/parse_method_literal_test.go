@@ -11,6 +11,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 		input                string
 		expectedName         string
 		expectedArgs         []string
+		expectedKwargs       []string
 		expectedRescueBlocks int
 	}{
 		{
@@ -22,6 +23,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{"arg"},
+			[]string{},
 			0,
 		},
 		{
@@ -32,6 +34,19 @@ func TestMethodLiteralExpression(t *testing.T) {
 			end
 			`,
 			"method",
+			[]string{},
+			[]string{},
+			0,
+		},
+		{
+			"with no arguments with parens",
+			`
+			def method()
+				puts("Hello")
+			end
+			`,
+			"method",
+			[]string{},
 			[]string{},
 			0,
 		},
@@ -44,6 +59,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{"fmt", "val"},
+			[]string{},
 			0,
 		},
 		{
@@ -51,6 +67,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			"def method(fmt, val); printf(fmt, val); end",
 			"method",
 			[]string{"fmt", "val"},
+			[]string{},
 			0,
 		},
 		{
@@ -63,6 +80,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			end
 			`,
 			"method",
+			[]string{},
 			[]string{},
 			1,
 		},
@@ -79,6 +97,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{},
+			[]string{},
 			2,
 		},
 		{
@@ -91,6 +110,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			end
 			`,
 			"method",
+			[]string{},
 			[]string{},
 			0,
 		},
@@ -107,6 +127,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{},
+			[]string{},
 			1,
 		},
 		{
@@ -122,6 +143,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"method",
 			[]string{},
+			[]string{},
 			2,
 		},
 		{
@@ -133,6 +155,7 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"level=",
 			[]string{"new"},
+			[]string{},
 			0,
 		},
 		{
@@ -146,7 +169,24 @@ func TestMethodLiteralExpression(t *testing.T) {
 			`,
 			"suppress_argument_errors",
 			[]string{},
+			[]string{},
 			1,
+		},
+		{
+			name:                 "with keyword arguments",
+			input:                "def method(option:, other:); option; end",
+			expectedName:         "method",
+			expectedArgs:         []string{},
+			expectedKwargs:       []string{"option", "other"},
+			expectedRescueBlocks: 0,
+		},
+		{
+			name:                 "with arguments & keyword arguments",
+			input:                "def method(name, option:); name + option; end",
+			expectedName:         "method",
+			expectedArgs:         []string{"name"},
+			expectedKwargs:       []string{"option"},
+			expectedRescueBlocks: 0,
 		},
 	}
 
@@ -154,36 +194,27 @@ func TestMethodLiteralExpression(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			program := testParseAST(t, tt.input)
 
-			if len(program.Statements) != 1 {
-				t.Fatalf("program has not enough statements. got=%d",
-					len(program.Statements))
-			}
-			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-			if !ok {
-				t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
-					program.Statements[0])
-			}
+			expectStatementLength(t, program.Statements, 1)
 
-			literal, ok := stmt.Expression.(*ast.MethodLiteral)
-			if !ok {
-				t.Fatalf("exp not *ast.MethodLiteral. got=%T", stmt.Expression)
-			}
+			testExpressionStatement(t, program.Statements[0], func(literal *ast.MethodLiteral) {
+				testLiteralExpression(t, literal.Name, tt.expectedName)
 
-			if literal.Name.TokenLiteral() != tt.expectedName {
-				t.Fatalf("exp literal not %s, got=%s", tt.expectedName, literal.Name.TokenLiteral())
-			}
+				if len(literal.Arguments) != len(tt.expectedArgs) {
+					t.Fatalf("exp %d parameters got=%d", len(tt.expectedArgs), len(literal.Arguments))
+				}
 
-			if len(literal.Parameters) != len(tt.expectedArgs) {
-				t.Fatalf("exp %d parameters got=%d", len(tt.expectedArgs), len(literal.Parameters))
-			}
+				for i, parameter := range literal.Arguments {
+					testIdentifier(t, *parameter, tt.expectedArgs[i])
+				}
 
-			for i, parameter := range literal.Parameters {
-				testIdentifier(t, parameter, tt.expectedArgs[i])
-			}
+				for i, argument := range literal.KeywordArguments {
+					testIdentifier(t, *argument, tt.expectedKwargs[i])
+				}
 
-			if len(literal.RescueBlocks) != tt.expectedRescueBlocks {
-				t.Fatalf("Expected method literal to have %d rescue blocks, but got %d", len(literal.RescueBlocks), tt.expectedRescueBlocks)
-			}
+				if len(literal.RescueBlocks) != tt.expectedRescueBlocks {
+					t.Fatalf("Expected method literal to have %d rescue blocks, but got %d", len(literal.RescueBlocks), tt.expectedRescueBlocks)
+				}
+			})
 		})
 	}
 }

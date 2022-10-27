@@ -4,15 +4,10 @@ import (
 	"emerald/parser/ast"
 )
 
-func (c *Compiler) compileArrayLiteral(node *ast.ArrayLiteral) error {
+func (c *Compiler) compileArrayLiteral(node *ast.ArrayLiteral) {
 	for _, val := range node.Value {
-		err := c.Compile(val)
-		if err != nil {
-			return err
-		}
+		c.Compile(val)
 	}
 
 	c.emit(OpArray, len(node.Value))
-
-	return nil
 }

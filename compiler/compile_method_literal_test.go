@@ -108,6 +108,22 @@ func TestCompileMethodLiteral(t *testing.T) {
 				Make(OpPop),
 			},
 		},
+		{
+			input: `def method(name:); name end`,
+			expectedConstants: []any{
+				":method",
+				[]Instructions{
+					Make(OpGetLocal, 0),
+					Make(OpReturn),
+				},
+			},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpPushConstant, 1),
+				Make(OpDefineMethod),
+				Make(OpPop),
+			},
+		},
 	}
 	runCompilerTests(t, tests)
 }

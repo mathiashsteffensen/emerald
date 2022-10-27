@@ -25,10 +25,7 @@ func BenchmarkFibonacci(b *testing.B) {
 		program := parse(input)
 		comp := compiler.New()
 
-		err := comp.Compile(program)
-		if err != nil {
-			b.Fatalf("compiler error: %s", err)
-		}
+		comp.Compile(program)
 
 		vm := New("", comp.Bytecode())
 		vm.Run()

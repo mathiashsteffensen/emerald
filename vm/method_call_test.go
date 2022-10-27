@@ -109,6 +109,16 @@ func TestMethodCall(t *testing.T) {
 			MyClass.new.hello`,
 			expected: "Hello",
 		},
+		{
+			name: "keyword arguments",
+			input: `
+					def m(n:, o:)
+						n
+					end
+					m(o: 3, n: 1)
+				`,
+			expected: 1,
+		},
 	}
 
 	runVmTests(t, tests)

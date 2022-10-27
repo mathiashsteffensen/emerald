@@ -47,7 +47,7 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 	switch bl := method.(type) {
 	case *object.WrappedBuiltInMethod:
 		// Builtin methods are easy, just call some Go code
-		return vm.evalBuiltIn(bl, block, args)
+		return vm.evalBuiltIn(bl, block, args, map[string]object.EmeraldValue{})
 	case *object.ClosedBlock:
 		// Method receiver
 		vm.push(vm.ctx.Self)
@@ -87,11 +87,11 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 	return core.NULL
 }
 
-func (vm *VM) evalBuiltIn(builtin *object.WrappedBuiltInMethod, block object.EmeraldValue, args []object.EmeraldValue) object.EmeraldValue {
+func (vm *VM) evalBuiltIn(builtin *object.WrappedBuiltInMethod, block object.EmeraldValue, args []object.EmeraldValue, kwargs map[string]object.EmeraldValue) object.EmeraldValue {
 	oldBlock := vm.ctx.Block
 	vm.ctx.Block = block
 
-	result := builtin.Method(vm.ctx, args...)
+	result := builtin.Method(vm.ctx, map[string]object.EmeraldValue{}, args...)
 
 	vm.ctx.Block = oldBlock
 

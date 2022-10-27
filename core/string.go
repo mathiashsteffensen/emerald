@@ -37,25 +37,25 @@ func InitString() {
 }
 
 func stringToS() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return ctx.Self
 	}
 }
 
 func stringInspect() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString(fmt.Sprintf(`"%s"`, ctx.Self.(*StringInstance).Value))
 	}
 }
 
 func stringToSym() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewSymbol(ctx.Self.Inspect())
 	}
 }
 
 func stringEquals() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*StringInstance)
 		right, ok := args[0].(*StringInstance)
 
@@ -68,10 +68,10 @@ func stringEquals() object.BuiltInMethod {
 }
 
 func stringAdd() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		selfString := ctx.Self.(*StringInstance)
 
-		if _, err := EnforceArity(args, 1, 1); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
 			return NULL
 		}
 
@@ -85,10 +85,10 @@ func stringAdd() object.BuiltInMethod {
 }
 
 func stringMultiply() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		selfString := ctx.Self.(*StringInstance)
 
-		if _, err := EnforceArity(args, 1, 1); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
 			return err
 		}
 
@@ -108,19 +108,19 @@ func stringMultiply() object.BuiltInMethod {
 }
 
 func stringUpcase() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString(strings.ToUpper(ctx.Self.(*StringInstance).Value))
 	}
 }
 
 func stringMatch() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return regexStringMatch(args[0].(*RegexpInstance), ctx.Self.(*StringInstance))
 	}
 }
 
 func stringSize() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewInteger(
 			int64(len(ctx.Self.(*StringInstance).Value)),
 		)

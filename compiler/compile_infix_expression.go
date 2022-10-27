@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) error {
+func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) {
 	var op Opcode
 
 	switch node.Operator {
@@ -36,32 +36,24 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) error {
 	case "!=":
 		op = OpNotEqual
 	case "&&":
-		return c.compileIfExpression(&ast.IfExpression{
+		c.compileIfExpression(&ast.IfExpression{
 			Condition:   node.Left,
 			Consequence: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Right}}},
 			Alternative: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Left}}},
 		})
+		return
 	case "||":
-		return c.compileIfExpression(&ast.IfExpression{
+		c.compileIfExpression(&ast.IfExpression{
 			Condition:   node.Left,
 			Consequence: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Left}}},
 			Alternative: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Right}}},
 		})
+		return
 	default:
-		return fmt.Errorf("unknown infix operator %s", node.Operator)
+		panic(fmt.Errorf("unknown infix operator %s", node.Operator))
 	}
 
-	err := c.Compile(node.Right)
-	if err != nil {
-		return err
-	}
-
-	err = c.Compile(node.Left)
-	if err != nil {
-		return err
-	}
-
+	c.Compile(node.Right)
+	c.Compile(node.Left)
 	c.emit(op)
-
-	return nil
 }

@@ -6,11 +6,12 @@ import (
 )
 
 type BlockLiteral struct {
-	Token        lexer.Token // The 'do' or '{' token
-	Parameters   []Expression
-	Body         *BlockStatement
-	RescueBlocks []*RescueBlock
-	EnsureBlock  *EnsureBlock
+	Token            lexer.Token // The 'do' or '{' token
+	Arguments        []*IdentifierExpression
+	KeywordArguments []*IdentifierExpression
+	Body             *BlockStatement
+	RescueBlocks     []*RescueBlock
+	EnsureBlock      *EnsureBlock
 }
 
 func (bl *BlockLiteral) expressionNode()      {}
@@ -22,11 +23,11 @@ func (bl *BlockLiteral) String(indents ...int) string {
 
 	out.WriteString(bl.TokenLiteral())
 
-	if len(bl.Parameters) != 0 {
+	if len(bl.Arguments) != 0 {
 		out.WriteString(" |")
-		for i, parameter := range bl.Parameters {
+		for i, parameter := range bl.Arguments {
 			out.WriteString(parameter.String(0))
-			if i != len(bl.Parameters)-1 {
+			if i != len(bl.Arguments)-1 {
 				out.WriteString(", ")
 			}
 		}

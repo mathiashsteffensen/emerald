@@ -18,13 +18,13 @@ func InitClass() {
 }
 
 func classAncestors() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewArray(ctx.Self.Ancestors())
 	}
 }
 
 func className() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var namespaces strings.Builder
 
 		parent := ctx.Self.ParentNamespace()
@@ -51,7 +51,7 @@ func className() object.BuiltInMethod {
 }
 
 func classNew() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		instance := ctx.Self.(*object.Class).New()
 
 		if instance.RespondsTo("initialize", instance) {
@@ -63,7 +63,7 @@ func classNew() object.BuiltInMethod {
 }
 
 func classSingletonNew() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return object.NewClass("", Object, Object.Class(), object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 	}
 }

@@ -28,6 +28,10 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.ExperimentalWarning()
 
+		if logHeapUsage {
+			go logHeapUsageRoutine()
+		}
+
 		defer helpers.RecoverWithStacktrace()
 
 		for _, file := range args {
@@ -46,13 +50,7 @@ var rootCmd = &cobra.Command{
 			}
 
 			c := compiler.New()
-
-			err = c.Compile(program)
-			helpers.CheckError("Compilation failed", err)
-
-			if logHeapUsage {
-				go logHeapUsageRoutine()
-			}
+			c.Compile(program)
 
 			machine := vm.New(absFile, c.Bytecode())
 			machine.Run()

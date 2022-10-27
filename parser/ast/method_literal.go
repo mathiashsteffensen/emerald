@@ -20,7 +20,7 @@ func (ml *MethodLiteral) String(indents ...int) string {
 
 	params := []string{}
 
-	for _, p := range ml.Parameters {
+	for _, p := range ml.Arguments {
 		params = append(params, p.String(0))
 	}
 

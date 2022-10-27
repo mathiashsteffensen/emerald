@@ -8,8 +8,8 @@ def cache
     @cache ||= {}
 end
 
-def cached_fib_iterative
-    cache[n] ||= fib_iterative
+def cached_fib_iterative(n)
+    cache[n] ||= fib_iterative n
 end
 
 def fib_iterative(n)
@@ -26,7 +26,7 @@ end
 
 def bench_fib_iterative(n)
     measure_time "Iterative fibonacci #{n}" do
-        cached_fib_iterative n
+        fib_iterative n
     end
 end
 
@@ -70,11 +70,23 @@ def bench_string_template(n)
     end
 end
 
-1.times do
-    # bench_fib_iterative(160_800)
+def bench_hash_literal(n)
+    measure_time "Hash literal #{n}" do
+        n.times do
+            {
+                one: n,
+                two: "Hello",
+            }
+        end
+    end
+end
+
+5.times do
+    bench_fib_iterative(160_800)
     # bench_boolean_negate(1_000_000)
-    bench_string_add 100_000
-    bench_string_template 100_000
+    # bench_string_add 100_000
+    # bench_string_template 100_000
+    # bench_hash_literal 1_000_000
 end
 
 sleep 1

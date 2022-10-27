@@ -28,13 +28,13 @@ func NewException(msg string) object.EmeraldError {
 }
 
 func exceptionToS() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString(ctx.Self.(object.EmeraldError).Message())
 	}
 }
 
 func exceptionNew(initializer func(msg string) object.EmeraldError) object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var msg string
 
 		if len(args) != 0 {

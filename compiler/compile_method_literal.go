@@ -6,33 +6,25 @@ import (
 	ast "emerald/parser/ast"
 )
 
-func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) error {
-	block, _, err := c.compileBlock(node.BlockLiteral)
-	if err != nil {
-		return err
-	}
+func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
+	block, _ := c.compileBlock(node.BlockLiteral)
 
 	symbol := core.NewSymbol(node.Name.(ast.IdentifierExpression).Value)
 
 	c.emit(OpPushConstant, c.addConstant(symbol))
 	c.emit(OpPushConstant, c.addConstant(block))
 	c.emit(OpDefineMethod)
-
-	return nil
 }
 
-func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int, error) {
+func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int) {
 	c.enterScope()
 
-	numParams := len(node.Parameters)
-	for _, p := range node.Parameters {
-		c.symbolTable.Define(p.(ast.IdentifierExpression).Value)
+	numParams := len(node.Arguments)
+	for _, p := range append(node.Arguments, node.KeywordArguments...) {
+		c.symbolTable.Define(p.Value)
 	}
 
-	err := c.Compile(node.Body)
-	if err != nil {
-		return nil, 0, err
-	}
+	c.Compile(node.Body)
 
 	if c.lastInstructionIs(OpPop) {
 		c.replaceLastPopWithReturn()
@@ -52,15 +44,17 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int, err
 		c.emitSymbol(s)
 	}
 
-	block := object.NewBlock(instructions, numLocals, numParams)
+	var kwargNames []string
+	for _, argument := range node.KeywordArguments {
+		kwargNames = append(kwargNames, argument.Value)
+	}
+
+	block := object.NewBlock(instructions, numLocals, numParams, kwargNames)
 
 	for _, rescueBlock := range node.RescueBlocks {
 		c.enterScope()
 
-		err = c.Compile(rescueBlock.Body)
-		if err != nil {
-			return nil, 0, err
-		}
+		c.Compile(rescueBlock.Body)
 
 		if c.lastInstructionIs(OpPop) {
 			c.replaceLastPopWithReturn()
@@ -82,7 +76,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int, err
 		block.RescueBlocks = append(block.RescueBlocks, object.NewRescueBlock(instructions, errorClasses...))
 	}
 
-	return block, len(freeSymbols), nil
+	return block, len(freeSymbols)
 }
 
 func (c *Compiler) replaceLastPopWithReturn() {

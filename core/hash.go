@@ -2,6 +2,7 @@ package core
 
 import (
 	"emerald/object"
+	"github.com/elliotchance/orderedmap/v2"
 )
 
 var Hash *object.Class
@@ -19,45 +20,68 @@ func InitHash() {
 
 type HashInstance struct {
 	*object.Instance
-	Values map[string]object.EmeraldValue
+	Values *orderedmap.OrderedMap[string, object.EmeraldValue] // Only Values need to be ordered since we always iterate on those
 	Keys   map[string]object.EmeraldValue
 }
 
 func NewHash() *HashInstance {
 	return &HashInstance{
 		Instance: Hash.New(),
-		Values:   map[string]object.EmeraldValue{},
+		Values:   orderedmap.NewOrderedMap[string, object.EmeraldValue](),
 		Keys:     map[string]object.EmeraldValue{},
 	}
 }
 
 func (hash *HashInstance) Get(key object.EmeraldValue) object.EmeraldValue {
-	return hash.Values[key.HashKey()]
+	return hash.Values.GetOrDefault(key.HashKey(), NULL)
 }
 
 func (hash *HashInstance) Set(key object.EmeraldValue, value object.EmeraldValue) {
 	hashKey := key.HashKey()
-	hash.Values[hashKey] = value
+	hash.Values.Set(hashKey, value)
 	hash.Keys[hashKey] = key
 }
 
+func (hash *HashInstance) Each(callback func(key object.EmeraldValue, value object.EmeraldValue)) {
+	for el := hash.Values.Front(); el != nil; el = el.Next() {
+		callback(hash.Keys[el.Key], el.Value)
+	}
+}
+
+//func hashToS() object.BuiltInMethod {
+//	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+//		if _, err := EnforceArity(args, kwargs, 0, 0, []string{}); err != nil {
+//			return err
+//		}
+//
+//		var out strings.Builder
+//
+//		out.WriteRune('{')
+//
+//		ctx.Self.(*HashInstance).Each(func(key object.EmeraldValue, value object.EmeraldValue) {
+//			out.WriteString(Send(key, "to_s", NULL).(*StringInstance).Value)
+//			out.WriteString(Send(value, "to_s", NULL).(*StringInstance).Value)
+//		})
+//
+//		out.WriteRune('}')
+//
+//		return NewString(out.String())
+//	}
+//}
+
 func hashIndexAccessor() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, 1, 1); err != nil {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
 			return err
 		}
 
-		if value := ctx.Self.(*HashInstance).Get(args[0]); value != nil {
-			return value
-		}
-
-		return NULL
+		return ctx.Self.(*HashInstance).Get(args[0])
 	}
 }
 
 func hashIndexSetter() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, 2, 2); err != nil {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 2, 2, []string{}); err != nil {
 			return err
 		}
 
@@ -68,20 +92,20 @@ func hashIndexSetter() object.BuiltInMethod {
 }
 
 func hashEach() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		hash := ctx.Self.(*HashInstance)
 
-		for hashKey, value := range hash.Values {
-			ctx.Yield(hash.Keys[hashKey], value)
-		}
+		hash.Each(func(key object.EmeraldValue, value object.EmeraldValue) {
+			ctx.Yield(key, value)
+		})
 
 		return hash
 	}
 }
 
 func hashEquals() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		args, err := EnforceArity(args, 1, 1)
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		args, err := EnforceArity(args, kwargs, 1, 1, []string{})
 
 		if err != nil {
 			return err
@@ -95,13 +119,13 @@ func hashEquals() object.BuiltInMethod {
 		hash := ctx.Self.(*HashInstance)
 		otherHash := otherObj.(*HashInstance)
 
-		for key, value := range hash.Values {
-			otherValue, ok := otherHash.Values[key]
+		for el := hash.Values.Front(); el != nil; el = el.Next() {
+			otherValue, ok := otherHash.Values.Get(el.Key)
 			if !ok {
 				return FALSE
 			}
 
-			if Send(value, "==", NULL, otherValue) != TRUE {
+			if Send(el.Value, "==", NULL, otherValue) != TRUE {
 				return FALSE
 			}
 		}

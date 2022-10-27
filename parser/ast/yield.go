@@ -6,8 +6,9 @@ import (
 )
 
 type Yield struct {
-	Token     lexer.Token
-	Arguments []Expression
+	Token            lexer.Token
+	Arguments        []Expression
+	KeywordArguments []*HashLiteralElement
 }
 
 func (y Yield) expressionNode()      {}

@@ -102,7 +102,7 @@ func (val *BaseEmeraldValue) SEND(
 	case *ClosedBlock:
 		return EvalBlock(method, args...)
 	case *WrappedBuiltInMethod:
-		return method.Method(ctx, args...)
+		return method.Method(ctx, map[string]EmeraldValue{}, args...)
 	default:
 		panic("This is a bug in the Emerald VM, no idea how the fuck we got here, my b")
 	}

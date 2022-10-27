@@ -21,8 +21,8 @@ func InitEnumerable() {
 }
 
 func enumerableFirst() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, 0, 1); err != nil {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 0, 1, []string{}); err != nil {
 			return err
 		}
 
@@ -39,7 +39,7 @@ func enumerableFirst() object.BuiltInMethod {
 
 		var values []object.EmeraldValue
 		wrappedBlock := &object.WrappedBuiltInMethod{
-			Method: func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				// TODO: This doesn't stop iterating after the first element has been found, should probably implement a break keyword or something
 				if int64(len(values)) != numElements {
 					values = append(values, args[0])
@@ -59,12 +59,12 @@ func enumerableFirst() object.BuiltInMethod {
 }
 
 func enumerableMap() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := make([]object.EmeraldValue, 0)
 		block := ctx.Block
 
 		wrappedBlock := &object.WrappedBuiltInMethod{
-			Method: func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				arr = append(
 					arr,
 					object.EvalBlock(block.(*object.ClosedBlock), args...),
@@ -80,12 +80,12 @@ func enumerableMap() object.BuiltInMethod {
 }
 
 func enumerableFind() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var firstTruthyElement object.EmeraldValue
 		block := ctx.Block
 
 		wrappedBlock := &object.WrappedBuiltInMethod{
-			Method: func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if firstTruthyElement != nil {
 					return NULL
 				}
@@ -112,12 +112,12 @@ func enumerableFind() object.BuiltInMethod {
 }
 
 func enumerableFindIndex() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		index, found := 0, false
 		block := ctx.Block
 
 		wrappedBlock := &object.WrappedBuiltInMethod{
-			Method: func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if found {
 					return NULL
 				}
@@ -144,7 +144,7 @@ func enumerableFindIndex() object.BuiltInMethod {
 }
 
 func enumerableSum() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var accumulated object.EmeraldValue
 
 		blockGiven := ctx.BlockGiven()
@@ -157,7 +157,7 @@ func enumerableSum() object.BuiltInMethod {
 		}
 
 		wrappedBlock := &object.WrappedBuiltInMethod{
-			Method: func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if blockGiven {
 					accumulated = Send(accumulated, "+", NULL, object.EvalBlock(block.(*object.ClosedBlock), args...))
 				} else {
@@ -177,7 +177,7 @@ func enumerableSum() object.BuiltInMethod {
 // https://apidock.com/ruby/Enumerable/reduce
 // TODO: Support symbol argument
 func enumerableReduce() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var accumulated object.EmeraldValue
 
 		self := ctx.Self
@@ -193,7 +193,7 @@ func enumerableReduce() object.BuiltInMethod {
 		passedFirst := false
 
 		wrappedBlock := &object.WrappedBuiltInMethod{
-			Method: func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if argGiven || passedFirst {
 					args = append([]object.EmeraldValue{accumulated}, args...)
 					accumulated = object.EvalBlock(block.(*object.ClosedBlock), args...)

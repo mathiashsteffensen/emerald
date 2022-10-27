@@ -16,7 +16,7 @@ func InitTrueClass() {
 }
 
 func trueToS() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString("true")
 	}
 }

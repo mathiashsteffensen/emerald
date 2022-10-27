@@ -10,7 +10,7 @@ func (p *Parser) parseYield() ast.Expression {
 		Arguments: []ast.Expression{},
 	}
 
-	yield.Arguments = p.parseCallArguments()
+	yield.Arguments, yield.KeywordArguments = p.parseCallArguments()
 
 	return yield
 }

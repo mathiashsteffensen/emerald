@@ -99,9 +99,9 @@ const (
 	OpReturnValue
 	OpDefineMethod
 
-	// OpSend Invokes a method on the current execution context self.
-	// Takes an operand that references the number of arguments passed.
-	// Pops that number of arguments from the stack,
+	// OpSend Invokes a method on the current self.
+	// Takes an operand that references the number of arguments passed & an operand representing the number of keyword arguments passed.
+	// Pops the arguments & keyword arguments from the stack,
 	// the next object on the stack is the symbol representing the name of the method to invoke
 	OpSend
 
@@ -172,7 +172,7 @@ var definitions = map[Opcode]*Definition{
 	OpReturn:            {"OpReturn", []int{}},
 	OpReturnValue:       {"OpReturnValue", []int{}},
 	OpDefineMethod:      {"OpDefineMethod", []int{}},
-	OpSend:              {"OpSend", []int{1}},
+	OpSend:              {"OpSend", []int{1, 1}},
 	OpOpenClass:         {"OpOpenClass", []int{2}},
 	OpOpenModule:        {"OpOpenModule", []int{2}},
 	OpUnwrapContext:     {"OpUnwrapContext", []int{}},

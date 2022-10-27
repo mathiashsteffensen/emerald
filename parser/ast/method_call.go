@@ -32,13 +32,15 @@ func (m MethodCall) String(indents ...int) string {
 	if len(m.Arguments) != 0 {
 		out.WriteString("(")
 
-		for i, argument := range m.Arguments {
-			out.WriteString(argument.String(0))
-
-			if i != len(m.Arguments)-1 {
-				out.WriteString(", ")
-			}
+		args := []string{}
+		for _, a := range m.Arguments {
+			args = append(args, a.String(0))
 		}
+		for _, el := range m.KeywordArguments {
+			args = append(args, el.Key.String(0)+": "+el.Value.String(0))
+		}
+
+		out.WriteString(strings.Join(args, ", "))
 
 		out.WriteString(")")
 	}

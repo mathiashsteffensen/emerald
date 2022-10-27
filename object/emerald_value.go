@@ -4,7 +4,7 @@ import "fmt"
 
 type (
 	// BuiltInMethod - The type signature of an Emerald method defined in Go compiler
-	BuiltInMethod func(ctx *Context, args ...EmeraldValue) EmeraldValue
+	BuiltInMethod func(ctx *Context, kwargs map[string]EmeraldValue, args ...EmeraldValue) EmeraldValue
 
 	// WrappedBuiltInMethod -  Wraps a built-in method so that it conforms to the EmeraldValue interface
 	WrappedBuiltInMethod struct {

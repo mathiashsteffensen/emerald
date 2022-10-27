@@ -34,10 +34,7 @@ func runVmTests(t *testing.T, tests []vmTestCase, setupScripts ...string) {
 			program := parse(strings.Join(inputs, "\n"))
 			comp := compiler.New()
 
-			err := comp.Compile(program)
-			if err != nil {
-				t.Fatalf("compiler error: %s", err)
-			}
+			comp.Compile(program)
 
 			vm := New("test", comp.Bytecode())
 			vm.Run()
@@ -183,12 +180,12 @@ func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual o
 		return fmt.Errorf("object is not Hash. got=%T (%+v)", actual, actual)
 	}
 
-	if len(hash.Values) != len(expected) {
-		return fmt.Errorf("hash has wrong number of Pairs. want=%d, got=%d", len(expected), len(hash.Values))
+	if hash.Values.Len() != len(expected) {
+		return fmt.Errorf("hash has wrong number of Pairs. want=%d, got=%d", len(expected), hash.Values.Len())
 	}
 
 	for expectedKey, expectedValue := range expected {
-		pair, ok := hash.Values[expectedKey.HashKey()]
+		pair, ok := hash.Values.Get(expectedKey.HashKey())
 		if !ok {
 			return fmt.Errorf("no pair for given key in Pairs")
 		}

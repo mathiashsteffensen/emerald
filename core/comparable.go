@@ -47,7 +47,7 @@ func comparableGreaterThan() object.BuiltInMethod {
 }
 
 func comparableMethod(spaceshipCallback func(int64) object.EmeraldValue) object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		spaceshipResult := Send(ctx.Self, "<=>", NULL, args...)
 
 		if spaceshipResult == NULL {

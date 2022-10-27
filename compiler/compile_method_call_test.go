@@ -1,6 +1,8 @@
 package compiler
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCompileMethodCall(t *testing.T) {
 	tests := []compilerTestCase{
@@ -71,7 +73,7 @@ func TestCompileMethodCall(t *testing.T) {
 			},
 		},
 		{
-			name: "calling a method with a receiver in block passed to a builtin method",
+			name: "calling a method with a receiver in block",
 			input: `
 			class Math; end
 			[0].map { |i| Math.instance.add_two(i) }`,
@@ -273,6 +275,29 @@ func TestCompileMethodCall(t *testing.T) {
 				Make(OpNull),
 				Make(OpPushConstant, 7),
 				Make(OpSend, 1),
+				Make(OpPop),
+			},
+		},
+		{
+			name:  "keyword arguments",
+			input: "puts one: :two, three: :four",
+			expectedConstants: []any{
+				":puts",
+				":one",
+				":two",
+				":three",
+				":four",
+			},
+			expectedInstructions: []Instructions{
+				Make(OpSelf),
+				Make(OpPushConstant, 0),
+				Make(OpNull),
+				Make(OpPushConstant, 1),
+				Make(OpPushConstant, 2),
+				Make(OpPushConstant, 3),
+				Make(OpPushConstant, 4),
+				Make(OpHash, 4),
+				Make(OpSend, 2, 1),
 				Make(OpPop),
 			},
 		},

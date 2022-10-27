@@ -2,13 +2,8 @@ package compiler
 
 import "emerald/parser/ast"
 
-func (c *Compiler) compileCaseExpression(node *ast.CaseExpression) error {
-	var err error
-
-	err = c.Compile(node.Subject)
-	if err != nil {
-		return err
-	}
+func (c *Compiler) compileCaseExpression(node *ast.CaseExpression) {
+	c.Compile(node.Subject)
 
 	var (
 		lastOpCheckCaseEqualPosition       = -1
@@ -22,19 +17,13 @@ func (c *Compiler) compileCaseExpression(node *ast.CaseExpression) error {
 		}
 
 		for _, matcher := range clause.Matchers {
-			err = c.Compile(matcher)
-			if err != nil {
-				return err
-			}
+			c.Compile(matcher)
 		}
 
 		lastOpCheckCaseEqualPosition = c.emit(OpCheckCaseEqual, lastOpCheckCaseEqualMatchersLength, 9999)
 		lastOpCheckCaseEqualMatchersLength = len(clause.Matchers)
 
-		err = c.Compile(clause.Consequence)
-		if err != nil {
-			return err
-		}
+		c.Compile(clause.Consequence)
 
 		if c.lastInstructionIs(OpPop) {
 			c.removeLastPop()
@@ -49,10 +38,7 @@ func (c *Compiler) compileCaseExpression(node *ast.CaseExpression) error {
 
 	c.emit(OpPop)
 
-	err = c.compileStatementsWithReturnValue(node.Alternative.Statements)
-	if err != nil {
-		return err
-	}
+	c.compileStatementsWithReturnValue(node.Alternative.Statements)
 
 	if c.lastInstructionIs(OpPop) {
 		c.removeLastPop()
@@ -63,6 +49,4 @@ func (c *Compiler) compileCaseExpression(node *ast.CaseExpression) error {
 	}
 
 	c.emit(OpPop)
-
-	return err
 }

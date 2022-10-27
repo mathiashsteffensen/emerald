@@ -59,7 +59,7 @@ func TestBlockLiteral(t *testing.T) {
 			}
 
 			for i, arg := range tt.expectedArgs {
-				testIdentifier(t, methodCall.Block.Parameters[i], arg)
+				testIdentifier(t, *methodCall.Block.Arguments[i], arg)
 			}
 		})
 	}

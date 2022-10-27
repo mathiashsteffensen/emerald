@@ -20,23 +20,26 @@ func (p *Parser) parseMethodCall(left ast.Expression) ast.Expression {
 		return node
 	}
 
-	node.Arguments = p.parseCallArguments()
+	node.Arguments, node.KeywordArguments = p.parseCallArguments()
 	node.Block = p.parseBlockLiteral()
 
 	return node
 }
 
-func (p *Parser) parseCallArguments() []ast.Expression {
-	var args []ast.Expression
+func (p *Parser) parseCallArguments() ([]ast.Expression, []*ast.HashLiteralElement) {
+	var (
+		args   []ast.Expression
+		kwargs []*ast.HashLiteralElement
+	)
 
 	if p.peekTokenIs(lexer.LPAREN) {
 		p.nextToken()
-		args = p.parseExpressionList(lexer.RPAREN)
+		args, kwargs = p.parseMethodArgsWithParentheses()
 	} else {
-		args = p.parseMethodArgsWithoutParentheses()
+		args, kwargs = p.parseMethodArgsWithoutParentheses()
 	}
 
-	return args
+	return args, kwargs
 }
 
 // Tokens that signify the end of a method call without parentheses
@@ -62,27 +65,80 @@ func (p *Parser) peekTokenDoesntSignifyCallArguments() bool {
 	return p.peekPrecedence() != LOWEST || p.peekTokenIsMultiple(endOfMethodArgsWithoutParenthesesTokens...)
 }
 
-func (p *Parser) parseMethodArgsWithoutParentheses() []ast.Expression {
-	args := []ast.Expression{}
-
-	if p.peekTokenDoesntSignifyCallArguments() {
-		return args
+func (p *Parser) parseMethodArgsWithParentheses() ([]ast.Expression, []*ast.HashLiteralElement) {
+	if p.peekTokenIs(lexer.RPAREN) {
+		p.nextToken()
+		return []ast.Expression{}, []*ast.HashLiteralElement{}
 	}
 
 	p.nextToken()
 
-	args = append(args, p.parseExpression(LOWEST))
+	args, kwargs := p.parseArgumentList()
 
-	for p.peekTokenIs(lexer.COMMA) {
-		p.nextToken()
-		p.nextToken()
-		p.nextIfCurSemicolonOrNewline()
-		args = append(args, p.parseExpression(LOWEST))
+	if !p.expectPeek(lexer.RPAREN) {
+		return nil, nil
 	}
+
+	return args, kwargs
+}
+
+func (p *Parser) parseMethodArgsWithoutParentheses() ([]ast.Expression, []*ast.HashLiteralElement) {
+	if p.peekTokenDoesntSignifyCallArguments() {
+		return []ast.Expression{}, []*ast.HashLiteralElement{}
+	}
+
+	p.nextToken()
+
+	args, kwargs := p.parseArgumentList()
 
 	if p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON) {
 		p.nextToken()
 	}
 
-	return args
+	return args, kwargs
+}
+
+func (p *Parser) parseArgumentList() ([]ast.Expression, []*ast.HashLiteralElement) {
+	startedKeywordArgs := false
+	args := []ast.Expression{}
+	keywordArgs := []*ast.HashLiteralElement{}
+
+	if p.peekTokenIsMultiple(lexer.COLON, lexer.ARROW) {
+		key := p.parseHashLiteralKey()
+		p.nextToken()
+		keywordArgs = append(keywordArgs, &ast.HashLiteralElement{
+			Key:   key,
+			Value: p.parseExpression(LOWEST),
+		})
+		startedKeywordArgs = true
+	} else {
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	for p.peekTokenIs(lexer.COMMA) {
+		p.nextToken()
+		p.nextToken()
+
+		if startedKeywordArgs {
+			key := p.parseHashLiteralKey()
+			p.nextToken()
+			keywordArgs = append(keywordArgs, &ast.HashLiteralElement{
+				Key:   key,
+				Value: p.parseExpression(LOWEST),
+			})
+		} else if p.peekTokenIsMultiple(lexer.COLON, lexer.ARROW) {
+			key := p.parseHashLiteralKey()
+			p.nextToken()
+			keywordArgs = append(keywordArgs, &ast.HashLiteralElement{
+				Key:   key,
+				Value: p.parseExpression(LOWEST),
+			})
+			startedKeywordArgs = true
+		} else {
+			p.nextIfCurNewline()
+			args = append(args, p.parseExpression(LOWEST))
+		}
+	}
+
+	return args, keywordArgs
 }

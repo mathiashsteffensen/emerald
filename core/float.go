@@ -35,13 +35,13 @@ func NewFloat(val float64) *FloatInstance {
 }
 
 func floatToS() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewString(strconv.FormatFloat(ctx.Self.(*FloatInstance).Value, 'f', -1, 64))
 	}
 }
 
 func floatAdd() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*FloatInstance)
 
 		var newValue float64
@@ -58,7 +58,7 @@ func floatAdd() object.BuiltInMethod {
 }
 
 func floatSubtract() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*FloatInstance)
 
 		var newValue float64
@@ -75,7 +75,7 @@ func floatSubtract() object.BuiltInMethod {
 }
 
 func floatMultiply() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*FloatInstance)
 
 		var newValue float64
@@ -92,7 +92,7 @@ func floatMultiply() object.BuiltInMethod {
 }
 
 func floatDivide() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*FloatInstance)
 
 		var newValue float64
@@ -109,13 +109,13 @@ func floatDivide() object.BuiltInMethod {
 }
 
 func floatNegate() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return NewFloat(-ctx.Self.(*FloatInstance).Value)
 	}
 }
 
 func floatSpaceship() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*FloatInstance)
 		if right, ok := args[0].(*FloatInstance); ok {
 			var result int64

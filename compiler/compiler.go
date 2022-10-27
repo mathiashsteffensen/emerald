@@ -56,10 +56,7 @@ func init() {
 		}
 
 		c := New()
-		err := c.Compile(ast)
-		if err != nil {
-			panic(err)
-		}
+		c.Compile(ast)
 
 		instructions := append(c.Bytecode().Instructions, byte(OpReturn))
 
@@ -67,53 +64,30 @@ func init() {
 	}
 }
 
-func (c *Compiler) Compile(node ast.Node) error {
+func (c *Compiler) Compile(node ast.Node) {
 	switch node := node.(type) {
 	case *ast.AST:
 		for _, s := range node.Statements {
-			err := c.Compile(s)
-			if err != nil {
-				return err
-			}
+			c.Compile(s)
 		}
 	case *ast.ExpressionStatement:
-		err := c.Compile(node.Expression)
-		if err != nil {
-			return err
-		}
-
+		c.Compile(node.Expression)
 		c.emit(OpPop)
 	case *ast.BlockStatement:
 		for _, s := range node.Statements {
-			err := c.Compile(s)
-			if err != nil {
-				return err
-			}
+			c.Compile(s)
 		}
 	case *ast.ReturnStatement:
-		err := c.Compile(node.ReturnValue)
-		if err != nil {
-			return err
-		}
-
+		c.Compile(node.ReturnValue)
 		c.emit(OpReturnValue)
 	case *ast.PrefixExpression:
-		err := c.compilePrefixExpression(node)
-		if err != nil {
-			return err
-		}
+		c.compilePrefixExpression(node)
 	case *ast.AssignmentExpression:
-		err := c.compileAssignment(node)
-		if err != nil {
-			return err
-		}
+		c.compileAssignment(node)
 	case *ast.Self:
 		c.emit(OpSelf)
 	case ast.Yield:
-		err := c.compileYield(node)
-		if err != nil {
-			return err
-		}
+		c.compileYield(node)
 	case ast.IdentifierExpression:
 		c.compileIdentifierExpression(node)
 	case *ast.InstanceVariable:
@@ -122,43 +96,23 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.compileIdentifierExpression(node)
 	case ast.CallExpression:
 		c.emit(OpSelf) // Method calls without a receiver has an implicit self receiver
-		err := c.compileCallExpression(node)
-		if err != nil {
-			return err
-		}
+		c.compileCallExpression(node)
 	case *ast.MethodCall:
-		err := c.compileMethodCall(node)
-		if err != nil {
-			return err
-		}
+		c.compileMethodCall(node)
 	case *ast.ScopeAccessor:
-		err := c.compileScopeAccessor(node)
-		if err != nil {
-			return err
-		}
+		c.compileScopeAccessor(node)
 	case *ast.InfixExpression:
-		err := c.compileInfixExpression(node)
-		if err != nil {
-			return err
-		}
+		c.compileInfixExpression(node)
 	case *ast.IfExpression:
-		err := c.compileIfExpression(node)
-		if err != nil {
-			return err
-		}
+		c.compileIfExpression(node)
 	case *ast.CaseExpression:
-		err := c.compileCaseExpression(node)
-		if err != nil {
-			return err
-		}
+		c.compileCaseExpression(node)
+
 		if c.lastInstructionIs(OpPop) {
 			c.removeLastPop()
 		}
 	case *ast.WhileExpression:
-		err := c.compileWhileExpression(node)
-		if err != nil {
-			return err
-		}
+		c.compileWhileExpression(node)
 	case *ast.IntegerLiteral:
 		integer := core.NewInteger(node.Value)
 		c.emit(OpPushConstant, c.addConstant(integer))
@@ -176,62 +130,35 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.StringLiteral:
 		c.compileStringLiteral(node)
 	case *ast.StringTemplate:
-		err := c.compileStringTemplate(node)
-		if err != nil {
-			return err
-		}
+		c.compileStringTemplate(node)
 	case *ast.SymbolLiteral:
 		sym := core.NewSymbol(node.Value)
 		c.emit(OpPushConstant, c.addConstant(sym))
 	case *ast.RegexpLiteral:
 		c.compileRegexpLiteral(node)
 	case *ast.ArrayLiteral:
-		err := c.compileArrayLiteral(node)
-		if err != nil {
-			return err
-		}
+		c.compileArrayLiteral(node)
 	case *ast.HashLiteral:
-		err := c.compileHashLiteral(node)
-		if err != nil {
-			return err
-		}
+		c.compileHashLiteral(node)
 	case *ast.MethodLiteral:
-		err := c.compileMethodLiteral(node)
-		if err != nil {
-			return err
-		}
+		c.compileMethodLiteral(node)
 	case *ast.ClassLiteral:
-		err := c.compileClassLiteral(node)
-		if err != nil {
-			return err
-		}
+		c.compileClassLiteral(node)
 	case *ast.StaticClassLiteral:
-		err := c.compileStaticClassLiteral(node)
-		if err != nil {
-			return err
-		}
+		c.compileStaticClassLiteral(node)
 	case *ast.ModuleLiteral:
-		err := c.compileModuleLiteral(node)
-		if err != nil {
-			return err
-		}
+		c.compileModuleLiteral(node)
 	}
-	return nil
 }
 
-func (c *Compiler) compileStatementsWithReturnValue(statements []ast.Statement) error {
+func (c *Compiler) compileStatementsWithReturnValue(statements []ast.Statement) {
 	if len(statements) == 0 {
 		c.emit(OpNull)
 	} else {
 		for _, s := range statements {
-			err := c.Compile(s)
-			if err != nil {
-				return err
-			}
+			c.Compile(s)
 		}
 	}
-
-	return nil
 }
 
 func (c *Compiler) Bytecode() *Bytecode {

@@ -2,15 +2,10 @@ package compiler
 
 import "emerald/parser/ast"
 
-func (c *Compiler) compileYield(node ast.Yield) error {
+func (c *Compiler) compileYield(node ast.Yield) {
 	for _, argument := range node.Arguments {
-		err := c.Compile(argument)
-		if err != nil {
-			return err
-		}
+		c.Compile(argument)
 	}
 
 	c.emit(OpYield, len(node.Arguments))
-
-	return nil
 }

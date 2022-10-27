@@ -6,10 +6,11 @@ import (
 )
 
 type CallExpression struct {
-	Token     lexer.Token // The '(' token
-	Method    IdentifierExpression
-	Arguments []Expression
-	Block     *BlockLiteral
+	Token            lexer.Token // The '(' token
+	Method           IdentifierExpression
+	Arguments        []Expression
+	KeywordArguments []*HashLiteralElement
+	Block            *BlockLiteral
 }
 
 func (ce CallExpression) expressionNode()      {}
@@ -20,6 +21,9 @@ func (ce CallExpression) String(indents ...int) string {
 	args := []string{}
 	for _, a := range ce.Arguments {
 		args = append(args, a.String(0))
+	}
+	for _, el := range ce.KeywordArguments {
+		args = append(args, strings.Join([]string{el.Key.String(0), el.Value.String(0)}, ": "))
 	}
 
 	out.WriteString(ce.Method.String(indents...))

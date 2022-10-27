@@ -33,7 +33,7 @@ func InitIO() {
 }
 
 func ioNew() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		fd := args[0].(*IntegerInstance).Value
 
 		return NewIO(uintptr(fd))
@@ -41,7 +41,7 @@ func ioNew() object.BuiltInMethod {
 }
 
 func ioSysopen() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		path := args[0].(*StringInstance).Value
 
 		fd, err := syscall.Open(path, syscall.O_LARGEFILE, 0)
@@ -54,7 +54,7 @@ func ioSysopen() object.BuiltInMethod {
 }
 
 func ioOpen() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		io := Send(IO, "new", NULL, args...)
 
 		if !ctx.BlockGiven() {
@@ -70,7 +70,7 @@ func ioOpen() object.BuiltInMethod {
 }
 
 func ioClose() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		io := ctx.Self.(*IOInstance)
 
 		if !io.Closed {
@@ -85,7 +85,7 @@ func ioClose() object.BuiltInMethod {
 }
 
 func ioGetbyte() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		fd := ctx.Self.(*IOInstance).FileDescriptor
 
 		buffer := make([]byte, 1)

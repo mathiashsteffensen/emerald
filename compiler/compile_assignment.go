@@ -7,17 +7,14 @@ import (
 	"unicode"
 )
 
-func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) error {
-	err := c.Compile(node.Value)
-	if err != nil {
-		return err
-	}
+func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) {
+	c.Compile(node.Value)
 
 	switch name := node.Name.(type) {
 	case ast.IdentifierExpression:
 		if unicode.IsUpper(rune(name.Value[0])) {
 			c.emit(OpConstantSet, c.addConstant(core.NewSymbol(name.Value)))
-			return nil
+			return
 		}
 
 		stringName := name.String(0)
@@ -43,6 +40,4 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) error {
 
 		c.emit(OpSetGlobal, symbol.Index)
 	}
-
-	return nil
 }

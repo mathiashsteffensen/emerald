@@ -6,7 +6,7 @@ import (
 )
 
 func (p *Parser) parseHashLiteral() ast.Expression {
-	value := make(map[ast.Expression]ast.Expression)
+	values := []*ast.HashLiteralElement{}
 
 	p.nextIfNewline()
 
@@ -18,21 +18,14 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 
 		p.nextToken()
 
-		var key ast.Expression
-
-		if p.peekTokenIs(lexer.COLON) {
-			key = &ast.SymbolLiteral{Token: p.curToken, Value: p.curToken.Literal}
-			p.nextToken()
-		} else {
-			key = p.parseExpression(LOWEST)
-			if !p.expectPeek(lexer.ARROW) {
-				return nil
-			}
-		}
+		key := p.parseHashLiteralKey()
 
 		p.nextToken()
 
-		value[key] = p.parseExpression(LOWEST)
+		values = append(values, &ast.HashLiteralElement{
+			Key:   key,
+			Value: p.parseExpression(LOWEST),
+		})
 
 		if !p.peekTokenIs(lexer.COMMA) {
 			p.nextIfNewline()
@@ -46,7 +39,23 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 	}
 
 	return &ast.HashLiteral{
-		Value: value,
-		Token: p.curToken,
+		Values: values,
+		Token:  p.curToken,
 	}
+}
+
+func (p *Parser) parseHashLiteralKey() ast.Expression {
+	var key ast.Expression
+
+	if p.peekTokenIs(lexer.COLON) {
+		key = &ast.SymbolLiteral{Token: p.curToken, Value: p.curToken.Literal}
+		p.nextToken()
+	} else {
+		key = p.parseExpression(LOWEST)
+		if !p.expectPeek(lexer.ARROW) {
+			return nil
+		}
+	}
+
+	return key
 }

@@ -108,7 +108,7 @@ func (p *Parser) Errors() []string {
 }
 
 func (p *Parser) addError(msg string) {
-	log.DebugF("SyntaxError: %s", msg)
+	log.InternalDebugF("SyntaxError: %s", msg)
 	p.errors = append(p.errors, msg)
 }
 
@@ -133,6 +133,10 @@ func (p *Parser) noPrefixParseFnError() {
 }
 
 func (p *Parser) nextToken() {
+	if p.curTokenIs(lexer.EOF) {
+		return
+	}
+
 	p.curToken = p.peekToken
 	p.peekToken = p.l.NextToken()
 }
@@ -407,7 +411,11 @@ func (p *Parser) expectCur(ts ...lexer.TokenType) bool {
 	if p.curTokenIs(ts...) {
 		return true
 	} else {
-		p.peekError(ts[0])
+		if p.peekTokenIs(lexer.EOF) {
+			p.unexpectedEofError()
+		} else {
+			p.peekError(ts[0])
+		}
 		return false
 	}
 }
@@ -417,7 +425,12 @@ func (p *Parser) expectPeek(t lexer.TokenType) bool {
 		p.nextToken()
 		return true
 	} else {
-		p.peekError(t)
+		if p.peekTokenIs(lexer.EOF) {
+			p.unexpectedEofError()
+		} else {
+			p.peekError(t)
+		}
+
 		return false
 	}
 }
@@ -436,6 +449,12 @@ func (p *Parser) nextIfCurSemicolonOrNewline() {
 
 func (p *Parser) nextIfNewline() {
 	for p.peekTokenIs(lexer.NEWLINE) {
+		p.nextToken()
+	}
+}
+
+func (p *Parser) nextIfCurNewline() {
+	for p.curTokenIs(lexer.NEWLINE) {
 		p.nextToken()
 	}
 }

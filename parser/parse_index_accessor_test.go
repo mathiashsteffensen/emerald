@@ -18,35 +18,35 @@ func TestIndexAccessor(t *testing.T) {
 	expectStatementLength(t, program.Statements, 4)
 
 	testExpressionStatement(t, program.Statements[0], func(expression *ast.MethodCall) {
-		testMethodCall(t, expression, "hash", "[]", []any{":key"}, false)
+		testMethodCall(t, expression, "hash", "[]", []any{":key"}, []string{}, false)
 	})
 
 	testExpressionStatement(t, program.Statements[1], func(expression *ast.MethodCall) {
-		testMethodCall(t, expression, "hash", "[]=", []any{":key", ":value"}, false)
+		testMethodCall(t, expression, "hash", "[]=", []any{":key", ":value"}, []string{}, false)
 	})
 
 	testExpressionStatement(t, program.Statements[2], func(expression *ast.IfExpression) {
-		testMethodCall(t, expression.Condition, "cache", "[]", []any{"n"}, false)
+		testMethodCall(t, expression.Condition, "cache", "[]", []any{"n"}, []string{}, false)
 
 		testExpressionStatement(t, expression.Consequence.Statements[0], func(expression *ast.MethodCall) {
-			testMethodCall(t, expression, "cache", "[]", []any{"n"}, false)
+			testMethodCall(t, expression, "cache", "[]", []any{"n"}, []string{}, false)
 
 		})
 
 		testExpressionStatement(t, expression.Alternative.Statements[0], func(expression *ast.MethodCall) {
-			testMethodCall(t, expression, "cache", "[]=", []any{"n", 5}, false)
+			testMethodCall(t, expression, "cache", "[]=", []any{"n", 5}, []string{}, false)
 		})
 	})
 
 	testExpressionStatement(t, program.Statements[3], func(expression *ast.IfExpression) {
-		testMethodCall(t, expression.Condition, "cache", "[]", []any{"n"}, false)
+		testMethodCall(t, expression.Condition, "cache", "[]", []any{"n"}, []string{}, false)
 
 		testExpressionStatement(t, expression.Consequence.Statements[0], func(expression *ast.MethodCall) {
-			testMethodCall(t, expression, "cache", "[]=", []any{"n", 5}, false)
+			testMethodCall(t, expression, "cache", "[]=", []any{"n", 5}, []string{}, false)
 		})
 
 		testExpressionStatement(t, expression.Alternative.Statements[0], func(expression *ast.MethodCall) {
-			testMethodCall(t, expression, "cache", "[]", []any{"n"}, false)
+			testMethodCall(t, expression, "cache", "[]", []any{"n"}, []string{}, false)
 		})
 	})
 }

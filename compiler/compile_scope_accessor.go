@@ -5,13 +5,8 @@ import (
 	"emerald/parser/ast"
 )
 
-func (c *Compiler) compileScopeAccessor(node *ast.ScopeAccessor) error {
-	err := c.Compile(node.Left)
-	if err != nil {
-		return err
-	}
+func (c *Compiler) compileScopeAccessor(node *ast.ScopeAccessor) {
+	c.Compile(node.Left)
 
 	c.emit(OpScopedConstantGet, c.addConstant(core.NewSymbol(node.Method.Value)))
-
-	return nil
 }

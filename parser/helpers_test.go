@@ -100,7 +100,7 @@ func testAssignmentExpression(t *testing.T, expr ast.Expression, expectedName, e
 	}
 }
 
-func testCallExpression(t *testing.T, expr ast.Expression, name string, args []any, block bool) {
+func testCallExpression(t *testing.T, expr ast.Expression, name string, args []any, kwargs []string, block bool) {
 	exp, ok := expr.(ast.CallExpression)
 	if !ok {
 		t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T", expr)
@@ -118,19 +118,37 @@ func testCallExpression(t *testing.T, expr ast.Expression, name string, args []a
 		testLiteralExpression(t, exp.Arguments[i], arg)
 	}
 
+	for _, kwarg := range kwargs {
+		found := false
+		for _, el := range exp.KeywordArguments {
+			if el.Key.String(0) == kwarg {
+				found = true
+			}
+		}
+		if !found {
+			var keys []string
+
+			for _, el := range exp.KeywordArguments {
+				keys = append(keys, el.Key.String(0))
+			}
+
+			t.Fatalf("Did not receive keyword argument %q got %#v", kwarg, keys)
+		}
+	}
+
 	if block && exp.Block == nil {
 		t.Fatalf("exp was not passed a block")
 	}
 }
 
-func testMethodCall(t *testing.T, expr ast.Expression, receiver string, name string, args []any, block bool) {
+func testMethodCall(t *testing.T, expr ast.Expression, receiver string, name string, args []any, kwargs []string, block bool) {
 	exp, ok := expr.(*ast.MethodCall)
 	if !ok {
 		t.Fatalf("stmt.Expression is not *ast.MethodCall. got=%T", expr)
 	}
 
 	testIdentifier(t, exp.Left, receiver)
-	testCallExpression(t, exp.CallExpression, name, args, block)
+	testCallExpression(t, exp.CallExpression, name, args, kwargs, block)
 }
 
 func testInfixExpression(t *testing.T, exp ast.Expression, left any, operator string, right any) bool {
@@ -184,6 +202,16 @@ func testLiteralExpression(
 	}
 	t.Errorf("type of exp not handled. got=%T", exp)
 	return false
+}
+
+func testArrayLiteral(t *testing.T, exp *ast.ArrayLiteral, expected []any) {
+	if len(exp.Value) != len(expected) {
+		t.Fatalf("exp does not %d values got=%d", len(expected), len(exp.Value))
+	}
+
+	for i, expect := range expected {
+		testLiteralExpression(t, exp.Value[i], expect)
+	}
 }
 
 func testFloatLiteral(t *testing.T, expr ast.Expression, expected float64) bool {
@@ -354,15 +382,15 @@ func testHashLiteral(t *testing.T, expr ast.Expression, items map[string]any) {
 	for expectedKey, expectedValue := range items {
 		keyFound := false
 
-		for actualKey, actualValue := range hash.Value {
-			if actualKey.String(0) == expectedKey {
+		for _, actual := range hash.Values {
+			if actual.Key.String(0) == expectedKey {
 				keyFound = true
-				testLiteralExpression(t, actualValue, expectedValue)
+				testLiteralExpression(t, actual.Value, expectedValue)
 			}
 		}
 
 		if !keyFound {
-			t.Fatalf("HashLiteral did not have expected key %q, hash %#v", expectedKey, hash.Value)
+			t.Fatalf("HashLiteral did not have expected key %q, hash %#v", expectedKey, hash.Values)
 		}
 	}
 }

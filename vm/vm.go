@@ -4,6 +4,7 @@ import (
 	"emerald/compiler"
 	"emerald/core"
 	"emerald/heap"
+	"emerald/log"
 	"emerald/object"
 	"fmt"
 )
@@ -218,9 +219,9 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 
 		vm.ctx.Self.DefinedMethodSet()[name.Value] = object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File)
 	case compiler.OpSend:
-		numArgs := compiler.ReadUint8(ins[ip+1:])
-		vm.currentFiber().currentFrame().ip += 1
-		vm.callFunction(int(numArgs))
+		numArgs := vm.readUint8(ins, ip)
+		hasKwargs := vm.readUint8(ins, ip+1)
+		vm.callFunction(int(numArgs), hasKwargs == 1)
 	case compiler.OpOpenClass:
 		// Fetch the symbol name from the heap
 		nameIndex := vm.readUint16(ins, ip)
@@ -287,8 +288,24 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 	vm.push(object.NewClosedBlock(vm.ctx, block, free, ""))
 }
 
-func (vm *VM) callFunction(numArgs int) {
-	basePointer := vm.currentFiber().sp - numArgs
+func (vm *VM) callFunction(numArgs int, hasKwargs bool) {
+	var (
+		kwargsHash   *core.HashInstance
+		kwargsMap    = map[string]object.EmeraldValue{}
+		basePointer  int
+		argsEndIndex int
+	)
+
+	if hasKwargs {
+		var ok bool
+		kwargsHash, ok = vm.currentFiber().pop().(*core.HashInstance)
+		if !ok {
+			log.FatalBugF("Keyword arguments instance was not a hash, got %s", vm.currentFiber().StackTop().Inspect())
+		}
+		basePointer = vm.currentFiber().sp - (numArgs - kwargsHash.Values.Len())
+	} else {
+		basePointer = vm.currentFiber().sp - numArgs
+	}
 
 	receiver := vm.stack()[basePointer-3]
 	name := vm.stack()[basePointer-2].(*core.SymbolInstance)
@@ -300,12 +317,27 @@ func (vm *VM) callFunction(numArgs int) {
 	}
 
 	// Handy for debugging, but makes the VM quite slow when logging in a hot loop
-	// log.InternalDebugF("Calling method %s#%s", receiver.Inspect(), name.Value)
+	// log.DebugF("Calling method %s#%s %d %s", receiver.Inspect(), name.Value, numArgs)
 
 	vm.withExecutionContext(receiver, block, func() {
 		switch method := method.(type) {
 		case *object.ClosedBlock:
-			if _, err := core.EnforceArity(vm.stack()[basePointer:vm.currentFiber().sp], method.NumArgs, method.NumArgs); err != nil {
+			if hasKwargs {
+				sortedKwargsHash := core.NewHash()
+
+				// Sort kwargs first, so they match the definition order, this allows local variable references to resolve correctly
+				for _, kwargStringKey := range method.Kwargs {
+					symbolKey := core.NewSymbol(kwargStringKey)
+
+					sortedKwargsHash.Set(symbolKey, kwargsHash.Get(symbolKey))
+				}
+
+				kwargsMap, argsEndIndex = vm.pushKwargsToStack(sortedKwargsHash)
+			} else {
+				argsEndIndex = vm.currentFiber().sp
+			}
+
+			if _, err := core.EnforceArity(vm.stack()[basePointer:argsEndIndex], kwargsMap, method.NumArgs, method.NumArgs, method.Kwargs); err != nil {
 				return
 			}
 
@@ -322,11 +354,28 @@ func (vm *VM) callFunction(numArgs int) {
 				return vm.currentFiber().framesIndex >= originalFrameIndex
 			})
 		case *object.WrappedBuiltInMethod:
-			result := vm.evalBuiltIn(method, block, vm.stack()[basePointer:vm.currentFiber().sp])
+			if hasKwargs {
+				kwargsMap, argsEndIndex = vm.pushKwargsToStack(kwargsHash)
+			}
+
+			result := vm.evalBuiltIn(method, block, vm.stack()[basePointer:vm.currentFiber().sp], kwargsMap)
 			vm.currentFiber().sp = basePointer - 3
 			vm.push(result)
 		}
 	})
+}
+
+func (vm *VM) pushKwargsToStack(kwargsHash *core.HashInstance) (map[string]object.EmeraldValue, int) {
+	kwargsMap := map[string]object.EmeraldValue{}
+
+	kwargsHash.Each(func(key object.EmeraldValue, value object.EmeraldValue) {
+		vm.push(value)
+		kwargsMap[key.Inspect()] = value
+	})
+
+	argsEndIndex := vm.currentFiber().sp - kwargsHash.Values.Len()
+
+	return kwargsMap, argsEndIndex
 }
 
 func (vm *VM) evalInfixOperator(op string) {

@@ -49,7 +49,7 @@ func (f *Frame) blockRescuingException(exception object.EmeraldError) *object.Cl
 		})
 
 		if caughtClassName != nil {
-			block := object.NewBlock(rescueBlock.Instructions, 0, 0)
+			block := object.NewBlock(rescueBlock.Instructions, 0, 0, []string{})
 			return object.NewClosedBlock(f.block.Context, block, []object.EmeraldValue{}, f.block.File)
 		}
 	}

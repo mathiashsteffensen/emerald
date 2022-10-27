@@ -23,8 +23,8 @@ func InitModule() {
 }
 
 func moduleDefineMethod() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, 1, 1); err != nil {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
 			return err
 		}
 
@@ -40,11 +40,11 @@ func moduleDefineMethod() object.BuiltInMethod {
 }
 
 func moduleAttrReader() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
 			name, instanceVarName := nameAndInstanceVarFromObject(arg)
 
-			ctx.Self.BuiltInMethodSet()[name] = func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+			ctx.Self.BuiltInMethodSet()[name] = func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				value := ctx.Self.InstanceVariableGet(instanceVarName, ctx.Self, ctx.Self)
 
 				if value == nil {
@@ -60,11 +60,11 @@ func moduleAttrReader() object.BuiltInMethod {
 }
 
 func moduleAttrWriter() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
 			name, instanceVarName := nameAndInstanceVarFromObject(arg)
 
-			ctx.Self.BuiltInMethodSet()[fmt.Sprintf("%s=", name)] = func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+			ctx.Self.BuiltInMethodSet()[fmt.Sprintf("%s=", name)] = func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				ctx.Self.InstanceVariableSet(instanceVarName, args[0])
 
 				return args[0]
@@ -76,7 +76,7 @@ func moduleAttrWriter() object.BuiltInMethod {
 }
 
 func moduleAttrAccessor() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		Send(ctx.Self, "attr_reader", NULL, args...)
 		Send(ctx.Self, "attr_writer", NULL, args...)
 
@@ -85,7 +85,7 @@ func moduleAttrAccessor() object.BuiltInMethod {
 }
 
 func moduleCaseEquals() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return Send(args[0], "is_a?", NULL, ctx.Self)
 	}
 }

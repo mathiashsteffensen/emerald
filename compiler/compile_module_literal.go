@@ -5,21 +5,16 @@ import (
 	"emerald/parser/ast"
 )
 
-func (c *Compiler) compileModuleLiteral(node *ast.ModuleLiteral) error {
+func (c *Compiler) compileModuleLiteral(node *ast.ModuleLiteral) {
 	name := node.Name.Value
 
 	c.emit(OpOpenModule, c.addConstant(core.NewSymbol(name)))
 
-	err := c.compileStatementsWithReturnValue(node.Body.Statements)
-	if err != nil {
-		return err
-	}
+	c.compileStatementsWithReturnValue(node.Body.Statements)
 
 	if c.lastInstructionIs(OpPop) {
 		c.replaceLastInstructionWith(OpUnwrapContext)
 	} else {
 		c.emit(OpUnwrapContext)
 	}
-
-	return nil
 }

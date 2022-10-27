@@ -5,16 +5,13 @@ import (
 	"emerald/parser/ast"
 )
 
-func (c *Compiler) compileCallExpression(node ast.CallExpression) error {
+func (c *Compiler) compileCallExpression(node ast.CallExpression) {
 	method := core.NewSymbol(node.Method.Value)
 
 	c.emit(OpPushConstant, c.addConstant(method))
 
 	if node.Block != nil {
-		block, freeSymbolCount, err := c.compileBlock(node.Block)
-		if err != nil {
-			return err
-		}
+		block, freeSymbolCount := c.compileBlock(node.Block)
 
 		c.emit(OpCloseBlock, c.addConstant(block), freeSymbolCount)
 	} else {
@@ -22,13 +19,19 @@ func (c *Compiler) compileCallExpression(node ast.CallExpression) error {
 	}
 
 	for _, argument := range node.Arguments {
-		err := c.Compile(argument)
-		if err != nil {
-			return err
-		}
+		c.Compile(argument)
 	}
 
-	c.emit(OpSend, len(node.Arguments))
+	hasKwargsOperand := 0 // 0 signals to VM that OpSend did not receive kwargs
+	numKwargs := len(node.KeywordArguments)
+	if numKwargs != 0 {
+		for _, el := range node.KeywordArguments {
+			c.Compile(el.Key)
+			c.Compile(el.Value)
+		}
+		c.emit(OpHash, numKwargs*2)
+		hasKwargsOperand = 1
+	}
 
-	return nil
+	c.emit(OpSend, len(node.Arguments)+numKwargs, hasKwargsOperand)
 }

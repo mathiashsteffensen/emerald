@@ -1,8 +1,8 @@
 package core
 
 import (
-	"strings"
 	"emerald/object"
+	"strings"
 )
 
 var Array *object.Class
@@ -34,8 +34,8 @@ func NewArray(val []object.EmeraldValue) *ArrayInstance {
 }
 
 func arrayIndexAccessor() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, 1, 1); err != nil {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
 			return err
 		}
 		intArg, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])
@@ -57,7 +57,7 @@ func arrayIndexAccessor() object.BuiltInMethod {
 }
 
 func arrayPush() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := ctx.Self.(*ArrayInstance)
 
 		arr.Value = append(arr.Value, args...)
@@ -67,7 +67,7 @@ func arrayPush() object.BuiltInMethod {
 }
 
 func arrayPop() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := ctx.Self.(*ArrayInstance)
 
 		if len(arr.Value) == 0 {
@@ -84,7 +84,7 @@ func arrayPop() object.BuiltInMethod {
 }
 
 func arrayEach() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := ctx.Self.(*ArrayInstance)
 
 		for _, val := range arr.Value {
@@ -96,7 +96,7 @@ func arrayEach() object.BuiltInMethod {
 }
 
 func arrayEquals() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := ctx.Self.(*ArrayInstance)
 		otherArr, ok := args[0].(*ArrayInstance)
 		if !ok {
@@ -118,7 +118,7 @@ func arrayEquals() object.BuiltInMethod {
 }
 
 func arrayToS() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var out strings.Builder
 
 		out.WriteString("[")

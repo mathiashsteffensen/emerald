@@ -26,6 +26,21 @@ type Config struct {
 }
 
 func Start(in io.ReadCloser, out io.Writer, config Config) {
+	print := func(str string) {
+		_, err := io.WriteString(out, str)
+		if err != nil {
+			panic(err)
+		}
+		_, err = io.WriteString(out, "\n")
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	printf := func(frmt string, args ...any) {
+		print(fmt.Sprintf(frmt, args...))
+	}
+
 	readline.SetHistoryPath("/tmp/iem.hst")
 
 	lineReader, err := readline.New(fmt.Sprintf(PROMPT_FMT, 1))
@@ -48,8 +63,6 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 	var buffer string
 
 	for {
-		fmt.Fprintf(out, PROMPT_FMT, lineCount)
-
 		line, err = lineReader.Readline()
 		if err != nil {
 			if err.Error() == "Interrupt" {
@@ -59,8 +72,10 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			switch err.Error() {
 			case "Interrupt":
 				continue
+			case "EOF":
+				goto Exit
 			default:
-				fmt.Fprintf(out, "Error reading line %s\n", err)
+				printf("Error reading line %s\n", err)
 				continue
 			}
 		}
@@ -68,8 +83,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 		lineReader.SaveHistory(buffer + line)
 
 		if line == "quit" || line == "exit" {
-			fmt.Fprintf(out, "See you next time!\n")
-			break
+			goto Exit
 		}
 
 		l := lexer.New(lexer.NewInput("repl.rb", buffer+line))
@@ -79,35 +93,32 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 		if len(p.Errors()) != 0 {
 			errors := types.NewSlice(p.Errors()...)
 
-			if errors.Includes("expected next token to be END, got EOF instead") ||
-				errors.Includes("expected next token to be one of [RESCUE, ENSURE, END], got EOF instead") {
+			if errors.Includes("syntax error, unexpected end-of-input") {
 				buffer += line + "\n"
 				lineReader.SetPrompt(lineReader.Config.Prompt + "	")
 			} else {
-				printParserErrors(out, p.Errors())
+				for _, msg := range p.Errors() {
+					print("\t" + msg)
+				}
 				lineReader.Config.Prompt = fmt.Sprintf(PROMPT_FMT, 1)
 			}
 
 			continue
 		} else {
 			buffer = ""
+			lineReader.SetPrompt(fmt.Sprintf(PROMPT_FMT, 1))
 		}
 
 		if config.AstMode {
 			astNodes = append(astNodes, program)
 			for _, node := range astNodes {
-				fmt.Fprintf(out, "%s\n", node.String(0))
+				printf("%s\n", node.String(0))
 			}
 			continue
 		}
 
 		comp := compiler.New()
-
-		err := comp.Compile(program)
-		if err != nil {
-			fmt.Fprintf(out, "Woops! Compilation failed:\n %s\n", err)
-			continue
-		}
+		comp.Compile(program)
 
 		code := comp.Bytecode()
 
@@ -126,7 +137,9 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 
 		if exception := heap.GetGlobalVariableString("$!"); exception != nil {
 			exception := exception.(object.EmeraldError)
-			log.FatalF("%s: %s", exception.ClassName(), exception.Message())
+			printf("%s: %s\n", exception.ClassName(), exception.Message())
+			heap.SetGlobalVariableString("$!", nil)
+			continue
 		}
 
 		evaluated := machine.LastPoppedStackElem()
@@ -135,16 +148,12 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			ctx := machine.Context()
 			ctx.Self = evaluated
 			evaluated = machine.Send(evaluated, "inspect", core.NULL)
-			io.WriteString(out, evaluated.Inspect())
-			io.WriteString(out, "\n")
+			print(evaluated.Inspect())
 		}
 
 		lineCount++
 	}
-}
 
-func printParserErrors(out io.Writer, errors []string) {
-	for _, msg := range errors {
-		io.WriteString(out, "\t"+msg+"\n")
-	}
+Exit:
+	printf("\nSee you next time!")
 }

@@ -10,33 +10,24 @@ func (c *Compiler) compileStringLiteral(node *ast.StringLiteral) {
 	c.emit(OpPushConstant, c.addConstant(str))
 }
 
-func (c *Compiler) compileStringTemplate(node *ast.StringTemplate) error {
-	err := c.compileStringTemplateString(node.Chain)
+func (c *Compiler) compileStringTemplate(node *ast.StringTemplate) {
+	c.compileStringTemplateString(node.Chain)
 
 	c.emit(OpStringJoin, node.Count())
-
-	return err
 }
 
-func (c *Compiler) compileStringTemplateString(node *ast.StringTemplateChainString) error {
+func (c *Compiler) compileStringTemplateString(node *ast.StringTemplateChainString) {
 	c.compileStringLiteral(node.StringLiteral)
 
 	if node.Next != nil {
-		return c.compileStringTemplateExpression(node.Next)
+		c.compileStringTemplateExpression(node.Next)
 	}
-
-	return nil
 }
 
-func (c *Compiler) compileStringTemplateExpression(node *ast.StringTemplateChainExpression) error {
-	err := c.Compile(node.Expression)
-	if err != nil {
-		return err
-	}
+func (c *Compiler) compileStringTemplateExpression(node *ast.StringTemplateChainExpression) {
+	c.Compile(node.Expression)
 
 	if node.Next != nil {
-		return c.compileStringTemplateString(node.Next)
+		c.compileStringTemplateString(node.Next)
 	}
-
-	return nil
 }

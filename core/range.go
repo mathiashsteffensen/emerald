@@ -31,7 +31,7 @@ func InitRange() {
 }
 
 func rangeNew() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		begin := args[0]
 		end := args[1]
 		var excludeEnd bool
@@ -47,7 +47,7 @@ func rangeNew() object.BuiltInMethod {
 }
 
 func rangeEach() object.BuiltInMethod {
-	return func(ctx *object.Context, args ...object.EmeraldValue) object.EmeraldValue {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		r := ctx.Self.(*RangeInstance)
 		begin := r.Begin.(*IntegerInstance).Value
 		end := r.End.(*IntegerInstance).Value

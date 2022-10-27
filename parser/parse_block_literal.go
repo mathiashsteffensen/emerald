@@ -23,7 +23,7 @@ func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
 
 	if p.peekTokenIs(lexer.BIT_OR) {
 		p.nextToken()
-		block.Parameters = p.parseExpressionList(lexer.BIT_OR)
+		block.Arguments, block.KeywordArguments = p.parseMethodLiteralArguments(lexer.BIT_OR)
 	}
 
 	if endToken == lexer.RBRACE {

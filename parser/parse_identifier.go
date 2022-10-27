@@ -34,7 +34,7 @@ func (p *Parser) parseIdentifierExpression() ast.Expression {
 		Method: node,
 	}
 
-	callExpression.Arguments = p.parseMethodArgsWithoutParentheses()
+	callExpression.Arguments, callExpression.KeywordArguments = p.parseMethodArgsWithoutParentheses()
 	callExpression.Block = p.parseBlockLiteral()
 
 	return callExpression

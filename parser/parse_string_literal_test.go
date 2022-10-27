@@ -30,6 +30,6 @@ func TestStringLiteralExpression(t *testing.T) {
 		testStringLiteral(t, expression.Chain.StringLiteral, "This is a ")
 		testIdentifier(t, expression.Chain.Next.Expression, "template")
 		testStringLiteral(t, expression.Chain.Next.Next.StringLiteral, " also ")
-		testMethodCall(t, expression.Chain.Next.Next.Next.Expression, "boop", "method", []any{}, false)
+		testMethodCall(t, expression.Chain.Next.Next.Next.Expression, "boop", "method", []any{}, []string{}, false)
 	})
 }

@@ -4,11 +4,8 @@ import (
 	"emerald/parser/ast"
 )
 
-func (c *Compiler) compileIfExpression(node *ast.IfExpression) error {
-	err := c.Compile(node.Condition)
-	if err != nil {
-		return err
-	}
+func (c *Compiler) compileIfExpression(node *ast.IfExpression) {
+	c.Compile(node.Condition)
 
 	// Emit an `OpJumpNotTruthy` with a bogus value
 	jumpNotTruthyPos := c.emit(OpJumpNotTruthy, 9999)
@@ -17,10 +14,7 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) error {
 	if node.Consequence == nil {
 		c.emit(OpNull)
 	} else {
-		err = c.Compile(node.Consequence)
-		if err != nil {
-			return err
-		}
+		c.Compile(node.Consequence)
 
 		if c.lastInstructionIs(OpPop) {
 			c.removeLastPop()
@@ -37,10 +31,7 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) error {
 
 	if node.ElseIfs != nil {
 		for _, elseIf := range node.ElseIfs {
-			elseIfPosition, err := c.compileElsifBranch(elseIf)
-			if err != nil {
-				return err
-			}
+			elseIfPosition := c.compileElsifBranch(elseIf)
 			jumpPositions = append(jumpPositions, elseIfPosition)
 		}
 	}
@@ -48,10 +39,7 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) error {
 	if node.Alternative == nil {
 		c.emit(OpNull)
 	} else {
-		err := c.Compile(node.Alternative)
-		if err != nil {
-			return err
-		}
+		c.Compile(node.Alternative)
 		if c.lastInstructionIs(OpPop) {
 			c.removeLastPop()
 		}
@@ -61,15 +49,10 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) error {
 	for _, position := range jumpPositions {
 		c.changeOperand(position, afterAlternativePos)
 	}
-
-	return nil
 }
 
-func (c *Compiler) compileElsifBranch(elsIf ast.ElseIf) (int, error) {
-	err := c.Compile(elsIf.Condition)
-	if err != nil {
-		return 0, err
-	}
+func (c *Compiler) compileElsifBranch(elsIf ast.ElseIf) int {
+	c.Compile(elsIf.Condition)
 
 	// Emit an `OpJumpNotTruthy` with a bogus value
 	jumpNotTruthyPos := c.emit(OpJumpNotTruthy, 9999)
@@ -78,10 +61,7 @@ func (c *Compiler) compileElsifBranch(elsIf ast.ElseIf) (int, error) {
 	if elsIf.Consequence == nil {
 		c.emit(OpNull)
 	} else {
-		err = c.Compile(elsIf.Consequence)
-		if err != nil {
-			return 0, err
-		}
+		c.Compile(elsIf.Consequence)
 
 		if c.lastInstructionIs(OpPop) {
 			c.removeLastPop()
@@ -94,5 +74,5 @@ func (c *Compiler) compileElsifBranch(elsIf ast.ElseIf) (int, error) {
 	afterConsequencePos := len(c.currentInstructions())
 	c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
 
-	return jumpPos, nil
+	return jumpPos
 }

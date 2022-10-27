@@ -104,6 +104,15 @@ func FatalF(format string, args ...any) {
 	os.Exit(1)
 }
 
+func FatalBugF(format string, args ...any) {
+	FatalF(
+		format+
+			"\n\n This is a bug in the Emerald toolchain, please report this issue at https://github.com/mathiashsteffensen/emerald/issues "+
+			"with the error message above.",
+		args...,
+	)
+}
+
 func StackTrace(r any) {
 	goStack := string(debug.Stack())
 	stackLines := strings.Split(goStack, "\n")

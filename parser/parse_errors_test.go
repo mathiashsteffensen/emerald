@@ -15,8 +15,9 @@ func TestParseErrors(t *testing.T) {
 		`,
 		"expected next token to be }, got IDENT instead",
 	)
-	testParseError(t, "(2+2", "expected next token to be ), got EOF instead")
-	testParseError(t, "p(", "expected next token to be ), got EOF instead")
-	testParseError(t, "p { 2", "expected next token to be }, got EOF instead")
-	testParseError(t, `"hello #{name"`, "expected next token to be }, got EOF instead")
+	testParseError(t, "(2+2", "syntax error, unexpected end-of-input")
+	testParseError(t, "p(", "syntax error, unexpected end-of-input")
+	testParseError(t, "p { 2", "syntax error, unexpected end-of-input")
+	testParseError(t, `"hello #{name"`, "syntax error, unexpected end-of-input")
+	testParseError(t, `true ? 2`, "syntax error, unexpected end-of-input")
 }

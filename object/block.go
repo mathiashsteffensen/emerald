@@ -22,6 +22,7 @@ type Block struct {
 	Instructions []byte
 	NumLocals    int
 	NumArgs      int
+	Kwargs       []string
 	RescueBlocks []RescueBlock
 }
 
@@ -32,11 +33,12 @@ func (b *Block) Type() EmeraldValueType    { return BLOCK_VALUE }
 func (b *Block) Inspect() string           { return fmt.Sprintf("#<Block:%p>", b) }
 func (b *Block) HashKey() string           { return b.Inspect() }
 
-func NewBlock(instructions []byte, numLocals int, numArgs int) *Block {
+func NewBlock(instructions []byte, numLocals int, numArgs int, kwargs []string) *Block {
 	return &Block{
 		Instructions: instructions,
 		NumLocals:    numLocals,
 		NumArgs:      numArgs,
+		Kwargs:       kwargs,
 	}
 }
 

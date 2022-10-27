@@ -28,15 +28,11 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 
 			compiler := New()
 
-			err := compiler.Compile(program)
-
-			if err != nil {
-				t.Fatalf("compiler error: %s", err)
-			}
+			compiler.Compile(program)
 
 			bytecode := compiler.Bytecode()
 
-			err = testInstructions(tt.expectedInstructions, bytecode.Instructions)
+			err := testInstructions(tt.expectedInstructions, bytecode.Instructions)
 			if err != nil {
 				t.Errorf("testInstructions failed: %s", err)
 			}

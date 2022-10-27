@@ -5,7 +5,7 @@ import (
 	ast "emerald/parser/ast"
 )
 
-func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) error {
+func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) {
 	name := node.Name.Value
 
 	// Emit a parent class
@@ -14,35 +14,24 @@ func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) error {
 		// If no parent is specified, it inherits from core.Object
 		c.emitConstantGet(core.Object.Name)
 	} else {
-		err := c.Compile(node.Parent)
-		if err != nil {
-			return err
-		}
+		c.Compile(node.Parent)
 	}
 
 	c.emit(OpOpenClass, c.addConstant(core.NewSymbol(name)))
 
-	err := c.compileStatementsWithReturnValue(node.Body.Statements)
-	if err != nil {
-		return err
-	}
+	c.compileStatementsWithReturnValue(node.Body.Statements)
 
 	if c.lastInstructionIs(OpPop) {
 		c.replaceLastInstructionWith(OpUnwrapContext)
 	} else {
 		c.emit(OpUnwrapContext)
 	}
-
-	return nil
 }
 
-func (c *Compiler) compileStaticClassLiteral(node *ast.StaticClassLiteral) error {
+func (c *Compiler) compileStaticClassLiteral(node *ast.StaticClassLiteral) {
 	c.emit(OpStaticTrue)
 
-	err := c.Compile(node.Body)
-	if err != nil {
-		return err
-	}
+	c.Compile(node.Body)
 
 	if c.lastInstructionIs(OpPop) {
 		lastPos := c.scopes[c.scopeIndex].lastInstruction.Position
@@ -51,6 +40,4 @@ func (c *Compiler) compileStaticClassLiteral(node *ast.StaticClassLiteral) error
 	} else {
 		c.emit(OpStaticFalse)
 	}
-
-	return nil
 }

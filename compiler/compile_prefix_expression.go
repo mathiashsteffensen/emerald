@@ -5,19 +5,15 @@ import (
 	"fmt"
 )
 
-func (c *Compiler) compilePrefixExpression(node *ast.PrefixExpression) error {
-	err := c.Compile(node.Right)
-	if err != nil {
-		return err
-	}
+func (c *Compiler) compilePrefixExpression(node *ast.PrefixExpression) {
+	c.Compile(node.Right)
+
 	switch node.Operator {
 	case "!":
 		c.emit(OpBang)
 	case "-":
 		c.emit(OpMinus)
 	default:
-		return fmt.Errorf("unknown prefix operator %s", node.Operator)
+		panic(fmt.Errorf("unknown prefix operator %s", node.Operator))
 	}
-
-	return nil
 }

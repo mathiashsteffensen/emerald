@@ -10,7 +10,7 @@ func NewSlice[T comparable](value ...T) *Slice[T] {
 	}
 }
 
-func (slice Slice[T]) Each(cb func(T)) Slice[T] {
+func (slice *Slice[T]) Each(cb func(T)) *Slice[T] {
 	for _, val := range slice.Value {
 		cb(val)
 	}
@@ -18,7 +18,7 @@ func (slice Slice[T]) Each(cb func(T)) Slice[T] {
 	return slice
 }
 
-func (slice Slice[T]) Map(cb func(element T) T) *Slice[T] {
+func (slice *Slice[T]) Map(cb func(element T) T) *Slice[T] {
 	newSlice := NewSlice[T]()
 
 	for _, val := range slice.Value {
@@ -28,7 +28,7 @@ func (slice Slice[T]) Map(cb func(element T) T) *Slice[T] {
 	return newSlice
 }
 
-func (slice Slice[T]) Find(cb func(T) bool) *T {
+func (slice *Slice[T]) Find(cb func(T) bool) *T {
 	for _, val := range slice.Value {
 		if cb(val) {
 			return &val
@@ -38,7 +38,7 @@ func (slice Slice[T]) Find(cb func(T) bool) *T {
 	return nil
 }
 
-func (slice Slice[T]) FindIndex(cb func(T) bool) *int {
+func (slice *Slice[T]) FindIndex(cb func(T) bool) *int {
 	for i, val := range slice.Value {
 		if cb(val) {
 			return &i
@@ -48,7 +48,7 @@ func (slice Slice[T]) FindIndex(cb func(T) bool) *int {
 	return nil
 }
 
-func (slice Slice[T]) Includes(value T) bool {
+func (slice *Slice[T]) Includes(value T) bool {
 	for _, val := range slice.Value {
 		if val == value {
 			return true

@@ -24,7 +24,7 @@ func (p *Parser) parseCaseExpression() ast.Expression {
 	for p.curTokenIs(lexer.WHEN) {
 		whenClause := &ast.WhenClause{Matchers: []ast.Expression{}}
 
-		whenClause.Matchers = p.parseMethodArgsWithoutParentheses()
+		whenClause.Matchers, _ = p.parseMethodArgsWithoutParentheses()
 
 		whenClause.Consequence = p.parseBlockStatement(lexer.END, lexer.ELSE, lexer.WHEN)
 
