@@ -34,7 +34,7 @@ func New(input *Input) *Lexer {
 }
 
 func (l *Lexer) Snapshot(token Token) string {
-	start := token.Pos - 30
+	start := token.Pos - 80
 	end := token.Pos + 8
 
 	if start < 0 {

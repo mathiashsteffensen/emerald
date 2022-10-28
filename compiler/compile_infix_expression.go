@@ -35,6 +35,8 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) {
 		op = OpCaseEqual
 	case "!=":
 		op = OpNotEqual
+	case "<<":
+		op = OpBinShiftLeft
 	case "&&":
 		c.compileIfExpression(&ast.IfExpression{
 			Condition:   node.Left,

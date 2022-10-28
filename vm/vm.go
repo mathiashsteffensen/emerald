@@ -126,6 +126,8 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.evalInfixOperator("===")
 	case compiler.OpNotEqual:
 		vm.evalInfixOperator("!=")
+	case compiler.OpBinShiftLeft:
+		vm.evalInfixOperator("<<")
 	case compiler.OpJump:
 		pos := int(compiler.ReadUint16(ins[ip+1:]))
 		vm.currentFiber().currentFrame().ip = pos - 1

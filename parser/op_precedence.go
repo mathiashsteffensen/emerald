@@ -16,7 +16,8 @@ const (
 	BOOL_AND   // &&
 	COMPARATOR // ==
 	ORDERING   // > or <
-	SUM        // +
+	BIN_SHIFT  // << or >>
+	SUM        // + or -
 	PRODUCT    // *
 	PREFIX     // -X or !X
 	CALL       // myFunction(X)
@@ -46,6 +47,7 @@ var precedences = map[lexer.TokenType]int{
 	lexer.GT:              ORDERING,
 	lexer.LT_OR_EQ:        ORDERING,
 	lexer.GT_OR_EQ:        ORDERING,
+	lexer.APPEND:          BIN_SHIFT,
 	lexer.PLUS:            SUM,
 	lexer.MINUS:           SUM,
 	lexer.SLASH:           PRODUCT,

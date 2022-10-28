@@ -237,6 +237,17 @@ func TestCompileInfixExpression(t *testing.T) {
 				Make(OpPop),
 			},
 		},
+		{
+			name:              "binary shift left",
+			input:             "[] << 2",
+			expectedConstants: []any{2},
+			expectedInstructions: []Instructions{
+				Make(OpPushConstant, 0),
+				Make(OpArray),
+				Make(OpBinShiftLeft),
+				Make(OpPop),
+			},
+		},
 	}
 
 	runCompilerTests(t, tests)

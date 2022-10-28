@@ -147,6 +147,10 @@ func TestOperatorPrecedence(t *testing.T) {
 	(i = (i + 1))
 end`,
 		},
+		{
+			"[] << 2",
+			"([\n] << 2)",
+		},
 	}
 
 	for _, tt := range tests {

@@ -7,19 +7,21 @@ import (
 
 func TestMethodCallParsing(t *testing.T) {
 	input := `
-		1.add(2, 3, 4 + 5) do |num, next|
-			num + @var.method
-		rescue NoMemoryError, SystemError => e
-			puts("we done fucked up this time")
-		rescue Exception => e
-			puts("Adding is hard :(")
-		ensure
-			puts("This will always run")
-		end.first
+1.add(2, 3, 4 + 5) do |num, next|
+  num + @var.method
+rescue NoMemoryError, SystemError => e
+  puts("we done fucked up this time")
+rescue Exception => e
+  puts("Adding is hard :(")
+ensure
+  puts("This will always run")
+end.first
 
-		Logger.instance.info msg, tags
-		Logger.level = :debug
-		Logger.debug()
+Logger
+  .instance { puts "Hello" }
+  .info msg, tags
+Logger.level = :debug
+Logger.debug()
 	`
 
 	program := testParseAST(t, input)

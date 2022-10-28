@@ -95,6 +95,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.UNLESS, p.parseUnlessModifier)
 	p.registerInfix(lexer.WHILE, p.parseWhileModifier)
 	p.registerInfix(lexer.QUESTION, p.parseTernary)
+	p.registerInfix(lexer.APPEND, p.parseInfixExpression)
 
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
@@ -220,6 +221,15 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 	stmt.Expression = p.parseExpression(LOWEST)
+
+ParseIfMethodCall:
+	p.nextIfNewline()
+	if p.peekTokenIs(lexer.DOT) {
+		p.nextToken()
+		stmt.Expression = p.parseMethodCall(stmt.Expression)
+		goto ParseIfMethodCall
+	}
+
 	return stmt
 }
 
@@ -236,6 +246,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 			return leftExp
 		}
 		p.nextToken()
+
 		leftExp = infix(leftExp)
 	}
 

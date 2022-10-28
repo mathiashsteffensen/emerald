@@ -12,7 +12,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 		operator   string
 		rightValue any
 	}{
-		{"5 + 5;", 5, "+", 5},
+		{`5 + 5`, 5, "+", 5},
 		{"5 - 5;", 5, "-", 5},
 		{"5 * 5;", 5, "*", 5},
 		{"5 / 5;", 5, "/", 5},

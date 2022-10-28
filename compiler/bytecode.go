@@ -43,6 +43,7 @@ const (
 	OpGreaterThanOrEq
 	OpLessThan
 	OpLessThanOrEq
+	OpBinShiftLeft
 
 	// Prefix operators
 	OpMinus
@@ -159,6 +160,7 @@ var definitions = map[Opcode]*Definition{
 	OpArray:             {"OpArray", []int{2}},
 	OpHash:              {"OpHash", []int{2}},
 	OpMinus:             {"OpMinus", []int{}},
+	OpBinShiftLeft:      {"OpBinShiftLeft", []int{}},
 	OpBang:              {"OpBang", []int{}},
 	OpJump:              {"OpJump", []int{2}},
 	OpJumpTruthy:        {"OpJumpTruthy", []int{2}},

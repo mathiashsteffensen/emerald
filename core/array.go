@@ -19,6 +19,7 @@ func InitArray() {
 
 	DefineMethod(Array, "[]", arrayIndexAccessor())
 	DefineMethod(Array, "==", arrayEquals())
+	DefineMethod(Array, "<<", arrayPush())
 	DefineMethod(Array, "push", arrayPush())
 	DefineMethod(Array, "pop", arrayPop())
 	DefineMethod(Array, "each", arrayEach())

@@ -8,6 +8,10 @@ func TestArray_push(t *testing.T) {
 			input:    "arr = []; arr.push(2, 3, 4); arr",
 			expected: []any{2, 3, 4},
 		},
+		{
+			input:    "arr = []; arr << 2; arr",
+			expected: []any{2},
+		},
 	}
 
 	runCoreTests(t, tests)
