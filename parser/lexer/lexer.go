@@ -326,20 +326,7 @@ func (l *Lexer) Run() {
 
 					continue
 				} else if isDigit(l.currentChar) {
-					tok.Pos = l.position
-					tok.Column = l.Column
-					tok.Line = l.Line
-					tok.Literal = l.readNumber()
-
-					if l.currentChar == '.' && isDigit(l.peekChar()) {
-						l.readChar()
-						tok.Literal = tok.Literal + "." + l.readNumber()
-						tok.Type = FLOAT
-					} else {
-						tok.Type = INT
-					}
-
-					l.sendToken(tok)
+					l.lexNumber(&tok)
 					continue
 				} else {
 					tok = l.newToken(ILLEGAL, l.currentChar)

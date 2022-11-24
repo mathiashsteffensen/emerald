@@ -6,29 +6,21 @@ import (
 )
 
 func TestFloatLiteral(t *testing.T) {
-	input := "15.25"
+	input := "15.25; 4e10; 4.0E-1"
 
 	program := testParseAST(t, input)
 
-	if len(program.Statements) != 1 {
-		t.Fatalf("expected 1 statement, got=%d", len(program.Statements))
-	}
+	expectStatementLength(t, program.Statements, 3)
 
-	expr, ok := program.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf("expected expression got=%#v", program.Statements[0])
-	}
+	testExpressionStatement(t, program.Statements[0], func(float *ast.FloatLiteral) {
+		testFloatLiteral(t, float, 15.25)
+	})
 
-	float, ok := expr.Expression.(*ast.FloatLiteral)
-	if !ok {
-		t.Fatalf("expected float got=%#v", expr.Expression)
-	}
+	testExpressionStatement(t, program.Statements[1], func(float *ast.FloatLiteral) {
+		testFloatLiteral(t, float, 4e10)
+	})
 
-	if float.Value != 15.25 {
-		t.Fatalf("expected float to have value 15.25, got=%f", float.Value)
-	}
-
-	if float.String(1) != "	15.25" {
-		t.Fatalf("expected float to have value 15.25, got=%s", float.String(0))
-	}
+	testExpressionStatement(t, program.Statements[2], func(float *ast.FloatLiteral) {
+		testFloatLiteral(t, float, 4.0e-1)
+	})
 }
