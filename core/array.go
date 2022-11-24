@@ -101,10 +101,6 @@ func arrayEach() object.BuiltInMethod {
 	}
 }
 
-var arrayCompact object.BuiltInMethod = func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-
-}
-
 var arrayCompactBang object.BuiltInMethod = func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 	arr := ctx.Self.(*ArrayInstance)
 

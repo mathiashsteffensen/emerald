@@ -5,13 +5,11 @@ func (l *Lexer) lexDoubleQuotedString(tok *Token) bool {
 	tok.Literal = l.readString()
 
 	if l.nextIsLTEMPLATE() {
-		l.inTemplate = true
+		l.templateNesting += 1
 		l.sendToken(*tok)
 		l.sendToken(l.combineCurrentAndPeek(LTEMPLATE))
 		l.readChar()
 		return true
-	} else if l.inTemplate {
-		l.inTemplate = false
 	}
 
 	return false
@@ -30,6 +28,7 @@ func (l *Lexer) readString() string {
 			break
 		}
 	}
+
 	return l.currentInput.content[position:l.position]
 }
 

@@ -9,7 +9,7 @@ func TestStringLiteralExpression(t *testing.T) {
 	input := `
 		"hello \n\t\a\b\v\f\r\s world"
 		"This is a #{template}"
-		"This is a #{template} also #{boop.method}"
+		"This is a #{template} also #{boop.method} #{"nested #{template}"}"
 	`
 
 	program := testParseAST(t, input)
@@ -31,5 +31,10 @@ func TestStringLiteralExpression(t *testing.T) {
 		testIdentifier(t, expression.Chain.Next.Expression, "template")
 		testStringLiteral(t, expression.Chain.Next.Next.StringLiteral, " also ")
 		testMethodCall(t, expression.Chain.Next.Next.Next.Expression, "boop", "method", []any{}, []string{}, false)
+		testStringLiteral(t, expression.Chain.Next.Next.Next.Next.StringLiteral, " ")
+		testExpression(t, expression.Chain.Next.Next.Next.Next.Next.Expression, func(expression *ast.StringTemplate) {
+			testStringLiteral(t, expression.Chain.StringLiteral, "nested ")
+			testIdentifier(t, expression.Chain.Next.Expression, "template")
+		})
 	})
 }

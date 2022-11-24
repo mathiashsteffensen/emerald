@@ -58,7 +58,7 @@ func TestLexer_Run(t *testing.T) {
 	$: $LOAD_PATH Integer::Math::MAX <=> ===
 	/^[w]|abc/ =~ yield while break += -= ident /= *=
 	#{this is a comment}
-	"this is a #{template}" "this is a #{template} also" "this is a #{template} also #{boop.method}" ½`
+	"this is a #{template}" "this is a #{template} also" "this is a #{template} also #{boop.method} #{"nested #{template}"}" ½`
 
 	tests := []struct {
 		expectedType    TokenType
@@ -317,14 +317,19 @@ func TestLexer_Run(t *testing.T) {
 		{DOT, "."},
 		{IDENT, "method"},
 		{RBRACE, "}"},
+		{STRING, " "},
+		{LTEMPLATE, "#{"},
+		{STRING, "nested "},
+		{LTEMPLATE, "#{"},
+		{IDENT, "template"},
+		{RBRACE, "}"},
+		{RBRACE, "}"},
 		{ILLEGAL, "Â"},
 		{ILLEGAL, "½"},
 		{EOF, ""},
 	}
 
 	l := New(NewInput("test.rb", input))
-
-	l.Feed(NewInput("test.rb", ""))
 
 	l.Run()
 

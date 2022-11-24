@@ -15,12 +15,12 @@ type Lexer struct {
 	outputChan   chan Token
 	lastEmitted  Token
 
-	inTemplate bool
+	templateNesting uint8
 }
 
 func New(input *Input) *Lexer {
 	l := &Lexer{
-		inputChan:  make(chan *Input, 100),
+		inputChan:  make(chan *Input, 10),
 		outputChan: make(chan Token, 500),
 		Line:       1,
 		Column:     -1,
@@ -65,6 +65,10 @@ func (l *Lexer) Feed(input *Input) {
 	}
 
 	l.inputChan <- input
+}
+
+func (l *Lexer) inTemplate() bool {
+	return l.templateNesting != 0
 }
 
 func (l *Lexer) Run() {
@@ -185,7 +189,7 @@ func (l *Lexer) Run() {
 
 				// If we are in a template i.e.
 				// "This is a #{template <We are here>}"
-				if l.inTemplate {
+				if l.inTemplate() {
 					// Emit the RBRACE token immediately
 					l.sendToken(tok)
 
@@ -205,6 +209,8 @@ func (l *Lexer) Run() {
 
 						l.readChar()
 					}
+
+					l.templateNesting -= 1
 
 					continue
 				}
