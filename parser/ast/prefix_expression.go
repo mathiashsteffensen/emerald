@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"emerald/debug"
 	"emerald/parser/lexer"
 	"strings"
 )
@@ -16,10 +17,18 @@ func (pe *PrefixExpression) TokenLiteral() string { return pe.Token.Literal }
 func (pe *PrefixExpression) String(indents ...int) string {
 	var out strings.Builder
 
-	indented(&out, indents[0], "(")
+	indented(&out, indents[0], "")
+
+	if debug.IsTest {
+		out.WriteRune('(')
+	}
+
 	out.WriteString(pe.Operator)
 	out.WriteString(pe.Right.String(0))
-	out.WriteString(")")
+
+	if debug.IsTest {
+		out.WriteRune(')')
+	}
 
 	return out.String()
 }

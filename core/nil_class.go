@@ -9,7 +9,7 @@ var NilClass *object.Class
 var NULL *object.Instance
 
 func InitNilClass() {
-	NilClass = DefineClass(Object, "NilClass", Object)
+	NilClass = DefineClass("NilClass", Object)
 
 	NULL = NilClass.New()
 

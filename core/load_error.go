@@ -8,7 +8,7 @@ import (
 var LoadError *object.Class
 
 func InitLoadError() {
-	LoadError = DefineClass(Object, "LoadError", StandardError)
+	LoadError = DefineClass("LoadError", StandardError)
 
 	DefineSingletonMethod(LoadError, "new", exceptionNew(NewLoadError))
 }

@@ -31,6 +31,7 @@ func init() {
 	InitArgumentError()
 	InitTypeError()
 	InitLoadError()
+	InitNoMethodError()
 
 	// Initialize remaining core classes & modules
 	InitRegexp()

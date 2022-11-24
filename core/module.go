@@ -8,7 +8,7 @@ import (
 var Module *object.Class
 
 func InitModule() {
-	Module = DefineClass(Object, "Module", Object)
+	Module = DefineClass("Module", Object)
 
 	DefineMethod(Module, "define_method", moduleDefineMethod())
 	DefineMethod(Module, "attr_reader", moduleAttrReader())

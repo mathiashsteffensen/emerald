@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"emerald/debug"
 	"emerald/parser/lexer"
 	"strings"
 )
@@ -23,11 +24,23 @@ func (m MethodCall) String(indents ...int) string {
 	var out strings.Builder
 
 	indent := indents[0]
+	var newLineIndent int
 
-	indented(&out, indent, "(")
-	out.WriteString(m.Left.String(0))
+	if len(indents) != 1 {
+		newLineIndent = indents[1]
+	} else {
+		newLineIndent = indent
+	}
+
+	indented(&out, indent, "")
+
+	if debug.IsTest {
+		out.WriteRune('(')
+	}
+
+	out.WriteString(m.Left.String(0, newLineIndent))
 	out.WriteString(".")
-	out.WriteString(m.Method.String(0))
+	out.WriteString(m.Method.String(0, newLineIndent))
 
 	if len(m.Arguments) != 0 {
 		out.WriteString("(")
@@ -54,10 +67,12 @@ func (m MethodCall) String(indents ...int) string {
 		}
 
 		out.WriteString(" ")
-		out.WriteString(m.Block.String(blockIndent))
+		out.WriteString(m.Block.String(blockIndent, newLineIndent))
 	}
 
-	out.WriteString(")")
+	if debug.IsTest {
+		out.WriteRune(')')
+	}
 
 	return out.String()
 }

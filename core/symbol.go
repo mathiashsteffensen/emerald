@@ -5,7 +5,7 @@ import "emerald/object"
 var Symbol *object.Class
 
 func InitSymbol() {
-	Symbol = DefineClass(Object, "Symbol", Object)
+	Symbol = DefineClass("Symbol", Object)
 
 	DefineMethod(Symbol, "to_s", symbolToS())
 }

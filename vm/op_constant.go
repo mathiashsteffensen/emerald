@@ -6,6 +6,7 @@ import (
 	"emerald/heap"
 	"emerald/object"
 	"fmt"
+	"unicode"
 )
 
 func (vm *VM) executeOpConstantGet(ins compiler.Instructions, ip int) {
@@ -35,12 +36,21 @@ func (vm *VM) executeOpScopedConstantGet(ins compiler.Instructions, ip int) {
 
 	self := vm.pop()
 
-	value, err := getConst(self, name)
-	if err != nil {
-		panic(err)
+	var result object.EmeraldValue
+
+	if unicode.IsUpper(rune(name[0])) {
+		value, err := getConst(self, name)
+		if err != nil {
+			err := core.NewStandardError(err.Error())
+			core.Raise(err)
+			return
+		}
+		result = value
+	} else {
+		result = vm.Send(self, name, core.NULL)
 	}
 
-	vm.push(value)
+	vm.push(result)
 }
 
 func getConst(self object.EmeraldValue, name string) (object.EmeraldValue, error) {

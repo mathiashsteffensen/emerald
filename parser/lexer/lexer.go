@@ -431,7 +431,7 @@ func (l *Lexer) readRegexp() string {
 
 func (l *Lexer) readIdentifier() string {
 	position := l.position
-	for isLetter(l.currentChar) {
+	for isLetter(l.currentChar) || isDigit(l.currentChar) {
 		l.readChar()
 	}
 

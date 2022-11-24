@@ -3,7 +3,6 @@
 Emerald is a Ruby compiler & virtual machine written in Go.
 
 ## Building Emerald
-
 Run the following from your command line:
 ```bash
 git clone git@github.com:mathiashsteffensen/emerald.git && \
@@ -17,7 +16,7 @@ To run a source file of Ruby code:
 ./emerald main.rb
 ```
 
-To start the Emerald VM in interactive mode:
+To start the Emerald REPL:
 ```bash
 ./iem
 ```
@@ -30,7 +29,7 @@ The lexer/tokenizer is located in the ./parser/lexer package. I have tried to ke
 1. Don't have a separate lexer & parser.
 2. Turn the lexer into a stack machine since templates can be infinitely nested (or as deep as the stack allows)
 
-And since I prefer the performance of having the parser & lexer separate (they run in parallel) I went with option 2,
+And since I prefer the performance of having the parser & lexer separate (they run in parallel) I went with option 2 (not fully implemented yet, nested templates would throw errors right now),
 but this significantly increases the complexity of the lexer.
 
 ### Parser
@@ -65,15 +64,15 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [ ] without parens with args
     - [x] return keyword
     - [ ] default values for parameters
-    - [ ] keyword arguments
+    - [x] keyword arguments
     - [ ] block arguments
     - [x] yield
-- [ ] method calls
+- [x] method calls
     - [x] with parens
     - [x] without parens
     - [x] without parens with args
     - [x] with block arguments
-    - [ ] keyword arguments
+    - [x] keyword arguments
 - [x] conditionals
     - [x] if
     - [x] if modifier
@@ -189,7 +188,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [ ] `&` (AND)
     - [ ] `^` (XOR)
     - [ ] `>>` (right shift)
-    - [ ] `<<` (left shift, append)
+    - [x] `<<` (left shift, append)
     - [x] `==` (equal)
     - [x] `!=` (not equal)
     - [x] `===` (case equality)

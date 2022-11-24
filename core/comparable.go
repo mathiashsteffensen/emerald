@@ -7,7 +7,7 @@ import "emerald/object"
 var Comparable *object.Module
 
 func InitComparable() {
-	Comparable = DefineModule(Object, "Comparable")
+	Comparable = DefineModule("Comparable")
 
 	DefineMethod(Comparable, "==", comparableEquals())
 	DefineMethod(Comparable, "<", comparableLessThan())

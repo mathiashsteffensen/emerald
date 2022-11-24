@@ -3,13 +3,27 @@ package core
 import (
 	"emerald/heap"
 	"emerald/object"
-	"fmt"
 )
 
 // Send is a function for calling methods that is dependency injected by the emerald/vm package
 var Send func(self object.EmeraldValue, name string, block object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue
 
-func DefineClass(namespace object.EmeraldValue, name string, super *object.Class) *object.Class {
+func DefineClass(name string, super *object.Class) *object.Class {
+	var superClass object.EmeraldValue
+
+	if super != nil {
+		superClass = super.Class()
+	}
+
+	class := object.NewClass(name, super, superClass, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+
+	Object.NamespaceDefinitionSet(name, class)
+	class.SetParentNamespace(Object)
+
+	return class
+}
+
+func DefineNestedClass(namespace object.EmeraldValue, name string, super *object.Class) *object.Class {
 	var superClass object.EmeraldValue
 
 	if super != nil {
@@ -24,13 +38,20 @@ func DefineClass(namespace object.EmeraldValue, name string, super *object.Class
 	return class
 }
 
-func DefineModule(namespace object.EmeraldValue, name string) *object.Module {
+func DefineModule(name string) *object.Module {
 	module := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-	if namespace != nil {
-		namespace.NamespaceDefinitionSet(name, module)
-		module.SetParentNamespace(namespace)
-	}
+	Object.NamespaceDefinitionSet(name, module)
+	module.SetParentNamespace(Object)
+
+	return module
+}
+
+func DefineNestedModule(namespace object.EmeraldValue, name string) *object.Module {
+	module := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+
+	Object.NamespaceDefinitionSet(name, module)
+	module.SetParentNamespace(Object)
 
 	return module
 }
@@ -80,7 +101,7 @@ func EnforceArity(
 func EnforceArgumentType[T object.EmeraldValue](typ *object.Class, arg object.EmeraldValue) (T, object.EmeraldError) {
 	argClass := arg.Class().Super().(*object.Class)
 	if argClass.Name != typ.Name {
-		err := NewTypeError(fmt.Sprintf("no implicit conversion of %s into %s", argClass.Name, typ.Name))
+		err := NewNoConversionTypeError(typ.Name, argClass.Name)
 		Raise(err)
 		var empty T
 		return empty, err

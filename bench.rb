@@ -81,12 +81,30 @@ def bench_hash_literal(n)
     end
 end
 
+class C
+    def call
+        nil
+    end
+end
+
+def bench_method_calls(n)
+    measure_time "Method call #{n}" do
+        c = C.new
+        n.times do
+            c.call
+        end
+    end
+end
+
 5.times do
-    bench_fib_iterative(160_800)
+    # bench_fib_iterative(160_800)
     # bench_boolean_negate(1_000_000)
     # bench_string_add 100_000
     # bench_string_template 100_000
     # bench_hash_literal 1_000_000
+    bench_method_calls 100_000
 end
 
 sleep 1
+
+puts $LOAD_PATH.join("\n")

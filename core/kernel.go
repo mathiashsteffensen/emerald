@@ -1,7 +1,7 @@
 package core
 
 import (
-	"emerald/log"
+	"emerald/debug"
 	"emerald/object"
 	"errors"
 	"fmt"
@@ -17,7 +17,7 @@ var Kernel *object.Module
 var Compile func(fileName string, content string) []byte
 
 func InitKernel() {
-	Kernel = DefineModule(nil, "Kernel")
+	Kernel = object.NewModule("Kernel", object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
 	DefineMethod(Kernel, "inspect", kernelInspect())
 	DefineMethod(Kernel, "raise", kernelRaise())
@@ -145,12 +145,21 @@ func kernelRaise() object.BuiltInMethod {
 
 func kernelRequireRelative() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		path := args[0].(*StringInstance).Value
+		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
+			return err
+		}
+
+		arg, emErr := EnforceArgumentType[*StringInstance](String, args[0])
+		if emErr != nil {
+			return emErr
+		}
+
+		path := arg.Value
 		fileParts := strings.Split(ctx.File, "/")
 		fileParts[len(fileParts)-1] = ""
 		dir := filepath.Join(fileParts...)
 
-		log.InternalDebugF("Attempting to require %s from dir %s", path, dir)
+		debug.InternalDebugF("Attempting to require %s from dir %s", path, dir)
 
 		absoluteFilePath, err := filepath.Abs("/" + filepath.Join(dir, path))
 		if err != nil {
@@ -159,11 +168,9 @@ func kernelRequireRelative() object.BuiltInMethod {
 
 		absolutePathStr := NewString(absoluteFilePath)
 
-		requiredFiles := requiredFilesHash()
-
 		// File has already been loaded
-		if requiredFiles.Get(absolutePathStr) != NULL {
-			log.InternalDebugF("Kernel#require_relative - File %s is already loaded, skipping", absoluteFilePath)
+		if requiredFilesHash.Get(absolutePathStr) != NULL {
+			debug.InternalDebugF("Kernel#require_relative - File %s is already loaded, skipping", absoluteFilePath)
 			return FALSE
 		}
 
@@ -179,7 +186,7 @@ func kernelRequireRelative() object.BuiltInMethod {
 
 		instructions := Compile(absoluteFilePath, string(sourceContent))
 
-		log.InternalDebugF("Kernel#require_relative - Successfully compiled file %s", absoluteFilePath)
+		debug.InternalDebugF("Kernel#require_relative - Successfully compiled file %s", absoluteFilePath)
 
 		requiredBlock := object.NewClosedBlock(&object.Context{
 			Outer: nil,
@@ -194,7 +201,7 @@ func kernelRequireRelative() object.BuiltInMethod {
 
 		object.EvalBlock(requiredBlock)
 
-		requiredFiles.Set(absolutePathStr, TRUE)
+		requiredFilesHash.Set(absolutePathStr, TRUE)
 
 		return TRUE
 	}
@@ -206,16 +213,7 @@ func kernelInspect() object.BuiltInMethod {
 	}
 }
 
-func requiredFilesHash() *HashInstance {
-	requiredFiles := Kernel.InstanceVariableGet("required_files", Kernel, Kernel)
-	if requiredFiles == nil {
-		hash := NewHash()
-		Kernel.InstanceVariableSet("required_files", hash)
-		return hash
-	} else {
-		return requiredFiles.(*HashInstance)
-	}
-}
+var requiredFilesHash = NewHash()
 
 func writeToStdout(str string) object.EmeraldError {
 	_, err := os.Stdout.WriteString(str)

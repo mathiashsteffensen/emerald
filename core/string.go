@@ -21,7 +21,9 @@ func NewString(val string) object.EmeraldValue {
 }
 
 func InitString() {
-	String = DefineClass(Object, "String", Object)
+	String = DefineClass("String", Object)
+
+	DefineSingletonMethod(String, "new", stringNew())
 
 	DefineMethod(String, "to_s", stringToS())
 	DefineMethod(String, "inspect", stringInspect())
@@ -34,6 +36,26 @@ func InitString() {
 	DefineMethod(String, "upcase", stringUpcase())
 	DefineMethod(String, "size", stringSize())
 	DefineMethod(String, "length", stringSize())
+}
+
+func stringNew() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		args, err := EnforceArity(args, kwargs, 0, 1, []string{})
+		if err != nil {
+			return err
+		}
+
+		if len(args) == 1 {
+			str, err := EnforceArgumentType[*StringInstance](String, args[0])
+			if err != nil {
+				return err
+			}
+
+			return str
+		}
+
+		return NewString("")
+	}
 }
 
 func stringToS() object.BuiltInMethod {

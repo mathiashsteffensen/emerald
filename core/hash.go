@@ -8,7 +8,7 @@ import (
 var Hash *object.Class
 
 func InitHash() {
-	Hash = DefineClass(Object, "Hash", Object)
+	Hash = DefineClass("Hash", Object)
 
 	Hash.Include(Enumerable)
 

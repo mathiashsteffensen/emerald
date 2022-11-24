@@ -9,10 +9,11 @@ import (
 var Enumerable *object.Module
 
 func InitEnumerable() {
-	Enumerable = DefineModule(Object, "Enumerable")
+	Enumerable = DefineModule("Enumerable")
 
 	DefineMethod(Enumerable, "first", enumerableFirst())
 	DefineMethod(Enumerable, "find", enumerableFind())
+	DefineMethod(Enumerable, "detect", enumerableFind())
 	DefineMethod(Enumerable, "find_index", enumerableFindIndex())
 	DefineMethod(Enumerable, "map", enumerableMap())
 	DefineMethod(Enumerable, "reduce", enumerableReduce())

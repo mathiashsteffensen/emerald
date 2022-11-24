@@ -8,7 +8,7 @@ import (
 var StandardError *object.Class
 
 func InitStandardError() {
-	StandardError = DefineClass(Object, "StandardError", Exception)
+	StandardError = DefineClass("StandardError", Exception)
 
 	DefineSingletonMethod(StandardError, "new", exceptionNew(NewStandardError))
 }

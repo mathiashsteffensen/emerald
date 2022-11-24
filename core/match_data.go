@@ -17,7 +17,7 @@ type MatchDataInstance struct {
 }
 
 func InitMatchData() {
-	MatchData = DefineClass(Object, "MatchData", Object)
+	MatchData = DefineClass("MatchData", Object)
 
 	DefineMethod(MatchData, "[]", matchDataIndexAccessor())
 	DefineMethod(MatchData, "to_s", matchDataToS())

@@ -2,6 +2,21 @@ package core_test
 
 import "testing"
 
+func TestArray_compactBang(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "arr = [2, 3, nil, 5]; arr.compact!; arr",
+			expected: []any{2, 3, 5},
+		},
+		{
+			input:    "arr = [nil, 2, nil]; arr.compact!; arr",
+			expected: []any{2},
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestArray_push(t *testing.T) {
 	tests := []coreTestCase{
 		{

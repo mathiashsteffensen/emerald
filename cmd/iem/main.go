@@ -1,7 +1,7 @@
 package main
 
 import (
-	"emerald/log"
+	"emerald/debug"
 	"emerald/repl"
 	"flag"
 	"os"
@@ -10,7 +10,7 @@ import (
 var outputMode = flag.String("outmode", "inspect", "EM_DEBUG=1 iem -outmode=ast")
 
 func main() {
-	log.ExperimentalWarning()
+	debug.ExperimentalWarning()
 
 	flag.Parse()
 

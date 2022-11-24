@@ -1,14 +1,14 @@
 package helpers
 
 import (
-	"emerald/log"
+	"emerald/debug"
 	"fmt"
 	"os"
 )
 
 func RecoverWithStacktrace() {
 	if r := recover(); r != nil {
-		log.StackTrace(r)
+		debug.StackTrace(r)
 	}
 }
 

@@ -1,55 +1,69 @@
-package log
+package debug
 
 import (
 	"emerald/types"
 	"fmt"
 	"os"
+	"path"
 	"runtime/debug"
 	"strings"
 	"time"
 )
 
-type Level int
+type LogLevel int
 
 const (
-	InternalDebugLevel Level = iota
-	DebugLevel
-	WarnLevel
-	FatalLevel
+	LogInternalDebugLevel LogLevel = iota
+	LogDebugLevel
+	LogWarnLevel
+	LogFatalLevel
 )
 
-var currentLevel = DebugLevel
+var currentLevel = LogDebugLevel
 var trueEnvValues = types.NewSlice("true", "on", "1")
+var IsTest bool
+var BinaryDir string
 
-func (l Level) String() string {
+func (l LogLevel) String() string {
 	switch l {
-	case InternalDebugLevel:
+	case LogInternalDebugLevel:
 		return "INTERNAL"
-	case DebugLevel:
+	case LogDebugLevel:
 		return "DEBUG"
-	case WarnLevel:
+	case LogWarnLevel:
 		return "WARN"
-	case FatalLevel:
+	case LogFatalLevel:
 		return "FATAL"
 	}
 
 	return ""
 }
 
-func IsLevel(level Level) bool {
+func IsLevel(level LogLevel) bool {
 	return currentLevel == level
 }
 
 func init() {
 	if setInternalDebug := os.Getenv("EM_DEBUG"); trueEnvValues.Includes(setInternalDebug) {
-		currentLevel = InternalDebugLevel
+		currentLevel = LogInternalDebugLevel
 	}
+
+	isTestString := os.Getenv("EM_TEST")
+	IsTest = trueEnvValues.Includes(isTestString)
+
+	e, err := os.Executable()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	BinaryDir = path.Dir(e)
 
 	go logRoutine()
 }
 
 type message struct {
-	level  Level
+	level  LogLevel
 	format string
 	args   []any
 }
@@ -61,45 +75,45 @@ func Shutdown() {
 	doneChan <- true
 }
 
-func writeToChan(level Level, msg string) {
+func writeToChan(level LogLevel, msg string) {
 	write(level, msg)
 }
 
-func writeToChanF(level Level, format string, args ...any) {
+func writeToChanF(level LogLevel, format string, args ...any) {
 	writef(level, format, args...)
 }
 
 func InternalDebug(msg string) {
-	writeToChan(InternalDebugLevel, msg)
+	writeToChan(LogInternalDebugLevel, msg)
 }
 
 func InternalDebugF(format string, args ...any) {
-	writeToChanF(InternalDebugLevel, format, args...)
+	writeToChanF(LogInternalDebugLevel, format, args...)
 }
 
 func Debug(msg string) {
-	writeToChan(DebugLevel, msg)
+	writeToChan(LogDebugLevel, msg)
 }
 
 func DebugF(format string, args ...any) {
-	writeToChanF(DebugLevel, format, args...)
+	writeToChanF(LogDebugLevel, format, args...)
 }
 
 func Warn(msg string) {
-	writeToChan(WarnLevel, msg)
+	writeToChan(LogWarnLevel, msg)
 }
 
 func WarnF(format string, args ...any) {
-	writeToChanF(WarnLevel, format, args...)
+	writeToChanF(LogWarnLevel, format, args...)
 }
 
 func Fatal(msg string) {
-	writeToChan(FatalLevel, msg)
+	writeToChan(LogFatalLevel, msg)
 	os.Exit(1)
 }
 
 func FatalF(format string, args ...any) {
-	writeToChanF(FatalLevel, format, args...)
+	writeToChanF(LogFatalLevel, format, args...)
 	time.Sleep(200 * time.Millisecond)
 	os.Exit(1)
 }
@@ -128,13 +142,13 @@ func ExperimentalWarning() {
 	)
 }
 
-func write(level Level, msg string) {
+func write(level LogLevel, msg string) {
 	if level >= currentLevel {
 		fmt.Printf("[%s] %s\n", level, msg)
 	}
 }
 
-func writef(level Level, format string, args ...any) {
+func writef(level LogLevel, format string, args ...any) {
 	if level >= currentLevel {
 		write(level, fmt.Sprintf(format, args...))
 	}

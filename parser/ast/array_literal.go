@@ -17,6 +17,10 @@ func (al *ArrayLiteral) String(indents ...int) string {
 
 	indent := indents[0]
 
+	if len(al.Value) == 0 {
+		return indented(&out, indent, "[]").String()
+	}
+
 	indented(&out, indent, "[\n")
 
 	var newlineIndent int

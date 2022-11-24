@@ -8,7 +8,7 @@ import (
 var RuntimeError *object.Class
 
 func InitRuntimeError() {
-	RuntimeError = DefineClass(Object, "RuntimeError", StandardError)
+	RuntimeError = DefineClass("RuntimeError", StandardError)
 
 	DefineSingletonMethod(RuntimeError, "new", exceptionNew(NewRuntimeError))
 }

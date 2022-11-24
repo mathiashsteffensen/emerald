@@ -7,7 +7,7 @@ var FalseClass *object.Class
 var FALSE object.EmeraldValue
 
 func InitFalseClass() {
-	FalseClass = DefineClass(Object, "FalseClass", Object)
+	FalseClass = DefineClass("FalseClass", Object)
 
 	DefineMethod(FalseClass, "to_s", falseToS())
 	DefineMethod(FalseClass, "inspect", falseToS())

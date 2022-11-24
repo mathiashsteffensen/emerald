@@ -7,7 +7,7 @@ var TrueClass *object.Class
 var TRUE object.EmeraldValue
 
 func InitTrueClass() {
-	TrueClass = DefineClass(Object, "TrueClass", Object)
+	TrueClass = DefineClass("TrueClass", Object)
 
 	DefineMethod(TrueClass, "to_s", trueToS())
 	DefineMethod(TrueClass, "inspect", trueToS())

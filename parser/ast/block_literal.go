@@ -20,6 +20,13 @@ func (bl *BlockLiteral) String(indents ...int) string {
 	var out strings.Builder
 
 	indent := indents[0]
+	var newLineIndent int
+
+	if len(indents) != 1 {
+		newLineIndent = indents[1]
+	} else {
+		newLineIndent = indent
+	}
 
 	out.WriteString(bl.TokenLiteral())
 
@@ -35,17 +42,17 @@ func (bl *BlockLiteral) String(indents ...int) string {
 	}
 
 	out.WriteString("\n")
-	out.WriteString(bl.Body.String(indent + 1))
+	out.WriteString(bl.Body.String(newLineIndent + 1))
 
 	if bl.TokenLiteral() == "{" {
-		indented(&out, indent, "}")
+		indented(&out, newLineIndent, "}")
 	} else {
 		for _, block := range bl.RescueBlocks {
-			out.WriteString(block.String(indent))
+			out.WriteString(block.String(newLineIndent))
 		}
 
 		if bl.EnsureBlock != nil {
-			out.WriteString(bl.EnsureBlock.String(indent))
+			out.WriteString(bl.EnsureBlock.String(newLineIndent))
 		}
 
 		indented(&out, indent, "end")

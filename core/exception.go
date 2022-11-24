@@ -13,7 +13,7 @@ func (err *ExceptionInstance) Message() string   { return err.message }
 func (err *ExceptionInstance) ClassName() string { return Exception.Name }
 
 func InitException() {
-	Exception = DefineClass(Object, "Exception", Object)
+	Exception = DefineClass("Exception", Object)
 
 	DefineSingletonMethod(Exception, "new", exceptionNew(NewException))
 

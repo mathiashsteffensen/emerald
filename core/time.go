@@ -20,7 +20,7 @@ func NewTime(val time.Time) *TimeInstance {
 }
 
 func init() {
-	Time = DefineClass(Object, "Time", Object)
+	Time = DefineClass("Time", Object)
 
 	DefineSingletonMethod(Time, "new", timeNew())
 	DefineSingletonMethod(Time, "now", timeNew())

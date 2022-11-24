@@ -21,7 +21,7 @@ func NewInteger(val int64) object.EmeraldValue {
 }
 
 func InitInteger() {
-	Integer = DefineClass(Object, "Integer", Numeric)
+	Integer = DefineClass("Integer", Numeric)
 
 	Integer.Include(Comparable)
 

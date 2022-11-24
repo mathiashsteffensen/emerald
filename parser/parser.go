@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"emerald/log"
+	"emerald/debug"
 	ast "emerald/parser/ast"
 	"emerald/parser/lexer"
 	"fmt"
@@ -109,7 +109,7 @@ func (p *Parser) Errors() []string {
 }
 
 func (p *Parser) addError(msg string) {
-	log.InternalDebugF("SyntaxError: %s", msg)
+	debug.InternalDebugF("SyntaxError: %s", msg)
 	p.errors = append(p.errors, msg)
 }
 
@@ -118,8 +118,11 @@ func (p *Parser) unexpectedEofError() {
 }
 
 func (p *Parser) peekError(t lexer.TokenType) {
-	p.addError(fmt.Sprintf("expected next token to be %s, got %s instead",
-		t, p.peekToken.Type))
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
+	if !debug.IsTest {
+		msg = fmt.Sprintf("%s at line %d column %d\n%s", msg, p.peekToken.Line, p.peekToken.Column, p.l.Snapshot(p.peekToken))
+	}
+	p.addError(msg)
 }
 
 func (p *Parser) noPrefixParseFnError() {
@@ -225,8 +228,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 ParseIfMethodCall:
 	p.nextIfNewline()
 	if p.peekTokenIs(lexer.DOT) {
-		p.nextToken()
-		stmt.Expression = p.parseMethodCall(stmt.Expression)
+		stmt.Expression = p.parseAsInfix(stmt.Expression, LOWEST)
 		goto ParseIfMethodCall
 	}
 
@@ -240,17 +242,21 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	leftExp := p.parseAsPrefix()
 
+	return p.parseAsInfix(leftExp, precedence)
+}
+
+func (p *Parser) parseAsInfix(left ast.Expression, precedence int) ast.Expression {
 	for !p.peekTokenIs(lexer.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
-			return leftExp
+			return left
 		}
 		p.nextToken()
 
-		leftExp = infix(leftExp)
+		left = infix(left)
 	}
 
-	return leftExp
+	return left
 }
 
 func (p *Parser) parseAsPrefix() ast.Expression {

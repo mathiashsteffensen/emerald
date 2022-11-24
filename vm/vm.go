@@ -3,8 +3,8 @@ package vm
 import (
 	"emerald/compiler"
 	"emerald/core"
+	"emerald/debug"
 	"emerald/heap"
-	"emerald/log"
 	"emerald/object"
 	"fmt"
 )
@@ -32,6 +32,10 @@ func New(file string, bytecode *compiler.Bytecode) *VM {
 	}
 
 	vm.ctx = vm.newContext(file, core.MainObject, core.NULL)
+
+	heap.SetGlobalVariableString("$LOAD_PATH", core.NewArray([]object.EmeraldValue{
+		core.NewString(debug.BinaryDir),
+	}))
 
 	object.EvalBlock = func(block *object.ClosedBlock, args ...object.EmeraldValue) object.EmeraldValue {
 		return vm.withExecutionContextForBlock(block, func() object.EmeraldValue {
@@ -236,7 +240,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		class, err := getConst(vm.ctx.Self, name)
 		if err != nil {
 			// If not create a new class object
-			class = core.DefineClass(vm.ctx.Self, name, parent.(*object.Class))
+			class = core.DefineNestedClass(vm.ctx.Self, name, parent.(*object.Class))
 		}
 
 		// Create and set a new Context with this class as Self
@@ -248,7 +252,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 
 		module, err := getConst(vm.ctx.Self, name)
 		if err != nil {
-			module = core.DefineModule(vm.ctx.Self, name)
+			module = core.DefineNestedModule(vm.ctx.Self, name)
 		}
 
 		vm.ctx = vm.newEnclosedContext(outerCtx.File, module, outerCtx.Block)
@@ -302,7 +306,7 @@ func (vm *VM) callFunction(numArgs int, hasKwargs bool) {
 		var ok bool
 		kwargsHash, ok = vm.currentFiber().pop().(*core.HashInstance)
 		if !ok {
-			log.FatalBugF("Keyword arguments instance was not a hash, got %s", vm.currentFiber().StackTop().Inspect())
+			debug.FatalBugF("Keyword arguments instance was not a hash, got %s", vm.currentFiber().StackTop().Inspect())
 		}
 		basePointer = vm.currentFiber().sp - (numArgs - kwargsHash.Values.Len())
 	} else {
@@ -315,11 +319,11 @@ func (vm *VM) callFunction(numArgs int, hasKwargs bool) {
 
 	method, err := receiver.Class().ExtractMethod(name.Value, receiver.Class(), receiver)
 	if err != nil {
-		core.Raise(core.NewException(fmt.Sprintf("undefined method %s for %s", name.Value, receiver.Inspect())))
+		core.Raise(core.NewNoMethodError(fmt.Sprintf("undefined method %s for %s", name.Value, receiver.Inspect())))
 	}
 
 	// Handy for debugging, but makes the VM quite slow when logging in a hot loop
-	// log.DebugF("Calling method %s#%s %d %s", receiver.Inspect(), name.Value, numArgs)
+	// debug.DebugF("Calling method %s#%s %d %s", receiver.Inspect(), name.Value, numArgs)
 
 	vm.withExecutionContext(receiver, block, func() {
 		switch method := method.(type) {

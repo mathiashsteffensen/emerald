@@ -21,7 +21,7 @@ func NewRange(begin object.EmeraldValue, end object.EmeraldValue, excludeEnd boo
 }
 
 func InitRange() {
-	Range = DefineClass(Object, "Range", Object)
+	Range = DefineClass("Range", Object)
 
 	Range.Include(Enumerable)
 

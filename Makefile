@@ -39,15 +39,15 @@ install:
 
 test:
 	@echo "Running test ${RUN}" && echo "" && \
-	go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ -run=${RUN}
+	EM_TEST=1 go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ -run=${RUN}
 
 test-all:
 	@echo "Running test suite" && echo "" && \
- 	go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ --timeout=1s -coverprofile=./tmp/coverage.out && \
+ 	EM_TEST=1 go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ --timeout=1s -coverprofile=./tmp/coverage.out && \
  	go tool cover -html=tmp/coverage.out -o tmp/coverage.html && echo ""
 
 ci-test:
-	go test ./parser/lexer ./parser ./compiler/ ./object/ ./vm/ ./core/
+	EM_TEST=1 go test ./parser/lexer ./parser ./compiler/ ./object/ ./vm/ ./core/
 
 lint:
 	@echo "Linting ..." && staticcheck ./... && echo ""

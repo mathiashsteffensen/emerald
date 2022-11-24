@@ -24,7 +24,7 @@ func NewRegexp(pattern string) *RegexpInstance {
 }
 
 func InitRegexp() {
-	Regexp = DefineClass(Object, "Regexp", Object)
+	Regexp = DefineClass("Regexp", Object)
 
 	DefineSingletonMethod(Regexp, "new", regexpNew())
 	DefineSingletonMethod(Regexp, "last_match", regexpLastMatch())

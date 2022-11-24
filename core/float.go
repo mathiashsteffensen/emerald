@@ -8,7 +8,7 @@ import (
 var Float *object.Class
 
 func InitFloat() {
-	Float = DefineClass(Object, "Float", Numeric)
+	Float = DefineClass("Float", Numeric)
 
 	Float.Include(Comparable)
 

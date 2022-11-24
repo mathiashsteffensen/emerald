@@ -8,7 +8,7 @@ import (
 var TypeError *object.Class
 
 func InitTypeError() {
-	TypeError = DefineClass(Object, "TypeError", StandardError)
+	TypeError = DefineClass("TypeError", StandardError)
 
 	DefineSingletonMethod(TypeError, "new", exceptionNew(NewTypeError))
 }

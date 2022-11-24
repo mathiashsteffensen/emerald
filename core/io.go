@@ -22,7 +22,7 @@ func NewIO(fd uintptr) *IOInstance {
 }
 
 func InitIO() {
-	IO = DefineClass(Object, "IO", Object)
+	IO = DefineClass("IO", Object)
 
 	DefineSingletonMethod(IO, "new", ioNew())
 	DefineSingletonMethod(IO, "sysopen", ioSysopen())

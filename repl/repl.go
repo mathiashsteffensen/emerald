@@ -3,8 +3,8 @@ package repl
 import (
 	"emerald/compiler"
 	"emerald/core"
+	"emerald/debug"
 	"emerald/heap"
-	"emerald/log"
 	"emerald/object"
 	"emerald/parser"
 	"emerald/parser/ast"
@@ -123,13 +123,13 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 		code := comp.Bytecode()
 
 		if config.OutputBytecode {
-			log.InternalDebugF("Emerald bytecode: \n%s", code.Instructions[0:])
+			debug.InternalDebugF("Emerald bytecode: \n%s", code.Instructions[0:])
 			time.Sleep(50 * time.Millisecond)
 		}
 
 		currentWorkingDir, err := os.Getwd()
 		if err != nil {
-			log.Fatal(err.Error())
+			debug.Fatal(err.Error())
 		}
 
 		machine := vm.New(currentWorkingDir, code)

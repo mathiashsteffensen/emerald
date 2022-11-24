@@ -2,7 +2,7 @@ package subcmd
 
 import (
 	"emerald/cmd/helpers"
-	"emerald/log"
+	"emerald/debug"
 	"emerald/parser"
 	"emerald/parser/lexer"
 	"github.com/spf13/cobra"
@@ -33,12 +33,12 @@ var ParseCmd = &cobra.Command{
 			done := time.Since(start)
 
 			if len(p.Errors()) != 0 {
-				log.FatalF("parser error: %s\n", p.Errors()[0])
+				debug.FatalF("parser error: %s\n", p.Errors()[0])
 			}
 
-			log.Debug("\n" + program.String(0))
+			debug.Debug("\n" + program.String(0))
 
-			log.DebugF("Parsed file %s in %s", file, done)
+			debug.DebugF("Parsed file %s in %s", file, done)
 		}
 	},
 }

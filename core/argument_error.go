@@ -20,7 +20,7 @@ func (err *ArgumentErrorInstance) Inspect() string {
 }
 
 func InitArgumentError() {
-	ArgumentError = DefineClass(Object, "ArgumentError", StandardError)
+	ArgumentError = DefineClass("ArgumentError", StandardError)
 
 	DefineSingletonMethod(ArgumentError, "new", exceptionNew(newArgumentError))
 }

@@ -4,8 +4,8 @@ import (
 	"emerald/cmd/emerald/subcmd"
 	"emerald/cmd/helpers"
 	"emerald/compiler"
+	"emerald/debug"
 	"emerald/heap"
-	"emerald/log"
 	"emerald/object"
 	"emerald/parser"
 	"emerald/parser/lexer"
@@ -26,7 +26,7 @@ var rootCmd = &cobra.Command{
 	Long:  "Emerald is a Ruby compiler & Virtual Machine implemented in Go",
 	Args:  cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.ExperimentalWarning()
+		debug.ExperimentalWarning()
 
 		if logHeapUsage {
 			go logHeapUsageRoutine()
@@ -46,7 +46,7 @@ var rootCmd = &cobra.Command{
 			program := p.ParseAST()
 
 			if len(p.Errors()) != 0 {
-				log.FatalF("parser error: %s\n", p.Errors()[0])
+				debug.FatalF("parser error: %s\n", p.Errors()[0])
 			}
 
 			c := compiler.New()
@@ -57,14 +57,14 @@ var rootCmd = &cobra.Command{
 
 			if exception := heap.GetGlobalVariableString("$!"); exception != nil {
 				exception := exception.(object.EmeraldError)
-				log.FatalF("%s: %s", exception.ClassName(), exception.Message())
+				debug.FatalF("%s: %s", exception.ClassName(), exception.Message())
 			}
 
 			if machine.StackTop() != nil {
-				log.InternalDebug("StackTop was not nil")
+				debug.InternalDebug("StackTop was not nil")
 			}
 
-			log.Shutdown()
+			debug.Shutdown()
 		}
 	},
 }
@@ -78,7 +78,7 @@ func init() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		log.FatalF("error: %s", err)
+		debug.FatalF("error: %s", err)
 		os.Exit(1)
 	}
 }
@@ -92,6 +92,6 @@ func logHeapUsageRoutine() {
 		runtime.ReadMemStats(&m)
 		heapAlloc := float64(m.HeapAlloc) / 1024 / 1024 // In MB
 
-		log.DebugF("Heap size: %fMB", heapAlloc)
+		debug.DebugF("Heap size: %fMB", heapAlloc)
 	}
 }
