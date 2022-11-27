@@ -3,6 +3,7 @@ package core
 import (
 	"emerald/object"
 	"github.com/elliotchance/orderedmap/v2"
+	"strings"
 )
 
 var Hash *object.Class
@@ -16,6 +17,8 @@ func InitHash() {
 	DefineMethod(Hash, "[]=", hashIndexSetter())
 	DefineMethod(Hash, "==", hashEquals())
 	DefineMethod(Hash, "each", hashEach())
+	DefineMethod(Hash, "to_s", hashToS())
+	DefineMethod(Hash, "inspect", hashToS())
 }
 
 type HashInstance struct {
@@ -48,26 +51,35 @@ func (hash *HashInstance) Each(callback func(key object.EmeraldValue, value obje
 	}
 }
 
-//func hashToS() object.BuiltInMethod {
-//	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-//		if _, err := EnforceArity(args, kwargs, 0, 0, []string{}); err != nil {
-//			return err
-//		}
-//
-//		var out strings.Builder
-//
-//		out.WriteRune('{')
-//
-//		ctx.Self.(*HashInstance).Each(func(key object.EmeraldValue, value object.EmeraldValue) {
-//			out.WriteString(Send(key, "to_s", NULL).(*StringInstance).Value)
-//			out.WriteString(Send(value, "to_s", NULL).(*StringInstance).Value)
-//		})
-//
-//		out.WriteRune('}')
-//
-//		return NewString(out.String())
-//	}
-//}
+func hashToS() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 0, 0, []string{}); err != nil {
+			return err
+		}
+
+		pairs := []string{}
+
+		ctx.Self.(*HashInstance).Each(func(key object.EmeraldValue, value object.EmeraldValue) {
+			var out strings.Builder
+
+			out.WriteString(Send(key, "to_s", NULL).(*StringInstance).Value)
+			out.WriteString(" => ")
+			out.WriteString(Send(value, "to_s", NULL).(*StringInstance).Value)
+
+			pairs = append(pairs, out.String())
+		})
+
+		var out strings.Builder
+
+		out.WriteRune('{')
+
+		out.WriteString(strings.Join(pairs, ", "))
+
+		out.WriteRune('}')
+
+		return NewString(out.String())
+	}
+}
 
 func hashIndexAccessor() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {

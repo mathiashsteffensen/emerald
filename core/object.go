@@ -37,9 +37,15 @@ func objectToS() object.BuiltInMethod {
 	}
 }
 
+var mainObjectToSResult object.EmeraldValue = nil
+
 func mainObjectToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString("main")
+		if mainObjectToSResult == nil {
+			mainObjectToSResult = NewString("main")
+		}
+
+		return mainObjectToSResult
 	}
 }
 
