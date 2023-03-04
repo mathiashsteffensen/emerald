@@ -24,7 +24,7 @@ func InitModule() {
 
 func moduleDefineMethod() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 

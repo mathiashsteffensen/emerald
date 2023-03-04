@@ -40,7 +40,7 @@ func InitString() {
 
 func stringNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		args, err := EnforceArity(args, kwargs, 0, 1, []string{})
+		args, err := EnforceArity(args, kwargs, 0, 1)
 		if err != nil {
 			return err
 		}
@@ -93,7 +93,7 @@ func stringAdd() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		selfString := ctx.Self.(*StringInstance)
 
-		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
 			return NULL
 		}
 
@@ -110,7 +110,7 @@ func stringMultiply() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		selfString := ctx.Self.(*StringInstance)
 
-		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 

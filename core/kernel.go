@@ -46,7 +46,7 @@ func kernelClass() object.BuiltInMethod {
 
 func kernelKindOf() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 
@@ -103,7 +103,7 @@ func kernelPuts() object.BuiltInMethod {
 
 func kernelInclude() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 255, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 255); err != nil {
 			return err
 		}
 
@@ -126,7 +126,7 @@ func kernelInclude() object.BuiltInMethod {
 
 func kernelRaise() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		args, err := EnforceArity(args, kwargs, 1, 2, []string{})
+		args, err := EnforceArity(args, kwargs, 1, 2)
 		if err != nil {
 			return err
 		}
@@ -145,7 +145,7 @@ func kernelRaise() object.BuiltInMethod {
 
 func kernelRequireRelative() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 

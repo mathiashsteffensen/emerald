@@ -50,7 +50,7 @@ func integerToS() object.BuiltInMethod {
 
 func integerCaseEq() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 
@@ -143,7 +143,7 @@ func integerSpaceship() object.BuiltInMethod {
 
 func integerInfixOperator(cb func(left int64, right int64) object.EmeraldValue) object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 		right, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])

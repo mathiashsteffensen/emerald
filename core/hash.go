@@ -53,7 +53,7 @@ func (hash *HashInstance) Each(callback func(key object.EmeraldValue, value obje
 
 func hashToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 0, 0, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 0, 0); err != nil {
 			return err
 		}
 
@@ -83,7 +83,7 @@ func hashToS() object.BuiltInMethod {
 
 func hashIndexAccessor() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 
@@ -93,7 +93,7 @@ func hashIndexAccessor() object.BuiltInMethod {
 
 func hashIndexSetter() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 2, 2, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 2, 2); err != nil {
 			return err
 		}
 
@@ -117,7 +117,7 @@ func hashEach() object.BuiltInMethod {
 
 func hashEquals() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		args, err := EnforceArity(args, kwargs, 1, 1, []string{})
+		args, err := EnforceArity(args, kwargs, 1, 1)
 
 		if err != nil {
 			return err

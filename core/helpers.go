@@ -69,7 +69,7 @@ func EnforceArity(
 	kwargs map[string]object.EmeraldValue,
 	minArgs int,
 	maxArgs int,
-	requiredKwargs []string,
+	requiredKwargs ...string,
 ) ([]object.EmeraldValue, object.EmeraldError) {
 	var err object.EmeraldError
 

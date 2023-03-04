@@ -23,7 +23,7 @@ func InitEnumerable() {
 
 func enumerableFirst() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 0, 1, []string{}); err != nil {
+		if _, err := EnforceArity(args, kwargs, 0, 1); err != nil {
 			return err
 		}
 

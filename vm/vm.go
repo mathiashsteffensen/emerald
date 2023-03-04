@@ -343,7 +343,7 @@ func (vm *VM) callFunction(numArgs int, hasKwargs bool) {
 				argsEndIndex = vm.currentFiber().sp
 			}
 
-			if _, err := core.EnforceArity(vm.stack()[basePointer:argsEndIndex], kwargsMap, method.NumArgs, method.NumArgs, method.Kwargs); err != nil {
+			if _, err := core.EnforceArity(vm.stack()[basePointer:argsEndIndex], kwargsMap, method.NumArgs, method.NumArgs, method.Kwargs...); err != nil {
 				return
 			}
 

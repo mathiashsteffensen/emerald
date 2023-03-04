@@ -38,4 +38,5 @@ func init() {
 	InitMatchData()
 	InitRange()
 	InitIO()
+	InitDir()
 }
