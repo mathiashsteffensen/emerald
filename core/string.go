@@ -13,7 +13,7 @@ type StringInstance struct {
 	Value string
 }
 
-func (s *StringInstance) Inspect() string { return s.Value }
+func (s *StringInstance) Inspect() string { return fmt.Sprintf("%q", s.Value) }
 func (s *StringInstance) HashKey() string { return s.Inspect() }
 
 func NewString(val string) object.EmeraldValue {

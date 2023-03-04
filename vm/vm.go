@@ -319,7 +319,7 @@ func (vm *VM) callFunction(numArgs int, hasKwargs bool) {
 
 	method, err := receiver.Class().ExtractMethod(name.Value, receiver.Class(), receiver)
 	if err != nil {
-		core.Raise(core.NewNoMethodError(fmt.Sprintf("undefined method %s for %s", name.Value, receiver.Inspect())))
+		core.Raise(core.NewNoMethodError(fmt.Sprintf("undefined method '%s' for %s:%s", name.Value, receiver.Inspect(), receiver.Class().Super().(*object.Class).Name)))
 	}
 
 	// Handy for debugging, but makes the VM quite slow when logging in a hot loop
