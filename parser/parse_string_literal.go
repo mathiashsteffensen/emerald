@@ -80,6 +80,7 @@ var stringEscapeFunctions = []stringEscapeFunc{
 	newStringEscapeFunc("f", "\f"),
 	newStringEscapeFunc("r", "\r"),
 	newStringEscapeFunc("s", " "),
+	newStringEscapeFunc(`\\`, `\`),
 }
 
 func escapeString(str string) string {

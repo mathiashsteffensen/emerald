@@ -13,7 +13,7 @@ type StringInstance struct {
 	Value string
 }
 
-func (s *StringInstance) Inspect() string { return fmt.Sprintf("%q", s.Value) }
+func (s *StringInstance) Inspect() string { return s.Value }
 func (s *StringInstance) HashKey() string { return s.Inspect() }
 
 func NewString(val string) object.EmeraldValue {
@@ -66,7 +66,7 @@ func stringToS() object.BuiltInMethod {
 
 func stringInspect() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(fmt.Sprintf(`"%s"`, ctx.Self.(*StringInstance).Value))
+		return NewString(fmt.Sprintf("%q", ctx.Self.(*StringInstance).Value))
 	}
 }
 

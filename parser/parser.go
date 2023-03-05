@@ -127,8 +127,9 @@ func (p *Parser) peekError(t lexer.TokenType) {
 
 func (p *Parser) noPrefixParseFnError() {
 	msg := fmt.Sprintf(
-		"no prefix parse function for %s found at line %d, column %d\n%s",
+		"no prefix parse function for %s:%q found at line %d, column %d\n%s",
 		p.curToken.Type,
+		p.curToken.Literal,
 		p.curToken.Line,
 		p.curToken.Column,
 		p.l.Snapshot(p.curToken),

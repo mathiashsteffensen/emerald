@@ -414,8 +414,9 @@ func (l *Lexer) readNumber() string {
 func (l *Lexer) readRegexp() string {
 	position := l.position + 1
 	for {
+		prevChar := l.currentChar
 		l.readChar()
-		if l.currentChar == '/' || l.currentChar == 0 {
+		if (l.currentChar == '/' && prevChar != '\\') || l.currentChar == 0 {
 			break
 		}
 	}

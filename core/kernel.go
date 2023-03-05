@@ -30,6 +30,7 @@ func InitKernel() {
 
 	// Should be made private when that function has been implemented
 	DefineMethod(Kernel, "puts", kernelPuts())
+	DefineMethod(Kernel, "print", kernelPrint())
 }
 
 func kernelClass() object.BuiltInMethod {
@@ -88,6 +89,20 @@ func kernelSleep() object.BuiltInMethod {
 }
 
 func kernelPuts() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		for _, arg := range args {
+			val := Send(arg, "to_s", NULL)
+
+			if err := writeToStdout(fmt.Sprintf("%s\n", val.Inspect())); err != nil {
+				return err
+			}
+		}
+
+		return NULL
+	}
+}
+
+func kernelPrint() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
 			val := Send(arg, "to_s", NULL)
@@ -217,11 +232,6 @@ var requiredFilesHash = NewHash()
 
 func writeToStdout(str string) object.EmeraldError {
 	_, err := os.Stdout.WriteString(str)
-	if err != nil {
-		return raiseStdoutWriteFailed()
-	}
-
-	_, err = os.Stdout.WriteString("\n")
 	if err != nil {
 		return raiseStdoutWriteFailed()
 	}
