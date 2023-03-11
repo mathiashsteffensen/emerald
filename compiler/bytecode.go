@@ -129,9 +129,9 @@ const (
 	OpCloseBlock
 
 	// Setter and getter operators for instance variables,
-	// both take a single operand that's a reference to a constant in the constant pool
-	// which is a symbol referencing the name.
-	// Set operation sets value to top of the stack
+	// both take a single operand that's a reference to a constant in the constant pool.
+	// That constant must be a symbol referencing the name.
+	// Set operation sets value and pushes it to top of the stack
 	OpInstanceVarSet
 	OpInstanceVarGet
 )

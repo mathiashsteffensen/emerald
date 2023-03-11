@@ -47,13 +47,15 @@ type ClosedBlock struct {
 	FreeVariables []EmeraldValue
 	Context       *Context
 	File          string
+	Visibility    MethodVisibility
 }
 
-func NewClosedBlock(ctx *Context, block *Block, free []EmeraldValue, file string) *ClosedBlock {
+func NewClosedBlock(ctx *Context, block *Block, free []EmeraldValue, file string, visibility MethodVisibility) *ClosedBlock {
 	return &ClosedBlock{
 		Block:         block,
 		FreeVariables: free,
 		Context:       ctx,
 		File:          file,
+		Visibility:    visibility,
 	}
 }

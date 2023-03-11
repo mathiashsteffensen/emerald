@@ -20,17 +20,21 @@ func InitKernel() {
 	Kernel = object.NewModule("Kernel", object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
 	DefineMethod(Kernel, "inspect", kernelInspect())
-	DefineMethod(Kernel, "raise", kernelRaise())
-	DefineMethod(Kernel, "require_relative", kernelRequireRelative())
 	DefineMethod(Kernel, "class", kernelClass())
 	DefineMethod(Kernel, "kind_of?", kernelKindOf())
 	DefineMethod(Kernel, "is_a?", kernelKindOf())
 	DefineMethod(Kernel, "include", kernelInclude())
-	DefineMethod(Kernel, "sleep", kernelSleep())
 
-	// Should be made private when that function has been implemented
-	DefineMethod(Kernel, "puts", kernelPuts())
-	DefineMethod(Kernel, "print", kernelPrint())
+	definePrivateKernelMethod("raise", kernelRaise())
+	definePrivateKernelMethod("require_relative", kernelRequireRelative())
+	definePrivateKernelMethod("sleep", kernelSleep())
+	definePrivateKernelMethod("puts", kernelPuts())
+	definePrivateKernelMethod("print", kernelPrint())
+}
+
+func definePrivateKernelMethod(name string, method object.BuiltInMethod) {
+	DefineMethod(Kernel, name, method, object.PRIVATE)
+	DefineSingletonMethod(Kernel, name, method)
 }
 
 func kernelClass() object.BuiltInMethod {
@@ -212,7 +216,7 @@ func kernelRequireRelative() object.BuiltInMethod {
 			BlockGiven: func() bool {
 				return false
 			},
-		}, &object.Block{Instructions: instructions}, []object.EmeraldValue{}, "")
+		}, &object.Block{Instructions: instructions}, []object.EmeraldValue{}, "", object.PUBLIC)
 
 		object.EvalBlock(requiredBlock)
 

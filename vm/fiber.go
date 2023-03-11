@@ -10,6 +10,8 @@ const (
 	MaxFrames    = 1024
 )
 
+var ErrStackOverflow = fmt.Errorf("stack overflow: max stack size of %d exceeded", MaxStackSize)
+
 // Fiber is an abstract execution thread, separate from any OS level threads.
 // Currently, this is kind of meaningless, but it is to allow for a concurrency implementation in the future.
 type Fiber struct {
@@ -61,7 +63,7 @@ func (fiber *Fiber) StackTop() object.EmeraldValue {
 // push an obj on to the stack
 func (fiber *Fiber) push(obj object.EmeraldValue) {
 	if fiber.sp >= MaxStackSize {
-		panic(fmt.Errorf("stack overflow: max stack size of %d exceeded", MaxStackSize))
+		panic(ErrStackOverflow)
 	}
 
 	fiber.stack[fiber.sp] = obj

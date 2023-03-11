@@ -81,9 +81,9 @@ func (val *BaseEmeraldValue) Methods() []string {
 }
 
 func (val *BaseEmeraldValue) RespondsTo(name string, self EmeraldValue) bool {
-	_, err := val.ExtractMethod(name, self, self)
+	_, visibility, _, err := val.ExtractMethod(name, self, self)
 
-	return err == nil
+	return err == nil && visibility == PUBLIC
 }
 
 var EvalBlock func(block *ClosedBlock, args ...EmeraldValue) EmeraldValue
@@ -93,7 +93,7 @@ func (val *BaseEmeraldValue) SEND(
 	name string,
 	args ...EmeraldValue,
 ) EmeraldValue {
-	method, err := ctx.Self.ExtractMethod(name, ctx.Self.Class(), ctx.Self)
+	method, _, _, err := ctx.Self.ExtractMethod(name, ctx.Self.Class(), ctx.Self)
 	if err != nil {
 		panic(err)
 	}
@@ -108,18 +108,20 @@ func (val *BaseEmeraldValue) SEND(
 	}
 }
 
-func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, error) {
+func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, MethodVisibility, bool, error) {
 	for _, ancestor := range extractFrom.Ancestors() {
+		isSelf := ancestor == extractFrom
+
 		if method, ok := ancestor.DefinedMethodSet()[name]; ok {
-			return method, nil
+			return method, method.Visibility, isSelf, nil
 		}
 
 		if method, ok := ancestor.BuiltInMethodSet()[name]; ok {
-			return &WrappedBuiltInMethod{Method: method}, nil
+			return method, method.Visibility, isSelf, nil
 		}
 	}
 
-	return nil, fmt.Errorf("undefined method %s for %s", name, target.Inspect())
+	return nil, PUBLIC, false, fmt.Errorf("undefined method %s for %s", name, target.Inspect())
 }
 
 func (val *BaseEmeraldValue) InstanceVariableGet(name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue {

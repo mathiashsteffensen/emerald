@@ -223,11 +223,11 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		block := vm.pop().(*object.Block)
 		name := vm.stack()[vm.currentFiber().sp-1].(*core.SymbolInstance)
 
-		vm.ctx.Self.DefinedMethodSet()[name.Value] = object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File)
+		vm.ctx.Self.DefinedMethodSet()[name.Value] = object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File, vm.ctx.DefaultMethodVisibility)
 	case compiler.OpSend:
 		numArgs := vm.readUint8(ins, ip)
 		hasKwargs := vm.readUint8(ins, ip+1)
-		vm.callFunction(int(numArgs), hasKwargs == 1)
+		vm.callMethod(int(numArgs), hasKwargs == 1)
 	case compiler.OpOpenClass:
 		// Fetch the symbol name from the heap
 		nameIndex := vm.readUint16(ins, ip)
@@ -291,10 +291,10 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 
 	vm.currentFiber().sp = vm.currentFiber().sp - numFreeVars
 
-	vm.push(object.NewClosedBlock(vm.ctx, block, free, ""))
+	vm.push(object.NewClosedBlock(vm.ctx, block, free, "", object.PUBLIC))
 }
 
-func (vm *VM) callFunction(numArgs int, hasKwargs bool) {
+func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 	var (
 		kwargsHash   *core.HashInstance
 		kwargsMap    = map[string]object.EmeraldValue{}
@@ -317,12 +317,16 @@ func (vm *VM) callFunction(numArgs int, hasKwargs bool) {
 	name := vm.stack()[basePointer-2].(*core.SymbolInstance)
 	block := vm.stack()[basePointer-1]
 
-	method, err := receiver.Class().ExtractMethod(name.Value, receiver.Class(), receiver)
+	method, visibility, isDefinedOnReceiver, err := receiver.Class().ExtractMethod(name.Value, receiver.Class(), receiver)
 	if err != nil {
-		core.Raise(core.NewNoMethodError(fmt.Sprintf("undefined method '%s' for %s:%s", name.Value, receiver.Inspect(), receiver.Class().Super().(*object.Class).Name)))
+		raiseUndefinedNoMethodError(name.Value, receiver)
 	}
 
-	// Handy for debugging, but makes the VM quite slow when logging in a hot loop
+	if ok := vm.ctx.ValidateMethodVisibility(receiver, visibility, isDefinedOnReceiver); !ok {
+		raiseNotVisibleNoMethodError(name.Value, receiver)
+	}
+
+	// Handy for debugging, but makes the VM quite slow when calling DebugF in a hot path
 	// debug.DebugF("Calling method %s#%s %d %s", receiver.Inspect(), name.Value, numArgs)
 
 	vm.withExecutionContext(receiver, block, func() {
@@ -371,6 +375,30 @@ func (vm *VM) callFunction(numArgs int, hasKwargs bool) {
 	})
 }
 
+func raiseUndefinedNoMethodError(name string, receiver object.EmeraldValue) {
+	core.Raise(
+		core.NewNoMethodError(
+			fmt.Sprintf("undefined method '%s' for %s:%s", name, receiver.Inspect(), receiver.Class().Super().(*object.Class).Name),
+		),
+	)
+}
+
+func raiseNotVisibleNoMethodError(name string, receiver object.EmeraldValue) {
+	var receiverPart string
+	receiverClassName := receiver.Class().Super().(*object.Class).Name
+	if receiverClassName == core.Class.Name {
+		receiverPart = fmt.Sprintf("%s:%s", receiver.Inspect(), receiverClassName)
+	} else {
+		receiverPart = receiverClassName
+	}
+
+	core.Raise(
+		core.NewNoMethodError(
+			fmt.Sprintf("private method `%s' called for %s", name, receiverPart),
+		),
+	)
+}
+
 func (vm *VM) pushKwargsToStack(kwargsHash *core.HashInstance) (map[string]object.EmeraldValue, int) {
 	kwargsMap := map[string]object.EmeraldValue{}
 
@@ -400,6 +428,8 @@ func (vm *VM) withExecutionContext(self object.EmeraldValue, block object.Emeral
 	vm.ctx = vm.newEnclosedContext(oldCtx.File, self, block)
 
 	cb()
+
+	oldCtx.DefaultMethodVisibility = vm.ctx.DefaultMethodVisibility
 
 	vm.ctx = oldCtx
 }

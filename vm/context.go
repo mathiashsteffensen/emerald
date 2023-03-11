@@ -7,11 +7,12 @@ import (
 
 func (vm *VM) newContext(file string, self, block object.EmeraldValue) *object.Context {
 	return &object.Context{
-		File:       file,
-		Self:       self,
-		Block:      block,
-		Yield:      vm.Yield,
-		BlockGiven: vm.BlockGiven,
+		File:                    file,
+		Self:                    self,
+		Block:                   block,
+		Yield:                   vm.Yield,
+		BlockGiven:              vm.BlockGiven,
+		DefaultMethodVisibility: object.PUBLIC,
 	}
 }
 

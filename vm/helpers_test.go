@@ -286,7 +286,7 @@ func testInstanceObject(expected string, actual object.EmeraldValue) error {
 func testErrorObject(expected string, actual object.EmeraldValue) error {
 	split := strings.Split(expected, ":")
 	className := split[0]
-	msg := split[1]
+	msg := strings.Join(split[1:], ":")
 
 	emeraldError, ok := actual.(object.EmeraldError)
 	if !ok {

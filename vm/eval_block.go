@@ -31,7 +31,7 @@ func (vm *VM) Send(self object.EmeraldValue, name string, block object.EmeraldVa
 	oldCtx := vm.ctx
 	vm.ctx = vm.newEnclosedContext(oldCtx.File, self, block)
 
-	method, err := self.ExtractMethod(name, self.Class(), self)
+	method, _, _, err := self.ExtractMethod(name, self.Class(), self)
 	if err != nil {
 		panic(err)
 	}

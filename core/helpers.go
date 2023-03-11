@@ -56,12 +56,23 @@ func DefineNestedModule(namespace object.EmeraldValue, name string) *object.Modu
 	return module
 }
 
-func DefineMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod) {
-	receiver.BuiltInMethodSet()[name] = method
+func DefineMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
+	receiver.BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: getVisibility(visibilities)}
 }
 
-func DefineSingletonMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod) {
-	receiver.Class().BuiltInMethodSet()[name] = method
+func DefineSingletonMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
+	receiver.Class().BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: getVisibility(visibilities)}
+}
+
+func getVisibility(visibilities []object.MethodVisibility) object.MethodVisibility {
+	var visibility object.MethodVisibility
+	if len(visibilities) != 0 {
+		visibility = visibilities[0]
+	} else {
+		visibility = object.PUBLIC
+	}
+
+	return visibility
 }
 
 func EnforceArity(
@@ -110,8 +121,9 @@ func EnforceArgumentType[T object.EmeraldValue](typ *object.Class, arg object.Em
 	return arg.(T), nil
 }
 
-func Raise(err object.EmeraldError) {
+func Raise(err object.EmeraldError) object.EmeraldError {
 	heap.SetGlobalVariableString("$!", err)
+	return err
 }
 
 func NativeBoolToBooleanObject(input bool) object.EmeraldValue {
