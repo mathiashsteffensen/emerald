@@ -28,7 +28,7 @@ func (hl *HashLiteral) String(indents ...int) string {
 		indented(&out, indent, "{\n")
 
 		for _, el := range hl.Values {
-			out.WriteString(el.Key.String(indent+1) + ": " + el.Value.String(0) + ",\n")
+			out.WriteString(el.Key.String(indent+1) + " => " + el.Value.String(0) + ",\n")
 		}
 
 		indented(&out, indent, "}")

@@ -357,13 +357,21 @@ func (p *Parser) parseExpressionList(delim lexer.TokenType) []ast.Expression {
 		return args
 	}
 
+	p.nextIfNewline()
 	p.nextToken()
 
 	args = append(args, p.parseExpression(LOWEST))
 
 	for p.peekTokenIs(lexer.COMMA) {
 		p.nextToken()
+		p.nextIfNewline()
+
+		if p.peekTokenIs(delim) {
+			break
+		}
+
 		p.nextToken()
+
 		args = append(args, p.parseExpression(LOWEST))
 	}
 

@@ -23,7 +23,7 @@ func (ce CallExpression) String(indents ...int) string {
 		args = append(args, a.String(0))
 	}
 	for _, el := range ce.KeywordArguments {
-		args = append(args, strings.Join([]string{el.Key.String(0), el.Value.String(0)}, ": "))
+		args = append(args, strings.Join([]string{el.Key.String(0), el.Value.String(0)}, " => "))
 	}
 
 	out.WriteString(ce.Method.String(indents...))

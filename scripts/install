@@ -8,6 +8,12 @@ mkdir -p /home/"$USER"/.emerald/bin
 cp ./emerald /home/"$USER"/.emerald/bin/emerald
 cp ./iem /home/"$USER"/.emerald/bin/iem
 
-echo "export PATH=$PATH:/home/$USER/.emerald/bin" >> ~/.bashrc
-echo "export GEM_HOME=/home/$USER/.emerald/vendor" >> ~/.bashrc
-echo "export GEM_PATH=/home/$USER/.emerald/vendor" >> ~/.bashrc
+BASHRC="/home/$USER/.bashrc"
+
+function bashrc-add-if-not-present() {
+  grep -qxF "$1" "$BASHRC" || echo $1 >> $BASHRC
+}
+
+bashrc-add-if-not-present "export PATH=$PATH:/home/$USER/.emerald/bin"
+bashrc-add-if-not-present "export GEM_HOME=/home/$USER/.emerald/vendor"
+bashrc-add-if-not-present "export GEM_PATH=/home/$USER/.emerald/vendor"
