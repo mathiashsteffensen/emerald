@@ -9,10 +9,6 @@ import (
 	"fmt"
 )
 
-const (
-	GlobalsSize = 65536
-)
-
 // VM is our virtual machine responsible for the fetch, decode, execute cycle
 type VM struct {
 	ctx        *object.Context
@@ -50,8 +46,11 @@ func New(file string, bytecode *compiler.Bytecode) *VM {
 func (vm *VM) Run() {
 	vm.runWhile(func() bool {
 		poppedLastFrame := vm.currentFiber().framesIndex == 0
+		frameHasMoreInstructions := func() bool {
+			return vm.currentFiber().currentFrame().ip < len(vm.currentFiber().currentFrame().Instructions())-1
+		}
 
-		return !poppedLastFrame && vm.currentFiber().currentFrame().ip < len(vm.currentFiber().currentFrame().Instructions())-1
+		return !poppedLastFrame && frameHasMoreInstructions()
 	})
 }
 
