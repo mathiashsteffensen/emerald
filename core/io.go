@@ -44,7 +44,7 @@ func ioSysopen() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		path := args[0].(*StringInstance).Value
 
-		fd, err := syscall.Open(path, syscall.O_LARGEFILE, 0)
+		fd, err := syscall.Open(path, syscall.O_NONBLOCK, 0)
 		if err != nil {
 			panic(err)
 		}

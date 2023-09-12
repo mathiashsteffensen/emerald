@@ -1,5 +1,5 @@
 // Package heap is not a heap in the traditional sense since we are blessed by the Go GC.
-// The package simply contains all objects in use by the Emerald VM that is not currently on the stack, and is not stored on another object
+// The package simply contains all objects in use by the Emerald VM that are not currently on the stack, and are not stored on another object
 // i.e. All literals and global variables. Although literals and global variables will be pushed onto the stack
 // when for example passed as arguments, or assigned to a local variable
 package heap

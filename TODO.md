@@ -1,1 +1,1 @@
-- [ ] Implement call stack tracing in VM
+- Implement call stack tracing in VM

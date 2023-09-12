@@ -5,7 +5,7 @@ Emerald is a Ruby compiler & virtual machine written in Go.
 ## Building Emerald
 Run the following from your command line:
 ```bash
-git clone git@github.com:mathiashsteffensen/emerald.git && \
+git clone git@github.com:mathiashsteffensen/emerald.git
 cd emerald && ./scripts/install
 ```
 
@@ -159,7 +159,7 @@ NOTE: To say they have been implemented does not mean any features are guarantee
     - [x] every Ruby Object can be a hash key
 - [ ] symbols
     - [x] `:symbol`
-    - [ ] `:"symbol"`
+    - [x] `:"symbol"`
     - [ ] `:"symbol"` with interpolation
     - [ ] `:'symbol'`
     - [ ] `%s{symbol}`

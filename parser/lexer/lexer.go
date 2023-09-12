@@ -220,10 +220,14 @@ func (l *Lexer) Run() {
 				tok = l.newToken(RBRACKET, l.currentChar)
 			case ':':
 				if l.peekChar() == ':' {
+					// Scope operator
+					// File::Stat
 					char := l.currentChar
 					l.readChar()
 					tok = Token{Type: SCOPE, Literal: string(char) + string(l.currentChar)}
 				} else if isLetter(l.peekChar()) {
+					// A "normal" symbol
+					// :symbol
 					char := l.currentChar
 					tok.Pos = l.position
 					tok.Column = l.Column
@@ -232,6 +236,21 @@ func (l *Lexer) Run() {
 
 					l.readChar()
 					tok.Literal = string(char) + l.readIdentifier()
+					l.sendToken(tok)
+
+					continue
+				} else if peek := l.peekChar(); peek == '"' || peek == '\'' {
+					// A quoted symbol (does not support interpolation yet)
+					// :"symbol" or :'symbol'
+					char := l.currentChar
+					tok.Pos = l.position
+					tok.Column = l.Column
+					tok.Line = l.Line
+					tok.Type = SYMBOL
+
+					l.readChar()
+					tok.Literal = string(char) + l.readString(peek)
+					l.readChar()
 					l.sendToken(tok)
 
 					continue
@@ -244,6 +263,8 @@ func (l *Lexer) Run() {
 				if l.lexDoubleQuotedString(&tok) {
 					continue
 				}
+			case '\'':
+				l.lexSingleQuotedString(&tok)
 			case '&':
 				if l.peekChar() == '&' {
 					char := l.currentChar

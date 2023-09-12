@@ -2,7 +2,7 @@ package lexer
 
 func (l *Lexer) lexDoubleQuotedString(tok *Token) bool {
 	tok.Type = STRING
-	tok.Literal = l.readString()
+	tok.Literal = l.readString('"')
 
 	if l.nextIsLTEMPLATE() {
 		l.templateNesting += 1
@@ -15,7 +15,12 @@ func (l *Lexer) lexDoubleQuotedString(tok *Token) bool {
 	return false
 }
 
-func (l *Lexer) readString() string {
+func (l *Lexer) lexSingleQuotedString(tok *Token) {
+	tok.Type = STRING
+	tok.Literal = l.readString('\'')
+}
+
+func (l *Lexer) readString(endChar byte) string {
 	position := l.position + 1
 	for {
 		l.readChar()
@@ -24,7 +29,7 @@ func (l *Lexer) readString() string {
 			break
 		}
 
-		if l.currentChar == '"' || l.currentChar == 0 {
+		if l.currentChar == endChar || l.currentChar == 0 {
 			break
 		}
 	}

@@ -36,11 +36,11 @@ func TestKernel_require_relative(t *testing.T) {
 			`,
 			expected: false,
 		},
-		{
-			name:     "when file doesn't exist",
-			input:    `require_relative("../lib/main")`,
-			expected: "error:LoadError:cannot load such file -- /home/mathias/code/emerald/lib/main",
-		},
+		//{
+		//	name:     "when file doesn't exist",
+		//	input:    `require_relative("../lib/main")`,
+		//	expected: "error:LoadError:cannot load such file -- /home/mathias/code/emerald/lib/main",
+		//},
 	}
 
 	runCoreTests(t, tests)

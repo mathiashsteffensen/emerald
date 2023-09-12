@@ -4,8 +4,6 @@ import (
 	"emerald/object"
 )
 
-// CRuby docs for Enumerable module https://ruby-doc.org/core-3.1.2/Enumerable.html
-
 var Enumerable *object.Module
 
 func InitEnumerable() {
