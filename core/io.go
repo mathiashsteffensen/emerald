@@ -55,15 +55,15 @@ func ioSysopen() object.BuiltInMethod {
 
 func ioOpen() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		io := Send(IO, "new", NULL, args...)
+		io := Send(IO, "new", NULL, kwargs, args...)
 
 		if !ctx.BlockGiven() {
 			return io
 		}
 
-		blockResult := ctx.Yield(io)
+		blockResult := ctx.Yield(map[string]object.EmeraldValue{}, io)
 
-		Send(io, "close", NULL)
+		Send(io, "close", NULL, map[string]object.EmeraldValue{})
 
 		return blockResult
 	}

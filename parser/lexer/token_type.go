@@ -42,6 +42,8 @@ const (
 	BOOL_OR_ASSIGN  TokenType = "||="
 	APPEND          TokenType = "<<"
 	DOT             TokenType = "."
+	RANGE_INCLUSIVE TokenType = ".."
+	RANGE_EXCLUSIVE TokenType = "..."
 	SCOPE           TokenType = "::"
 	BIT_AND         TokenType = "&"
 	BOOL_AND        TokenType = "&&"

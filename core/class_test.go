@@ -65,27 +65,70 @@ func TestClass_name(t *testing.T) {
 }
 
 func TestClass_new_instance(t *testing.T) {
-	tests := []coreTestCase{
-		{
-			input: `
-				module MyMod
-					class MyClass
+	before := `
+		def create_class(kwargs:)
+			module MyMod
+				class MyClass
+					if kwargs
+						def initialize(value:)
+							@value = value
+						end
+					else
 						def initialize(value)
 							@value = value
 						end
+					end
 
-						def value
-							@value
-						end
+					def value
+						@value
 					end
 				end
+			end
+		end
+	`
 
-				instance = MyMod::MyClass.new(2)
+	tests := []coreTestCase{
+		{
+			name: "positional argument provided",
+			input: `
+								create_class(kwarfs: false)
+
+								instance = MyMod::MyClass.new(2)
+								instance.value
+							`,
+			expected: 2,
+		},
+		{
+			name: "positional argument omitted",
+			input: `
+								create_class(kwargs: false)
+
+								instance = MyMod::MyClass.new()
+								instance.value
+							`,
+			expected: "error:ArgumentError:wrong number of arguments (given 0, expected 1)",
+		},
+		{
+			name: "keyword argument provided",
+			input: `
+						create_class(kwargs: true)
+
+						instance = MyMod::MyClass.new(value: 3)
+						instance.value
+					`,
+			expected: 3,
+		},
+		{
+			name: "keyword argument omitted",
+			input: `
+				create_class(kwargs: true)
+
+				instance = MyMod::MyClass.new
 				instance.value
 			`,
-			expected: 2,
+			expected: "error:ArgumentError:missing keyword: :value",
 		},
 	}
 
-	runCoreTests(t, tests)
+	runCoreTests(t, tests, before)
 }

@@ -62,9 +62,9 @@ func hashToS() object.BuiltInMethod {
 		ctx.Self.(*HashInstance).Each(func(key object.EmeraldValue, value object.EmeraldValue) {
 			var out strings.Builder
 
-			out.WriteString(Send(key, "to_s", NULL).(*StringInstance).Value)
+			out.WriteString(Send(key, "to_s", NULL, map[string]object.EmeraldValue{}).(*StringInstance).Value)
 			out.WriteString(" => ")
-			out.WriteString(Send(value, "to_s", NULL).(*StringInstance).Value)
+			out.WriteString(Send(value, "to_s", NULL, map[string]object.EmeraldValue{}).(*StringInstance).Value)
 
 			pairs = append(pairs, out.String())
 		})
@@ -108,7 +108,7 @@ func hashEach() object.BuiltInMethod {
 		hash := ctx.Self.(*HashInstance)
 
 		hash.Each(func(key object.EmeraldValue, value object.EmeraldValue) {
-			ctx.Yield(key, value)
+			ctx.Yield(map[string]object.EmeraldValue{}, key, value)
 		})
 
 		return hash
@@ -137,7 +137,7 @@ func hashEquals() object.BuiltInMethod {
 				return FALSE
 			}
 
-			if Send(el.Value, "==", NULL, otherValue) != TRUE {
+			if Send(el.Value, "==", NULL, map[string]object.EmeraldValue{}, otherValue) != TRUE {
 				return FALSE
 			}
 		}

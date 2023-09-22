@@ -6,7 +6,7 @@ type Context struct {
 	Self                    EmeraldValue
 	BreakValue              EmeraldValue
 	Block                   EmeraldValue
-	Yield                   func(args ...EmeraldValue) EmeraldValue
+	Yield                   func(kwargs map[string]EmeraldValue, args ...EmeraldValue) EmeraldValue
 	BlockGiven              func() bool
 	DefaultMethodVisibility MethodVisibility
 }

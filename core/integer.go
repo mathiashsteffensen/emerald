@@ -104,7 +104,7 @@ func integerNegate() object.BuiltInMethod {
 func integerTimes() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for i := int64(0); i < ctx.Self.(*IntegerInstance).Value; i++ {
-			ctx.Yield(NewInteger(i))
+			ctx.Yield(map[string]object.EmeraldValue{}, NewInteger(i))
 		}
 
 		return ctx.Self

@@ -47,7 +47,7 @@ func (vm *VM) executeOpScopedConstantGet(ins compiler.Instructions, ip int) {
 		}
 		result = value
 	} else {
-		result = vm.Send(self, name, core.NULL)
+		result = vm.Send(self, name, core.NULL, map[string]object.EmeraldValue{})
 	}
 
 	vm.push(result)

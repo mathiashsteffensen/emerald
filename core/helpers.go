@@ -6,7 +6,7 @@ import (
 )
 
 // Send is a function for calling methods that is dependency injected by the emerald/vm package
-var Send func(self object.EmeraldValue, name string, block object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue
+var Send func(self object.EmeraldValue, name string, block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue
 
 func DefineClass(name string, super *object.Class) *object.Class {
 	var superClass object.EmeraldValue

@@ -38,7 +38,7 @@ func (vm *VM) popFramesUntilExceptionRescuedOrProgramTerminates() bool {
 			debug.InternalDebug("Rescued!")
 			vm.currentFiber().inRescue = true
 			debug.InternalDebug("Evaluating rescue clause")
-			vm.rawEvalBlock(fiber.currentFrame().blockRescuingException(raisedException), core.NULL)
+			vm.rawEvalBlock(fiber.currentFrame().blockRescuingException(raisedException), core.NULL, map[string]object.EmeraldValue{})
 			heap.SetGlobalVariableString("$!", nil)
 			debug.InternalDebugF("Done evaluating rescue clause, framesIndex=%d", fiber.framesIndex)
 			vm.currentFiber().inRescue = false

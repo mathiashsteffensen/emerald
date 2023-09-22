@@ -11,7 +11,7 @@ func (c *Compiler) compileCallExpression(node ast.CallExpression) {
 	c.emit(OpPushConstant, c.addConstant(method))
 
 	if node.Block != nil {
-		block, freeSymbolCount := c.compileBlock(node.Block)
+		block, freeSymbolCount := c.compileBlock(node.Block, false)
 
 		c.emit(OpCloseBlock, c.addConstant(block), freeSymbolCount)
 	} else {

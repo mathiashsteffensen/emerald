@@ -3,6 +3,7 @@ package vm
 import (
 	"emerald/compiler"
 	"emerald/core"
+	"emerald/object"
 	"strings"
 )
 
@@ -18,8 +19,8 @@ func (vm *VM) executeOpStringJoin(ins compiler.Instructions, ip int) {
 
 	var out strings.Builder
 
-	for _, object := range objects {
-		stringified := vm.Send(object, "to_s", core.NULL).Inspect()
+	for _, o := range objects {
+		stringified := vm.Send(o, "to_s", core.NULL, map[string]object.EmeraldValue{}).Inspect()
 
 		out.WriteString(stringified)
 	}

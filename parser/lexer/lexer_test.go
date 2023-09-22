@@ -59,7 +59,7 @@ func TestLexer_Run(t *testing.T) {
 	/^[w]|abc|\// =~ yield while break += -= ident /= *=
 	#{this is a comment}
 	"this is a #{template}" "this is a #{template} also" "this is a #{template} also #{boop.method} #{"nested #{template}"}" ½
-	:"symbol" 'string' :'symbol'`
+	:"symbol" 'string' :'symbol' .. ...`
 
 	tests := []struct {
 		expectedType    TokenType
@@ -331,6 +331,8 @@ func TestLexer_Run(t *testing.T) {
 		{SYMBOL, ":symbol"},
 		{STRING, "string"},
 		{SYMBOL, ":symbol"},
+		{RANGE_INCLUSIVE, ".."},
+		{RANGE_EXCLUSIVE, "..."},
 		{EOF, ""},
 	}
 

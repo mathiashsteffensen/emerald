@@ -47,7 +47,7 @@ func enumerableFirst() object.BuiltInMethod {
 			},
 		}
 
-		Send(ctx.Self, "each", wrappedBlock)
+		Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
 		if numElements == 1 {
 			return values[0]
@@ -66,13 +66,13 @@ func enumerableMap() object.BuiltInMethod {
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				arr = append(
 					arr,
-					object.EvalBlock(block.(*object.ClosedBlock), args...),
+					object.EvalBlock(block.(*object.ClosedBlock), kwargs, args...),
 				)
 				return NULL
 			},
 		}
 
-		Send(ctx.Self, "each", wrappedBlock)
+		Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
 		return NewArray(arr)
 	}
@@ -89,7 +89,7 @@ func enumerableFind() object.BuiltInMethod {
 					return NULL
 				}
 
-				if IsTruthy(object.EvalBlock(block.(*object.ClosedBlock), args...)) {
+				if IsTruthy(object.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)) {
 					if len(args) < 2 {
 						firstTruthyElement = args[0]
 					} else {
@@ -100,7 +100,7 @@ func enumerableFind() object.BuiltInMethod {
 			},
 		}
 
-		Send(ctx.Self, "each", wrappedBlock)
+		Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
 		if firstTruthyElement == nil {
 			return NULL
@@ -121,7 +121,7 @@ func enumerableFindIndex() object.BuiltInMethod {
 					return NULL
 				}
 
-				if IsTruthy(object.EvalBlock(block.(*object.ClosedBlock), args...)) {
+				if IsTruthy(object.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)) {
 					found = true
 					return NULL
 				}
@@ -132,7 +132,7 @@ func enumerableFindIndex() object.BuiltInMethod {
 			},
 		}
 
-		Send(ctx.Self, "each", wrappedBlock)
+		Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
 		if found {
 			return NewInteger(int64(index))
@@ -158,16 +158,16 @@ func enumerableSum() object.BuiltInMethod {
 		wrappedBlock := &object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if blockGiven {
-					accumulated = Send(accumulated, "+", NULL, object.EvalBlock(block.(*object.ClosedBlock), args...))
+					accumulated = Send(accumulated, "+", NULL, map[string]object.EmeraldValue{}, object.EvalBlock(block.(*object.ClosedBlock), kwargs, args...))
 				} else {
-					accumulated = Send(accumulated, "+", NULL, args...)
+					accumulated = Send(accumulated, "+", NULL, kwargs, args...)
 				}
 
 				return NULL
 			},
 		}
 
-		Send(ctx.Self, "each", wrappedBlock)
+		Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
 		return accumulated
 	}
@@ -186,7 +186,7 @@ func enumerableReduce() object.BuiltInMethod {
 		if argGiven {
 			accumulated = args[0]
 		} else {
-			accumulated = Send(self, "first", NULL)
+			accumulated = Send(self, "first", NULL, map[string]object.EmeraldValue{})
 		}
 
 		passedFirst := false
@@ -195,7 +195,7 @@ func enumerableReduce() object.BuiltInMethod {
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if argGiven || passedFirst {
 					args = append([]object.EmeraldValue{accumulated}, args...)
-					accumulated = object.EvalBlock(block.(*object.ClosedBlock), args...)
+					accumulated = object.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)
 				} else {
 					passedFirst = true
 				}
@@ -204,7 +204,7 @@ func enumerableReduce() object.BuiltInMethod {
 			},
 		}
 
-		Send(self, "each", wrappedBlock)
+		Send(self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
 		return accumulated
 	}

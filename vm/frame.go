@@ -45,11 +45,11 @@ func (f *Frame) blockRescuingException(exception object.EmeraldError) *object.Cl
 		caughtClassName := rescueBlock.CaughtErrorClasses.Find(func(className string) bool {
 			class := core.Object.NamespaceDefinitionGet(className)
 
-			return core.IsTruthy(core.Send(exception, "is_a?", core.NULL, class))
+			return core.IsTruthy(core.Send(exception, "is_a?", core.NULL, map[string]object.EmeraldValue{}, class))
 		})
 
 		if caughtClassName != nil {
-			block := object.NewBlock(rescueBlock.Instructions, 0, 0, []string{})
+			block := object.NewBlock(rescueBlock.Instructions, 0, 0, []string{}, false)
 			return object.NewClosedBlock(f.block.Context, block, []object.EmeraldValue{}, f.block.File, object.PUBLIC)
 		}
 	}

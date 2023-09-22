@@ -33,9 +33,9 @@ func New(file string, bytecode *compiler.Bytecode) *VM {
 		core.NewString(debug.BinaryDir),
 	}))
 
-	object.EvalBlock = func(block *object.ClosedBlock, args ...object.EmeraldValue) object.EmeraldValue {
+	object.EvalBlock = func(block *object.ClosedBlock, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return vm.withExecutionContextForBlock(block, func() object.EmeraldValue {
-			return vm.rawEvalBlock(block, core.NULL, args...)
+			return vm.rawEvalBlock(block, core.NULL, kwargs, args...)
 		})
 	}
 	core.Send = vm.Send
@@ -365,13 +365,29 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 		case *object.WrappedBuiltInMethod:
 			if hasKwargs {
 				kwargsMap, argsEndIndex = vm.pushKwargsToStack(kwargsHash)
+			} else {
+				argsEndIndex = vm.currentFiber().sp
 			}
 
-			result := vm.evalBuiltIn(method, block, vm.stack()[basePointer:vm.currentFiber().sp], kwargsMap)
+			keys(kwargsMap)
+
+			result := vm.evalBuiltIn(method, block, vm.stack()[basePointer:argsEndIndex], kwargsMap)
 			vm.currentFiber().sp = basePointer - 3
 			vm.push(result)
 		}
 	})
+}
+
+func keys(kwargs map[string]object.EmeraldValue) []string {
+	arr := make([]string, len(kwargs))
+
+	i := 0
+	for k := range kwargs {
+		arr[i] = k
+		i++
+	}
+
+	return arr
 }
 
 func raiseUndefinedNoMethodError(name string, receiver object.EmeraldValue) {
@@ -414,7 +430,7 @@ func (vm *VM) pushKwargsToStack(kwargsHash *core.HashInstance) (map[string]objec
 func (vm *VM) evalInfixOperator(op string) {
 	left := vm.pop()
 
-	vm.stack()[vm.currentFiber().sp-1] = vm.Send(left, op, core.NULL, vm.StackTop())
+	vm.stack()[vm.currentFiber().sp-1] = vm.Send(left, op, core.NULL, map[string]object.EmeraldValue{}, vm.StackTop())
 }
 
 func (vm *VM) Context() *object.Context {

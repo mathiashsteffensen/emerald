@@ -55,7 +55,7 @@ func classNew() object.BuiltInMethod {
 		instance := ctx.Self.(*object.Class).New()
 
 		if instance.RespondsTo("initialize", instance) {
-			Send(instance, "initialize", ctx.Block, args...)
+			Send(instance, "initialize", ctx.Block, kwargs, args...)
 		}
 
 		return instance

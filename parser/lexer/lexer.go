@@ -258,7 +258,17 @@ func (l *Lexer) Run() {
 					tok = l.newToken(COLON, l.currentChar)
 				}
 			case '.':
-				tok = l.newToken(DOT, l.currentChar)
+				if l.peekChar() == '.' {
+					tok = l.combineCurrentAndPeek(RANGE_INCLUSIVE)
+
+					if l.peekChar() == '.' {
+						tok.Type = RANGE_EXCLUSIVE
+						tok.Literal = tok.Literal + string(l.currentChar)
+						l.readChar()
+					}
+				} else {
+					tok = l.newToken(DOT, l.currentChar)
+				}
 			case '"':
 				if l.lexDoubleQuotedString(&tok) {
 					continue

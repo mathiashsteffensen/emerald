@@ -7,7 +7,7 @@ import (
 )
 
 func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
-	block, _ := c.compileBlock(node.BlockLiteral)
+	block, _ := c.compileBlock(node.BlockLiteral, true)
 
 	symbol := core.NewSymbol(node.Name.(ast.IdentifierExpression).Value)
 
@@ -16,7 +16,7 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
 	c.emit(OpDefineMethod)
 }
 
-func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int) {
+func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*object.Block, int) {
 	c.enterScope()
 
 	numParams := len(node.Arguments)
@@ -49,7 +49,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral) (*object.Block, int) {
 		kwargNames = append(kwargNames, argument.Value)
 	}
 
-	block := object.NewBlock(instructions, numLocals, numParams, kwargNames)
+	block := object.NewBlock(instructions, numLocals, numParams, kwargNames, enforceArity)
 
 	for _, rescueBlock := range node.RescueBlocks {
 		c.enterScope()

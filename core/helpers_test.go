@@ -1,6 +1,7 @@
 package core_test
 
 import (
+	"bytes"
 	"emerald/compiler"
 	"emerald/core"
 	"emerald/heap"
@@ -21,8 +22,14 @@ type coreTestCase struct {
 	expected any
 }
 
-func runCoreTests(t *testing.T, tests []coreTestCase) {
+func runCoreTests(t *testing.T, tests []coreTestCase, beforeEach ...string) {
 	t.Helper()
+
+	beforeScript := bytes.Buffer{}
+
+	for _, s := range beforeEach {
+		beforeScript.WriteString(s)
+	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -38,7 +45,9 @@ func runCoreTests(t *testing.T, tests []coreTestCase) {
 
 			heap.Reset()
 
-			program := parse(t, tt.input)
+			combinedScript := strings.Join([]string{beforeScript.String(), tt.input}, "\n")
+
+			program := parse(t, combinedScript)
 			comp := compiler.New()
 
 			comp.Compile(program)
@@ -331,7 +340,7 @@ func testInstanceObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testErrorObject(expected string, actual object.EmeraldValue) error {
-	split := strings.Split(expected, ":")
+	split := strings.SplitN(expected, ":", 2)
 	className := split[0]
 	msg := split[1]
 

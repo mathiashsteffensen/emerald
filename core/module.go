@@ -118,8 +118,8 @@ func moduleAttrWriter() object.BuiltInMethod {
 
 func moduleAttrAccessor() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		Send(ctx.Self, "attr_reader", NULL, args...)
-		Send(ctx.Self, "attr_writer", NULL, args...)
+		Send(ctx.Self, "attr_reader", NULL, kwargs, args...)
+		Send(ctx.Self, "attr_writer", NULL, kwargs, args...)
 
 		return NULL
 	}
@@ -127,7 +127,7 @@ func moduleAttrAccessor() object.BuiltInMethod {
 
 func moduleCaseEquals() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return Send(args[0], "is_a?", NULL, ctx.Self)
+		return Send(args[0], "is_a?", NULL, map[string]object.EmeraldValue{}, ctx.Self)
 	}
 }
 

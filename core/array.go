@@ -94,7 +94,7 @@ func arrayEach() object.BuiltInMethod {
 		arr := ctx.Self.(*ArrayInstance)
 
 		for _, val := range arr.Value {
-			ctx.Yield(val)
+			ctx.Yield(map[string]object.EmeraldValue{}, val)
 		}
 
 		return arr
@@ -134,7 +134,7 @@ func arrayEquals() object.BuiltInMethod {
 		}
 
 		for i, value := range arr.Value {
-			if !IsTruthy(Send(value, "==", NULL, otherArr.Value[i])) {
+			if !IsTruthy(Send(value, "==", NULL, map[string]object.EmeraldValue{}, otherArr.Value[i])) {
 				return FALSE
 			}
 		}
@@ -151,7 +151,7 @@ func arrayToS() object.BuiltInMethod {
 
 		values := ctx.Self.(*ArrayInstance).Value
 		for i, value := range values {
-			out.WriteString(Send(value, "inspect", NULL).Inspect())
+			out.WriteString(Send(value, "inspect", NULL, map[string]object.EmeraldValue{}).Inspect())
 
 			if i != len(values)-1 {
 				out.WriteString(", ")

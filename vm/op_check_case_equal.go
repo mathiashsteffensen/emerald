@@ -3,6 +3,7 @@ package vm
 import (
 	"emerald/compiler"
 	"emerald/core"
+	"emerald/object"
 )
 
 func (vm *VM) executeOpCheckCaseEqual(ins compiler.Instructions, ip int) {
@@ -17,7 +18,7 @@ func (vm *VM) executeOpCheckCaseEqual(ins compiler.Instructions, ip int) {
 	subject := vm.StackTop()
 
 	for _, matcher := range matchers {
-		if vm.Send(matcher, "===", core.NULL, subject) == core.TRUE {
+		if vm.Send(matcher, "===", core.NULL, map[string]object.EmeraldValue{}, subject) == core.TRUE {
 			vm.pop()
 			return
 		}

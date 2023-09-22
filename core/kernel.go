@@ -95,7 +95,7 @@ func kernelSleep() object.BuiltInMethod {
 func kernelPuts() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
-			val := Send(arg, "to_s", NULL)
+			val := Send(arg, "to_s", NULL, map[string]object.EmeraldValue{})
 
 			if err := writeToStdout(fmt.Sprintf("%s\n", val.Inspect())); err != nil {
 				return err
@@ -109,7 +109,7 @@ func kernelPuts() object.BuiltInMethod {
 func kernelPrint() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
-			val := Send(arg, "to_s", NULL)
+			val := Send(arg, "to_s", NULL, map[string]object.EmeraldValue{})
 
 			if err := writeToStdout(val.Inspect()); err != nil {
 				return err
@@ -154,7 +154,7 @@ func kernelRaise() object.BuiltInMethod {
 		case 1:
 			Raise(NewRuntimeError(args[0].(*StringInstance).Value))
 		case 2:
-			exception := Send(args[0], "new", NULL, args[1])
+			exception := Send(args[0], "new", NULL, map[string]object.EmeraldValue{}, args[1])
 			Raise(exception.(object.EmeraldError))
 		}
 
@@ -218,7 +218,7 @@ func kernelRequireRelative() object.BuiltInMethod {
 			},
 		}, &object.Block{Instructions: instructions}, []object.EmeraldValue{}, "", object.PUBLIC)
 
-		object.EvalBlock(requiredBlock)
+		object.EvalBlock(requiredBlock, map[string]object.EmeraldValue{})
 
 		requiredFilesHash.Set(absolutePathStr, TRUE)
 

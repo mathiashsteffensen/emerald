@@ -53,11 +53,11 @@ func rangeEach() object.BuiltInMethod {
 		end := r.End.(*IntegerInstance).Value
 
 		for i := begin; i < end; i++ {
-			ctx.Yield(NewInteger(i))
+			ctx.Yield(map[string]object.EmeraldValue{}, NewInteger(i))
 		}
 
 		if !r.ExcludeEnd {
-			ctx.Yield(r.End)
+			ctx.Yield(map[string]object.EmeraldValue{}, r.End)
 		}
 
 		return ctx.Self
