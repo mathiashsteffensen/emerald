@@ -46,3 +46,16 @@ func TestIO_open(t *testing.T) {
 
 	runCoreTests(t, tests)
 }
+
+func TestIO_read(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			name:     "reads the whole file",
+			input:    `IO.read("core/fixtures/require_test.rb").size`,
+			file:     "../io.rb",
+			expected: 242,
+		},
+	}
+
+	runCoreTests(t, tests)
+}

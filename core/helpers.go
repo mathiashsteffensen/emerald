@@ -126,6 +126,11 @@ func Raise(err object.EmeraldError) object.EmeraldError {
 	return err
 }
 
+func RaiseGoError(err error) object.EmeraldError {
+	emeraldErr := NewStandardError(err.Error())
+	return Raise(emeraldErr)
+}
+
 func NativeBoolToBooleanObject(input bool) object.EmeraldValue {
 	if input {
 		return TRUE

@@ -8,7 +8,7 @@ import (
 
 func RecoverWithStacktrace() {
 	if r := recover(); r != nil {
-		debug.StackTrace(r)
+		debug.StackTrace(r, true)
 	}
 }
 

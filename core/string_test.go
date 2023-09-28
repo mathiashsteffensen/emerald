@@ -79,3 +79,18 @@ func TestString_size(t *testing.T) {
 
 	runCoreTests(t, tests)
 }
+
+func TestString_split(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    `"h e llo o".split`,
+			expected: []any{"h", "e", "llo", "o"},
+		},
+		{
+			input:    `"h e llo o".split("o")`,
+			expected: []any{"h e ll", " ", ""},
+		},
+	}
+
+	runCoreTests(t, tests)
+}

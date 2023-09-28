@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const EMERALD_VERSION = "0.0.1"
+
 type LogLevel int
 
 const (
@@ -120,25 +122,30 @@ func FatalF(format string, args ...any) {
 
 func FatalBugF(format string, args ...any) {
 	FatalF(
-		format+
-			"\n\n This is a bug in the Emerald toolchain, please report this issue at https://github.com/mathiashsteffensen/emerald/issues "+
-			"with the error message above.",
-		args...,
+		"This is a bug in the Emerald toolchain, please report this issue at https://github.com/mathiashsteffensen/emerald/issues "+
+			"with the error message and stack trace below.\n\n%s\n%s",
+		fmt.Sprintf(format, args...),
+		StackTrace(nil, false),
 	)
 }
 
-func StackTrace(r any) {
+func StackTrace(r any, log bool) string {
 	goStack := string(debug.Stack())
-	stackLines := strings.Split(goStack, "\n")
+	stackLines := strings.Join(strings.Split(goStack, "\n")[7:37], "\n")
 
-	FatalF("Emerald VM panicked %s:\n%s", r, strings.Join(stackLines[7:37], "\n"))
+	if log {
+		FatalF("Emerald VM panicked %s:\n%s", r, stackLines)
+	}
+
+	return stackLines
 }
 
 func ExperimentalWarning() {
-	Warn(
-		"The Emerald VM is experimental and not near complete. " +
-			"You are guaranteed to encounter bugs. " +
+	WarnF(
+		"Emerald VM version %s is experimental and not near complete. "+
+			"You are guaranteed to encounter bugs. "+
 			"When you do, feel free to report them at https://github.com/mathiashsteffensen/emerald/issues\n",
+		EMERALD_VERSION,
 	)
 }
 

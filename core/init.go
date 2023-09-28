@@ -33,10 +33,18 @@ func init() {
 	InitLoadError()
 	InitNoMethodError()
 
+	// Initialize our Emerald module
+	InitEmerald()
+
 	// Initialize remaining core classes & modules
 	InitRegexp()
 	InitMatchData()
 	InitRange()
 	InitIO()
 	InitDir()
+	InitFile()
+
+	// Networking core classes
+	InitTCPServer()
+	InitTCPSocket()
 }

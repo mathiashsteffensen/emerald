@@ -36,6 +36,7 @@ func InitString() {
 	DefineMethod(String, "upcase", stringUpcase())
 	DefineMethod(String, "size", stringSize())
 	DefineMethod(String, "length", stringSize())
+	DefineMethod(String, "split", stringSplit())
 }
 
 func stringNew() object.BuiltInMethod {
@@ -146,5 +147,36 @@ func stringSize() object.BuiltInMethod {
 		return NewInteger(
 			int64(len(ctx.Self.(*StringInstance).Value)),
 		)
+	}
+}
+
+func stringSplit() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := EnforceArity(args, kwargs, 0, 1); err != nil {
+			return err
+		}
+
+		var sep string
+
+		if len(args) == 0 {
+			sep = " "
+		} else {
+			arg, err := EnforceArgumentType[*StringInstance](String, args[0])
+			if err != nil {
+				return err
+			}
+
+			sep = arg.Value
+		}
+
+		self := ctx.Self.(*StringInstance)
+
+		slice := []object.EmeraldValue{}
+
+		for _, s := range strings.Split(self.Value, sep) {
+			slice = append(slice, NewString(s))
+		}
+
+		return NewArray(slice)
 	}
 }

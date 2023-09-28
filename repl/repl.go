@@ -148,7 +148,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			ctx := machine.Context()
 			ctx.Self = evaluated
 			evaluated = machine.Send(evaluated, "inspect", core.NULL, map[string]object.EmeraldValue{})
-			print(evaluated.Inspect())
+			print("=> " + evaluated.Inspect())
 		}
 
 		lineCount++

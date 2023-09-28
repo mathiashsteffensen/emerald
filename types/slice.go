@@ -63,3 +63,11 @@ func (slice *Slice[T]) Push(element T) *Slice[T] {
 
 	return slice
 }
+
+func (slice *Slice[T]) First() *T {
+	if len(slice.Value) != 0 {
+		return &slice.Value[0]
+	}
+
+	return nil
+}

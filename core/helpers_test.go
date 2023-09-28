@@ -19,6 +19,7 @@ import (
 type coreTestCase struct {
 	name     string
 	input    string
+	file     string
 	expected any
 }
 
@@ -52,7 +53,15 @@ func runCoreTests(t *testing.T, tests []coreTestCase, beforeEach ...string) {
 
 			comp.Compile(program)
 
-			file, err := filepath.Abs("kernel.rb")
+			var relativeFilePath string
+
+			if tt.file == "" {
+				relativeFilePath = "test.rb"
+			} else {
+				relativeFilePath = tt.file
+			}
+
+			file, err := filepath.Abs(relativeFilePath)
 			if err != nil {
 				panic(err)
 			}

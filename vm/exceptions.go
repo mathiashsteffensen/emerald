@@ -21,7 +21,7 @@ func (vm *VM) popFramesUntilExceptionRescuedOrProgramTerminates() bool {
 	// If this is called we assume that this is not nil
 	raisedException := heap.GetGlobalVariableString("$!").(object.EmeraldError)
 
-	debug.InternalDebugF("Raising %s in frame %d", raisedException.Inspect(), vm.currentFiber().framesIndex)
+	debug.InternalDebugF("Raising %s in frame %d", raisedException.ClassName(), vm.currentFiber().framesIndex)
 
 	rescued := true
 
@@ -35,7 +35,7 @@ func (vm *VM) popFramesUntilExceptionRescuedOrProgramTerminates() bool {
 		}
 
 		if rescued {
-			debug.InternalDebug("Rescued!")
+			debug.InternalDebugF("Rescued in frame %d!", fiber.framesIndex)
 			vm.currentFiber().inRescue = true
 			debug.InternalDebug("Evaluating rescue clause")
 			vm.rawEvalBlock(fiber.currentFrame().blockRescuingException(raisedException), core.NULL, map[string]object.EmeraldValue{})

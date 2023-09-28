@@ -12,6 +12,10 @@ type TimeInstance struct {
 	Value time.Time
 }
 
+func (time *TimeInstance) Inspect() string {
+	return time.Value.Format("2006-01-02 15:04:05.000000 -0700")
+}
+
 func NewTime(val time.Time) *TimeInstance {
 	return &TimeInstance{
 		Instance: Time.New(),
@@ -37,7 +41,7 @@ func timeNew() object.BuiltInMethod {
 
 func timeToF() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewFloat(float64(ctx.Self.(*TimeInstance).Value.UnixMicro()) / 1_000_000.0)
+		return NewFloat(float64(ctx.Self.(*TimeInstance).Value.UnixNano()) / 1_000_000.0)
 	}
 }
 

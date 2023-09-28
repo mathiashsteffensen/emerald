@@ -2,6 +2,7 @@ package core
 
 import (
 	"emerald/object"
+	"math"
 	"strconv"
 )
 
@@ -20,6 +21,7 @@ func InitFloat() {
 	DefineMethod(Float, "*", floatMultiply())
 	DefineMethod(Float, "/", floatDivide())
 	DefineMethod(Float, "-@", floatNegate())
+	DefineMethod(Float, "round", floatRound())
 }
 
 type FloatInstance struct {
@@ -133,6 +135,30 @@ func floatSpaceship() object.BuiltInMethod {
 			return NewInteger(result)
 		} else {
 			return NULL
+		}
+	}
+}
+
+func roundFloatToPrecision(val float64, precision int64) float64 {
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(val*ratio) / ratio
+}
+
+func floatRound() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		EnforceArity(args, kwargs, 0, 1)
+
+		float := ctx.Self.(*FloatInstance)
+
+		if len(args) == 1 {
+			precision, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])
+			if err != nil {
+				return err
+			}
+
+			return NewFloat(roundFloatToPrecision(float.Value, precision.Value))
+		} else {
+			return NewInteger(int64(math.Round(float.Value)))
 		}
 	}
 }

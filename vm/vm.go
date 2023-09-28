@@ -305,7 +305,7 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 		var ok bool
 		kwargsHash, ok = vm.currentFiber().pop().(*core.HashInstance)
 		if !ok {
-			debug.FatalBugF("Keyword arguments instance was not a hash, got %s", vm.currentFiber().StackTop().Inspect())
+			debug.FatalBugF("Keyword arguments instance was not a hash? got %s", vm.currentFiber().StackTop().Inspect())
 		}
 		basePointer = vm.currentFiber().sp - (numArgs - kwargsHash.Values.Len())
 	} else {
@@ -313,7 +313,10 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 	}
 
 	receiver := vm.stack()[basePointer-3]
-	name := vm.stack()[basePointer-2].(*core.SymbolInstance)
+	name, ok := vm.stack()[basePointer-2].(*core.SymbolInstance)
+	if !ok {
+		debug.FatalBugF("Method name instance was not a symbol? got %q", vm.stack()[basePointer-2].Inspect())
+	}
 	block := vm.stack()[basePointer-1]
 
 	method, visibility, isDefinedOnReceiver, err := receiver.Class().ExtractMethod(name.Value, receiver.Class(), receiver)
@@ -369,25 +372,11 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 				argsEndIndex = vm.currentFiber().sp
 			}
 
-			keys(kwargsMap)
-
 			result := vm.evalBuiltIn(method, block, vm.stack()[basePointer:argsEndIndex], kwargsMap)
 			vm.currentFiber().sp = basePointer - 3
 			vm.push(result)
 		}
 	})
-}
-
-func keys(kwargs map[string]object.EmeraldValue) []string {
-	arr := make([]string, len(kwargs))
-
-	i := 0
-	for k := range kwargs {
-		arr[i] = k
-		i++
-	}
-
-	return arr
 }
 
 func raiseUndefinedNoMethodError(name string, receiver object.EmeraldValue) {
