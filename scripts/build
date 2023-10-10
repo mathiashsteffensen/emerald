@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+print () {
+    echo "--- $1"
+}
+
+println () {
+    print "$1"
+    echo ""
+}
+
+
+echo ""
+print "Building $1 executable..."
+
+time go build -o ./$1 ./cmd/$1/main.go
+
+echo ""
+println "Completed building $1 executable"

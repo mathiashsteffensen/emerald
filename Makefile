@@ -1,34 +1,13 @@
 SHELL:=/bin/bash
 
-define print
-	@echo "--- $(1)"
-endef
-
-define println
-	$(call print,$(1))
-	@echo ""
-endef
-
-define get_timestamp
-	$(shell date +%s%N)
-endef
-
-define benchmark_build_time =
-	$(eval START:=$(get_timestamp))
-	@echo ""
-	$(call print, "Building $@ executable...")
-	@go build -o ./$@ ./cmd/$@/main.go
-	$(call println, "Completed building $@ executable in $$(((($(get_timestamp) - $(START))/1000)))μs")
-endef
-
 default:
 	@make lint test-all build
 
 emerald:
-	$(benchmark_build_time)
+	@./scripts/build emerald
 
-iem: ./**/*.go ./parser/**/*.go ./cmd/iem/main.go
-	$(benchmark_build_time)
+iem:
+	@./scripts/build iem
 
 .PHONY: build emerald iem
 
