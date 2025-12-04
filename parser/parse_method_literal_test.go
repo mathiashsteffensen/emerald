@@ -188,6 +188,14 @@ func TestMethodLiteralExpression(t *testing.T) {
 			expectedKwargs:       []string{"option"},
 			expectedRescueBlocks: 0,
 		},
+		{
+			name:                 "with trailing comma in parameters",
+			input:                "def method(a,); end",
+			expectedName:         "method",
+			expectedArgs:         []string{"a"},
+			expectedKwargs:       []string{},
+			expectedRescueBlocks: 0,
+		},
 	}
 
 	for _, tt := range tests {
@@ -217,4 +225,5 @@ func TestMethodLiteralExpression(t *testing.T) {
 			})
 		})
 	}
+
 }

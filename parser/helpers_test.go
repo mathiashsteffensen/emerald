@@ -29,7 +29,10 @@ func testParseError(t *testing.T, input, expectedError string) {
 		t.Fatalf("Expected parser to have errors, but had none")
 	}
 
-	if p.Errors()[0] != expectedError {
+	// Compare as substring to be resilient to additional location/context
+	// information that may be appended to error messages in non-test
+	// debug modes.
+	if !strings.Contains(p.Errors()[0], expectedError) {
 		t.Fatalf("Expected parser to have error=%q but got=%q", expectedError, p.Errors()[0])
 	}
 }

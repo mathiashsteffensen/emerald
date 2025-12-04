@@ -68,6 +68,12 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType) (args []*ast
 
 	for p.peekTokenIs(lexer.COMMA) {
 		p.nextToken()
+		p.nextIfNewline()
+
+		if p.peekTokenIs(delim) {
+			p.nextToken()
+			return
+		}
 
 		if !p.expectPeek(lexer.IDENT) {
 			return nil, nil

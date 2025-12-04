@@ -4,6 +4,7 @@ import "testing"
 
 func TestParseErrors(t *testing.T) {
 	testParseError(t, "def method", "syntax error, unexpected end-of-input")
+	testParseError(t, "def method(a", "syntax error, unexpected end-of-input")
 	testParseError(t, "{ hello }", "expected next token to be =>, got } instead")
 	testParseError(
 		t,
@@ -20,4 +21,7 @@ func TestParseErrors(t *testing.T) {
 	testParseError(t, "p { 2", "syntax error, unexpected end-of-input")
 	testParseError(t, `"hello #{name"`, "syntax error, unexpected end-of-input")
 	testParseError(t, `true ? 2`, "syntax error, unexpected end-of-input")
+	testParseError(t, "def method(, a); end", "expected next token to be IDENT")
+	testParseError(t, "def method(a,.); end", "expected next token to be IDENT")
+	testParseError(t, "def method(a:, b); end", "expected next token to be :")
 }

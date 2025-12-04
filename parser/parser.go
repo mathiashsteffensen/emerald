@@ -118,10 +118,11 @@ func (p *Parser) unexpectedEofError() {
 }
 
 func (p *Parser) peekError(t lexer.TokenType) {
-	msg := fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
-	if !debug.IsTest {
-		msg = fmt.Sprintf("%s at line %d column %d\n%s", msg, p.peekToken.Line, p.peekToken.Column, p.l.Snapshot(p.peekToken))
-	}
+	msg := fmt.Sprintf(
+		"expected next token to be %s, got %s instead at line %d column %d\n%s",
+		t, p.peekToken.Type, p.peekToken.Line,
+		p.peekToken.Column, p.l.Snapshot(p.peekToken),
+	)
 	p.addError(msg)
 }
 
