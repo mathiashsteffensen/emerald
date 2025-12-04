@@ -354,6 +354,10 @@ func TestLexer_Run(t *testing.T) {
 	}
 }
 
+func TestLexer_Feed(t *testing.T) {
+
+}
+
 func TestLexer_Snapshot(t *testing.T) {
 	input := "w + w"
 

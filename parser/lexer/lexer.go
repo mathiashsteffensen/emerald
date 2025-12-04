@@ -5,7 +5,6 @@ import (
 )
 
 type Lexer struct {
-	inputChan    chan *Input
 	currentInput *Input
 	Line         int
 	Column       int
@@ -20,13 +19,12 @@ type Lexer struct {
 
 func New(input *Input) *Lexer {
 	l := &Lexer{
-		inputChan:  make(chan *Input, 10),
 		outputChan: make(chan Token, 500),
 		Line:       1,
 		Column:     -1,
 	}
 
-	l.Feed(input)
+	l.currentInput = input
 
 	l.readChar()
 
@@ -56,15 +54,6 @@ func (l *Lexer) Snapshot(token Token) string {
 	buf.WriteString("^")
 
 	return buf.String()
-}
-
-func (l *Lexer) Feed(input *Input) {
-	if l.currentInput == nil {
-		l.currentInput = input
-		return
-	}
-
-	l.inputChan <- input
 }
 
 func (l *Lexer) inTemplate() bool {
@@ -374,7 +363,6 @@ func (l *Lexer) Run() {
 }
 
 func (l *Lexer) Close() {
-	close(l.inputChan)
 	close(l.outputChan)
 }
 
@@ -411,18 +399,8 @@ func (l *Lexer) readChar() {
 }
 
 func (l *Lexer) peekChar() byte {
-	if l.currentInput == nil || l.nextPosition >= len(l.currentInput.content) {
-		select {
-		case nextInput := <-l.inputChan:
-			l.currentInput = nextInput
-
-			l.position = 0
-			l.nextPosition = 1
-
-			return 0
-		default:
-			return 0
-		}
+	if l.nextPosition >= len(l.currentInput.content) {
+		return 0
 	} else {
 		return l.currentInput.content[l.nextPosition]
 	}
