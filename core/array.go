@@ -27,7 +27,7 @@ func InitArray() {
 	DefineMethod(Array, "push", arrayPush())
 	DefineMethod(Array, "pop", arrayPop())
 	DefineMethod(Array, "each", arrayEach())
-	DefineMethod(Array, "compact!", arrayCompactBang)
+	DefineMethod(Array, "compact!", arrayCompactBang())
 	DefineMethod(Array, "to_s", arrayToS())
 	DefineMethod(Array, "inspect", arrayToS())
 }
@@ -101,24 +101,26 @@ func arrayEach() object.BuiltInMethod {
 	}
 }
 
-var arrayCompactBang object.BuiltInMethod = func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-	arr := ctx.Self.(*ArrayInstance)
+func arrayCompactBang() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := ctx.Self.(*ArrayInstance)
 
-	i := 0 // output index
-	for _, x := range arr.Value {
-		if x != NULL {
-			// copy and increment index
-			arr.Value[i] = x
-			i++
+		i := 0 // output index
+		for _, x := range arr.Value {
+			if x != NULL {
+				// copy and increment index
+				arr.Value[i] = x
+				i++
+			}
 		}
-	}
-	// Prevent memory leak by erasing truncated values
-	for j := i; j < len(arr.Value); j++ {
-		arr.Value[j] = nil
-	}
-	arr.Value = arr.Value[:i]
+		// Prevent memory leak by erasing truncated values
+		for j := i; j < len(arr.Value); j++ {
+			arr.Value[j] = nil
+		}
+		arr.Value = arr.Value[:i]
 
-	return arr
+		return arr
+	}
 }
 
 func arrayEquals() object.BuiltInMethod {

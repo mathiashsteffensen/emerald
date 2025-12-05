@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
 )
 
 var Dir *object.Class
@@ -33,6 +36,12 @@ func dirPwd() object.BuiltInMethod {
 	}
 }
 
+var globListRegexp = regexp.MustCompile(`{(\S*)}`)
+
+func raiseFailedToReadGlobPathError(err error) {
+	Raise(NewRuntimeError(fmt.Sprintf("Failed to read glob path %s", err)))
+}
+
 func dirGlob() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, emErr := EnforceArity(args, kwargs, 1, 2); emErr != nil {
@@ -44,11 +53,30 @@ func dirGlob() object.BuiltInMethod {
 			return emErr
 		}
 
-		paths, err := filepath.Glob(globPath.Value)
+		var paths []string
+
+		for _, match := range globListRegexp.FindAllString(globPath.Value, -1) {
+			values := strings.Split(match[1:len(match)-1], ",")
+
+			for _, value := range values {
+				p, err := filepath.Glob(
+					globListRegexp.ReplaceAllString(globPath.Value, value),
+				)
+				if err != nil {
+					raiseFailedToReadGlobPathError(err)
+					return NULL
+				}
+				paths = append(paths, p...)
+			}
+		}
+
+		p, err := filepath.Glob(globPath.Value)
 		if err != nil {
-			Raise(NewRuntimeError(fmt.Sprintf("Failed to read glob path %s", err)))
+			raiseFailedToReadGlobPathError(err)
 			return NULL
 		}
+		paths = append(paths, p...)
+		sort.Strings(paths)
 
 		result := NewArray([]object.EmeraldValue{})
 
