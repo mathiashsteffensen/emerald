@@ -1,6 +1,9 @@
 package compiler
 
-import "emerald/parser/ast"
+import (
+	"emerald/bytecode"
+	"emerald/parser/ast"
+)
 
 func (c *Compiler) compileCaseExpression(node *ast.CaseExpression) {
 	c.Compile(node.Subject)
@@ -20,27 +23,27 @@ func (c *Compiler) compileCaseExpression(node *ast.CaseExpression) {
 			c.Compile(matcher)
 		}
 
-		lastOpCheckCaseEqualPosition = c.emit(OpCheckCaseEqual, lastOpCheckCaseEqualMatchersLength, 9999)
+		lastOpCheckCaseEqualPosition = c.emit(bytecode.OpCheckCaseEqual, clause.Token, lastOpCheckCaseEqualMatchersLength, 9999)
 		lastOpCheckCaseEqualMatchersLength = len(clause.Matchers)
 
 		c.Compile(clause.Consequence)
 
-		if c.lastInstructionIs(OpPop) {
+		if c.lastInstructionIs(bytecode.OpPop) {
 			c.removeLastPop()
 		}
 
 		// Emit an OpJump with a bogus position, position will be set to right after else clause
 		// when the else clause has been compiled
-		opJumpPositions = append(opJumpPositions, c.emit(OpJump, 9998))
+		opJumpPositions = append(opJumpPositions, c.emit(bytecode.OpJump, clause.Token, 9998))
 	}
 
 	c.changeOperand(lastOpCheckCaseEqualPosition, lastOpCheckCaseEqualMatchersLength, len(c.currentInstructions()))
 
-	c.emit(OpPop)
+	c.emit(bytecode.OpPop, node.Token)
 
-	c.compileStatementsWithReturnValue(node.Alternative.Statements)
+	c.compileStatementsWithReturnValue(node.Alternative.Statements, node.Alternative.Token)
 
-	if c.lastInstructionIs(OpPop) {
+	if c.lastInstructionIs(bytecode.OpPop) {
 		c.removeLastPop()
 	}
 
@@ -48,5 +51,5 @@ func (c *Compiler) compileCaseExpression(node *ast.CaseExpression) {
 		c.changeOperand(position, len(c.currentInstructions()))
 	}
 
-	c.emit(OpPop)
+	c.emit(bytecode.OpPop, node.Token)
 }

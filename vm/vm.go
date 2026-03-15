@@ -1,12 +1,13 @@
 package vm
 
 import (
-	"emerald/compiler"
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/debug"
 	"emerald/heap"
 	"emerald/object"
 	"fmt"
+	"os"
 )
 
 // VM is our virtual machine responsible for the fetch, decode, execute cycle
@@ -16,8 +17,8 @@ type VM struct {
 	fiberIndex int
 }
 
-func New(file string, bytecode *compiler.Bytecode) *VM {
-	mainBlock := &object.ClosedBlock{Block: &object.Block{Instructions: bytecode.Instructions}}
+func New(file string, bytecode *bytecode.Bytecode) *VM {
+	mainBlock := &object.ClosedBlock{Block: &object.Block{Bytecode: *bytecode}}
 	mainFrame := NewFrame(mainBlock, 0)
 
 	rootFiber := NewFiber(mainFrame)
@@ -32,6 +33,13 @@ func New(file string, bytecode *compiler.Bytecode) *VM {
 	heap.SetGlobalVariableString("$LOAD_PATH", core.NewArray([]object.EmeraldValue{
 		core.NewString(debug.BinaryDir),
 	}))
+
+	argv := make([]object.EmeraldValue, len(os.Args))
+	for i, arg := range os.Args {
+		argv[i] = core.NewString(arg)
+	}
+	heap.SetGlobalVariableString("$*", core.NewArray(argv))
+	setConst(core.MainObject, "ARGV", core.NewArray(argv))
 
 	object.EvalBlock = func(block *object.ClosedBlock, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return vm.withExecutionContextForBlock(block, func() object.EmeraldValue {
@@ -57,8 +65,8 @@ func (vm *VM) Run() {
 func (vm *VM) runWhile(condition func() bool) {
 	var (
 		ip  int
-		ins compiler.Instructions
-		op  compiler.Opcode
+		ins bytecode.Instructions
+		op  bytecode.Opcode
 	)
 
 	for condition() {
@@ -77,94 +85,94 @@ func (vm *VM) runWhile(condition func() bool) {
 	}
 }
 
-func (vm *VM) fetch() (int, compiler.Instructions, compiler.Opcode) {
+func (vm *VM) fetch() (int, bytecode.Instructions, bytecode.Opcode) {
 	ip := vm.currentFiber().currentFrame().ip
 	ins := vm.currentFiber().currentFrame().Instructions()
-	return ip, ins, compiler.Opcode(ins[ip])
+	return ip, ins, bytecode.Opcode(ins[ip])
 }
 
-func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
+func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 	switch op {
-	case compiler.OpPop:
+	case bytecode.OpPop:
 		vm.pop()
-	case compiler.OpSelf:
+	case bytecode.OpSelf:
 		vm.push(vm.ctx.Self)
-	case compiler.OpTrue:
+	case bytecode.OpTrue:
 		vm.push(core.TRUE)
-	case compiler.OpFalse:
+	case bytecode.OpFalse:
 		vm.push(core.FALSE)
-	case compiler.OpNull:
+	case bytecode.OpNull:
 		vm.push(core.NULL)
-	case compiler.OpStringJoin:
+	case bytecode.OpStringJoin:
 		vm.executeOpStringJoin(ins, ip)
-	case compiler.OpYield:
+	case bytecode.OpYield:
 		vm.executeOpYield(ins, ip)
-	case compiler.OpPushConstant:
+	case bytecode.OpPushConstant:
 		constIndex := vm.readUint16(ins, ip)
 
 		vm.push(heap.GetConstant(constIndex))
-	case compiler.OpAdd:
+	case bytecode.OpAdd:
 		vm.evalInfixOperator("+")
-	case compiler.OpSub:
+	case bytecode.OpSub:
 		vm.evalInfixOperator("-")
-	case compiler.OpDiv:
+	case bytecode.OpDiv:
 		vm.evalInfixOperator("/")
-	case compiler.OpMul:
+	case bytecode.OpMul:
 		vm.evalInfixOperator("*")
-	case compiler.OpMatch:
+	case bytecode.OpMatch:
 		vm.evalInfixOperator("=~")
-	case compiler.OpSpaceship:
+	case bytecode.OpSpaceship:
 		vm.evalInfixOperator("<=>")
-	case compiler.OpLessThan:
+	case bytecode.OpLessThan:
 		vm.evalInfixOperator("<")
-	case compiler.OpLessThanOrEq:
+	case bytecode.OpLessThanOrEq:
 		vm.evalInfixOperator("<=")
-	case compiler.OpGreaterThan:
+	case bytecode.OpGreaterThan:
 		vm.evalInfixOperator(">")
-	case compiler.OpGreaterThanOrEq:
+	case bytecode.OpGreaterThanOrEq:
 		vm.evalInfixOperator(">=")
-	case compiler.OpEqual:
+	case bytecode.OpEqual:
 		vm.evalInfixOperator("==")
-	case compiler.OpCaseEqual:
+	case bytecode.OpCaseEqual:
 		vm.evalInfixOperator("===")
-	case compiler.OpNotEqual:
+	case bytecode.OpNotEqual:
 		vm.evalInfixOperator("!=")
-	case compiler.OpBinShiftLeft:
+	case bytecode.OpBinShiftLeft:
 		vm.evalInfixOperator("<<")
-	case compiler.OpJump:
-		pos := int(compiler.ReadUint16(ins[ip+1:]))
+	case bytecode.OpJump:
+		pos := int(bytecode.ReadUint16(ins[ip+1:]))
 		vm.currentFiber().currentFrame().ip = pos - 1
-	case compiler.OpJumpNotTruthy:
+	case bytecode.OpJumpNotTruthy:
 		vm.conditionalJump(!core.IsTruthy(vm.StackTop()), ins, ip)
-	case compiler.OpJumpTruthy:
+	case bytecode.OpJumpTruthy:
 		vm.conditionalJump(core.IsTruthy(vm.StackTop()), ins, ip)
-	case compiler.OpCheckCaseEqual:
+	case bytecode.OpCheckCaseEqual:
 		vm.executeOpCheckCaseEqual(ins, ip)
-	case compiler.OpGetGlobal:
+	case bytecode.OpGetGlobal:
 		globalIndex := vm.readUint16(ins, ip)
 		value := heap.GetGlobalVariable(globalIndex)
 		if value == nil {
 			value = core.NULL
 		}
 		vm.push(value)
-	case compiler.OpSetGlobal:
+	case bytecode.OpSetGlobal:
 		globalIndex := vm.readUint16(ins, ip)
 		heap.SetGlobalVariable(globalIndex, vm.StackTop())
-	case compiler.OpGetLocal:
+	case bytecode.OpGetLocal:
 		localIndex := vm.readUint8(ins, ip)
 		frame := vm.currentFiber().currentFrame()
 		vm.push(vm.stack()[frame.basePointer+int(localIndex)])
-	case compiler.OpSetLocal:
-		localIndex := compiler.ReadUint8(ins[ip+1:])
+	case bytecode.OpSetLocal:
+		localIndex := bytecode.ReadUint8(ins[ip+1:])
 		vm.currentFiber().currentFrame().ip += 1
 		frame := vm.currentFiber().currentFrame()
 		vm.stack()[frame.basePointer+int(localIndex)] = vm.StackTop()
-	case compiler.OpGetFree:
-		freeIndex := compiler.ReadUint8(ins[ip+1:])
+	case bytecode.OpGetFree:
+		freeIndex := bytecode.ReadUint8(ins[ip+1:])
 		vm.currentFiber().currentFrame().ip += 1
 
 		vm.push(vm.currentFiber().currentFrame().block.FreeVariables[freeIndex])
-	case compiler.OpInstanceVarGet:
+	case bytecode.OpInstanceVarGet:
 		constIndex := vm.readUint16(ins, ip)
 
 		name := heap.GetConstant(constIndex)
@@ -177,14 +185,14 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		}
 
 		vm.push(val)
-	case compiler.OpConstantGet:
+	case bytecode.OpConstantGet:
 		vm.executeOpConstantGet(ins, ip)
-	case compiler.OpConstantSet:
+	case bytecode.OpConstantSet:
 		vm.executeOpConstantSet(ins, ip)
-	case compiler.OpScopedConstantGet:
+	case bytecode.OpScopedConstantGet:
 		vm.executeOpScopedConstantGet(ins, ip)
-	case compiler.OpInstanceVarSet:
-		constIndex := compiler.ReadUint16(ins[ip+1:])
+	case bytecode.OpInstanceVarSet:
+		constIndex := bytecode.ReadUint16(ins[ip+1:])
 		vm.currentFiber().currentFrame().ip += 2
 
 		name := heap.GetConstant(constIndex)
@@ -192,16 +200,16 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		target := vm.ctx.Self
 
 		target.InstanceVariableSet(name.(*core.SymbolInstance).Value, val)
-	case compiler.OpArray:
-		numElements := int(compiler.ReadUint16(ins[ip+1:]))
+	case bytecode.OpArray:
+		numElements := int(bytecode.ReadUint16(ins[ip+1:]))
 		vm.currentFiber().currentFrame().ip += 2
 
 		array := vm.buildArray(vm.currentFiber().sp-numElements, vm.currentFiber().sp)
 		vm.currentFiber().sp = vm.currentFiber().sp - numElements
 
 		vm.push(array)
-	case compiler.OpHash:
-		numElements := int(compiler.ReadUint16(ins[ip+1:]))
+	case bytecode.OpHash:
+		numElements := int(bytecode.ReadUint16(ins[ip+1:]))
 		vm.currentFiber().currentFrame().ip += 2
 
 		startIndex := vm.currentFiber().sp - numElements
@@ -210,24 +218,24 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		vm.currentFiber().sp = startIndex
 
 		vm.push(hash)
-	case compiler.OpBang:
+	case bytecode.OpBang:
 		vm.executeBangOperator()
-	case compiler.OpMinus:
+	case bytecode.OpMinus:
 		vm.executeOpMinus()
-	case compiler.OpReturn:
+	case bytecode.OpReturn:
 		vm.executeOpReturn()
-	case compiler.OpReturnValue:
+	case bytecode.OpReturnValue:
 		vm.executeOpReturnValue()
-	case compiler.OpDefineMethod:
+	case bytecode.OpDefineMethod:
 		block := vm.pop().(*object.Block)
 		name := vm.stack()[vm.currentFiber().sp-1].(*core.SymbolInstance)
 
 		vm.ctx.Self.DefinedMethodSet()[name.Value] = object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File, vm.ctx.DefaultMethodVisibility)
-	case compiler.OpSend:
+	case bytecode.OpSend:
 		numArgs := vm.readUint8(ins, ip)
 		hasKwargs := vm.readUint8(ins, ip+1)
 		vm.callMethod(int(numArgs), hasKwargs == 1)
-	case compiler.OpOpenClass:
+	case bytecode.OpOpenClass:
 		// Fetch the symbol name from the heap
 		nameIndex := vm.readUint16(ins, ip)
 		name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
@@ -244,7 +252,7 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 
 		// Create and set a new Context with this class as Self
 		vm.ctx = vm.newEnclosedContext(vm.ctx.File, class, vm.ctx.Block)
-	case compiler.OpOpenModule:
+	case bytecode.OpOpenModule:
 		outerCtx := vm.ctx
 		nameIndex := vm.readUint16(ins, ip)
 		name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
@@ -255,22 +263,22 @@ func (vm *VM) execute(ip int, ins compiler.Instructions, op compiler.Opcode) {
 		}
 
 		vm.ctx = vm.newEnclosedContext(outerCtx.File, module, outerCtx.Block)
-	case compiler.OpUnwrapContext:
+	case bytecode.OpUnwrapContext:
 		to := vm.ctx.Outer
 
 		vm.ctx = to
-	case compiler.OpCloseBlock:
-		constIndex := compiler.ReadUint16(ins[ip+1:])
-		numFreeVars := compiler.ReadUint8(ins[ip+3:])
+	case bytecode.OpCloseBlock:
+		constIndex := bytecode.ReadUint16(ins[ip+1:])
+		numFreeVars := bytecode.ReadUint8(ins[ip+3:])
 		vm.currentFiber().currentFrame().ip += 3
 
 		vm.closeBlock(int(constIndex), int(numFreeVars))
-	case compiler.OpStaticTrue:
+	case bytecode.OpStaticTrue:
 		vm.ctx.Self = vm.ctx.Self.Class()
-	case compiler.OpStaticFalse:
+	case bytecode.OpStaticFalse:
 		vm.ctx.Self = vm.ctx.Self.(*object.SingletonClass).Instance
 	default:
-		def, err := compiler.Lookup(byte(op))
+		def, err := bytecode.Lookup(byte(op))
 		if err != nil {
 			panic(err)
 		}
@@ -477,24 +485,24 @@ func (vm *VM) buildHash(startIndex, endIndex int) object.EmeraldValue {
 	return hash
 }
 
-func (vm *VM) conditionalJump(condition bool, ins compiler.Instructions, ip int) {
+func (vm *VM) conditionalJump(condition bool, ins bytecode.Instructions, ip int) {
 	vm.currentFiber().currentFrame().ip += 2
 
 	if condition {
-		newPosition := int(compiler.ReadUint16(ins[ip+1:]))
+		newPosition := int(bytecode.ReadUint16(ins[ip+1:]))
 		vm.currentFiber().currentFrame().ip = newPosition - 1
 		vm.currentFiber().sp--
 	}
 }
 
-func (vm *VM) readUint8(ins compiler.Instructions, ip int) uint8 {
-	val := compiler.ReadUint8(ins[ip+1:])
+func (vm *VM) readUint8(ins bytecode.Instructions, ip int) uint8 {
+	val := bytecode.ReadUint8(ins[ip+1:])
 	vm.currentFiber().currentFrame().ip += 1
 	return val
 }
 
-func (vm *VM) readUint16(ins compiler.Instructions, ip int) uint16 {
-	val := compiler.ReadUint16(ins[ip+1:])
+func (vm *VM) readUint16(ins bytecode.Instructions, ip int) uint16 {
+	val := bytecode.ReadUint16(ins[ip+1:])
 	vm.currentFiber().currentFrame().ip += 2
 	return val
 }

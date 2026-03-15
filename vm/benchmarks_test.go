@@ -22,8 +22,8 @@ func BenchmarkFibonacci(b *testing.B) {
 	`
 
 	for i := 0; i < b.N; i++ {
-		program := parse(input)
-		comp := compiler.New()
+		l, program := parse(input)
+		comp := compiler.New(l)
 
 		comp.Compile(program)
 

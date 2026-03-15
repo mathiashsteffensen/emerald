@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileInstanceVariable(t *testing.T) {
 	tests := []compilerTestCase{
@@ -12,12 +15,12 @@ func TestCompileInstanceVariable(t *testing.T) {
 				2,
 				":@var",
 			},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpAdd),
-				Make(OpInstanceVarSet, 2),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpAdd),
+				bytecode.Make(bytecode.OpInstanceVarSet, 2),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -26,10 +29,10 @@ func TestCompileInstanceVariable(t *testing.T) {
 			expectedConstants: []any{
 				":@var",
 			},
-			expectedInstructions: []Instructions{
-				Make(OpInstanceVarGet, 0),
-				Make(OpSetGlobal, 0),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpInstanceVarGet, 0),
+				bytecode.Make(bytecode.OpSetGlobal, 0),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

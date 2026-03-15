@@ -1,6 +1,7 @@
-package compiler
+package bytecode
 
 import (
+	"emerald/parser/lexer"
 	"fmt"
 )
 
@@ -17,10 +18,19 @@ type (
 
 	Bytecode struct {
 		Instructions Instructions
+
+		// DebugTokens maps instruction offsets to their originating tokens for debugging purposes
+		DebugTokens map[int]lexer.Token
+		Lexer       *lexer.Lexer
 	}
 )
 
 func (bytecode Bytecode) String() string { return bytecode.Instructions.String() }
+
+// InstructionSnapshot returns a snapshot of the code for the instruction at the given offset
+func (bytecode Bytecode) InstructionSnapshot(offset int) string {
+	return bytecode.Lexer.Snapshot(bytecode.DebugTokens[offset])
+}
 
 const (
 	_ Opcode = iota

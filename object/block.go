@@ -1,25 +1,26 @@
 package object
 
 import (
+	"emerald/bytecode"
 	"emerald/types"
 	"fmt"
 )
 
 type RescueBlock struct {
-	Instructions       []byte
+	bytecode.Bytecode
 	CaughtErrorClasses *types.Slice[string]
 }
 
-func NewRescueBlock(ins []byte, errorClasses ...string) RescueBlock {
+func NewRescueBlock(bytecode bytecode.Bytecode, errorClasses ...string) RescueBlock {
 	return RescueBlock{
-		Instructions:       ins,
+		Bytecode:           bytecode,
 		CaughtErrorClasses: types.NewSlice(errorClasses...),
 	}
 }
 
 type Block struct {
 	*BaseEmeraldValue
-	Instructions []byte
+	bytecode.Bytecode
 	NumLocals    int
 	NumArgs      int
 	Kwargs       []string
@@ -34,9 +35,9 @@ func (b *Block) Type() EmeraldValueType    { return BLOCK_VALUE }
 func (b *Block) Inspect() string           { return fmt.Sprintf("#<Block:%p>", b) }
 func (b *Block) HashKey() string           { return b.Inspect() }
 
-func NewBlock(instructions []byte, numLocals int, numArgs int, kwargs []string, enforceArity bool) *Block {
+func NewBlock(bytecode bytecode.Bytecode, numLocals int, numArgs int, kwargs []string, enforceArity bool) *Block {
 	return &Block{
-		Instructions: instructions,
+		Bytecode:     bytecode,
 		NumLocals:    numLocals,
 		NumArgs:      numArgs,
 		Kwargs:       kwargs,

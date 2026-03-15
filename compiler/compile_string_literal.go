@@ -1,19 +1,20 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/parser/ast"
 )
 
 func (c *Compiler) compileStringLiteral(node *ast.StringLiteral) {
 	str := core.NewString(node.Value)
-	c.emit(OpPushConstant, c.addConstant(str))
+	c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(str))
 }
 
 func (c *Compiler) compileStringTemplate(node *ast.StringTemplate) {
 	c.compileStringTemplateString(node.Chain)
 
-	c.emit(OpStringJoin, node.Count())
+	c.emit(bytecode.OpStringJoin, node.Token, node.Count())
 }
 
 func (c *Compiler) compileStringTemplateString(node *ast.StringTemplateChainString) {

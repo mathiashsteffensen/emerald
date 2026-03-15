@@ -1,6 +1,8 @@
-package compiler
+package bytecode
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 // Make - Generates VM instructions from an OpCode & operands
 func Make(operator Opcode, operands ...int) Instructions {

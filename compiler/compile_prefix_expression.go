@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/parser/ast"
 	"fmt"
 )
@@ -10,9 +11,9 @@ func (c *Compiler) compilePrefixExpression(node *ast.PrefixExpression) {
 
 	switch node.Operator {
 	case "!":
-		c.emit(OpBang)
+		c.emit(bytecode.OpBang, node.Token)
 	case "-":
-		c.emit(OpMinus)
+		c.emit(bytecode.OpMinus, node.Token)
 	default:
 		panic(fmt.Errorf("unknown prefix operator %s", node.Operator))
 	}

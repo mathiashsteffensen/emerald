@@ -1,9 +1,11 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/object"
 	ast "emerald/parser/ast"
+	"emerald/parser/lexer"
 )
 
 func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
@@ -11,9 +13,9 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
 
 	symbol := core.NewSymbol(node.Name.(ast.IdentifierExpression).Value)
 
-	c.emit(OpPushConstant, c.addConstant(symbol))
-	c.emit(OpPushConstant, c.addConstant(block))
-	c.emit(OpDefineMethod)
+	c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(symbol))
+	c.emit(bytecode.OpPushConstant, node.BlockLiteral.Token, c.addConstant(block))
+	c.emit(bytecode.OpDefineMethod, node.Token)
 }
 
 func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*object.Block, int) {
@@ -26,22 +28,14 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*obj
 
 	c.Compile(node.Body)
 
-	if c.lastInstructionIs(OpPop) {
-		c.replaceLastPopWithReturn()
-	}
-
-	// Everything in Ruby returns something
-	// If function doesn't have a return value, return null
-	if !c.lastInstructionIs(OpReturnValue) {
-		c.emit(OpReturn)
-	}
+	c.ensureLastInstructionIsReturn(node.Token)
 
 	freeSymbols := c.symbolTable.FreeSymbols
 	numLocals := c.symbolTable.NumDefinitions
-	instructions := c.leaveScope()
+	bytecode := c.leaveScope()
 
 	for _, s := range freeSymbols {
-		c.emitSymbol(s)
+		c.emitSymbol(s, node.Token)
 	}
 
 	var kwargNames []string
@@ -49,31 +43,23 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*obj
 		kwargNames = append(kwargNames, argument.Value)
 	}
 
-	block := object.NewBlock(instructions, numLocals, numParams, kwargNames, enforceArity)
+	block := object.NewBlock(bytecode, numLocals, numParams, kwargNames, enforceArity)
 
 	for _, rescueBlock := range node.RescueBlocks {
 		c.enterScope()
 
 		c.Compile(rescueBlock.Body)
 
-		if c.lastInstructionIs(OpPop) {
-			c.replaceLastPopWithReturn()
-		}
-
-		// Everything in Ruby returns something
-		// If function doesn't have a return value, return null
-		if !c.lastInstructionIs(OpReturnValue) {
-			c.emit(OpReturn)
-		}
+		c.ensureLastInstructionIsReturn(rescueBlock.Token)
 
 		var errorClasses []string
-		instructions = c.leaveScope()
+		bytecode = c.leaveScope()
 
 		for _, errorClass := range rescueBlock.CaughtErrorClasses {
 			errorClasses = append(errorClasses, errorClass.String(0))
 		}
 
-		block.RescueBlocks = append(block.RescueBlocks, object.NewRescueBlock(instructions, errorClasses...))
+		block.RescueBlocks = append(block.RescueBlocks, object.NewRescueBlock(bytecode, errorClasses...))
 	}
 
 	return block, len(freeSymbols)
@@ -81,6 +67,21 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*obj
 
 func (c *Compiler) replaceLastPopWithReturn() {
 	lastPos := c.scopes[c.scopeIndex].lastInstruction.Position
-	c.replaceInstruction(lastPos, Make(OpReturnValue))
-	c.scopes[c.scopeIndex].lastInstruction.Opcode = OpReturnValue
+	c.replaceInstruction(lastPos, bytecode.Make(bytecode.OpReturnValue))
+	c.scopes[c.scopeIndex].lastInstruction.Opcode = bytecode.OpReturnValue
+}
+
+func (c *Compiler) ensureLastInstructionIsReturn(token lexer.Token) {
+	// These 2 if statements ensure everything in the Ruby implementation returns something
+
+	// If last instruction is a pop (an expression that leaves a value on the stack),
+	// replace it with return
+	if c.lastInstructionIs(bytecode.OpPop) {
+		c.replaceLastPopWithReturn()
+	}
+
+	// If block doesn't have a return value, return null
+	if !c.lastInstructionIs(bytecode.OpReturnValue) {
+		c.emit(bytecode.OpReturn, token)
+	}
 }

@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/heap"
 	ast "emerald/parser/ast"
@@ -13,7 +14,7 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) {
 	switch name := node.Name.(type) {
 	case ast.IdentifierExpression:
 		if unicode.IsUpper(rune(name.Value[0])) {
-			c.emit(OpConstantSet, c.addConstant(core.NewSymbol(name.Value)))
+			c.emit(bytecode.OpConstantSet, node.Token, c.addConstant(core.NewSymbol(name.Value)))
 			return
 		}
 
@@ -26,18 +27,18 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) {
 
 		switch symbol.Scope {
 		case heap.GlobalScope:
-			c.emit(OpSetGlobal, symbol.Index)
+			c.emit(bytecode.OpSetGlobal, node.Token, symbol.Index)
 		case heap.LocalScope:
-			c.emit(OpSetLocal, symbol.Index)
+			c.emit(bytecode.OpSetLocal, node.Token, symbol.Index)
 		}
 	case *ast.InstanceVariable:
-		c.emit(OpInstanceVarSet, c.addConstant(core.NewSymbol(name.Value)))
+		c.emit(bytecode.OpInstanceVarSet, node.Token, c.addConstant(core.NewSymbol(name.Value)))
 	case *ast.GlobalVariable:
 		symbol, ok := c.symbolTable.Resolve(name.Value)
 		if !ok {
 			symbol = c.symbolTable.DefineGlobal(name.Value)
 		}
 
-		c.emit(OpSetGlobal, symbol.Index)
+		c.emit(bytecode.OpSetGlobal, node.Token, symbol.Index)
 	}
 }

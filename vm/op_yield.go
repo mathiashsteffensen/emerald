@@ -1,11 +1,11 @@
 package vm
 
 import (
-	"emerald/compiler"
+	"emerald/bytecode"
 	"emerald/object"
 )
 
-func (vm *VM) executeOpYield(ins compiler.Instructions, ip int) {
+func (vm *VM) executeOpYield(ins bytecode.Instructions, ip int) {
 	numArgs := vm.readUint8(ins, ip)
 	args := vm.stack()[vm.currentFiber().sp-int(numArgs) : vm.currentFiber().sp]
 

@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileIdentifierExpression(t *testing.T) {
 	tests := []compilerTestCase{
@@ -14,22 +17,22 @@ func TestCompileIdentifierExpression(t *testing.T) {
 			expectedConstants: []any{
 				24,
 				":no_arg",
-				[]Instructions{
-					Make(OpPushConstant, 0), // The literal "24"
-					Make(OpReturnValue),
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpPushConstant, 0), // The literal "24"
+					bytecode.Make(bytecode.OpReturnValue),
 				},
 				":no_arg",
 			},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 1), // The symbol name of the method
-				Make(OpPushConstant, 2), // The compiled block
-				Make(OpDefineMethod),
-				Make(OpPop),
-				Make(OpSelf),            // Receiver, implicit self
-				Make(OpPushConstant, 3), // The symbol name of the method
-				Make(OpNull),            // Null block
-				Make(OpSend, 0),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 1), // The symbol name of the method
+				bytecode.Make(bytecode.OpPushConstant, 2), // The compiled block
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpSelf),            // Receiver, implicit self
+				bytecode.Make(bytecode.OpPushConstant, 3), // The symbol name of the method
+				bytecode.Make(bytecode.OpNull),            // Null block
+				bytecode.Make(bytecode.OpSend, 0),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -38,19 +41,19 @@ func TestCompileIdentifierExpression(t *testing.T) {
 			expectedConstants: []any{
 				5,
 				":method",
-				[]Instructions{
-					Make(OpPushConstant, 0),
-					Make(OpSetGlobal, 0),
-					Make(OpPop),
-					Make(OpGetGlobal, 0),
-					Make(OpReturnValue),
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpPushConstant, 0),
+					bytecode.Make(bytecode.OpSetGlobal, 0),
+					bytecode.Make(bytecode.OpPop),
+					bytecode.Make(bytecode.OpGetGlobal, 0),
+					bytecode.Make(bytecode.OpReturnValue),
 				},
 			},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 1), // The symbol name of the method
-				Make(OpPushConstant, 2), // The compiled block
-				Make(OpDefineMethod),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 1), // The symbol name of the method
+				bytecode.Make(bytecode.OpPushConstant, 2), // The compiled block
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

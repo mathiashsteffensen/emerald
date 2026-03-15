@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/parser/ast"
 )
 
@@ -8,21 +9,21 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) {
 	c.Compile(node.Condition)
 
 	// Emit an `OpJumpNotTruthy` with a bogus value
-	jumpNotTruthyPos := c.emit(OpJumpNotTruthy, 9999)
-	c.emit(OpPop)
+	jumpNotTruthyPos := c.emit(bytecode.OpJumpNotTruthy, node.Token, 9999)
+	c.emit(bytecode.OpPop, node.Token)
 
 	if node.Consequence == nil {
-		c.emit(OpNull)
+		c.emit(bytecode.OpNull, node.Token)
 	} else {
 		c.Compile(node.Consequence)
 
-		if c.lastInstructionIs(OpPop) {
+		if c.lastInstructionIs(bytecode.OpPop) {
 			c.removeLastPop()
 		}
 	}
 
 	// Emit an `OpJump` with a bogus value
-	jumpPos := c.emit(OpJump, 9999)
+	jumpPos := c.emit(bytecode.OpJump, node.Token, 9999)
 
 	afterConsequencePos := len(c.currentInstructions())
 	c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
@@ -37,10 +38,10 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) {
 	}
 
 	if node.Alternative == nil {
-		c.emit(OpNull)
+		c.emit(bytecode.OpNull, node.Token)
 	} else {
 		c.Compile(node.Alternative)
-		if c.lastInstructionIs(OpPop) {
+		if c.lastInstructionIs(bytecode.OpPop) {
 			c.removeLastPop()
 		}
 	}
@@ -55,21 +56,21 @@ func (c *Compiler) compileElsifBranch(elsIf ast.ElseIf) int {
 	c.Compile(elsIf.Condition)
 
 	// Emit an `OpJumpNotTruthy` with a bogus value
-	jumpNotTruthyPos := c.emit(OpJumpNotTruthy, 9999)
-	c.emit(OpPop)
+	jumpNotTruthyPos := c.emit(bytecode.OpJumpNotTruthy, elsIf.Consequence.Token, 9999)
+	c.emit(bytecode.OpPop, elsIf.Consequence.Token)
 
 	if elsIf.Consequence == nil {
-		c.emit(OpNull)
+		c.emit(bytecode.OpNull, elsIf.Consequence.Token)
 	} else {
 		c.Compile(elsIf.Consequence)
 
-		if c.lastInstructionIs(OpPop) {
+		if c.lastInstructionIs(bytecode.OpPop) {
 			c.removeLastPop()
 		}
 	}
 
 	// Emit an `OpJump` with a bogus value
-	jumpPos := c.emit(OpJump, 9999)
+	jumpPos := c.emit(bytecode.OpJump, elsIf.Consequence.Token, 9999)
 
 	afterConsequencePos := len(c.currentInstructions())
 	c.changeOperand(jumpNotTruthyPos, afterConsequencePos)

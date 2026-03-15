@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/heap"
 	"emerald/object"
@@ -11,12 +12,12 @@ import (
 )
 
 type EmittedInstruction struct {
-	Opcode   Opcode
+	Opcode   bytecode.Opcode
 	Position int
 }
 
 type Compiler struct {
-	instructions Instructions
+	instructions bytecode.Instructions
 	opCount      int
 	symbolTable  *heap.SymbolTable
 	scopes       []CompilationScope
@@ -25,15 +26,19 @@ type Compiler struct {
 
 type ConstructorOption func(c *Compiler)
 
-func New(options ...ConstructorOption) *Compiler {
+func New(l *lexer.Lexer, options ...ConstructorOption) *Compiler {
 	mainScope := CompilationScope{
-		instructions:        Instructions{},
+		bytecode: bytecode.Bytecode{
+			Instructions: bytecode.Instructions{},
+			DebugTokens:  map[int]lexer.Token{},
+			Lexer:        l,
+		},
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
 	}
 
 	c := &Compiler{
-		instructions: Instructions{},
+		instructions: bytecode.Instructions{},
 		symbolTable:  heap.GlobalSymbolTable,
 		scopes:       []CompilationScope{mainScope},
 	}
@@ -46,7 +51,7 @@ func New(options ...ConstructorOption) *Compiler {
 }
 
 func init() {
-	core.Compile = func(fileName string, content string) []byte {
+	core.Compile = func(fileName string, content string) *bytecode.Bytecode {
 		l := lexer.New(lexer.NewInput(fileName, content))
 		p := parser.New(l)
 		ast := p.ParseAST()
@@ -55,12 +60,14 @@ func init() {
 			core.Raise(core.NewException(fmt.Sprintf("failed to parse source file %s\n\n%s", fileName, p.Errors()[0])))
 		}
 
-		c := New()
+		c := New(l)
 		c.Compile(ast)
 
-		instructions := append(c.Bytecode().Instructions, byte(OpReturn))
+		bc := c.Bytecode()
 
-		return instructions
+		bc.Instructions = append(bc.Instructions, byte(bytecode.OpReturn))
+
+		return bc
 	}
 }
 
@@ -72,20 +79,20 @@ func (c *Compiler) Compile(node ast.Node) {
 		}
 	case *ast.ExpressionStatement:
 		c.Compile(node.Expression)
-		c.emit(OpPop)
+		c.emit(bytecode.OpPop, node.Token)
 	case *ast.BlockStatement:
 		for _, s := range node.Statements {
 			c.Compile(s)
 		}
 	case *ast.ReturnStatement:
 		c.Compile(node.ReturnValue)
-		c.emit(OpReturnValue)
+		c.emit(bytecode.OpReturnValue, node.Token)
 	case *ast.PrefixExpression:
 		c.compilePrefixExpression(node)
 	case *ast.AssignmentExpression:
 		c.compileAssignment(node)
 	case *ast.Self:
-		c.emit(OpSelf)
+		c.emit(bytecode.OpSelf, node.Token)
 	case ast.Yield:
 		c.compileYield(node)
 	case ast.IdentifierExpression:
@@ -95,7 +102,7 @@ func (c *Compiler) Compile(node ast.Node) {
 	case *ast.GlobalVariable:
 		c.compileIdentifierExpression(node)
 	case ast.CallExpression:
-		c.emit(OpSelf) // Method calls without a receiver has an implicit self receiver
+		c.emit(bytecode.OpSelf, node.Token) // Method calls without a receiver has an implicit self receiver
 		c.compileCallExpression(node)
 	case *ast.MethodCall:
 		c.compileMethodCall(node)
@@ -108,32 +115,32 @@ func (c *Compiler) Compile(node ast.Node) {
 	case *ast.CaseExpression:
 		c.compileCaseExpression(node)
 
-		if c.lastInstructionIs(OpPop) {
+		if c.lastInstructionIs(bytecode.OpPop) {
 			c.removeLastPop()
 		}
 	case *ast.WhileExpression:
 		c.compileWhileExpression(node)
 	case *ast.IntegerLiteral:
 		integer := core.NewInteger(node.Value)
-		c.emit(OpPushConstant, c.addConstant(integer))
+		c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(integer))
 	case *ast.FloatLiteral:
 		float := core.NewFloat(node.Value)
-		c.emit(OpPushConstant, c.addConstant(float))
+		c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(float))
 	case *ast.BooleanLiteral:
 		if node.Value {
-			c.emit(OpTrue)
+			c.emit(bytecode.OpTrue, node.Token)
 		} else {
-			c.emit(OpFalse)
+			c.emit(bytecode.OpFalse, node.Token)
 		}
 	case *ast.NullExpression:
-		c.emit(OpNull)
+		c.emit(bytecode.OpNull, node.Token)
 	case *ast.StringLiteral:
 		c.compileStringLiteral(node)
 	case *ast.StringTemplate:
 		c.compileStringTemplate(node)
 	case *ast.SymbolLiteral:
 		sym := core.NewSymbol(node.Value)
-		c.emit(OpPushConstant, c.addConstant(sym))
+		c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(sym))
 	case *ast.RegexpLiteral:
 		c.compileRegexpLiteral(node)
 	case *ast.ArrayLiteral:
@@ -151,9 +158,9 @@ func (c *Compiler) Compile(node ast.Node) {
 	}
 }
 
-func (c *Compiler) compileStatementsWithReturnValue(statements []ast.Statement) {
+func (c *Compiler) compileStatementsWithReturnValue(statements []ast.Statement, debugToken lexer.Token) {
 	if len(statements) == 0 {
-		c.emit(OpNull)
+		c.emit(bytecode.OpNull, debugToken)
 	} else {
 		for _, s := range statements {
 			c.Compile(s)
@@ -161,15 +168,21 @@ func (c *Compiler) compileStatementsWithReturnValue(statements []ast.Statement) 
 	}
 }
 
-func (c *Compiler) Bytecode() *Bytecode {
-	return &Bytecode{
+func (c *Compiler) Bytecode() *bytecode.Bytecode {
+	return &bytecode.Bytecode{
 		Instructions: c.currentInstructions(),
+		DebugTokens:  c.currentScope().bytecode.DebugTokens,
+		Lexer:        c.currentScope().bytecode.Lexer,
 	}
 }
 
 func (c *Compiler) enterScope() {
 	scope := CompilationScope{
-		instructions:        Instructions{},
+		bytecode: bytecode.Bytecode{
+			Instructions: bytecode.Instructions{},
+			DebugTokens:  map[int]lexer.Token{},
+			Lexer:        c.currentScope().bytecode.Lexer,
+		},
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
 	}
@@ -180,18 +193,18 @@ func (c *Compiler) enterScope() {
 	c.symbolTable = heap.NewEnclosedSymbolTable(c.symbolTable)
 }
 
-func (c *Compiler) leaveScope() Instructions {
-	instructions := c.currentInstructions()
+func (c *Compiler) leaveScope() bytecode.Bytecode {
+	bytecode := c.currentScope().bytecode
 
 	c.scopes = c.scopes[:len(c.scopes)-1]
 	c.scopeIndex--
 
 	c.symbolTable = c.symbolTable.Outer
 
-	return instructions
+	return bytecode
 }
 
-func (c *Compiler) lastInstructionIs(op Opcode) bool {
+func (c *Compiler) lastInstructionIs(op bytecode.Opcode) bool {
 	if len(c.currentInstructions()) == 0 {
 		return false
 	}
@@ -203,7 +216,7 @@ func (c *Compiler) removeLastPop() {
 	previous := c.scopes[c.scopeIndex].previousInstruction
 	old := c.currentInstructions()
 
-	c.scopes[c.scopeIndex].instructions = old[:last.Position]
+	c.scopes[c.scopeIndex].bytecode.Instructions = old[:last.Position]
 	c.scopes[c.scopeIndex].lastInstruction = previous
 }
 
@@ -215,22 +228,22 @@ func (c *Compiler) replaceInstruction(pos int, newInstruction []byte) {
 	}
 }
 
-func (c *Compiler) replaceLastInstructionWith(op Opcode) {
+func (c *Compiler) replaceLastInstructionWith(op bytecode.Opcode) {
 	lastPos := c.scopes[c.scopeIndex].lastInstruction.Position
-	c.replaceInstruction(lastPos, Make(op))
+	c.replaceInstruction(lastPos, bytecode.Make(op))
 	c.scopes[c.scopeIndex].lastInstruction.Opcode = op
 }
 
 func (c *Compiler) changeOperand(opPos int, operands ...int) {
-	op := Opcode(c.currentInstructions()[opPos])
-	newInstruction := Make(op, operands...)
+	op := bytecode.Opcode(c.currentInstructions()[opPos])
+	newInstruction := bytecode.Make(op, operands...)
 
 	c.replaceInstruction(opPos, newInstruction)
 }
 
-func (c *Compiler) emit(op Opcode, operands ...int) int {
-	ins := Make(op, operands...)
-	pos := c.addInstruction(ins)
+func (c *Compiler) emit(op bytecode.Opcode, debugToken lexer.Token, operands ...int) int {
+	ins := bytecode.Make(op, operands...)
+	pos := c.addInstruction(ins, debugToken)
 
 	c.setLastInstruction(op, pos)
 
@@ -239,39 +252,44 @@ func (c *Compiler) emit(op Opcode, operands ...int) int {
 	return pos
 }
 
-func (c *Compiler) emitConstantGet(name string) {
+func (c *Compiler) emitConstantGet(name string, debugToken lexer.Token) {
 	symbol := core.NewSymbol(name)
 
-	c.emit(OpConstantGet, c.addConstant(symbol))
+	c.emit(bytecode.OpConstantGet, debugToken, c.addConstant(symbol))
 }
 
-func (c *Compiler) emitSymbol(symbol heap.Symbol) {
+func (c *Compiler) emitSymbol(symbol heap.Symbol, debugToken lexer.Token) {
 	switch symbol.Scope {
 	case heap.GlobalScope:
-		c.emit(OpGetGlobal, symbol.Index)
+		c.emit(bytecode.OpGetGlobal, debugToken, symbol.Index)
 	case heap.LocalScope:
-		c.emit(OpGetLocal, symbol.Index)
+		c.emit(bytecode.OpGetLocal, debugToken, symbol.Index)
 	case heap.FreeScope:
-		c.emit(OpGetFree, symbol.Index)
+		c.emit(bytecode.OpGetFree, debugToken, symbol.Index)
 	}
 }
 
 // returns the instructions for the current CompilationScope
-func (c *Compiler) currentInstructions() Instructions {
-	return c.scopes[c.scopeIndex].instructions
+func (c *Compiler) currentInstructions() bytecode.Instructions {
+	return c.currentScope().bytecode.Instructions
+}
+
+func (c *Compiler) currentScope() CompilationScope {
+	return c.scopes[c.scopeIndex]
 }
 
 // addInstruction adds instructions to the instruction stack and returns its location
-func (c *Compiler) addInstruction(ins []byte) int {
+func (c *Compiler) addInstruction(ins []byte, debugToken lexer.Token) int {
 	posNewInstruction := len(c.currentInstructions())
 	updatedInstructions := append(c.currentInstructions(), ins...)
 
-	c.scopes[c.scopeIndex].instructions = updatedInstructions
+	c.scopes[c.scopeIndex].bytecode.Instructions = updatedInstructions
+	c.scopes[c.scopeIndex].bytecode.DebugTokens[posNewInstruction] = debugToken
 
 	return posNewInstruction
 }
 
-func (c *Compiler) setLastInstruction(op Opcode, pos int) {
+func (c *Compiler) setLastInstruction(op bytecode.Opcode, pos int) {
 	previous := c.scopes[c.scopeIndex].lastInstruction
 	last := EmittedInstruction{Opcode: op, Position: pos}
 

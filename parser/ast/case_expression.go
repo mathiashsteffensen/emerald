@@ -6,6 +6,7 @@ import (
 )
 
 type WhenClause struct {
+	Token       lexer.Token // The 'when' token
 	Matchers    []Expression
 	Consequence *BlockStatement
 }

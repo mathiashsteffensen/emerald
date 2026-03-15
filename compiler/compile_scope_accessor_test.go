@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileScopeAccessor(t *testing.T) {
 	tests := []compilerTestCase{
@@ -10,10 +13,10 @@ func TestCompileScopeAccessor(t *testing.T) {
 				":MyMod",
 				":MyClass",
 			},
-			expectedInstructions: []Instructions{
-				Make(OpConstantGet, 0),
-				Make(OpScopedConstantGet, 1),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstantGet, 0),
+				bytecode.Make(bytecode.OpScopedConstantGet, 1),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

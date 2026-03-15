@@ -22,7 +22,7 @@ func (p *Parser) parseCaseExpression() ast.Expression {
 	p.nextIfCurSemicolonOrNewline()
 
 	for p.curTokenIs(lexer.WHEN) {
-		whenClause := &ast.WhenClause{Matchers: []ast.Expression{}}
+		whenClause := &ast.WhenClause{Token: p.curToken, Matchers: []ast.Expression{}}
 
 		whenClause.Matchers, _ = p.parseMethodArgsWithoutParentheses()
 

@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/parser/ast"
 )
@@ -8,5 +9,5 @@ import (
 func (c *Compiler) compileRegexpLiteral(node *ast.RegexpLiteral) {
 	regexp := core.NewRegexp(node.Value)
 
-	c.emit(OpPushConstant, c.addConstant(regexp))
+	c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(regexp))
 }

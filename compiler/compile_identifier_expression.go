@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/core"
 	ast "emerald/parser/ast"
 	"unicode"
@@ -10,25 +11,28 @@ func (c *Compiler) compileIdentifierExpression(node ast.Expression) {
 	switch node := node.(type) {
 	case ast.IdentifierExpression:
 		if unicode.IsUpper(rune(node.Value[0])) {
-			c.emitConstantGet(node.Value)
+			// Constant reference
+			c.emitConstantGet(node.Value, node.Token)
 		} else {
 			symbol, ok := c.symbolTable.Resolve(node.Value)
 			if ok {
-				c.emitSymbol(symbol)
+				// Variable reference
+				c.emitSymbol(symbol, node.Token)
 			} else {
-				c.emit(OpSelf)
-				c.emit(OpPushConstant, c.addConstant(core.NewSymbol(node.Value)))
-				c.emit(OpNull)
-				c.emit(OpSend)
+				// Method call with no arguments
+				c.emit(bytecode.OpSelf, node.Token)                                                    // Call on self
+				c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(core.NewSymbol(node.Value))) // Identifier value is method name
+				c.emit(bytecode.OpNull, node.Token)                                                    // No arguments
+				c.emit(bytecode.OpSend, node.Token)                                                    // Send the method
 			}
 		}
 	case *ast.InstanceVariable:
-		c.emit(OpInstanceVarGet, c.addConstant(core.NewSymbol(node.Value)))
+		c.emit(bytecode.OpInstanceVarGet, node.Token, c.addConstant(core.NewSymbol(node.Value)))
 	case *ast.GlobalVariable:
 		symbol, ok := c.symbolTable.Resolve(node.Value)
 		if !ok {
 			symbol = c.symbolTable.DefineGlobal(node.Value)
 		}
-		c.emitSymbol(symbol)
+		c.emitSymbol(symbol, node.Token)
 	}
 }

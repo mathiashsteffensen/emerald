@@ -1,12 +1,12 @@
 package vm
 
 import (
-	"emerald/compiler"
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/object"
 )
 
-func (vm *VM) executeOpCheckCaseEqual(ins compiler.Instructions, ip int) {
+func (vm *VM) executeOpCheckCaseEqual(ins bytecode.Instructions, ip int) {
 	numMatchers := int(vm.readUint8(ins, ip))
 	jumpPositionIfNoMatch := int(vm.readUint16(ins, ip+1))
 

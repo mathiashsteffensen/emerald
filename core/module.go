@@ -12,6 +12,7 @@ func InitModule() {
 
 	DefineMethod(Module, "===", moduleCaseEquals())
 
+	DefineMethod(Module, "name", className())
 	DefineMethod(Module, "define_method", moduleDefineMethod(), object.PRIVATE)
 	DefineMethod(Module, "attr_reader", moduleAttrReader(), object.PRIVATE)
 	DefineMethod(Module, "attr_writer", moduleAttrWriter(), object.PRIVATE)

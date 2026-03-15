@@ -17,12 +17,12 @@ func TestDir_glob(t *testing.T) {
 	tests := []coreTestCase{
 		{
 			input:    `Dir.glob("fixtures/*.rb")`,
-			expected: []any{"fixtures/require_test.rb", "fixtures/require_test_2.rb"},
+			expected: []any{"fixtures/namespaced_class.rb", "fixtures/require_test.rb", "fixtures/require_test_2.rb"},
 		},
 		{
 			input: `Dir.glob("fixtures/*.{rb,em}")`,
 			expected: []any{
-				"fixtures/glob_test.em", "fixtures/require_test.rb", "fixtures/require_test_2.rb",
+				"fixtures/glob_test.em", "fixtures/namespaced_class.rb", "fixtures/require_test.rb", "fixtures/require_test_2.rb",
 			},
 		},
 	}

@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/parser/ast"
 )
@@ -8,13 +9,13 @@ import (
 func (c *Compiler) compileModuleLiteral(node *ast.ModuleLiteral) {
 	name := node.Name.Value
 
-	c.emit(OpOpenModule, c.addConstant(core.NewSymbol(name)))
+	c.emit(bytecode.OpOpenModule, node.Token, c.addConstant(core.NewSymbol(name)))
 
-	c.compileStatementsWithReturnValue(node.Body.Statements)
+	c.compileStatementsWithReturnValue(node.Body.Statements, node.Body.Token)
 
-	if c.lastInstructionIs(OpPop) {
-		c.replaceLastInstructionWith(OpUnwrapContext)
+	if c.lastInstructionIs(bytecode.OpPop) {
+		c.replaceLastInstructionWith(bytecode.OpUnwrapContext)
 	} else {
-		c.emit(OpUnwrapContext)
+		c.emit(bytecode.OpUnwrapContext, node.Token)
 	}
 }

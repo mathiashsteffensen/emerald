@@ -1,6 +1,7 @@
 package core
 
 import (
+	"emerald/bytecode"
 	"emerald/debug"
 	"emerald/object"
 	"errors"
@@ -14,7 +15,7 @@ import (
 
 var Kernel *object.Module
 
-var Compile func(fileName string, content string) []byte
+var Compile func(fileName string, content string) *bytecode.Bytecode
 
 func InitKernel() {
 	Kernel = object.NewModule("Kernel", object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
@@ -203,7 +204,7 @@ func kernelRequireRelative() object.BuiltInMethod {
 			panic(err)
 		}
 
-		instructions := Compile(absoluteFilePath, string(sourceContent))
+		bytecode := Compile(absoluteFilePath, string(sourceContent))
 
 		debug.InternalDebugF("Kernel#require_relative - Successfully compiled file %s", absoluteFilePath)
 
@@ -216,7 +217,7 @@ func kernelRequireRelative() object.BuiltInMethod {
 			BlockGiven: func() bool {
 				return false
 			},
-		}, &object.Block{Instructions: instructions}, []object.EmeraldValue{}, "", object.PUBLIC)
+		}, &object.Block{Bytecode: *bytecode}, []object.EmeraldValue{}, "", object.PUBLIC)
 
 		object.EvalBlock(requiredBlock, map[string]object.EmeraldValue{})
 

@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/parser/ast"
 )
 
@@ -9,5 +10,5 @@ func (c *Compiler) compileArrayLiteral(node *ast.ArrayLiteral) {
 		c.Compile(val)
 	}
 
-	c.emit(OpArray, len(node.Value))
+	c.emit(bytecode.OpArray, node.Token, len(node.Value))
 }

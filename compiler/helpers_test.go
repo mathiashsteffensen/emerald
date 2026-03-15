@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/heap"
 	"emerald/object"
@@ -16,7 +17,7 @@ type compilerTestCase struct {
 	name                 string
 	input                string
 	expectedConstants    []any
-	expectedInstructions []Instructions
+	expectedInstructions []bytecode.Instructions
 }
 
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
@@ -24,9 +25,9 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			program := parse(tt.input)
+			l, program := parse(tt.input)
 
-			compiler := New()
+			compiler := New(l)
 
 			compiler.Compile(program)
 
@@ -48,15 +49,15 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	}
 }
 
-func parse(input string) *ast.AST {
+func parse(input string) (*lexer.Lexer, *ast.AST) {
 	l := lexer.New(lexer.NewInput("test.rb", input))
 	p := parser.New(l)
-	return p.ParseAST()
+	return l, p.ParseAST()
 }
 
 func testInstructions(
-	expected []Instructions,
-	actual Instructions,
+	expected []bytecode.Instructions,
+	actual bytecode.Instructions,
 ) error {
 	concatted := concatInstructions(expected)
 
@@ -73,8 +74,8 @@ func testInstructions(
 	return nil
 }
 
-func concatInstructions(s []Instructions) Instructions {
-	out := Instructions{}
+func concatInstructions(s []bytecode.Instructions) bytecode.Instructions {
+	out := bytecode.Instructions{}
 	for _, ins := range s {
 		out = append(out, ins...)
 	}
@@ -120,7 +121,7 @@ func testConstants(
 			}
 
 			return testStringObject(constant, actual[i])
-		case []Instructions:
+		case []bytecode.Instructions:
 			fn, ok := actual[i].(*object.Block)
 			if !ok {
 				return fmt.Errorf("constant %d - not a function: %T",

@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileCaseExpression(t *testing.T) {
 	tests := []compilerTestCase{
@@ -20,16 +23,16 @@ func TestCompileCaseExpression(t *testing.T) {
 				4,
 				5,
 			},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpConstantGet, 1),
-				Make(OpConstantGet, 2),
-				Make(OpCheckCaseEqual, 2, 19),
-				Make(OpPushConstant, 3),
-				Make(OpJump, 23),
-				Make(OpPop),
-				Make(OpPushConstant, 4),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpConstantGet, 1),
+				bytecode.Make(bytecode.OpConstantGet, 2),
+				bytecode.Make(bytecode.OpCheckCaseEqual, 2, 19),
+				bytecode.Make(bytecode.OpPushConstant, 3),
+				bytecode.Make(bytecode.OpJump, 23),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpPushConstant, 4),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -51,19 +54,19 @@ func TestCompileCaseExpression(t *testing.T) {
 				4,
 				5,
 			},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpConstantGet, 1),
-				Make(OpCheckCaseEqual, 1, 16),
-				Make(OpPushConstant, 2),
-				Make(OpJump, 33),
-				Make(OpConstantGet, 3),
-				Make(OpCheckCaseEqual, 1, 29),
-				Make(OpPushConstant, 4),
-				Make(OpJump, 33),
-				Make(OpPop),
-				Make(OpPushConstant, 5),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpConstantGet, 1),
+				bytecode.Make(bytecode.OpCheckCaseEqual, 1, 16),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpJump, 33),
+				bytecode.Make(bytecode.OpConstantGet, 3),
+				bytecode.Make(bytecode.OpCheckCaseEqual, 1, 29),
+				bytecode.Make(bytecode.OpPushConstant, 4),
+				bytecode.Make(bytecode.OpJump, 33),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpPushConstant, 5),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

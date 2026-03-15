@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileModuleLiteral(t *testing.T) {
 	tests := []compilerTestCase{
@@ -8,11 +11,11 @@ func TestCompileModuleLiteral(t *testing.T) {
 			name:              "module with no methods",
 			input:             "module MyMod; end",
 			expectedConstants: []any{":MyMod"},
-			expectedInstructions: []Instructions{
-				Make(OpOpenModule, 0),
-				Make(OpNull),
-				Make(OpUnwrapContext),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpOpenModule, 0),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpUnwrapContext),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -20,14 +23,14 @@ func TestCompileModuleLiteral(t *testing.T) {
 			input: `module MyMod
 				def method; end
 			end`,
-			expectedConstants: []any{":MyMod", ":method", []Instructions{Make(OpReturn)}},
-			expectedInstructions: []Instructions{
-				Make(OpOpenModule, 0),
-				Make(OpPushConstant, 1),
-				Make(OpPushConstant, 2),
-				Make(OpDefineMethod),
-				Make(OpUnwrapContext),
-				Make(OpPop),
+			expectedConstants: []any{":MyMod", ":method", []bytecode.Instructions{bytecode.Make(bytecode.OpReturn)}},
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpOpenModule, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpUnwrapContext),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

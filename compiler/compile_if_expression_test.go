@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileIfExpression(t *testing.T) {
 	tests := []compilerTestCase{
@@ -12,16 +15,16 @@ func TestCompileIfExpression(t *testing.T) {
 			3333
 			`,
 			expectedConstants: []any{10, 3333},
-			expectedInstructions: []Instructions{
-				Make(OpTrue),
-				Make(OpJumpNotTruthy, 11),
-				Make(OpPop),
-				Make(OpPushConstant, 0),
-				Make(OpJump, 12),
-				Make(OpNull),
-				Make(OpPop),
-				Make(OpPushConstant, 1),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 11),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpJump, 12),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -34,31 +37,31 @@ func TestCompileIfExpression(t *testing.T) {
 			3333
 			`,
 			expectedConstants: []any{10, 20, 3333},
-			expectedInstructions: []Instructions{
-				Make(OpTrue),
-				Make(OpJumpNotTruthy, 11),
-				Make(OpPop),
-				Make(OpPushConstant, 0),
-				Make(OpJump, 14),
-				Make(OpPushConstant, 1),
-				Make(OpPop),
-				Make(OpPushConstant, 2),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 11),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpJump, 14),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "negate if expression resolving to nil",
 			input:             "!(if false; 5; end)",
 			expectedConstants: []any{5},
-			expectedInstructions: []Instructions{
-				Make(OpFalse),
-				Make(OpJumpNotTruthy, 11),
-				Make(OpPop),
-				Make(OpPushConstant, 0),
-				Make(OpJump, 12),
-				Make(OpNull),
-				Make(OpBang),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 11),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpJump, 12),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpBang),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -73,24 +76,24 @@ func TestCompileIfExpression(t *testing.T) {
 				end
 			`,
 			expectedConstants: []any{},
-			expectedInstructions: []Instructions{
-				Make(OpTrue),
-				Make(OpJumpNotTruthy, 9),
-				Make(OpPop),
-				Make(OpTrue),
-				Make(OpJump, 28),
-				Make(OpTrue),
-				Make(OpJumpNotTruthy, 18),
-				Make(OpPop),
-				Make(OpTrue),
-				Make(OpJump, 28),
-				Make(OpFalse),
-				Make(OpJumpNotTruthy, 27),
-				Make(OpPop),
-				Make(OpTrue),
-				Make(OpJump, 28),
-				Make(OpNull),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 9),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpJump, 28),
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 18),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpJump, 28),
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 27),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpJump, 28),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

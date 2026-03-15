@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileBooleanLiteral(t *testing.T) {
 	tests := []compilerTestCase{
@@ -8,18 +11,18 @@ func TestCompileBooleanLiteral(t *testing.T) {
 			name:              "true",
 			input:             "true",
 			expectedConstants: []any{},
-			expectedInstructions: []Instructions{
-				Make(OpTrue),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "false",
 			input:             "false",
 			expectedConstants: []any{},
-			expectedInstructions: []Instructions{
-				Make(OpFalse),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

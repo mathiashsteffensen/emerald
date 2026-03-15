@@ -28,6 +28,7 @@ func init() {
 	InitException()
 	InitStandardError()
 	InitRuntimeError()
+	InitNameError()
 	InitArgumentError()
 	InitTypeError()
 	InitLoadError()

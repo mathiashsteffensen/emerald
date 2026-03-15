@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/parser/ast"
 )
@@ -8,5 +9,5 @@ import (
 func (c *Compiler) compileScopeAccessor(node *ast.ScopeAccessor) {
 	c.Compile(node.Left)
 
-	c.emit(OpScopedConstantGet, c.addConstant(core.NewSymbol(node.Method.Value)))
+	c.emit(bytecode.OpScopedConstantGet, node.Token, c.addConstant(core.NewSymbol(node.Method.Value)))
 }

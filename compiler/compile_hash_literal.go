@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	ast "emerald/parser/ast"
 )
 
@@ -9,5 +10,5 @@ func (c *Compiler) compileHashLiteral(node *ast.HashLiteral) {
 		c.Compile(el.Key)
 		c.Compile(el.Value)
 	}
-	c.emit(OpHash, len(node.Values)*2)
+	c.emit(bytecode.OpHash, node.Token, len(node.Values)*2)
 }

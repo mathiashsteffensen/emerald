@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/parser/ast"
 )
@@ -8,14 +9,14 @@ import (
 func (c *Compiler) compileCallExpression(node ast.CallExpression) {
 	method := core.NewSymbol(node.Method.Value)
 
-	c.emit(OpPushConstant, c.addConstant(method))
+	c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(method))
 
 	if node.Block != nil {
 		block, freeSymbolCount := c.compileBlock(node.Block, false)
 
-		c.emit(OpCloseBlock, c.addConstant(block), freeSymbolCount)
+		c.emit(bytecode.OpCloseBlock, node.Block.Token, c.addConstant(block), freeSymbolCount)
 	} else {
-		c.emit(OpNull)
+		c.emit(bytecode.OpNull, node.Token)
 	}
 
 	for _, argument := range node.Arguments {
@@ -29,9 +30,9 @@ func (c *Compiler) compileCallExpression(node ast.CallExpression) {
 			c.Compile(el.Key)
 			c.Compile(el.Value)
 		}
-		c.emit(OpHash, numKwargs*2)
+		c.emit(bytecode.OpHash, node.Token, numKwargs*2)
 		hasKwargsOperand = 1
 	}
 
-	c.emit(OpSend, len(node.Arguments)+numKwargs, hasKwargsOperand)
+	c.emit(bytecode.OpSend, node.Token, len(node.Arguments)+numKwargs, hasKwargsOperand)
 }

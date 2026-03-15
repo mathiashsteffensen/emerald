@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileRegexpLiteral(t *testing.T) {
 	tests := []compilerTestCase{
@@ -11,13 +14,13 @@ func TestCompileRegexpLiteral(t *testing.T) {
 				":match",
 				"abc",
 			},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpNull),
-				Make(OpPushConstant, 2),
-				Make(OpSend, 1),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpSend, 1),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

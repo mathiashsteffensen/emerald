@@ -32,26 +32,50 @@ func New(input *Input) *Lexer {
 }
 
 func (l *Lexer) Snapshot(token Token) string {
-	start := token.Pos - 80
-	end := token.Pos + 8
+	lines := strings.Split(l.currentInput.content, "\n")
 
-	if start < 0 {
-		start = 0
+	// token.Line is 1-based, convert to 0-based index
+	tokenLineIdx := token.Line - 1
+
+	// Determine the range of lines to include
+	startLine := tokenLineIdx - 1
+	if startLine < 0 {
+		startLine = 0
 	}
 
-	if end > len(l.currentInput.content) {
-		end = len(l.currentInput.content)
+	endLine := tokenLineIdx + 1
+	if endLine >= len(lines) {
+		endLine = len(lines) - 1
 	}
 
 	var buf strings.Builder
 
-	buf.WriteString(l.currentInput.content[start:end])
-	buf.WriteString("\n")
+	writeLine := func(lineNum int) {
+		line := strings.ReplaceAll(lines[lineNum], "\t", "  ")
+		buf.WriteString(line)
+		buf.WriteString("\n")
+	}
 
-	for i := 0; i < token.Column-2; i++ {
+	// Add first line
+	if startLine != tokenLineIdx {
+		writeLine(startLine)
+	}
+
+	// Add second line (the one with the token)
+	writeLine(tokenLineIdx)
+
+	// Add the caret indicator positioned under the token
+	for i := 0; i < token.Column; i++ {
 		buf.WriteString(" ")
 	}
 	buf.WriteString("^")
+
+	buf.WriteString("\n")
+
+	// Add third line
+	if endLine != tokenLineIdx {
+		writeLine(endLine)
+	}
 
 	return buf.String()
 }

@@ -36,11 +36,24 @@ func TestKernel_require_relative(t *testing.T) {
 			`,
 			expected: false,
 		},
-		//{
-		//	name:     "when file doesn't exist",
-		//	input:    `require_relative("../lib/main")`,
-		//	expected: "error:LoadError:cannot load such file -- /home/mathias/code/emerald/lib/main",
-		//},
+		{
+			name:     "when file doesn't exist",
+			input:    `require_relative("../lib/main")`,
+			expected: "error:LoadError:cannot load such file -- /Users/mathias/code/emerald/lib/main",
+		},
+		{
+			name: "resolving namespaced constant name in required file",
+			input: `
+				require_relative("fixtures/namespaced_class")
+				
+				module A
+					module C
+						B.name
+					end
+				end
+			`,
+			expected: "A::B",
+		},
 	}
 
 	runCoreTests(t, tests)

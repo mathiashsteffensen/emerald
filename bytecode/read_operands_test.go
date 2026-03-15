@@ -1,6 +1,8 @@
-package compiler
+package bytecode
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestReadOperands(t *testing.T) {
 	tests := []struct {

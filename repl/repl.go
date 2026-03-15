@@ -117,7 +117,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			continue
 		}
 
-		comp := compiler.New()
+		comp := compiler.New(l)
 		comp.Compile(program)
 
 		code := comp.Bytecode()

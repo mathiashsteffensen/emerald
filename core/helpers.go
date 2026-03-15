@@ -51,7 +51,7 @@ func DefineNestedModule(namespace object.EmeraldValue, name string) *object.Modu
 	module := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
 	Object.NamespaceDefinitionSet(name, module)
-	module.SetParentNamespace(Object)
+	module.SetParentNamespace(namespace)
 
 	return module
 }

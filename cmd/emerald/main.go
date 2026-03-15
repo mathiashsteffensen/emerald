@@ -49,7 +49,7 @@ var rootCmd = &cobra.Command{
 				debug.FatalF("parser error: %s\n", p.Errors()[0])
 			}
 
-			c := compiler.New()
+			c := compiler.New(l)
 			c.Compile(program)
 
 			machine := vm.New(absFile, c.Bytecode())

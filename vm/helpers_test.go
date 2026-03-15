@@ -31,8 +31,8 @@ func runVmTests(t *testing.T, tests []vmTestCase, setupScripts ...string) {
 			copy(inputs, setupScripts)
 			inputs = append(inputs, tt.input)
 
-			program := parse(strings.Join(inputs, "\n"))
-			comp := compiler.New()
+			l, program := parse(strings.Join(inputs, "\n"))
+			comp := compiler.New(l)
 
 			comp.Compile(program)
 
@@ -150,11 +150,11 @@ func testExpectedObject(
 	}
 }
 
-func parse(input string) *ast.AST {
+func parse(input string) (*lexer.Lexer, *ast.AST) {
 	l := lexer.New(lexer.NewInput("test.rb", input))
 
 	p := parser.New(l)
-	return p.ParseAST()
+	return l, p.ParseAST()
 }
 
 func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) error {

@@ -1,8 +1,8 @@
 package core
 
 import (
-	"strings"
 	"emerald/object"
+	"strings"
 )
 
 var Class *object.Class
@@ -44,7 +44,12 @@ func className() object.BuiltInMethod {
 			parent = parent.ParentNamespace()
 		}
 
-		namespaces.WriteString(ctx.Self.(*object.Class).Name)
+		switch self := ctx.Self.(type) {
+		case *object.Module:
+			namespaces.WriteString(self.Name)
+		case *object.Class:
+			namespaces.WriteString(self.Name)
+		}
 
 		return NewString(namespaces.String())
 	}

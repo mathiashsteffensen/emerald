@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileCallExpression(t *testing.T) {
 	tests := []compilerTestCase{
@@ -11,24 +14,24 @@ func TestCompileCallExpression(t *testing.T) {
 			`,
 			expectedConstants: []any{
 				":one_arg",
-				[]Instructions{
-					Make(OpGetLocal, 0),
-					Make(OpReturnValue),
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpGetLocal, 0),
+					bytecode.Make(bytecode.OpReturnValue),
 				},
 				":one_arg",
 				24,
 			},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpDefineMethod),
-				Make(OpPop),
-				Make(OpSelf),
-				Make(OpPushConstant, 2),
-				Make(OpNull),
-				Make(OpPushConstant, 3),
-				Make(OpSend, 1),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpSelf),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpPushConstant, 3),
+				bytecode.Make(bytecode.OpSend, 1),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -36,17 +39,17 @@ func TestCompileCallExpression(t *testing.T) {
 			expectedConstants: []any{
 				":call",
 				2,
-				[]Instructions{
-					Make(OpGetLocal, 0),
-					Make(OpReturnValue),
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpGetLocal, 0),
+					bytecode.Make(bytecode.OpReturnValue),
 				},
 			},
-			expectedInstructions: []Instructions{
-				Make(OpSelf),
-				Make(OpPushConstant, 0),
-				Make(OpCloseBlock, 2),
-				Make(OpSend),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpSelf),
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpCloseBlock, 2),
+				bytecode.Make(bytecode.OpSend),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -56,32 +59,32 @@ func TestCompileCallExpression(t *testing.T) {
 			`,
 			expectedConstants: []any{
 				":many_arg",
-				[]Instructions{
-					Make(OpGetLocal, 0),
-					Make(OpPop),
-					Make(OpGetLocal, 1),
-					Make(OpPop),
-					Make(OpGetLocal, 2),
-					Make(OpReturnValue),
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpGetLocal, 0),
+					bytecode.Make(bytecode.OpPop),
+					bytecode.Make(bytecode.OpGetLocal, 1),
+					bytecode.Make(bytecode.OpPop),
+					bytecode.Make(bytecode.OpGetLocal, 2),
+					bytecode.Make(bytecode.OpReturnValue),
 				},
 				":many_arg",
 				24,
 				25,
 				26,
 			},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpDefineMethod),
-				Make(OpPop),
-				Make(OpSelf),
-				Make(OpPushConstant, 2),
-				Make(OpNull),
-				Make(OpPushConstant, 3),
-				Make(OpPushConstant, 4),
-				Make(OpPushConstant, 5),
-				Make(OpSend, 3),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpSelf),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpPushConstant, 3),
+				bytecode.Make(bytecode.OpPushConstant, 4),
+				bytecode.Make(bytecode.OpPushConstant, 5),
+				bytecode.Make(bytecode.OpSend, 3),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

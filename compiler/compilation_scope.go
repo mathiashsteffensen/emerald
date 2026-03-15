@@ -1,7 +1,9 @@
 package compiler
 
+import bytecode2 "emerald/bytecode"
+
 type CompilationScope struct {
-	instructions        Instructions
+	bytecode            bytecode2.Bytecode
 	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
 }

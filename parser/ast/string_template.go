@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"emerald/parser/lexer"
 	"reflect"
 	"strings"
 )
@@ -59,6 +60,7 @@ func (s *StringTemplateChainExpression) String(indents ...int) string {
 }
 
 type StringTemplate struct {
+	Token lexer.Token
 	Chain *StringTemplateChainString
 }
 

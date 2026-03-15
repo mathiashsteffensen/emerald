@@ -1,43 +1,46 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileArrayLiteral(t *testing.T) {
 	tests := []compilerTestCase{
 		{
 			input:             "[]",
 			expectedConstants: []any{},
-			expectedInstructions: []Instructions{
-				Make(OpArray, 0),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpArray, 0),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			input:             "[1, 2, 3]",
 			expectedConstants: []any{1, 2, 3},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpPushConstant, 2),
-				Make(OpArray, 3),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpArray, 3),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			input:             "[1 + 2, 3 - 4, 5 * 6]",
 			expectedConstants: []any{2, 1, 4, 3, 6, 5},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpAdd),
-				Make(OpPushConstant, 2),
-				Make(OpPushConstant, 3),
-				Make(OpSub),
-				Make(OpPushConstant, 4),
-				Make(OpPushConstant, 5),
-				Make(OpMul),
-				Make(OpArray, 3),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpAdd),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpPushConstant, 3),
+				bytecode.Make(bytecode.OpSub),
+				bytecode.Make(bytecode.OpPushConstant, 4),
+				bytecode.Make(bytecode.OpPushConstant, 5),
+				bytecode.Make(bytecode.OpMul),
+				bytecode.Make(bytecode.OpArray, 3),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

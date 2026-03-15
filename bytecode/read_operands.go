@@ -1,6 +1,8 @@
-package compiler
+package bytecode
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 func ReadOperands(def *Definition, ins Instructions) ([]int, int) {
 	operands := make([]int, len(def.OperandWidths))

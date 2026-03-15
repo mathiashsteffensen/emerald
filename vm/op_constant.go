@@ -1,27 +1,30 @@
 package vm
 
 import (
-	"emerald/compiler"
+	"emerald/bytecode"
 	"emerald/core"
+	"emerald/debug"
 	"emerald/heap"
 	"emerald/object"
 	"fmt"
 	"unicode"
 )
 
-func (vm *VM) executeOpConstantGet(ins compiler.Instructions, ip int) {
+func (vm *VM) executeOpConstantGet(ins bytecode.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
 	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 
 	value, err := getConst(vm.ctx.Self, name)
 	if err != nil {
-		panic(err)
+		debug.WarnF("\n%s", vm.currentFiber().currentFrame().block.Bytecode.InstructionSnapshot(ip))
+		core.Raise(core.NewNameError(err.Error()))
+		return
 	}
 
 	vm.push(value)
 }
 
-func (vm *VM) executeOpConstantSet(ins compiler.Instructions, ip int) {
+func (vm *VM) executeOpConstantSet(ins bytecode.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
 	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 	// Don't pop it from the stack, we leave it there since assignment expressions return the assigned value
@@ -30,7 +33,7 @@ func (vm *VM) executeOpConstantSet(ins compiler.Instructions, ip int) {
 	setConst(vm.ctx.Self, name, value)
 }
 
-func (vm *VM) executeOpScopedConstantGet(ins compiler.Instructions, ip int) {
+func (vm *VM) executeOpScopedConstantGet(ins bytecode.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
 	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 

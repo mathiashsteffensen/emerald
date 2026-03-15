@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	"testing"
 )
 
@@ -9,9 +10,9 @@ func TestCompileSymbolLiteral(t *testing.T) {
 		{
 			input:             ":emerald",
 			expectedConstants: []any{":emerald"},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

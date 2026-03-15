@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileInfixExpression(t *testing.T) {
 	tests := []compilerTestCase{
@@ -8,244 +11,244 @@ func TestCompileInfixExpression(t *testing.T) {
 			name:              "addition",
 			input:             "1.0 + 2",
 			expectedConstants: []any{2, 1.0},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpAdd),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpAdd),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "subtracting",
 			input:             "1 - 2",
 			expectedConstants: []any{2, 1},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpSub),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpSub),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "multiplying",
 			input:             "1 * 2",
 			expectedConstants: []any{2, 1},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpMul),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpMul),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "dividing",
 			input:             "2 / 1",
 			expectedConstants: []any{1, 2},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpDiv),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpDiv),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "stack cleanup",
 			input:             "1; 2",
 			expectedConstants: []any{1, 2},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPop),
-				Make(OpPushConstant, 1),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "adding strings",
 			input:             `"eme" + "rald"`,
 			expectedConstants: []any{"rald", "eme"},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpAdd),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpAdd),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "greater than",
 			input:             "1 > 2",
 			expectedConstants: []any{2, 1},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpGreaterThan),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpGreaterThan),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "greater than or eq",
 			input:             "1 >= 2",
 			expectedConstants: []any{2, 1},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpGreaterThanOrEq),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpGreaterThanOrEq),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "less than",
 			input:             "1 < 2",
 			expectedConstants: []any{2, 1},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpLessThan),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpLessThan),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "less than or eq",
 			input:             "1 <= 2",
 			expectedConstants: []any{2, 1},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpLessThanOrEq),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpLessThanOrEq),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "integers equals",
 			input:             "1 == 2",
 			expectedConstants: []any{2, 1},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpEqual),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpEqual),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "integers not equals",
 			input:             "1 != 2",
 			expectedConstants: []any{2, 1},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpNotEqual),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpNotEqual),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "boolean equals",
 			input:             "true == false",
 			expectedConstants: []any{},
-			expectedInstructions: []Instructions{
-				Make(OpFalse),
-				Make(OpTrue),
-				Make(OpEqual),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpEqual),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "boolean not equals",
 			input:             "true != false",
 			expectedConstants: []any{},
-			expectedInstructions: []Instructions{
-				Make(OpFalse),
-				Make(OpTrue),
-				Make(OpNotEqual),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpNotEqual),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "boolean and",
 			input:             "true && false",
 			expectedConstants: []any{},
-			expectedInstructions: []Instructions{
-				Make(OpTrue),
-				Make(OpJumpNotTruthy, 9),
-				Make(OpPop),
-				Make(OpFalse),
-				Make(OpJump, 10),
-				Make(OpTrue),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 9),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpJump, 10),
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "boolean or",
 			input:             "1 + 2 || false",
 			expectedConstants: []any{2, 1, 2, 1},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpAdd),
-				Make(OpJumpNotTruthy, 21),
-				Make(OpPop),
-				Make(OpPushConstant, 2),
-				Make(OpPushConstant, 3),
-				Make(OpAdd),
-				Make(OpJump, 22),
-				Make(OpFalse),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpAdd),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 21),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpPushConstant, 3),
+				bytecode.Make(bytecode.OpAdd),
+				bytecode.Make(bytecode.OpJump, 22),
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "boolean and evaluating to false",
 			input:             "false && 15",
 			expectedConstants: []any{15},
-			expectedInstructions: []Instructions{
-				Make(OpFalse),
-				Make(OpJumpNotTruthy, 11),
-				Make(OpPop),
-				Make(OpPushConstant, 0),
-				Make(OpJump, 12),
-				Make(OpFalse),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 11),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpJump, 12),
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "spaceship",
 			input:             "1 <=> 2",
 			expectedConstants: []any{2, 1},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpSpaceship),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpSpaceship),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "matching",
 			input:             `/a/ =~ "a"`,
 			expectedConstants: []any{"a", "/a/"},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpPushConstant, 1),
-				Make(OpMatch),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpMatch),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "case equality",
 			input:             `true === true`,
 			expectedConstants: []any{},
-			expectedInstructions: []Instructions{
-				Make(OpTrue),
-				Make(OpTrue),
-				Make(OpCaseEqual),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpCaseEqual),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
 			name:              "binary shift left",
 			input:             "[] << 2",
 			expectedConstants: []any{2},
-			expectedInstructions: []Instructions{
-				Make(OpPushConstant, 0),
-				Make(OpArray),
-				Make(OpBinShiftLeft),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpArray),
+				bytecode.Make(bytecode.OpBinShiftLeft),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

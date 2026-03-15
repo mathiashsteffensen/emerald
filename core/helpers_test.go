@@ -48,8 +48,8 @@ func runCoreTests(t *testing.T, tests []coreTestCase, beforeEach ...string) {
 
 			combinedScript := strings.Join([]string{beforeScript.String(), tt.input}, "\n")
 
-			program := parse(t, combinedScript)
-			comp := compiler.New()
+			l, program := parse(t, combinedScript)
+			comp := compiler.New(l)
 
 			comp.Compile(program)
 
@@ -174,7 +174,7 @@ func testExpectedObject(
 	}
 }
 
-func parse(t *testing.T, input string) *ast.AST {
+func parse(t *testing.T, input string) (*lexer.Lexer, *ast.AST) {
 	t.Helper()
 
 	l := lexer.New(lexer.NewInput("test.rb", input))
@@ -187,7 +187,7 @@ func parse(t *testing.T, input string) *ast.AST {
 		}
 	}
 
-	return program
+	return l, program
 }
 
 func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) error {

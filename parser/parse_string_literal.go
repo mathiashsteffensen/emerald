@@ -11,11 +11,14 @@ func (p *Parser) parseStringLiteral() ast.Expression {
 	str := p.newString()
 
 	if p.peekTokenIs(lexer.LTEMPLATE) {
-		strTemplate := &ast.StringTemplate{Chain: &ast.StringTemplateChainString{
-			StringLiteral: str,
-			Next:          p.parseStringTemplateExpression(),
-			First:         true,
-		}}
+		strTemplate := &ast.StringTemplate{
+			Token: p.peekToken,
+			Chain: &ast.StringTemplateChainString{
+				StringLiteral: str,
+				Next:          p.parseStringTemplateExpression(),
+				First:         true,
+			},
+		}
 
 		return strTemplate
 	}

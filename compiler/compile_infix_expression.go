@@ -1,42 +1,43 @@
 package compiler
 
 import (
+	"emerald/bytecode"
 	ast "emerald/parser/ast"
 	"fmt"
 )
 
 func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) {
-	var op Opcode
+	var op bytecode.Opcode
 
 	switch node.Operator {
 	case "+":
-		op = OpAdd
+		op = bytecode.OpAdd
 	case "-":
-		op = OpSub
+		op = bytecode.OpSub
 	case "*":
-		op = OpMul
+		op = bytecode.OpMul
 	case "/":
-		op = OpDiv
+		op = bytecode.OpDiv
 	case "=~":
-		op = OpMatch
+		op = bytecode.OpMatch
 	case "<=>":
-		op = OpSpaceship
+		op = bytecode.OpSpaceship
 	case ">":
-		op = OpGreaterThan
+		op = bytecode.OpGreaterThan
 	case ">=":
-		op = OpGreaterThanOrEq
+		op = bytecode.OpGreaterThanOrEq
 	case "<":
-		op = OpLessThan
+		op = bytecode.OpLessThan
 	case "<=":
-		op = OpLessThanOrEq
+		op = bytecode.OpLessThanOrEq
 	case "==":
-		op = OpEqual
+		op = bytecode.OpEqual
 	case "===":
-		op = OpCaseEqual
+		op = bytecode.OpCaseEqual
 	case "!=":
-		op = OpNotEqual
+		op = bytecode.OpNotEqual
 	case "<<":
-		op = OpBinShiftLeft
+		op = bytecode.OpBinShiftLeft
 	case "&&":
 		c.compileIfExpression(&ast.IfExpression{
 			Condition:   node.Left,
@@ -57,5 +58,5 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) {
 
 	c.Compile(node.Right)
 	c.Compile(node.Left)
-	c.emit(op)
+	c.emit(op, node.Token)
 }

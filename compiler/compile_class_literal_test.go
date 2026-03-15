@@ -1,6 +1,9 @@
 package compiler
 
-import "testing"
+import (
+	"emerald/bytecode"
+	"testing"
+)
 
 func TestCompileClassLiteral(t *testing.T) {
 	tests := []compilerTestCase{
@@ -11,12 +14,12 @@ func TestCompileClassLiteral(t *testing.T) {
 				":Object",
 				":MyClass",
 			},
-			expectedInstructions: []Instructions{
-				Make(OpConstantGet, 0),
-				Make(OpOpenClass, 1),
-				Make(OpNull),
-				Make(OpUnwrapContext),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstantGet, 0),
+				bytecode.Make(bytecode.OpOpenClass, 1),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpUnwrapContext),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -35,17 +38,17 @@ func TestCompileClassLiteral(t *testing.T) {
 				":MyMod",
 				":MyClass",
 			},
-			expectedInstructions: []Instructions{
-				Make(OpOpenModule, 0),
-				Make(OpConstantGet, 1),
-				Make(OpOpenClass, 2),
-				Make(OpNull),
-				Make(OpUnwrapContext),
-				Make(OpUnwrapContext),
-				Make(OpPop),
-				Make(OpConstantGet, 3),
-				Make(OpScopedConstantGet, 4),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpOpenModule, 0),
+				bytecode.Make(bytecode.OpConstantGet, 1),
+				bytecode.Make(bytecode.OpOpenClass, 2),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpUnwrapContext),
+				bytecode.Make(bytecode.OpUnwrapContext),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpConstantGet, 3),
+				bytecode.Make(bytecode.OpScopedConstantGet, 4),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -68,31 +71,31 @@ func TestCompileClassLiteral(t *testing.T) {
 				":MyClass",
 				10,
 				":my_method",
-				[]Instructions{
-					Make(OpPushConstant, 2),
-					Make(OpReturnValue),
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpPushConstant, 2),
+					bytecode.Make(bytecode.OpReturnValue),
 				},
 				15,
 				":my_method",
-				[]Instructions{
-					Make(OpPushConstant, 5),
-					Make(OpReturnValue),
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpPushConstant, 5),
+					bytecode.Make(bytecode.OpReturnValue),
 				},
 			},
-			expectedInstructions: []Instructions{
-				Make(OpConstantGet, 0),
-				Make(OpOpenClass, 1),
-				Make(OpPushConstant, 3),
-				Make(OpPushConstant, 4),
-				Make(OpDefineMethod),
-				Make(OpPop),
-				Make(OpStaticTrue),
-				Make(OpPushConstant, 6),
-				Make(OpPushConstant, 7),
-				Make(OpDefineMethod),
-				Make(OpStaticFalse),
-				Make(OpUnwrapContext),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstantGet, 0),
+				bytecode.Make(bytecode.OpOpenClass, 1),
+				bytecode.Make(bytecode.OpPushConstant, 3),
+				bytecode.Make(bytecode.OpPushConstant, 4),
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpStaticTrue),
+				bytecode.Make(bytecode.OpPushConstant, 6),
+				bytecode.Make(bytecode.OpPushConstant, 7),
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpStaticFalse),
+				bytecode.Make(bytecode.OpUnwrapContext),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 		{
@@ -112,24 +115,24 @@ func TestCompileClassLiteral(t *testing.T) {
 				":MyClass",
 				10,
 				":my_method",
-				[]Instructions{
-					Make(OpPushConstant, 4),
-					Make(OpReturnValue),
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpPushConstant, 4),
+					bytecode.Make(bytecode.OpReturnValue),
 				},
 			},
-			expectedInstructions: []Instructions{
-				Make(OpConstantGet, 0),
-				Make(OpOpenClass, 1),
-				Make(OpNull),
-				Make(OpUnwrapContext),
-				Make(OpPop),
-				Make(OpConstantGet, 2),
-				Make(OpOpenClass, 3),
-				Make(OpPushConstant, 5),
-				Make(OpPushConstant, 6),
-				Make(OpDefineMethod),
-				Make(OpUnwrapContext),
-				Make(OpPop),
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstantGet, 0),
+				bytecode.Make(bytecode.OpOpenClass, 1),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpUnwrapContext),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpConstantGet, 2),
+				bytecode.Make(bytecode.OpOpenClass, 3),
+				bytecode.Make(bytecode.OpPushConstant, 5),
+				bytecode.Make(bytecode.OpPushConstant, 6),
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpUnwrapContext),
+				bytecode.Make(bytecode.OpPop),
 			},
 		},
 	}

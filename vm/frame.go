@@ -1,7 +1,7 @@
 package vm
 
 import (
-	"emerald/compiler"
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/object"
 )
@@ -16,7 +16,7 @@ func NewFrame(block *object.ClosedBlock, basePointer int) *Frame {
 	return &Frame{block: block, ip: -1, basePointer: basePointer}
 }
 
-func (f *Frame) Instructions() compiler.Instructions {
+func (f *Frame) Instructions() bytecode.Instructions {
 	return f.block.Instructions
 }
 
@@ -49,7 +49,7 @@ func (f *Frame) blockRescuingException(exception object.EmeraldError) *object.Cl
 		})
 
 		if caughtClassName != nil {
-			block := object.NewBlock(rescueBlock.Instructions, 0, 0, []string{}, false)
+			block := object.NewBlock(rescueBlock.Bytecode, 0, 0, []string{}, false)
 			return object.NewClosedBlock(f.block.Context, block, []object.EmeraldValue{}, f.block.File, object.PUBLIC)
 		}
 	}

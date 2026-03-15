@@ -1,13 +1,13 @@
 package vm
 
 import (
-	"emerald/compiler"
+	"emerald/bytecode"
 	"emerald/core"
 	"emerald/object"
 	"strings"
 )
 
-func (vm *VM) executeOpStringJoin(ins compiler.Instructions, ip int) {
+func (vm *VM) executeOpStringJoin(ins bytecode.Instructions, ip int) {
 	numStrings := int(vm.readUint8(ins, ip))
 
 	stackPointer := vm.currentFiber().sp
