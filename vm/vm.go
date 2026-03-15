@@ -327,13 +327,9 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 	}
 	block := vm.stack()[basePointer-1]
 
-	method, visibility, isDefinedOnReceiver, err := receiver.Class().ExtractMethod(name.Value, receiver.Class(), receiver)
+	method, err := vm.extractMethod(receiver, name.Value)
 	if err != nil {
-		raiseUndefinedNoMethodError(name.Value, receiver)
-	}
-
-	if ok := vm.ctx.ValidateMethodVisibility(receiver, visibility, isDefinedOnReceiver); !ok {
-		raiseNotVisibleNoMethodError(name.Value, receiver)
+		return
 	}
 
 	// Handy for debugging, but makes the VM quite slow when calling DebugF in a hot path
@@ -387,15 +383,28 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 	})
 }
 
-func raiseUndefinedNoMethodError(name string, receiver object.EmeraldValue) {
-	core.Raise(
+func (vm *VM) extractMethod(self object.EmeraldValue, name string) (object.EmeraldValue, object.EmeraldError) {
+	method, visibility, isDefinedOnReceiver, err := self.Class().ExtractMethod(name, self.Class(), self)
+	if err != nil {
+		return nil, raiseUndefinedNoMethodError(name, self)
+	}
+
+	if ok := vm.ctx.ValidateMethodVisibility(self, visibility, isDefinedOnReceiver); !ok {
+		return nil, raiseNotVisibleNoMethodError(name, self)
+	}
+
+	return method, nil
+}
+
+func raiseUndefinedNoMethodError(name string, receiver object.EmeraldValue) object.EmeraldError {
+	return core.Raise(
 		core.NewNoMethodError(
 			fmt.Sprintf("undefined method '%s' for %s:%s", name, receiver.Inspect(), receiver.Class().Super().(*object.Class).Name),
 		),
 	)
 }
 
-func raiseNotVisibleNoMethodError(name string, receiver object.EmeraldValue) {
+func raiseNotVisibleNoMethodError(name string, receiver object.EmeraldValue) object.EmeraldError {
 	var receiverPart string
 	receiverClassName := receiver.Class().Super().(*object.Class).Name
 	if receiverClassName == core.Class.Name {
@@ -404,7 +413,7 @@ func raiseNotVisibleNoMethodError(name string, receiver object.EmeraldValue) {
 		receiverPart = receiverClassName
 	}
 
-	core.Raise(
+	return core.Raise(
 		core.NewNoMethodError(
 			fmt.Sprintf("private method `%s' called for %s", name, receiverPart),
 		),

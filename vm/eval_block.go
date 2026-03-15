@@ -31,9 +31,9 @@ func (vm *VM) Send(self object.EmeraldValue, name string, block object.EmeraldVa
 	oldCtx := vm.ctx
 	vm.ctx = vm.newEnclosedContext(oldCtx.File, self, block)
 
-	method, _, _, err := self.ExtractMethod(name, self.Class(), self)
+	method, err := vm.extractMethod(self, name)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	result := vm.rawEvalBlock(method, block, kwargs, args...)
