@@ -7,6 +7,7 @@ Cache-Control: no-cache
 Content-Type: #{content_type}
 Content-Length: #{body.size}
 Connection: Closed
+
 #{body}
 "
         end
