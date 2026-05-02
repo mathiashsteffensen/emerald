@@ -6,22 +6,20 @@ import (
 	"strconv"
 )
 
-var Float *object.Class
+func (rt *Runtime) InitFloat() {
+	rt.Float = rt.DefineClass("Float", rt.Numeric)
 
-func InitFloat() {
-	Float = DefineClass("Float", Numeric)
+	rt.Float.Include(rt.Comparable)
 
-	Float.Include(Comparable)
-
-	DefineMethod(Float, "to_s", floatToS())
-	DefineMethod(Float, "inspect", floatToS())
-	DefineMethod(Float, "<=>", floatSpaceship())
-	DefineMethod(Float, "+", floatAdd())
-	DefineMethod(Float, "-", floatSubtract())
-	DefineMethod(Float, "*", floatMultiply())
-	DefineMethod(Float, "/", floatDivide())
-	DefineMethod(Float, "-@", floatNegate())
-	DefineMethod(Float, "round", floatRound())
+	rt.DefineMethod(rt.Float, "to_s", rt.floatToS())
+	rt.DefineMethod(rt.Float, "inspect", rt.floatToS())
+	rt.DefineMethod(rt.Float, "<=>", rt.floatSpaceship())
+	rt.DefineMethod(rt.Float, "+", rt.floatAdd())
+	rt.DefineMethod(rt.Float, "-", rt.floatSubtract())
+	rt.DefineMethod(rt.Float, "*", rt.floatMultiply())
+	rt.DefineMethod(rt.Float, "/", rt.floatDivide())
+	rt.DefineMethod(rt.Float, "-@", rt.floatNegate())
+	rt.DefineMethod(rt.Float, "round", rt.floatRound())
 }
 
 type FloatInstance struct {
@@ -29,20 +27,20 @@ type FloatInstance struct {
 	Value float64
 }
 
-func NewFloat(val float64) *FloatInstance {
+func (rt *Runtime) NewFloat(val float64) *FloatInstance {
 	return &FloatInstance{
-		Instance: Float.New(),
+		Instance: rt.Float.New(),
 		Value:    val,
 	}
 }
 
-func floatToS() object.BuiltInMethod {
+func (rt *Runtime) floatToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(strconv.FormatFloat(ctx.Self.(*FloatInstance).Value, 'f', -1, 64))
+		return rt.NewString(strconv.FormatFloat(ctx.Self.(*FloatInstance).Value, 'f', -1, 64))
 	}
 }
 
-func floatAdd() object.BuiltInMethod {
+func (rt *Runtime) floatAdd() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*FloatInstance)
 
@@ -55,11 +53,11 @@ func floatAdd() object.BuiltInMethod {
 			newValue = left.Value + right.Value
 		}
 
-		return NewFloat(newValue)
+		return rt.NewFloat(newValue)
 	}
 }
 
-func floatSubtract() object.BuiltInMethod {
+func (rt *Runtime) floatSubtract() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*FloatInstance)
 
@@ -72,11 +70,11 @@ func floatSubtract() object.BuiltInMethod {
 			newValue = left.Value - right.Value
 		}
 
-		return NewFloat(newValue)
+		return rt.NewFloat(newValue)
 	}
 }
 
-func floatMultiply() object.BuiltInMethod {
+func (rt *Runtime) floatMultiply() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*FloatInstance)
 
@@ -89,11 +87,11 @@ func floatMultiply() object.BuiltInMethod {
 			newValue = left.Value * right.Value
 		}
 
-		return NewFloat(newValue)
+		return rt.NewFloat(newValue)
 	}
 }
 
-func floatDivide() object.BuiltInMethod {
+func (rt *Runtime) floatDivide() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*FloatInstance)
 
@@ -106,17 +104,17 @@ func floatDivide() object.BuiltInMethod {
 			newValue = left.Value / right.Value
 		}
 
-		return NewFloat(newValue)
+		return rt.NewFloat(newValue)
 	}
 }
 
-func floatNegate() object.BuiltInMethod {
+func (rt *Runtime) floatNegate() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewFloat(-ctx.Self.(*FloatInstance).Value)
+		return rt.NewFloat(-ctx.Self.(*FloatInstance).Value)
 	}
 }
 
-func floatSpaceship() object.BuiltInMethod {
+func (rt *Runtime) floatSpaceship() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*FloatInstance)
 		if right, ok := args[0].(*FloatInstance); ok {
@@ -132,33 +130,33 @@ func floatSpaceship() object.BuiltInMethod {
 				result = 0
 			}
 
-			return NewInteger(result)
+			return rt.NewInteger(result)
 		} else {
-			return NULL
+			return rt.NULL
 		}
 	}
 }
 
-func roundFloatToPrecision(val float64, precision int64) float64 {
+func (rt *Runtime) roundFloatToPrecision(val float64, precision int64) float64 {
 	ratio := math.Pow(10, float64(precision))
 	return math.Round(val*ratio) / ratio
 }
 
-func floatRound() object.BuiltInMethod {
+func (rt *Runtime) floatRound() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		EnforceArity(args, kwargs, 0, 1)
+		rt.EnforceArity(args, kwargs, 0, 1)
 
 		float := ctx.Self.(*FloatInstance)
 
 		if len(args) == 1 {
-			precision, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])
+			precision, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[0])
 			if err != nil {
 				return err
 			}
 
-			return NewFloat(roundFloatToPrecision(float.Value, precision.Value))
+			return rt.NewFloat(rt.roundFloatToPrecision(float.Value, precision.Value))
 		} else {
-			return NewInteger(int64(math.Round(float.Value)))
+			return rt.NewInteger(int64(math.Round(float.Value)))
 		}
 	}
 }

@@ -1,7 +1,3 @@
-// Package heap is not a heap in the traditional sense since we are blessed by the Go GC.
-// The package simply contains all objects in use by the Emerald VM that are not currently on the stack, and are not stored on another object
-// i.e. All literals and global variables. Although literals and global variables will be pushed onto the stack
-// when for example passed as arguments, or assigned to a local variable
 package heap
 
 import (
@@ -10,52 +6,50 @@ import (
 
 const GlobalsSize = 65536
 
-var (
-	GlobalSymbolTable  *SymbolTable
-	ConstantPool       []object.EmeraldValue
-	GlobalVariablePool []object.EmeraldValue
-)
-
-func init() {
-	Reset()
+type Heap struct {
+	SymbolTable  *SymbolTable
+	ConstantPool []object.EmeraldValue
+	VariablePool []object.EmeraldValue
 }
 
-func GetConstant(index uint16) object.EmeraldValue {
-	return ConstantPool[index]
+func NewHeap() *Heap {
+	return &Heap{
+		SymbolTable:  NewSymbolTable(),
+		ConstantPool: []object.EmeraldValue{},
+		VariablePool: make([]object.EmeraldValue, GlobalsSize),
+	}
 }
 
-func AddConstant(obj object.EmeraldValue) int {
-	ConstantPool = append(ConstantPool, obj)
-	return len(ConstantPool) - 1
+func (h *Heap) GetConstant(index uint16) object.EmeraldValue {
+	return h.ConstantPool[index]
 }
 
-func GetGlobalVariable(index uint16) object.EmeraldValue {
-	return GlobalVariablePool[index]
+func (h *Heap) AddConstant(obj object.EmeraldValue) int {
+	h.ConstantPool = append(h.ConstantPool, obj)
+	return len(h.ConstantPool) - 1
 }
 
-func GetGlobalVariableString(name string) object.EmeraldValue {
-	if symbol, ok := GlobalSymbolTable.Resolve(name); !ok {
+func (h *Heap) GetGlobalVariable(index uint16) object.EmeraldValue {
+	return h.VariablePool[index]
+}
+
+func (h *Heap) GetGlobalVariableString(name string) object.EmeraldValue {
+	if symbol, ok := h.SymbolTable.Resolve(name); !ok {
 		return nil
 	} else {
-		return GetGlobalVariable(uint16(symbol.Index))
+		return h.GetGlobalVariable(uint16(symbol.Index))
 	}
 }
 
-func SetGlobalVariable(index uint16, obj object.EmeraldValue) {
-	GlobalVariablePool[index] = obj
+func (h *Heap) SetGlobalVariable(index uint16, obj object.EmeraldValue) {
+	h.VariablePool[index] = obj
 }
 
-func SetGlobalVariableString(name string, value object.EmeraldValue) {
-	symbol, ok := GlobalSymbolTable.Resolve(name)
+func (h *Heap) SetGlobalVariableString(name string, value object.EmeraldValue) {
+	symbol, ok := h.SymbolTable.Resolve(name)
 	if !ok {
-		symbol = GlobalSymbolTable.DefineGlobal(name)
+		symbol = h.SymbolTable.DefineGlobal(name)
 	}
 
-	SetGlobalVariable(uint16(symbol.Index), value)
-}
-
-func Reset() {
-	GlobalSymbolTable = NewSymbolTable()
-	ConstantPool = []object.EmeraldValue{}
-	GlobalVariablePool = make([]object.EmeraldValue, GlobalsSize)
+	h.SetGlobalVariable(uint16(symbol.Index), value)
 }

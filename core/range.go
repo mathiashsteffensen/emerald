@@ -2,8 +2,6 @@ package core
 
 import "emerald/object"
 
-var Range *object.Class
-
 type RangeInstance struct {
 	*object.Instance
 	ExcludeEnd bool
@@ -11,26 +9,26 @@ type RangeInstance struct {
 	End        object.EmeraldValue
 }
 
-func NewRange(begin object.EmeraldValue, end object.EmeraldValue, excludeEnd bool) *RangeInstance {
+func (rt *Runtime) NewRange(begin object.EmeraldValue, end object.EmeraldValue, excludeEnd bool) *RangeInstance {
 	return &RangeInstance{
-		Instance:   Range.New(),
+		Instance:   rt.Range.New(),
 		ExcludeEnd: excludeEnd,
 		Begin:      begin,
 		End:        end,
 	}
 }
 
-func InitRange() {
-	Range = DefineClass("Range", Object)
+func (rt *Runtime) InitRange() {
+	rt.Range = rt.DefineClass("Range", rt.Object)
 
-	Range.Include(Enumerable)
+	rt.Range.Include(rt.Enumerable)
 
-	DefineSingletonMethod(Range, "new", rangeNew())
+	rt.DefineSingletonMethod(rt.Range, "new", rt.rangeNew())
 
-	DefineMethod(Range, "each", rangeEach())
+	rt.DefineMethod(rt.Range, "each", rt.rangeEach())
 }
 
-func rangeNew() object.BuiltInMethod {
+func (rt *Runtime) rangeNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		begin := args[0]
 		end := args[1]
@@ -39,21 +37,21 @@ func rangeNew() object.BuiltInMethod {
 		if len(args) < 3 {
 			excludeEnd = false
 		} else {
-			excludeEnd = args[2] == TRUE
+			excludeEnd = args[2] == rt.TRUE
 		}
 
-		return NewRange(begin, end, excludeEnd)
+		return rt.NewRange(begin, end, excludeEnd)
 	}
 }
 
-func rangeEach() object.BuiltInMethod {
+func (rt *Runtime) rangeEach() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		r := ctx.Self.(*RangeInstance)
 		begin := r.Begin.(*IntegerInstance).Value
 		end := r.End.(*IntegerInstance).Value
 
 		for i := begin; i < end; i++ {
-			ctx.Yield(map[string]object.EmeraldValue{}, NewInteger(i))
+			ctx.Yield(map[string]object.EmeraldValue{}, rt.NewInteger(i))
 		}
 
 		if !r.ExcludeEnd {

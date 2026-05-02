@@ -2,28 +2,24 @@ package core
 
 import "emerald/object"
 
-var FalseClass *object.Class
+func (rt *Runtime) InitFalseClass() {
+	rt.FalseClass = rt.DefineClass("FalseClass", rt.Object)
 
-var FALSE object.EmeraldValue
+	rt.DefineMethod(rt.FalseClass, "to_s", rt.falseToS())
+	rt.DefineMethod(rt.FalseClass, "inspect", rt.falseToS())
+	rt.DefineMethod(rt.FalseClass, "!@", rt.falseBooleanNegate())
 
-func InitFalseClass() {
-	FalseClass = DefineClass("FalseClass", Object)
-
-	DefineMethod(FalseClass, "to_s", falseToS())
-	DefineMethod(FalseClass, "inspect", falseToS())
-	DefineMethod(FalseClass, "!@", falseBooleanNegate())
-
-	FALSE = FalseClass.New()
+	rt.FALSE = rt.FalseClass.New()
 }
 
-func falseToS() object.BuiltInMethod {
+func (rt *Runtime) falseToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString("false")
+		return rt.NewString("false")
 	}
 }
 
-func falseBooleanNegate() object.BuiltInMethod {
+func (rt *Runtime) falseBooleanNegate() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return TRUE
+		return rt.TRUE
 	}
 }

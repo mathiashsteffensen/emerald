@@ -82,7 +82,7 @@ func ensureNoExceptionUnlessExpected(t *testing.T, expected any) {
 		return
 	}
 
-	exception := heap.GetGlobalVariableString("$!")
+	exception := rt.Heap.GetGlobalVariableString("$!")
 
 	if exception != nil && exception != core.NULL {
 		err := exception.(object.EmeraldError)
@@ -146,7 +146,7 @@ func testExpectedObject(
 		}
 
 		if strings.HasPrefix(expected, "error:") {
-			err := testErrorObject(expected[6:], heap.GetGlobalVariableString("$!"))
+			err := testErrorObject(expected[6:], rt.Heap.GetGlobalVariableString("$!"))
 			if err != nil {
 				t.Errorf("testErrorObject failed: %s", err)
 			}
@@ -210,7 +210,7 @@ func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) e
 func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual object.EmeraldValue) error {
 	hash, ok := actual.(*core.HashInstance)
 	if !ok {
-		return fmt.Errorf("object is not Hash. got=%T (%+v)", actual, actual)
+		return fmt.Errorf("object is not rt.Hash. got=%T (%+v)", actual, actual)
 	}
 
 	if hash.Values.Len() != len(expected) {
@@ -266,7 +266,7 @@ func testBooleanObject(expected bool, actual object.EmeraldValue) error {
 func testStringObject(expected string, actual object.EmeraldValue) error {
 	result, ok := actual.(*core.StringInstance)
 	if !ok {
-		return fmt.Errorf("object is not String. got=%T (%+v)",
+		return fmt.Errorf("object is not rt.String. got=%T (%+v)",
 			actual, actual)
 	}
 	if result.Value != expected {
@@ -279,7 +279,7 @@ func testStringObject(expected string, actual object.EmeraldValue) error {
 func testSymbolObject(expected string, actual object.EmeraldValue) error {
 	result, ok := actual.(*core.SymbolInstance)
 	if !ok {
-		return fmt.Errorf("object is not Symbol. got=%T (%+v)",
+		return fmt.Errorf("object is not rt.Symbol. got=%T (%+v)",
 			actual, actual)
 	}
 	if result.Value != expected {

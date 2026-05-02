@@ -2,23 +2,22 @@ package core
 
 import (
 	"emerald/object"
-	"github.com/elliotchance/orderedmap/v2"
 	"strings"
+
+	"github.com/elliotchance/orderedmap/v2"
 )
 
-var Hash *object.Class
+func (rt *Runtime) InitHash() {
+	rt.Hash = rt.DefineClass("Hash", rt.Object)
 
-func InitHash() {
-	Hash = DefineClass("Hash", Object)
+	rt.Hash.Include(rt.Enumerable)
 
-	Hash.Include(Enumerable)
-
-	DefineMethod(Hash, "[]", hashIndexAccessor())
-	DefineMethod(Hash, "[]=", hashIndexSetter())
-	DefineMethod(Hash, "==", hashEquals())
-	DefineMethod(Hash, "each", hashEach())
-	DefineMethod(Hash, "to_s", hashToS())
-	DefineMethod(Hash, "inspect", hashToS())
+	rt.DefineMethod(rt.Hash, "[]", rt.hashIndexAccessor())
+	rt.DefineMethod(rt.Hash, "[]=", rt.hashIndexSetter())
+	rt.DefineMethod(rt.Hash, "==", rt.hashEquals())
+	rt.DefineMethod(rt.Hash, "each", rt.hashEach())
+	rt.DefineMethod(rt.Hash, "to_s", rt.hashToS())
+	rt.DefineMethod(rt.Hash, "inspect", rt.hashToS())
 }
 
 type HashInstance struct {
@@ -27,16 +26,20 @@ type HashInstance struct {
 	Keys   map[string]object.EmeraldValue
 }
 
-func NewHash() *HashInstance {
+func (rt *Runtime) NewHash() *HashInstance {
 	return &HashInstance{
-		Instance: Hash.New(),
+		Instance: rt.Hash.New(),
 		Values:   orderedmap.NewOrderedMap[string, object.EmeraldValue](),
 		Keys:     map[string]object.EmeraldValue{},
 	}
 }
 
 func (hash *HashInstance) Get(key object.EmeraldValue) object.EmeraldValue {
-	return hash.Values.GetOrDefault(key.HashKey(), NULL)
+	val := hash.Values.GetOrDefault(key.HashKey(), nil)
+	if val == nil {
+		return nil
+	}
+	return val
 }
 
 func (hash *HashInstance) Set(key object.EmeraldValue, value object.EmeraldValue) {
@@ -51,9 +54,9 @@ func (hash *HashInstance) Each(callback func(key object.EmeraldValue, value obje
 	}
 }
 
-func hashToS() object.BuiltInMethod {
+func (rt *Runtime) hashToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 0, 0); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 0, 0); err != nil {
 			return err
 		}
 
@@ -62,9 +65,9 @@ func hashToS() object.BuiltInMethod {
 		ctx.Self.(*HashInstance).Each(func(key object.EmeraldValue, value object.EmeraldValue) {
 			var out strings.Builder
 
-			out.WriteString(Send(key, "to_s", NULL, map[string]object.EmeraldValue{}).(*StringInstance).Value)
+			out.WriteString(rt.Send(key, "to_s", rt.NULL, map[string]object.EmeraldValue{}).(*StringInstance).Value)
 			out.WriteString(" => ")
-			out.WriteString(Send(value, "to_s", NULL, map[string]object.EmeraldValue{}).(*StringInstance).Value)
+			out.WriteString(rt.Send(value, "to_s", rt.NULL, map[string]object.EmeraldValue{}).(*StringInstance).Value)
 
 			pairs = append(pairs, out.String())
 		})
@@ -77,23 +80,27 @@ func hashToS() object.BuiltInMethod {
 
 		out.WriteRune('}')
 
-		return NewString(out.String())
+		return rt.NewString(out.String())
 	}
 }
 
-func hashIndexAccessor() object.BuiltInMethod {
+func (rt *Runtime) hashIndexAccessor() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 
-		return ctx.Self.(*HashInstance).Get(args[0])
+		val := ctx.Self.(*HashInstance).Get(args[0])
+		if val == nil {
+			return rt.NULL
+		}
+		return val
 	}
 }
 
-func hashIndexSetter() object.BuiltInMethod {
+func (rt *Runtime) hashIndexSetter() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 2, 2); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 2, 2); err != nil {
 			return err
 		}
 
@@ -103,7 +110,7 @@ func hashIndexSetter() object.BuiltInMethod {
 	}
 }
 
-func hashEach() object.BuiltInMethod {
+func (rt *Runtime) hashEach() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		hash := ctx.Self.(*HashInstance)
 
@@ -115,17 +122,17 @@ func hashEach() object.BuiltInMethod {
 	}
 }
 
-func hashEquals() object.BuiltInMethod {
+func (rt *Runtime) hashEquals() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		args, err := EnforceArity(args, kwargs, 1, 1)
+		args, err := rt.EnforceArity(args, kwargs, 1, 1)
 
 		if err != nil {
 			return err
 		}
 
 		otherObj := args[0]
-		if otherObj.Class().Super() != Hash {
-			return FALSE
+		if otherObj.Class().Super() != rt.Hash {
+			return rt.FALSE
 		}
 
 		hash := ctx.Self.(*HashInstance)
@@ -134,14 +141,14 @@ func hashEquals() object.BuiltInMethod {
 		for el := hash.Values.Front(); el != nil; el = el.Next() {
 			otherValue, ok := otherHash.Values.Get(el.Key)
 			if !ok {
-				return FALSE
+				return rt.FALSE
 			}
 
-			if Send(el.Value, "==", NULL, map[string]object.EmeraldValue{}, otherValue) != TRUE {
-				return FALSE
+			if rt.Send(el.Value, "==", rt.NULL, map[string]object.EmeraldValue{}, otherValue) != rt.TRUE {
+				return rt.FALSE
 			}
 		}
 
-		return TRUE
+		return rt.TRUE
 	}
 }

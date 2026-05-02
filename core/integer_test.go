@@ -113,7 +113,7 @@ func TestIntegerOperators(t *testing.T) {
 		},
 		{
 			input:    "6 + false",
-			expected: "error:TypeError:no implicit conversion of FalseClass into Integer",
+			expected: "error:TypeError:no implicit conversion of rt.FalseClass into rt.Integer",
 		},
 		{
 			input:    "6 === 6",
@@ -124,7 +124,7 @@ func TestIntegerOperators(t *testing.T) {
 			expected: true,
 		},
 		{
-			input:    "6 === Integer",
+			input:    "6 === rt.Integer",
 			expected: false,
 		},
 	}

@@ -5,12 +5,10 @@ import (
 	"fmt"
 )
 
-var LoadError *object.Class
+func (rt *Runtime) InitLoadError() {
+	rt.LoadError = rt.DefineClass("LoadError", rt.StandardError)
 
-func InitLoadError() {
-	LoadError = DefineClass("LoadError", StandardError)
-
-	DefineSingletonMethod(LoadError, "new", exceptionNew(NewLoadError))
+	rt.DefineSingletonMethod(rt.LoadError, "new", rt.exceptionNew(rt.NewLoadError))
 }
 
 type LoadErrorInstance struct {
@@ -27,12 +25,12 @@ func (err *LoadErrorInstance) Message() string {
 }
 
 func (err *LoadErrorInstance) ClassName() string {
-	return LoadError.Name
+	return "LoadError"
 }
 
-func NewLoadError(msg string) object.EmeraldError {
+func (rt *Runtime) NewLoadError(msg string) object.EmeraldError {
 	return &LoadErrorInstance{
-		Instance: LoadError.New(),
+		Instance: rt.LoadError.New(),
 		message:  msg,
 	}
 }

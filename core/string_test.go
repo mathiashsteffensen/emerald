@@ -21,7 +21,7 @@ func TestString_add(t *testing.T) {
 		},
 		{
 			input:    `"wdaw" + 2`,
-			expected: "error:TypeError:no implicit conversion of Integer into String",
+			expected: "error:TypeError:no implicit conversion of rt.Integer into rt.String",
 		},
 	}
 
@@ -36,7 +36,7 @@ func TestString_multiply(t *testing.T) {
 		},
 		{
 			input:    `"w" * ""`,
-			expected: "error:TypeError:no implicit conversion of String into Integer",
+			expected: "error:TypeError:no implicit conversion of rt.String into rt.Integer",
 		},
 	}
 
@@ -46,11 +46,11 @@ func TestString_multiply(t *testing.T) {
 func TestString_match(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			input:    `("a" =~ /a/).is_a?(MatchData)`,
+			input:    `("a" =~ /a/).is_a?(rt.MatchData)`,
 			expected: true,
 		},
 		{
-			input:    `"a".match(/a/).is_a?(MatchData)`,
+			input:    `"a".match(/a/).is_a?(rt.MatchData)`,
 			expected: true,
 		},
 	}

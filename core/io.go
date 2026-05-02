@@ -10,42 +10,40 @@ import (
 	"syscall"
 )
 
-var IO *object.Class
-
 type IOInstance struct {
 	*object.Instance
 	FileDescriptor uintptr
 	Closed         bool
 }
 
-func NewIO(fd uintptr) *IOInstance {
+func (rt *Runtime) NewIO(fd uintptr) *IOInstance {
 	return &IOInstance{
-		Instance:       IO.New(),
+		Instance:       rt.IO.New(),
 		FileDescriptor: fd,
 	}
 }
 
-func InitIO() {
-	IO = DefineClass("IO", Object)
+func (rt *Runtime) InitIO() {
+	rt.IO = rt.DefineClass("IO", rt.Object)
 
-	DefineSingletonMethod(IO, "new", ioNew())
-	DefineSingletonMethod(IO, "sysopen", ioSysopen())
-	DefineSingletonMethod(IO, "open", ioOpen())
-	DefineSingletonMethod(IO, "read", ioRead())
+	rt.DefineSingletonMethod(rt.IO, "new", rt.ioNew())
+	rt.DefineSingletonMethod(rt.IO, "sysopen", rt.ioSysopen())
+	rt.DefineSingletonMethod(rt.IO, "open", rt.ioOpen())
+	rt.DefineSingletonMethod(rt.IO, "read", rt.ioRead())
 
-	DefineMethod(IO, "close", ioClose())
-	DefineMethod(IO, "getbyte", ioGetbyte())
+	rt.DefineMethod(rt.IO, "close", rt.ioClose())
+	rt.DefineMethod(rt.IO, "getbyte", rt.ioGetbyte())
 }
 
-func ioNew() object.BuiltInMethod {
+func (rt *Runtime) ioNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		fd := args[0].(*IntegerInstance).Value
 
-		return NewIO(uintptr(fd))
+		return rt.NewIO(uintptr(fd))
 	}
 }
 
-func ioSysopen() object.BuiltInMethod {
+func (rt *Runtime) ioSysopen() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		path := args[0].(*StringInstance).Value
 
@@ -60,17 +58,17 @@ func ioSysopen() object.BuiltInMethod {
 
 		fd, err := syscall.Open("/"+resolvedPath, syscall.O_NONBLOCK, 0)
 		if err != nil {
-			panic(fmt.Sprintf("IO.sysopen: %s (%q)", err, resolvedPath))
-			return Raise(newArgumentError(fmt.Sprintf("%s (%q)", err, resolvedPath)))
+			panic(fmt.Sprintf("rt.IO.sysopen: %s (%q)", err, resolvedPath))
+			return rt.Raise(rt.newArgumentError(fmt.Sprintf("%s (%q)", err, resolvedPath)))
 		}
 
-		return NewInteger(int64(fd))
+		return rt.NewInteger(int64(fd))
 	}
 }
 
-func ioOpen() object.BuiltInMethod {
+func (rt *Runtime) ioOpen() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		ioInstance := Send(IO, "new", NULL, kwargs, args...)
+		ioInstance := rt.Send(rt.IO, "new", rt.NULL, kwargs, args...)
 
 		if !ctx.BlockGiven() {
 			return ioInstance
@@ -78,28 +76,28 @@ func ioOpen() object.BuiltInMethod {
 
 		blockResult := ctx.Yield(map[string]object.EmeraldValue{}, ioInstance)
 
-		Send(ioInstance, "close", NULL, map[string]object.EmeraldValue{})
+		rt.Send(ioInstance, "close", rt.NULL, map[string]object.EmeraldValue{})
 
 		return blockResult
 	}
 }
 
-func ioRead() object.BuiltInMethod {
+func (rt *Runtime) ioRead() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		fd := Send(IO, "sysopen", NULL, kwargs, args...).(*IntegerInstance).Value
+		fd := rt.Send(rt.IO, "sysopen", rt.NULL, kwargs, args...).(*IntegerInstance).Value
 
 		file := os.NewFile(uintptr(fd), "filename")
 
 		content, err := io.ReadAll(file)
 		if err != nil {
-			return RaiseGoError(err)
+			return rt.RaiseGoError(err)
 		}
 
-		return NewString(string(content))
+		return rt.NewString(string(content))
 	}
 }
 
-func ioClose() object.BuiltInMethod {
+func (rt *Runtime) ioClose() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		ioInstance := ctx.Self.(*IOInstance)
 
@@ -110,11 +108,11 @@ func ioClose() object.BuiltInMethod {
 			}
 		}
 
-		return NULL
+		return rt.NULL
 	}
 }
 
-func ioGetbyte() object.BuiltInMethod {
+func (rt *Runtime) ioGetbyte() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		fd := ctx.Self.(*IOInstance).FileDescriptor
 
@@ -126,6 +124,6 @@ func ioGetbyte() object.BuiltInMethod {
 			panic(fmt.Errorf("expected to read 1 byte but got %d", n))
 		}
 
-		return NewInteger(int64(buffer[0]))
+		return rt.NewInteger(int64(buffer[0]))
 	}
 }

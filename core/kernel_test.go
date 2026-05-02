@@ -11,8 +11,8 @@ func TestKernel_raise(t *testing.T) {
 		},
 		{
 			name:     "raising with a specific error class",
-			input:    `raise TypeError, "I wanted an Integer yo"`,
-			expected: "error:TypeError:I wanted an Integer yo",
+			input:    `raise rt.TypeError, "I wanted an rt.Integer yo"`,
+			expected: "error:TypeError:I wanted an rt.Integer yo",
 		},
 	}
 	runCoreTests(t, tests)
@@ -62,12 +62,12 @@ func TestKernel_require_relative(t *testing.T) {
 func TestKernel_class(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			input:    "Object.new.class",
-			expected: "class:Object",
+			input:    "rt.Object.new.class",
+			expected: "class:rt.Object",
 		},
 		{
-			input:    "Object.class",
-			expected: "class:Class",
+			input:    "rt.Object.class",
+			expected: "class:rt.Class",
 		},
 	}
 
@@ -78,17 +78,17 @@ func TestKernel_kind_of(t *testing.T) {
 	tests := []coreTestCase{
 		{
 			name:     "when self is instance of class",
-			input:    "Object.new.kind_of?(Object)",
+			input:    "rt.Object.new.kind_of?(rt.Object)",
 			expected: true,
 		},
 		{
 			name:     "when self is instance of subclass",
-			input:    "String.new.kind_of?(Object)",
+			input:    "rt.String.new.kind_of?(rt.Object)",
 			expected: true,
 		},
 		{
-			name:     "singleton is instance of Class",
-			input:    "String.kind_of?(Class)",
+			name:     "singleton is instance of rt.Class",
+			input:    "rt.String.kind_of?(rt.Class)",
 			expected: true,
 		},
 		{
@@ -111,7 +111,7 @@ func TestKernel_kind_of(t *testing.T) {
 		},
 		{
 			name:     "when passed wrong type of arg",
-			input:    "String.kind_of?(23)",
+			input:    "rt.String.kind_of?(23)",
 			expected: "error:TypeError:class or module required",
 		},
 	}
@@ -187,7 +187,7 @@ func TestKernel_include(t *testing.T) {
 					include "boop"
 				end
 			`,
-			expected: "error:TypeError:wrong argument type String (expected Module)",
+			expected: "error:TypeError:wrong argument type rt.String (expected rt.Module)",
 		},
 	}
 

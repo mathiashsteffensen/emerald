@@ -10,45 +10,43 @@ import (
 	"strings"
 )
 
-var Dir *object.Class
+func (rt *Runtime) InitDir() {
+	rt.Dir = rt.DefineClass("Dir", rt.Object)
 
-func InitDir() {
-	Dir = DefineClass("Dir", Object)
-
-	DefineSingletonMethod(Dir, "pwd", dirPwd())
-	DefineSingletonMethod(Dir, "glob", dirGlob())
+	rt.DefineSingletonMethod(rt.Dir, "pwd", rt.dirPwd())
+	rt.DefineSingletonMethod(rt.Dir, "glob", rt.dirGlob())
 }
 
-func dirPwd() object.BuiltInMethod {
+func (rt *Runtime) dirPwd() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 0, 0); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 0, 0); err != nil {
 			return err
 		}
 
 		wd, err := os.Getwd()
 		if err != nil {
-			e := NewException(err.Error())
-			Raise(e)
+			e := rt.NewException(err.Error())
+			rt.Raise(e)
 			return e
 		}
 
-		return NewString(wd)
+		return rt.NewString(wd)
 	}
 }
 
 var globListRegexp = regexp.MustCompile(`{(\S*)}`)
 
-func raiseFailedToReadGlobPathError(err error) {
-	Raise(NewRuntimeError(fmt.Sprintf("Failed to read glob path %s", err)))
+func (rt *Runtime) raiseFailedToReadGlobPathError(err error) {
+	rt.Raise(rt.NewRuntimeError(fmt.Sprintf("Failed to read glob path %s", err)))
 }
 
-func dirGlob() object.BuiltInMethod {
+func (rt *Runtime) dirGlob() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, emErr := EnforceArity(args, kwargs, 1, 2); emErr != nil {
+		if _, emErr := rt.EnforceArity(args, kwargs, 1, 2); emErr != nil {
 			return emErr
 		}
 
-		globPath, emErr := EnforceArgumentType[*StringInstance](String, args[0])
+		globPath, emErr := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 		if emErr != nil {
 			return emErr
 		}
@@ -63,8 +61,8 @@ func dirGlob() object.BuiltInMethod {
 					globListRegexp.ReplaceAllString(globPath.Value, value),
 				)
 				if err != nil {
-					raiseFailedToReadGlobPathError(err)
-					return NULL
+					rt.raiseFailedToReadGlobPathError(err)
+					return rt.NULL
 				}
 				paths = append(paths, p...)
 			}
@@ -72,16 +70,16 @@ func dirGlob() object.BuiltInMethod {
 
 		p, err := filepath.Glob(globPath.Value)
 		if err != nil {
-			raiseFailedToReadGlobPathError(err)
-			return NULL
+			rt.raiseFailedToReadGlobPathError(err)
+			return rt.NULL
 		}
 		paths = append(paths, p...)
 		sort.Strings(paths)
 
-		result := NewArray([]object.EmeraldValue{})
+		result := rt.NewArray([]object.EmeraldValue{})
 
 		for _, path := range paths {
-			result.Value = append(result.Value, NewString(path))
+			result.Value = append(result.Value, rt.NewString(path))
 		}
 
 		return result

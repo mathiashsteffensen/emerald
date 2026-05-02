@@ -5,18 +5,16 @@ import (
 	"emerald/object"
 )
 
-var Emerald *object.Module
-
-func InitEmerald() {
-	Emerald = DefineModule("Emerald")
+func (rt *Runtime) InitEmerald() {
+	rt.Emerald = rt.DefineModule("Emerald")
 
 	// This should be replaced by `extend self` when the feature is available
-	DefineMethod(Emerald, "version", emeraldVersion())
-	DefineSingletonMethod(Emerald, "version", emeraldVersion())
+	rt.DefineMethod(rt.Emerald, "version", rt.emeraldVersion())
+	rt.DefineSingletonMethod(rt.Emerald, "version", rt.emeraldVersion())
 }
 
-func emeraldVersion() object.BuiltInMethod {
-	version := NewString(debug.EMERALD_VERSION)
+func (rt *Runtime) emeraldVersion() object.BuiltInMethod {
+	version := rt.NewString(debug.EMERALD_VERSION)
 
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return version

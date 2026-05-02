@@ -6,8 +6,8 @@ func TestIO_sysopen(t *testing.T) {
 	tests := []coreTestCase{
 		{
 			input: `
-				file_descriptor = IO.sysopen "fixtures/require_test.rb"
-				io = IO.new file_descriptor
+				file_descriptor = rt.IO.sysopen "fixtures/require_test.rb"
+				io = rt.IO.new file_descriptor
 				b = io.getbyte
 				io.close
 				b
@@ -24,8 +24,8 @@ func TestIO_open(t *testing.T) {
 		{
 			name: "when called without a block",
 			input: `
-				file_descriptor = IO.sysopen "fixtures/require_test.rb"
-				io = IO.open file_descriptor
+				file_descriptor = rt.IO.sysopen "fixtures/require_test.rb"
+				io = rt.IO.open file_descriptor
 				b = io.getbyte
 				io.close
 				b
@@ -35,8 +35,8 @@ func TestIO_open(t *testing.T) {
 		{
 			name: "when called with a block",
 			input: `
-				file_descriptor = IO.sysopen "fixtures/require_test.rb"
-				IO.open(file_descriptor) do |io|
+				file_descriptor = rt.IO.sysopen "fixtures/require_test.rb"
+				rt.IO.open(file_descriptor) do |io|
 					io.getbyte
 				end
 			`,
@@ -51,7 +51,7 @@ func TestIO_read(t *testing.T) {
 	tests := []coreTestCase{
 		{
 			name:     "reads the whole file",
-			input:    `IO.read("core/fixtures/require_test.rb").size`,
+			input:    `rt.IO.read("core/fixtures/require_test.rb").size`,
 			file:     "../io.rb",
 			expected: 242,
 		},

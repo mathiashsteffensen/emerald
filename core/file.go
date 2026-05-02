@@ -5,26 +5,24 @@ import (
 	"path/filepath"
 )
 
-var File *object.Class
+func (rt *Runtime) InitFile() {
+	rt.File = rt.DefineClass("File", rt.IO)
 
-func InitFile() {
-	File = DefineClass("File", IO)
-
-	DefineSingletonMethod(File, "absolute_path?", fileIsAbsolutePath())
+	rt.DefineSingletonMethod(rt.File, "absolute_path?", rt.fileIsAbsolutePath())
 }
 
-func fileIsAbsolutePath() object.BuiltInMethod {
+func (rt *Runtime) fileIsAbsolutePath() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		_, err := EnforceArity(args, kwargs, 1, 1)
+		_, err := rt.EnforceArity(args, kwargs, 1, 1)
 		if err != nil {
 			return err
 		}
 
-		path, err := EnforceArgumentType[*StringInstance](String, args[0])
+		path, err := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 		if err != nil {
 			return err
 		}
 
-		return NativeBoolToBooleanObject(filepath.IsAbs(path.Value))
+		return rt.NativeBoolToBooleanObject(filepath.IsAbs(path.Value))
 	}
 }

@@ -2,38 +2,36 @@ package core
 
 import "emerald/object"
 
-var Exception *object.Class
-
 type ExceptionInstance struct {
 	*object.Instance
 	message string
 }
 
 func (err *ExceptionInstance) Message() string   { return err.message }
-func (err *ExceptionInstance) ClassName() string { return Exception.Name }
+func (err *ExceptionInstance) ClassName() string { return "Exception" }
 
-func InitException() {
-	Exception = DefineClass("Exception", Object)
+func (rt *Runtime) InitException() {
+	rt.Exception = rt.DefineClass("Exception", rt.Object)
 
-	DefineSingletonMethod(Exception, "new", exceptionNew(NewException))
+	rt.DefineSingletonMethod(rt.Exception, "new", rt.exceptionNew(rt.NewException))
 
-	DefineMethod(Exception, "to_s", exceptionToS())
+	rt.DefineMethod(rt.Exception, "to_s", rt.exceptionToS())
 }
 
-func NewException(msg string) object.EmeraldError {
+func (rt *Runtime) NewException(msg string) object.EmeraldError {
 	return &ExceptionInstance{
-		Instance: Exception.New(),
+		Instance: rt.Exception.New(),
 		message:  msg,
 	}
 }
 
-func exceptionToS() object.BuiltInMethod {
+func (rt *Runtime) exceptionToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(ctx.Self.(object.EmeraldError).Message())
+		return rt.NewString(ctx.Self.(object.EmeraldError).Message())
 	}
 }
 
-func exceptionNew(initializer func(msg string) object.EmeraldError) object.BuiltInMethod {
+func (rt *Runtime) exceptionNew(initializer func(msg string) object.EmeraldError) object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var msg string
 

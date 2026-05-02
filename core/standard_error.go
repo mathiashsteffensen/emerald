@@ -5,12 +5,10 @@ import (
 	"fmt"
 )
 
-var StandardError *object.Class
+func (rt *Runtime) InitStandardError() {
+	rt.StandardError = rt.DefineClass("StandardError", rt.Exception)
 
-func InitStandardError() {
-	StandardError = DefineClass("StandardError", Exception)
-
-	DefineSingletonMethod(StandardError, "new", exceptionNew(NewStandardError))
+	rt.DefineSingletonMethod(rt.StandardError, "new", rt.exceptionNew(rt.NewStandardError))
 }
 
 type StandardErrorInstance struct {
@@ -27,9 +25,9 @@ func (err *StandardErrorInstance) Message() string {
 }
 
 func (err *StandardErrorInstance) ClassName() string {
-	return StandardError.Name
+	return "StandardError"
 }
 
-func NewStandardError(msg string) object.EmeraldError {
-	return &StandardErrorInstance{StandardError.New(), msg}
+func (rt *Runtime) NewStandardError(msg string) object.EmeraldError {
+	return &StandardErrorInstance{rt.StandardError.New(), msg}
 }

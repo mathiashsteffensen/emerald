@@ -5,8 +5,6 @@ import (
 	"strconv"
 )
 
-var Integer *object.Class
-
 type IntegerInstance struct {
 	*object.Instance
 	Value int64
@@ -16,41 +14,41 @@ func (i *IntegerInstance) Inspect() string {
 	return strconv.Itoa(int(i.Value))
 }
 
-func NewInteger(val int64) object.EmeraldValue {
-	return &IntegerInstance{Integer.New(), val}
+func (rt *Runtime) NewInteger(val int64) object.EmeraldValue {
+	return &IntegerInstance{rt.Integer.New(), val}
 }
 
-func InitInteger() {
-	Integer = DefineClass("Integer", Numeric)
+func (rt *Runtime) InitInteger() {
+	rt.Integer = rt.DefineClass("Integer", rt.Numeric)
 
-	Integer.Include(Comparable)
+	rt.Integer.Include(rt.Comparable)
 
-	DefineMethod(Integer, "to_s", integerToS())
-	DefineMethod(Integer, "inspect", integerToS())
-	DefineMethod(Integer, "<=>", integerSpaceship())
-	DefineMethod(Integer, "===", integerCaseEq())
-	DefineMethod(Integer, "==", integerEquals)
-	DefineMethod(Integer, "!=", integerNotEquals)
-	DefineMethod(Integer, "+", integerAdd)
-	DefineMethod(Integer, "-", integerSubtract)
-	DefineMethod(Integer, "*", integerMultiply)
-	DefineMethod(Integer, "/", integerDivide)
-	DefineMethod(Integer, "-@", integerNegate())
-	DefineMethod(Integer, "to_f", integerToF())
-	DefineMethod(Integer, "times", integerTimes())
+	rt.DefineMethod(rt.Integer, "to_s", rt.integerToS())
+	rt.DefineMethod(rt.Integer, "inspect", rt.integerToS())
+	rt.DefineMethod(rt.Integer, "<=>", rt.integerSpaceship())
+	rt.DefineMethod(rt.Integer, "===", rt.integerCaseEq())
+	rt.DefineMethod(rt.Integer, "==", rt.integerEquals())
+	rt.DefineMethod(rt.Integer, "!=", rt.integerNotEquals())
+	rt.DefineMethod(rt.Integer, "+", rt.integerAdd())
+	rt.DefineMethod(rt.Integer, "-", rt.integerSubtract())
+	rt.DefineMethod(rt.Integer, "*", rt.integerMultiply())
+	rt.DefineMethod(rt.Integer, "/", rt.integerDivide())
+	rt.DefineMethod(rt.Integer, "-@", rt.integerNegate())
+	rt.DefineMethod(rt.Integer, "to_f", rt.integerToF())
+	rt.DefineMethod(rt.Integer, "times", rt.integerTimes())
 }
 
-func integerToS() object.BuiltInMethod {
+func (rt *Runtime) integerToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		val := ctx.Self.(*IntegerInstance).Value
 
-		return NewString(strconv.Itoa(int(val)))
+		return rt.NewString(strconv.Itoa(int(val)))
 	}
 }
 
-func integerCaseEq() object.BuiltInMethod {
+func (rt *Runtime) integerCaseEq() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 
@@ -58,66 +56,78 @@ func integerCaseEq() object.BuiltInMethod {
 
 		switch other := args[0].(type) {
 		case *IntegerInstance:
-			return NativeBoolToBooleanObject(other.Value == self.Value)
+			return rt.NativeBoolToBooleanObject(other.Value == self.Value)
 		case *FloatInstance:
-			return NativeBoolToBooleanObject(int64(other.Value) == self.Value)
+			return rt.NativeBoolToBooleanObject(int64(other.Value) == self.Value)
 		default:
-			return FALSE
+			return rt.FALSE
 		}
 	}
 }
 
-var integerAdd = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
-	return NewInteger(left + right)
-})
+func (rt *Runtime) integerAdd() object.BuiltInMethod {
+	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+		return rt.NewInteger(left + right)
+	})
+}
 
-var integerSubtract = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
-	return NewInteger(left - right)
-})
+func (rt *Runtime) integerSubtract() object.BuiltInMethod {
+	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+		return rt.NewInteger(left - right)
+	})
+}
 
-var integerMultiply = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
-	return NewInteger(left * right)
-})
+func (rt *Runtime) integerMultiply() object.BuiltInMethod {
+	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+		return rt.NewInteger(left * right)
+	})
+}
 
-var integerDivide = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
-	if left%right == 0 {
-		return NewInteger(left / right)
-	} else {
-		return NewFloat(float64(left) / float64(right))
-	}
-})
+func (rt *Runtime) integerDivide() object.BuiltInMethod {
+	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+		if left%right == 0 {
+			return rt.NewInteger(left / right)
+		} else {
+			return rt.NewFloat(float64(left) / float64(right))
+		}
+	})
+}
 
-var integerEquals = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
-	return NativeBoolToBooleanObject(left == right)
-})
+func (rt *Runtime) integerEquals() object.BuiltInMethod {
+	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+		return rt.NativeBoolToBooleanObject(left == right)
+	})
+}
 
-var integerNotEquals = integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
-	return NativeBoolToBooleanObject(left != right)
-})
+func (rt *Runtime) integerNotEquals() object.BuiltInMethod {
+	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+		return rt.NativeBoolToBooleanObject(left != right)
+	})
+}
 
-func integerNegate() object.BuiltInMethod {
+func (rt *Runtime) integerNegate() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewInteger(-ctx.Self.(*IntegerInstance).Value)
+		return rt.NewInteger(-ctx.Self.(*IntegerInstance).Value)
 	}
 }
 
-func integerTimes() object.BuiltInMethod {
+func (rt *Runtime) integerTimes() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for i := int64(0); i < ctx.Self.(*IntegerInstance).Value; i++ {
-			ctx.Yield(map[string]object.EmeraldValue{}, NewInteger(i))
+			ctx.Yield(map[string]object.EmeraldValue{}, rt.NewInteger(i))
 		}
 
 		return ctx.Self
 	}
 }
 
-func integerToF() object.BuiltInMethod {
+func (rt *Runtime) integerToF() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewFloat(float64(ctx.Self.(*IntegerInstance).Value))
+		return rt.NewFloat(float64(ctx.Self.(*IntegerInstance).Value))
 	}
 }
 
-func integerSpaceship() object.BuiltInMethod {
+func (rt *Runtime) integerSpaceship() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		left := ctx.Self.(*IntegerInstance)
 
@@ -134,19 +144,19 @@ func integerSpaceship() object.BuiltInMethod {
 				result = 0
 			}
 
-			return NewInteger(result)
+			return rt.NewInteger(result)
 		} else {
-			return NULL
+			return rt.NULL
 		}
 	}
 }
 
-func integerInfixOperator(cb func(left int64, right int64) object.EmeraldValue) object.BuiltInMethod {
+func (rt *Runtime) integerInfixOperator(cb func(left int64, right int64) object.EmeraldValue) object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
-		right, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])
+		right, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[0])
 		if err != nil {
 			return err
 		}

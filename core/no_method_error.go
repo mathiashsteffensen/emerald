@@ -2,25 +2,23 @@ package core
 
 import "emerald/object"
 
-var NoMethodError *object.Class
-
 type NoMethodErrorInstance struct {
 	*object.Instance
 	message string
 }
 
 func (err *NoMethodErrorInstance) Message() string   { return err.message }
-func (err *NoMethodErrorInstance) ClassName() string { return NoMethodError.Name }
+func (err *NoMethodErrorInstance) ClassName() string { return "NoMethodError" }
 
-func InitNoMethodError() {
-	NoMethodError = DefineClass("NoMethodError", StandardError)
+func (rt *Runtime) InitNoMethodError() {
+	rt.NoMethodError = rt.DefineClass("NoMethodError", rt.StandardError)
 
-	DefineSingletonMethod(NoMethodError, "new", exceptionNew(NewNoMethodError))
+	rt.DefineSingletonMethod(rt.NoMethodError, "new", rt.exceptionNew(rt.NewNoMethodError))
 }
 
-func NewNoMethodError(msg string) object.EmeraldError {
+func (rt *Runtime) NewNoMethodError(msg string) object.EmeraldError {
 	return &NoMethodErrorInstance{
-		Instance: NoMethodError.New(),
+		Instance: rt.NoMethodError.New(),
 		message:  msg,
 	}
 }

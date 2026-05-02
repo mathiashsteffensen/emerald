@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-var Time *object.Class
-
 type TimeInstance struct {
 	*object.Instance
 	Value time.Time
@@ -16,39 +14,39 @@ func (time *TimeInstance) Inspect() string {
 	return time.Value.Format("2006-01-02 15:04:05.000000 -0700")
 }
 
-func NewTime(val time.Time) *TimeInstance {
+func (rt *Runtime) NewTime(val time.Time) *TimeInstance {
 	return &TimeInstance{
-		Instance: Time.New(),
+		Instance: rt.Time.New(),
 		Value:    val,
 	}
 }
 
-func init() {
-	Time = DefineClass("Time", Object)
+func (rt *Runtime) InitTime() {
+	rt.Time = rt.DefineClass("Time", rt.Object)
 
-	DefineSingletonMethod(Time, "new", timeNew())
-	DefineSingletonMethod(Time, "now", timeNew())
+	rt.DefineSingletonMethod(rt.Time, "new", rt.timeNew())
+	rt.DefineSingletonMethod(rt.Time, "now", rt.timeNew())
 
-	DefineMethod(Time, "-", timeSubtract())
-	DefineMethod(Time, "to_f", timeToF())
+	rt.DefineMethod(rt.Time, "-", rt.timeSubtract())
+	rt.DefineMethod(rt.Time, "to_f", rt.timeToF())
 }
 
-func timeNew() object.BuiltInMethod {
+func (rt *Runtime) timeNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewTime(time.Now())
+		return rt.NewTime(time.Now())
 	}
 }
 
-func timeToF() object.BuiltInMethod {
+func (rt *Runtime) timeToF() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewFloat(float64(ctx.Self.(*TimeInstance).Value.UnixNano()) / 1_000_000.0)
+		return rt.NewFloat(float64(ctx.Self.(*TimeInstance).Value.UnixNano()) / 1_000_000.0)
 	}
 }
 
-func timeSubtract() object.BuiltInMethod {
+func (rt *Runtime) timeSubtract() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		newVal := ctx.Self.(*TimeInstance).Value.Sub(args[0].(*TimeInstance).Value)
 
-		return NewInteger(newVal.Milliseconds())
+		return rt.NewInteger(newVal.Milliseconds())
 	}
 }

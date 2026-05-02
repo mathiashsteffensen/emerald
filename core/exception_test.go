@@ -13,8 +13,8 @@ func TestException_kind_of(t *testing.T) {
 	for className := range object.Classes {
 		if strings.Contains(className, "Error") {
 			tests = append(tests, coreTestCase{
-				name:     fmt.Sprintf("%s#kind_of?(Exception) == true", className),
-				input:    fmt.Sprintf("%s.new.kind_of?(Exception)", className),
+				name:     fmt.Sprintf("%s#kind_of?(rt.Exception) == true", className),
+				input:    fmt.Sprintf("%s.new.kind_of?(rt.Exception)", className),
 				expected: true,
 			})
 		}

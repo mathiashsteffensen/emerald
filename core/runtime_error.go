@@ -5,12 +5,10 @@ import (
 	"fmt"
 )
 
-var RuntimeError *object.Class
+func (rt *Runtime) InitRuntimeError() {
+	rt.RuntimeError = rt.DefineClass("RuntimeError", rt.StandardError)
 
-func InitRuntimeError() {
-	RuntimeError = DefineClass("RuntimeError", StandardError)
-
-	DefineSingletonMethod(RuntimeError, "new", exceptionNew(NewRuntimeError))
+	rt.DefineSingletonMethod(rt.RuntimeError, "new", rt.exceptionNew(rt.NewRuntimeError))
 }
 
 type RuntimeErrorInstance struct {
@@ -27,9 +25,9 @@ func (err *RuntimeErrorInstance) Message() string {
 }
 
 func (err *RuntimeErrorInstance) ClassName() string {
-	return RuntimeError.Name
+	return "RuntimeError"
 }
 
-func NewRuntimeError(msg string) object.EmeraldError {
-	return &RuntimeErrorInstance{RuntimeError.New(), msg}
+func (rt *Runtime) NewRuntimeError(msg string) object.EmeraldError {
+	return &RuntimeErrorInstance{rt.RuntimeError.New(), msg}
 }

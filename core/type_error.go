@@ -5,12 +5,10 @@ import (
 	"fmt"
 )
 
-var TypeError *object.Class
+func (rt *Runtime) InitTypeError() {
+	rt.TypeError = rt.DefineClass("TypeError", rt.StandardError)
 
-func InitTypeError() {
-	TypeError = DefineClass("TypeError", StandardError)
-
-	DefineSingletonMethod(TypeError, "new", exceptionNew(NewTypeError))
+	rt.DefineSingletonMethod(rt.TypeError, "new", rt.exceptionNew(rt.NewTypeError))
 }
 
 type TypeErrorInstance struct {
@@ -27,16 +25,16 @@ func (err *TypeErrorInstance) Message() string {
 }
 
 func (err *TypeErrorInstance) ClassName() string {
-	return TypeError.Name
+	return "TypeError"
 }
 
-func NewNoConversionTypeError(expected string, actual string) object.EmeraldError {
-	return NewTypeError(fmt.Sprintf("no implicit conversion of %s into %s", actual, expected))
+func (rt *Runtime) NewNoConversionTypeError(expected string, actual string) object.EmeraldError {
+	return rt.NewTypeError(fmt.Sprintf("no implicit conversion of %s into %s", actual, expected))
 }
 
-func NewTypeError(msg string) object.EmeraldError {
+func (rt *Runtime) NewTypeError(msg string) object.EmeraldError {
 	return &TypeErrorInstance{
-		Instance: TypeError.New(),
+		Instance: rt.TypeError.New(),
 		message:  msg,
 	}
 }

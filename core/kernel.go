@@ -1,7 +1,6 @@
 package core
 
 import (
-	"emerald/bytecode"
 	"emerald/debug"
 	"emerald/object"
 	"errors"
@@ -13,32 +12,28 @@ import (
 	"time"
 )
 
-var Kernel *object.Module
+func (rt *Runtime) InitKernel() {
+	rt.Kernel = object.NewModule("Kernel", object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-var Compile func(fileName string, content string) *bytecode.Bytecode
+	rt.DefineMethod(rt.Kernel, "inspect", rt.kernelInspect())
+	rt.DefineMethod(rt.Kernel, "class", rt.kernelClass())
+	rt.DefineMethod(rt.Kernel, "kind_of?", rt.kernelKindOf())
+	rt.DefineMethod(rt.Kernel, "is_a?", rt.kernelKindOf())
+	rt.DefineMethod(rt.Kernel, "include", rt.kernelInclude())
 
-func InitKernel() {
-	Kernel = object.NewModule("Kernel", object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-
-	DefineMethod(Kernel, "inspect", kernelInspect())
-	DefineMethod(Kernel, "class", kernelClass())
-	DefineMethod(Kernel, "kind_of?", kernelKindOf())
-	DefineMethod(Kernel, "is_a?", kernelKindOf())
-	DefineMethod(Kernel, "include", kernelInclude())
-
-	definePrivateKernelMethod("raise", kernelRaise())
-	definePrivateKernelMethod("require_relative", kernelRequireRelative())
-	definePrivateKernelMethod("sleep", kernelSleep())
-	definePrivateKernelMethod("puts", kernelPuts())
-	definePrivateKernelMethod("print", kernelPrint())
+	rt.definePrivateKernelMethod("raise", rt.kernelRaise())
+	rt.definePrivateKernelMethod("require_relative", rt.kernelRequireRelative())
+	rt.definePrivateKernelMethod("sleep", rt.kernelSleep())
+	rt.definePrivateKernelMethod("puts", rt.kernelPuts())
+	rt.definePrivateKernelMethod("print", rt.kernelPrint())
 }
 
-func definePrivateKernelMethod(name string, method object.BuiltInMethod) {
-	DefineMethod(Kernel, name, method, object.PRIVATE)
-	DefineSingletonMethod(Kernel, name, method)
+func (rt *Runtime) definePrivateKernelMethod(name string, method object.BuiltInMethod) {
+	rt.DefineMethod(rt.Kernel, name, method, object.PRIVATE)
+	rt.DefineSingletonMethod(rt.Kernel, name, method)
 }
 
-func kernelClass() object.BuiltInMethod {
+func (rt *Runtime) kernelClass() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		class := ctx.Self.Class()
 
@@ -50,30 +45,30 @@ func kernelClass() object.BuiltInMethod {
 	}
 }
 
-func kernelKindOf() object.BuiltInMethod {
+func (rt *Runtime) kernelKindOf() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 
 		class := args[0]
 
 		if class.Type() != object.CLASS_VALUE && class.Type() != object.MODULE_VALUE {
-			Raise(NewTypeError("class or module required"))
-			return NULL
+			rt.Raise(rt.NewTypeError("class or module required"))
+			return rt.NULL
 		}
 
 		for _, ancestor := range ctx.Self.Class().Ancestors() {
 			if ancestor == args[0] {
-				return TRUE
+				return rt.TRUE
 			}
 		}
 
-		return FALSE
+		return rt.FALSE
 	}
 }
 
-func kernelSleep() object.BuiltInMethod {
+func (rt *Runtime) kernelSleep() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var sleepArg time.Duration
 
@@ -89,41 +84,41 @@ func kernelSleep() object.BuiltInMethod {
 		end := time.Now()
 		slept := math.Round(end.Sub(start).Seconds())
 
-		return NewInteger(int64(slept))
+		return rt.NewInteger(int64(slept))
 	}
 }
 
-func kernelPuts() object.BuiltInMethod {
+func (rt *Runtime) kernelPuts() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
-			val := Send(arg, "to_s", NULL, map[string]object.EmeraldValue{})
+			val := rt.Send(arg, "to_s", rt.NULL, map[string]object.EmeraldValue{})
 
-			if err := writeToStdout(fmt.Sprintf("%s\n", val.Inspect())); err != nil {
+			if err := rt.writeToStdout(fmt.Sprintf("%s\n", val.Inspect())); err != nil {
 				return err
 			}
 		}
 
-		return NULL
+		return rt.NULL
 	}
 }
 
-func kernelPrint() object.BuiltInMethod {
+func (rt *Runtime) kernelPrint() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for _, arg := range args {
-			val := Send(arg, "to_s", NULL, map[string]object.EmeraldValue{})
+			val := rt.Send(arg, "to_s", rt.NULL, map[string]object.EmeraldValue{})
 
-			if err := writeToStdout(val.Inspect()); err != nil {
+			if err := rt.writeToStdout(val.Inspect()); err != nil {
 				return err
 			}
 		}
 
-		return NULL
+		return rt.NULL
 	}
 }
 
-func kernelInclude() object.BuiltInMethod {
+func (rt *Runtime) kernelInclude() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 255); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 1, 255); err != nil {
 			return err
 		}
 
@@ -134,7 +129,7 @@ func kernelInclude() object.BuiltInMethod {
 
 			mod, ok := arg.(*object.Module)
 			if !ok {
-				Raise(NewTypeError(fmt.Sprintf("wrong argument type %s (expected Module)", arg.Class().Super().(*object.Class).Name)))
+				rt.Raise(rt.NewTypeError(fmt.Sprintf("wrong argument type %s (expected rt.Module)", arg.Class().Super().(*object.Class).Name)))
 			}
 
 			ctx.Self.Include(mod)
@@ -144,32 +139,32 @@ func kernelInclude() object.BuiltInMethod {
 	}
 }
 
-func kernelRaise() object.BuiltInMethod {
+func (rt *Runtime) kernelRaise() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		args, err := EnforceArity(args, kwargs, 1, 2)
+		args, err := rt.EnforceArity(args, kwargs, 1, 2)
 		if err != nil {
 			return err
 		}
 
 		switch len(args) {
 		case 1:
-			Raise(NewRuntimeError(args[0].(*StringInstance).Value))
+			rt.Raise(rt.NewRuntimeError(args[0].(*StringInstance).Value))
 		case 2:
-			exception := Send(args[0], "new", NULL, map[string]object.EmeraldValue{}, args[1])
-			Raise(exception.(object.EmeraldError))
+			exception := rt.Send(args[0], "new", rt.NULL, map[string]object.EmeraldValue{}, args[1])
+			rt.Raise(exception.(object.EmeraldError))
 		}
 
-		return NULL
+		return rt.NULL
 	}
 }
 
-func kernelRequireRelative() object.BuiltInMethod {
+func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
 
-		arg, emErr := EnforceArgumentType[*StringInstance](String, args[0])
+		arg, emErr := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 		if emErr != nil {
 			return emErr
 		}
@@ -186,33 +181,33 @@ func kernelRequireRelative() object.BuiltInMethod {
 			panic(err)
 		}
 
-		absolutePathStr := NewString(absoluteFilePath)
+		absolutePathStr := rt.NewString(absoluteFilePath)
 
-		// File has already been loaded
-		if requiredFilesHash.Get(absolutePathStr) != NULL {
-			debug.InternalDebugF("Kernel#require_relative - File %s is already loaded, skipping", absoluteFilePath)
-			return FALSE
+		// rt.File has already been loaded
+		if rt.RequiredFilesHash.(*HashInstance).Get(absolutePathStr) != rt.NULL {
+			debug.InternalDebugF("rt.Kernel#require_relative - rt.File %s is already loaded, skipping", absoluteFilePath)
+			return rt.FALSE
 		}
 
 		sourceContent, err := os.ReadFile(absoluteFilePath + ".rb")
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
-				Raise(NewLoadError(fmt.Sprintf("cannot load such file -- %s", absoluteFilePath)))
-				return NULL
+				rt.Raise(rt.NewLoadError(fmt.Sprintf("cannot load such file -- %s", absoluteFilePath)))
+				return rt.NULL
 			}
 
 			panic(err)
 		}
 
-		bytecode := Compile(absoluteFilePath, string(sourceContent))
+		bytecode := rt.Compile(absoluteFilePath, string(sourceContent))
 
-		debug.InternalDebugF("Kernel#require_relative - Successfully compiled file %s", absoluteFilePath)
+		debug.InternalDebugF("rt.Kernel#require_relative - Successfully compiled file %s", absoluteFilePath)
 
 		requiredBlock := object.NewClosedBlock(&object.Context{
 			Outer: nil,
 			File:  absoluteFilePath,
-			Self:  MainObject,
-			Block: NULL,
+			Self:  rt.MainObject,
+			Block: rt.NULL,
 			Yield: ctx.Yield,
 			BlockGiven: func() bool {
 				return false
@@ -221,31 +216,29 @@ func kernelRequireRelative() object.BuiltInMethod {
 
 		object.EvalBlock(requiredBlock, map[string]object.EmeraldValue{})
 
-		requiredFilesHash.Set(absolutePathStr, TRUE)
+		rt.RequiredFilesHash.(*HashInstance).Set(absolutePathStr, rt.TRUE)
 
-		return TRUE
+		return rt.TRUE
 	}
 }
 
-func kernelInspect() object.BuiltInMethod {
+func (rt *Runtime) kernelInspect() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(ctx.Self.Inspect())
+		return rt.NewString(ctx.Self.Inspect())
 	}
 }
 
-var requiredFilesHash = NewHash()
-
-func writeToStdout(str string) object.EmeraldError {
+func (rt *Runtime) writeToStdout(str string) object.EmeraldError {
 	_, err := os.Stdout.WriteString(str)
 	if err != nil {
-		return raiseStdoutWriteFailed()
+		return rt.raiseStdoutWriteFailed()
 	}
 
 	return nil
 }
 
-func raiseStdoutWriteFailed() object.EmeraldError {
-	err := NewException("Failed to write to STDOUT")
-	Raise(err)
+func (rt *Runtime) raiseStdoutWriteFailed() object.EmeraldError {
+	err := rt.NewException("Failed to write to STDOUT")
+	rt.Raise(err)
 	return err
 }

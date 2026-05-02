@@ -4,8 +4,6 @@ import (
 	"emerald/object"
 )
 
-var BasicObject *object.Class
-
-func InitBasicObject() {
-	BasicObject = object.NewClass("BasicObject", nil, nil, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+func (rt *Runtime) InitBasicObject() {
+	rt.BasicObject = object.NewClass("BasicObject", nil, nil, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 }

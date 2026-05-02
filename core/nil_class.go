@@ -4,34 +4,30 @@ import (
 	"emerald/object"
 )
 
-var NilClass *object.Class
+func (rt *Runtime) InitNilClass() {
+	rt.NilClass = rt.DefineClass("NilClass", rt.Object)
 
-var NULL *object.Instance
+	rt.NULL = rt.NilClass.New()
 
-func InitNilClass() {
-	NilClass = DefineClass("NilClass", Object)
-
-	NULL = NilClass.New()
-
-	DefineSingletonMethod(NULL, "to_s", nilToS())
-	DefineSingletonMethod(NULL, "inspect", nilInspect())
-	DefineSingletonMethod(NULL, "!@", nilBooleanNegate())
+	rt.DefineSingletonMethod(rt.NULL, "to_s", rt.nilToS())
+	rt.DefineSingletonMethod(rt.NULL, "inspect", rt.nilInspect())
+	rt.DefineSingletonMethod(rt.NULL, "!@", rt.nilBooleanNegate())
 }
 
-func nilToS() object.BuiltInMethod {
+func (rt *Runtime) nilToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString("")
+		return rt.NewString("")
 	}
 }
 
-func nilInspect() object.BuiltInMethod {
+func (rt *Runtime) nilInspect() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString("nil")
+		return rt.NewString("nil")
 	}
 }
 
-func nilBooleanNegate() object.BuiltInMethod {
+func (rt *Runtime) nilBooleanNegate() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return TRUE
+		return rt.TRUE
 	}
 }

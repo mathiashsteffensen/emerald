@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-var TCPSocket *object.Class
-
 type tcpSocketTimeout struct {
 	time.Duration
 	IsValid bool
@@ -37,49 +35,49 @@ type TCPSocketInstance struct {
 	timeout *tcpSocketTimeout
 }
 
-func InitTCPSocket() {
-	TCPSocket = DefineClass("TCPSocket", Object)
+func (rt *Runtime) InitTCPSocket() {
+	rt.TCPSocket = rt.DefineClass("TCPSocket", rt.Object)
 
-	DefineMethod(TCPSocket, "gets", tcpSocketGets())
-	DefineMethod(TCPSocket, "write", tcpSocketWrite())
-	DefineMethod(TCPSocket, "close", tcpSocketClose())
-	DefineMethod(TCPSocket, "timeout", tcpSocketTimeoutGet())
-	DefineMethod(TCPSocket, "timeout=", tcpSocketTimeoutSet())
+	rt.DefineMethod(rt.TCPSocket, "gets", rt.tcpSocketGets())
+	rt.DefineMethod(rt.TCPSocket, "write", rt.tcpSocketWrite())
+	rt.DefineMethod(rt.TCPSocket, "close", rt.tcpSocketClose())
+	rt.DefineMethod(rt.TCPSocket, "timeout", rt.tcpSocketTimeoutGet())
+	rt.DefineMethod(rt.TCPSocket, "timeout=", rt.tcpSocketTimeoutSet())
 }
 
-func NewTCPSocket(conn net.Conn) *TCPSocketInstance {
+func (rt *Runtime) NewTCPSocket(conn net.Conn) *TCPSocketInstance {
 	return &TCPSocketInstance{
-		Instance: TCPSocket.New(),
+		Instance: rt.TCPSocket.New(),
 		Conn:     conn,
 		tp:       textproto.NewReader(bufio.NewReader(conn)),
 		timeout:  &tcpSocketTimeout{},
 	}
 }
 
-func tcpSocketTimeoutGet() object.BuiltInMethod {
+func (rt *Runtime) tcpSocketTimeoutGet() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		socket := ctx.Self.(*TCPSocketInstance)
 
 		if !socket.timeout.IsValid {
-			return NULL
+			return rt.NULL
 		}
 
-		return NewInteger(int64(socket.timeout.Get() / time.Millisecond))
+		return rt.NewInteger(int64(socket.timeout.Get() / time.Millisecond))
 	}
 }
 
-func tcpSocketTimeoutSet() object.BuiltInMethod {
+func (rt *Runtime) tcpSocketTimeoutSet() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		EnforceArity(args, kwargs, 1, 1)
+		rt.EnforceArity(args, kwargs, 1, 1)
 
 		socket := ctx.Self.(*TCPSocketInstance)
 
-		if args[0] == NULL {
+		if args[0] == rt.NULL {
 			socket.timeout.Reset()
-			return NULL
+			return rt.NULL
 		}
 
-		newValue, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])
+		newValue, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[0])
 		if err != nil {
 			return err
 		}
@@ -90,31 +88,31 @@ func tcpSocketTimeoutSet() object.BuiltInMethod {
 	}
 }
 
-func tcpSocketGets() object.BuiltInMethod {
+func (rt *Runtime) tcpSocketGets() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		socket := ctx.Self.(*TCPSocketInstance)
 
 		line, err := socket.tp.ReadLine()
 		if err != nil {
 			debug.DebugF("Error reading from socket: %s", err)
-			return NULL
+			return rt.NULL
 		}
 
 		if line == "" {
-			return NULL
+			return rt.NULL
 		}
 
-		return NewString(line)
+		return rt.NewString(line)
 	}
 }
 
-func tcpSocketWrite() object.BuiltInMethod {
+func (rt *Runtime) tcpSocketWrite() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		EnforceArity(args, kwargs, 1, 1)
+		rt.EnforceArity(args, kwargs, 1, 1)
 
 		socket := ctx.Self.(*TCPSocketInstance)
 
-		content, emeraldErr := EnforceArgumentType[*StringInstance](String, args[0])
+		content, emeraldErr := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 		if emeraldErr != nil {
 			return emeraldErr
 		}
@@ -123,22 +121,22 @@ func tcpSocketWrite() object.BuiltInMethod {
 
 		bytesWritten, err := socket.Conn.Write([]byte(content.Value))
 		if err != nil {
-			return RaiseGoError(err)
+			return rt.RaiseGoError(err)
 		}
 
-		return NewInteger(int64(bytesWritten))
+		return rt.NewInteger(int64(bytesWritten))
 	}
 }
 
-func tcpSocketClose() object.BuiltInMethod {
+func (rt *Runtime) tcpSocketClose() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		socket := ctx.Self.(*TCPSocketInstance)
 
 		err := socket.Conn.Close()
 		if err != nil {
-			return RaiseGoError(err)
+			return rt.RaiseGoError(err)
 		}
 
-		return NULL
+		return rt.NULL
 	}
 }

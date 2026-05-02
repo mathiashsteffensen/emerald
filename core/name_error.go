@@ -5,12 +5,10 @@ import (
 	"fmt"
 )
 
-var NameError *object.Class
+func (rt *Runtime) InitNameError() {
+	rt.NameError = rt.DefineClass("NameError", rt.StandardError)
 
-func InitNameError() {
-	NameError = DefineClass("NameError", StandardError)
-
-	DefineSingletonMethod(NameError, "new", exceptionNew(NewNameError))
+	rt.DefineSingletonMethod(rt.NameError, "new", rt.exceptionNew(rt.NewNameError))
 }
 
 type NameErrorInstance struct {
@@ -27,9 +25,9 @@ func (err *NameErrorInstance) Message() string {
 }
 
 func (err *NameErrorInstance) ClassName() string {
-	return NameError.Name
+	return "NameError"
 }
 
-func NewNameError(msg string) object.EmeraldError {
-	return &NameErrorInstance{NameError.New(), msg}
+func (rt *Runtime) NewNameError(msg string) object.EmeraldError {
+	return &NameErrorInstance{rt.NameError.New(), msg}
 }

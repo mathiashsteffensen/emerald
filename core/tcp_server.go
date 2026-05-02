@@ -8,48 +8,46 @@ import (
 	"net/http"
 )
 
-var TCPServer *object.Class
-
 type TCPServerInstance struct {
 	*object.Instance
 	Address  string
 	Listener net.Listener
 }
 
-func InitTCPServer() {
-	TCPServer = DefineClass("TCPServer", Object)
+func (rt *Runtime) InitTCPServer() {
+	rt.TCPServer = rt.DefineClass("TCPServer", rt.Object)
 
-	DefineSingletonMethod(TCPServer, "new", tcpServerNew())
+	rt.DefineSingletonMethod(rt.TCPServer, "new", rt.tcpServerNew())
 
-	DefineMethod(TCPServer, "accept", tcpServerAccept())
-	DefineMethod(TCPServer, "super_serve", tcpServerSuperServe())
+	rt.DefineMethod(rt.TCPServer, "accept", rt.tcpServerAccept())
+	rt.DefineMethod(rt.TCPServer, "super_serve", rt.tcpServerSuperServe())
 }
 
-func NewTCPServer() *TCPServerInstance {
+func (rt *Runtime) NewTCPServer() *TCPServerInstance {
 	return &TCPServerInstance{
-		Instance: TCPServer.New(),
+		Instance: rt.TCPServer.New(),
 		Address:  "",
 		Listener: nil,
 	}
 }
 
-func tcpServerNew() object.BuiltInMethod {
+func (rt *Runtime) tcpServerNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 2, 2); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 2, 2); err != nil {
 			return err
 		}
 
-		host, err := EnforceArgumentType[*StringInstance](String, args[0])
+		host, err := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 		if err != nil {
 			return err
 		}
 
-		port, err := EnforceArgumentType[*IntegerInstance](Integer, args[1])
+		port, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[1])
 		if err != nil {
 			return err
 		}
 
-		server := NewTCPServer()
+		server := rt.NewTCPServer()
 
 		server.Address = fmt.Sprintf("%s:%d", host.Value, port.Value)
 
@@ -57,11 +55,11 @@ func tcpServerNew() object.BuiltInMethod {
 	}
 }
 
-func ensureListenerSet(server *TCPServerInstance) object.EmeraldError {
+func (rt *Runtime) ensureListenerSet(server *TCPServerInstance) object.EmeraldError {
 	if server.Listener == nil {
 		listener, err := net.Listen("tcp", server.Address)
 		if err != nil {
-			return RaiseGoError(err)
+			return rt.RaiseGoError(err)
 		}
 
 		server.Listener = listener
@@ -70,24 +68,25 @@ func ensureListenerSet(server *TCPServerInstance) object.EmeraldError {
 	return nil
 }
 
-func tcpServerAccept() object.BuiltInMethod {
+func (rt *Runtime) tcpServerAccept() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		server := ctx.Self.(*TCPServerInstance)
 
-		if err := ensureListenerSet(server); err != nil {
+		if err := rt.ensureListenerSet(server); err != nil {
 			return err
 		}
 
 		conn, err := server.Listener.Accept()
 		if err != nil {
-			return RaiseGoError(err)
+			return rt.RaiseGoError(err)
 		}
 
-		return NewTCPSocket(conn)
+		return rt.NewTCPSocket(conn)
 	}
 }
 
 type superServer struct {
+	rt  *Runtime
 	ctx *object.Context
 }
 
@@ -97,38 +96,38 @@ type contextKey struct {
 
 var ConnContextKey = &contextKey{"http-conn"}
 
-func SaveConnInContext(ctx context.Context, c net.Conn) context.Context {
+func (rt *Runtime) SaveConnInContext(ctx context.Context, c net.Conn) context.Context {
 	return context.WithValue(ctx, ConnContextKey, c)
 }
-func GetConn(r *http.Request) net.Conn {
+func (rt *Runtime) GetConn(r *http.Request) net.Conn {
 	return r.Context().Value(ConnContextKey).(net.Conn)
 }
 
 func (s *superServer) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
-	s.ctx.Yield(map[string]object.EmeraldValue{}, NewTCPSocket(GetConn(req)))
+	s.ctx.Yield(map[string]object.EmeraldValue{}, s.rt.NewTCPSocket(s.rt.GetConn(req)))
 }
 
-func tcpServerSuperServe() object.BuiltInMethod {
+func (rt *Runtime) tcpServerSuperServe() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if !ctx.BlockGiven() {
-			return Raise(newArgumentError("You must pass a block to TCPServer#super_serve"))
+			return rt.Raise(rt.newArgumentError("You must pass a block to rt.TCPServer#super_serve"))
 		}
 
 		emeraldServer := ctx.Self.(*TCPServerInstance)
-		if err := ensureListenerSet(emeraldServer); err != nil {
+		if err := rt.ensureListenerSet(emeraldServer); err != nil {
 			return err
 		}
 
 		goServer := &http.Server{
 			Handler:     &superServer{ctx: ctx},
-			ConnContext: SaveConnInContext,
+			ConnContext: rt.SaveConnInContext,
 		}
 
 		err := goServer.Serve(emeraldServer.Listener)
 		if err != nil {
-			return RaiseGoError(err)
+			return rt.RaiseGoError(err)
 		}
 
-		return NULL
+		return rt.NULL
 	}
 }

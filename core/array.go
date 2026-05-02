@@ -5,8 +5,6 @@ import (
 	"strings"
 )
 
-var Array *object.Class
-
 type ArrayInstance struct {
 	*object.Instance
 	Value []object.EmeraldValue
@@ -16,35 +14,35 @@ func (a *ArrayInstance) Remove(index int) {
 	a.Value = append(a.Value[:index], a.Value[index+1:]...)
 }
 
-func InitArray() {
-	Array = DefineClass("Array", Object)
+func (rt *Runtime) InitArray() {
+	rt.Array = rt.DefineClass("Array", rt.Object)
 
-	Array.Include(Enumerable)
+	rt.Array.Include(rt.Enumerable)
 
-	DefineMethod(Array, "[]", arrayIndexAccessor())
-	DefineMethod(Array, "==", arrayEquals())
-	DefineMethod(Array, "<<", arrayPush())
-	DefineMethod(Array, "push", arrayPush())
-	DefineMethod(Array, "pop", arrayPop())
-	DefineMethod(Array, "each", arrayEach())
-	DefineMethod(Array, "compact!", arrayCompactBang())
-	DefineMethod(Array, "to_s", arrayToS())
-	DefineMethod(Array, "inspect", arrayToS())
+	rt.DefineMethod(rt.Array, "[]", rt.arrayIndexAccessor())
+	rt.DefineMethod(rt.Array, "==", rt.arrayEquals())
+	rt.DefineMethod(rt.Array, "<<", rt.arrayPush())
+	rt.DefineMethod(rt.Array, "push", rt.arrayPush())
+	rt.DefineMethod(rt.Array, "pop", rt.arrayPop())
+	rt.DefineMethod(rt.Array, "each", rt.arrayEach())
+	rt.DefineMethod(rt.Array, "compact!", rt.arrayCompactBang())
+	rt.DefineMethod(rt.Array, "to_s", rt.arrayToS())
+	rt.DefineMethod(rt.Array, "inspect", rt.arrayToS())
 }
 
-func NewArray(val []object.EmeraldValue) *ArrayInstance {
+func (rt *Runtime) NewArray(val []object.EmeraldValue) *ArrayInstance {
 	return &ArrayInstance{
-		Instance: Array.New(),
+		Instance: rt.Array.New(),
 		Value:    val,
 	}
 }
 
-func arrayIndexAccessor() object.BuiltInMethod {
+func (rt *Runtime) arrayIndexAccessor() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		if _, err := EnforceArity(args, kwargs, 1, 1); err != nil {
+		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
 			return err
 		}
-		intArg, err := EnforceArgumentType[*IntegerInstance](Integer, args[0])
+		intArg, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[0])
 
 		if err != nil {
 			return err
@@ -55,14 +53,14 @@ func arrayIndexAccessor() object.BuiltInMethod {
 		index := intArg.Value
 
 		if index >= int64(len(arr)) {
-			return NULL
+			return rt.NULL
 		}
 
 		return arr[index]
 	}
 }
 
-func arrayPush() object.BuiltInMethod {
+func (rt *Runtime) arrayPush() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := ctx.Self.(*ArrayInstance)
 
@@ -72,12 +70,12 @@ func arrayPush() object.BuiltInMethod {
 	}
 }
 
-func arrayPop() object.BuiltInMethod {
+func (rt *Runtime) arrayPop() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := ctx.Self.(*ArrayInstance)
 
 		if len(arr.Value) == 0 {
-			return NULL
+			return rt.NULL
 		}
 
 		index := len(arr.Value) - 1
@@ -89,7 +87,7 @@ func arrayPop() object.BuiltInMethod {
 	}
 }
 
-func arrayEach() object.BuiltInMethod {
+func (rt *Runtime) arrayEach() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := ctx.Self.(*ArrayInstance)
 
@@ -101,13 +99,13 @@ func arrayEach() object.BuiltInMethod {
 	}
 }
 
-func arrayCompactBang() object.BuiltInMethod {
+func (rt *Runtime) arrayCompactBang() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := ctx.Self.(*ArrayInstance)
 
 		i := 0 // output index
 		for _, x := range arr.Value {
-			if x != NULL {
+			if x != rt.NULL {
 				// copy and increment index
 				arr.Value[i] = x
 				i++
@@ -123,29 +121,29 @@ func arrayCompactBang() object.BuiltInMethod {
 	}
 }
 
-func arrayEquals() object.BuiltInMethod {
+func (rt *Runtime) arrayEquals() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		arr := ctx.Self.(*ArrayInstance)
 		otherArr, ok := args[0].(*ArrayInstance)
 		if !ok {
-			return FALSE
+			return rt.FALSE
 		}
 
 		if len(arr.Value) != len(otherArr.Value) {
-			return FALSE
+			return rt.FALSE
 		}
 
 		for i, value := range arr.Value {
-			if !IsTruthy(Send(value, "==", NULL, map[string]object.EmeraldValue{}, otherArr.Value[i])) {
-				return FALSE
+			if !rt.IsTruthy(rt.Send(value, "==", rt.NULL, map[string]object.EmeraldValue{}, otherArr.Value[i])) {
+				return rt.FALSE
 			}
 		}
 
-		return TRUE
+		return rt.TRUE
 	}
 }
 
-func arrayToS() object.BuiltInMethod {
+func (rt *Runtime) arrayToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var out strings.Builder
 
@@ -153,7 +151,7 @@ func arrayToS() object.BuiltInMethod {
 
 		values := ctx.Self.(*ArrayInstance).Value
 		for i, value := range values {
-			out.WriteString(Send(value, "inspect", NULL, map[string]object.EmeraldValue{}).Inspect())
+			out.WriteString(rt.Send(value, "inspect", rt.NULL, map[string]object.EmeraldValue{}).Inspect())
 
 			if i != len(values)-1 {
 				out.WriteString(", ")
@@ -162,6 +160,6 @@ func arrayToS() object.BuiltInMethod {
 
 		out.WriteString("]")
 
-		return NewString(out.String())
+		return rt.NewString(out.String())
 	}
 }

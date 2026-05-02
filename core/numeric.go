@@ -1,9 +1,5 @@
 package core
 
-import "emerald/object"
-
-var Numeric *object.Class
-
-func InitNumeric() {
-	Numeric = DefineClass("Numeric", Object)
+func (rt *Runtime) InitNumeric() {
+	rt.Numeric = rt.DefineClass("Numeric", rt.Object)
 }

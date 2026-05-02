@@ -1,13 +1,11 @@
 package core
 
 import (
-	"emerald/heap"
 	"emerald/object"
 	"fmt"
+
 	"github.com/dlclark/regexp2"
 )
-
-var Regexp *object.Class
 
 type RegexpInstance struct {
 	*object.Instance
@@ -15,60 +13,60 @@ type RegexpInstance struct {
 	Expression *regexp2.Regexp
 }
 
-func NewRegexp(pattern string) *RegexpInstance {
+func (rt *Runtime) NewRegexp(pattern string) *RegexpInstance {
 	return &RegexpInstance{
-		Instance:   Regexp.New(),
+		Instance:   rt.Regexp.New(),
 		Source:     pattern,
 		Expression: regexp2.MustCompile(pattern, 0),
 	}
 }
 
-func InitRegexp() {
-	Regexp = DefineClass("Regexp", Object)
+func (rt *Runtime) InitRegexp() {
+	rt.Regexp = rt.DefineClass("Regexp", rt.Object)
 
-	DefineSingletonMethod(Regexp, "new", regexpNew())
-	DefineSingletonMethod(Regexp, "last_match", regexpLastMatch())
+	rt.DefineSingletonMethod(rt.Regexp, "new", rt.regexpNew())
+	rt.DefineSingletonMethod(rt.Regexp, "last_match", rt.regexpLastMatch())
 
-	DefineMethod(Regexp, "inspect", regexpInspect())
-	DefineMethod(Regexp, "match", regexpMatch())
-	DefineMethod(Regexp, "=~", regexpMatch())
+	rt.DefineMethod(rt.Regexp, "inspect", rt.regexpInspect())
+	rt.DefineMethod(rt.Regexp, "match", rt.regexpMatch())
+	rt.DefineMethod(rt.Regexp, "=~", rt.regexpMatch())
 }
 
-func regexpNew() object.BuiltInMethod {
+func (rt *Runtime) regexpNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewRegexp(args[0].(*StringInstance).Value)
+		return rt.NewRegexp(args[0].(*StringInstance).Value)
 	}
 }
 
-func regexpLastMatch() object.BuiltInMethod {
+func (rt *Runtime) regexpLastMatch() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		lastMatch := heap.GetGlobalVariableString("$~")
+		lastMatch := rt.Heap.GetGlobalVariableString("$~")
 		if lastMatch == nil {
-			return NULL
+			return rt.NULL
 		}
 		return lastMatch
 	}
 }
 
-func regexpInspect() object.BuiltInMethod {
+func (rt *Runtime) regexpInspect() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString(fmt.Sprintf("/%s/", ctx.Self.(*RegexpInstance).Source))
+		return rt.NewString(fmt.Sprintf("/%s/", ctx.Self.(*RegexpInstance).Source))
 	}
 }
 
-func regexpMatch() object.BuiltInMethod {
+func (rt *Runtime) regexpMatch() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return regexStringMatch(ctx.Self.(*RegexpInstance), args[0].(*StringInstance))
+		return rt.regexStringMatch(ctx.Self.(*RegexpInstance), args[0].(*StringInstance))
 	}
 }
 
-func regexStringMatch(regex *RegexpInstance, str *StringInstance) object.EmeraldValue {
+func (rt *Runtime) regexStringMatch(regex *RegexpInstance, str *StringInstance) object.EmeraldValue {
 	if m, err := regex.Expression.FindStringMatch(str.Value); err != nil {
 		panic(err)
 	} else if m == nil {
-		return NULL
+		return rt.NULL
 	} else {
-		result := NewMatchData(regex, m)
+		result := rt.NewMatchData(regex, m)
 
 		return result
 	}

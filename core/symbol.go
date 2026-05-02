@@ -2,12 +2,10 @@ package core
 
 import "emerald/object"
 
-var Symbol *object.Class
+func (rt *Runtime) InitSymbol() {
+	rt.Symbol = rt.DefineClass("Symbol", rt.Object)
 
-func InitSymbol() {
-	Symbol = DefineClass("Symbol", Object)
-
-	DefineMethod(Symbol, "to_s", symbolToS())
+	rt.DefineMethod(rt.Symbol, "to_s", rt.symbolToS())
 }
 
 type SymbolInstance struct {
@@ -17,39 +15,37 @@ type SymbolInstance struct {
 
 func (s *SymbolInstance) Inspect() string { return ":" + s.Value }
 
-func NewSymbol(val string) object.EmeraldValue {
-	return GlobalSymbolInternPool.ResolveOrDefine(val)
+func (rt *Runtime) NewSymbol(val string) object.EmeraldValue {
+	return rt.GlobalSymbolInternPool.ResolveOrDefine(rt, val)
 }
 
 type SymbolInternStore map[string]object.EmeraldValue
-
-var GlobalSymbolInternPool = SymbolInternStore{}
 
 func (s SymbolInternStore) Resolve(val string) (object.EmeraldValue, bool) {
 	sym, ok := s[val]
 	return sym, ok
 }
 
-func (s SymbolInternStore) Define(val string) object.EmeraldValue {
-	sym := &SymbolInstance{Value: val, Instance: Symbol.New()}
+func (s SymbolInternStore) Define(rt *Runtime, val string) object.EmeraldValue {
+	sym := &SymbolInstance{Value: val, Instance: rt.Symbol.New()}
 
 	s[val] = sym
 
 	return sym
 }
 
-func (s SymbolInternStore) ResolveOrDefine(val string) object.EmeraldValue {
+func (s SymbolInternStore) ResolveOrDefine(rt *Runtime, val string) object.EmeraldValue {
 	if sym, ok := s.Resolve(val); ok {
 		return sym
 	} else {
-		return s.Define(val)
+		return s.Define(rt, val)
 	}
 }
 
-func symbolToS() object.BuiltInMethod {
+func (rt *Runtime) symbolToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		val := ctx.Self.Inspect()
 
-		return NewString(val[1:])
+		return rt.NewString(val[1:])
 	}
 }

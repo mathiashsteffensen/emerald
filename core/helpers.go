@@ -1,14 +1,12 @@
 package core
 
 import (
-	"emerald/heap"
 	"emerald/object"
 )
 
-// Send is a function for calling methods that is dependency injected by the emerald/vm package
-var Send func(self object.EmeraldValue, name string, block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue
+// rt.Send is a function for calling methods that is dependency injected by the emerald/vm package
 
-func DefineClass(name string, super *object.Class) *object.Class {
+func (rt *Runtime) DefineClass(name string, super *object.Class) *object.Class {
 	var superClass object.EmeraldValue
 
 	if super != nil {
@@ -17,13 +15,13 @@ func DefineClass(name string, super *object.Class) *object.Class {
 
 	class := object.NewClass(name, super, superClass, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-	Object.NamespaceDefinitionSet(name, class)
-	class.SetParentNamespace(Object)
+	rt.Object.NamespaceDefinitionSet(name, class)
+	class.SetParentNamespace(rt.Object)
 
 	return class
 }
 
-func DefineNestedClass(namespace object.EmeraldValue, name string, super *object.Class) *object.Class {
+func (rt *Runtime) DefineNestedClass(namespace object.EmeraldValue, name string, super *object.Class) *object.Class {
 	var superClass object.EmeraldValue
 
 	if super != nil {
@@ -38,33 +36,33 @@ func DefineNestedClass(namespace object.EmeraldValue, name string, super *object
 	return class
 }
 
-func DefineModule(name string) *object.Module {
+func (rt *Runtime) DefineModule(name string) *object.Module {
 	module := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-	Object.NamespaceDefinitionSet(name, module)
-	module.SetParentNamespace(Object)
+	rt.Object.NamespaceDefinitionSet(name, module)
+	module.SetParentNamespace(rt.Object)
 
 	return module
 }
 
-func DefineNestedModule(namespace object.EmeraldValue, name string) *object.Module {
+func (rt *Runtime) DefineNestedModule(namespace object.EmeraldValue, name string) *object.Module {
 	module := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
-	Object.NamespaceDefinitionSet(name, module)
+	rt.Object.NamespaceDefinitionSet(name, module)
 	module.SetParentNamespace(namespace)
 
 	return module
 }
 
-func DefineMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
-	receiver.BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: getVisibility(visibilities)}
+func (rt *Runtime) DefineMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
+	receiver.BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: rt.getVisibility(visibilities)}
 }
 
-func DefineSingletonMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
-	receiver.Class().BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: getVisibility(visibilities)}
+func (rt *Runtime) DefineSingletonMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
+	receiver.Class().BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: rt.getVisibility(visibilities)}
 }
 
-func getVisibility(visibilities []object.MethodVisibility) object.MethodVisibility {
+func (rt *Runtime) getVisibility(visibilities []object.MethodVisibility) object.MethodVisibility {
 	var visibility object.MethodVisibility
 	if len(visibilities) != 0 {
 		visibility = visibilities[0]
@@ -75,7 +73,7 @@ func getVisibility(visibilities []object.MethodVisibility) object.MethodVisibili
 	return visibility
 }
 
-func EnforceArity(
+func (rt *Runtime) EnforceArity(
 	args []object.EmeraldValue,
 	kwargs map[string]object.EmeraldValue,
 	minArgs int,
@@ -93,15 +91,15 @@ func EnforceArity(
 	numArgsGiven := len(argsWithoutNilPointers)
 
 	if numArgsGiven < minArgs || numArgsGiven > maxArgs {
-		err = NewArgumentError(numArgsGiven, maxArgs)
-		Raise(err)
+		err = rt.NewArgumentError(numArgsGiven, maxArgs)
+		rt.Raise(err)
 		return argsWithoutNilPointers, err
 	}
 
 	for _, kwarg := range requiredKwargs {
 		if _, ok := kwargs[":"+kwarg]; !ok {
-			err = NewKeywordMissingArgumentError(kwarg)
-			Raise(err)
+			err = rt.NewKeywordMissingArgumentError(kwarg)
+			rt.Raise(err)
 			return argsWithoutNilPointers, err
 		}
 	}
@@ -109,11 +107,11 @@ func EnforceArity(
 	return argsWithoutNilPointers, nil
 }
 
-func EnforceArgumentType[T object.EmeraldValue](typ *object.Class, arg object.EmeraldValue) (T, object.EmeraldError) {
+func EnforceArgumentType[T object.EmeraldValue](rt *Runtime, typ *object.Class, arg object.EmeraldValue) (T, object.EmeraldError) {
 	argClass := arg.Class().Super().(*object.Class)
 	if argClass.Name != typ.Name {
-		err := NewNoConversionTypeError(typ.Name, argClass.Name)
-		Raise(err)
+		err := rt.NewNoConversionTypeError(typ.Name, argClass.Name)
+		rt.Raise(err)
 		var empty T
 		return empty, err
 	}
@@ -121,19 +119,19 @@ func EnforceArgumentType[T object.EmeraldValue](typ *object.Class, arg object.Em
 	return arg.(T), nil
 }
 
-func Raise(err object.EmeraldError) object.EmeraldError {
-	heap.SetGlobalVariableString("$!", err)
+func (rt *Runtime) Raise(err object.EmeraldError) object.EmeraldError {
+	rt.Heap.SetGlobalVariableString("$!", err)
 	return err
 }
 
-func RaiseGoError(err error) object.EmeraldError {
-	emeraldErr := NewStandardError(err.Error())
-	return Raise(emeraldErr)
+func (rt *Runtime) RaiseGoError(err error) object.EmeraldError {
+	emeraldErr := rt.NewStandardError(err.Error())
+	return rt.Raise(emeraldErr)
 }
 
-func NativeBoolToBooleanObject(input bool) object.EmeraldValue {
+func (rt *Runtime) NativeBoolToBooleanObject(input bool) object.EmeraldValue {
 	if input {
-		return TRUE
+		return rt.TRUE
 	}
-	return FALSE
+	return rt.FALSE
 }

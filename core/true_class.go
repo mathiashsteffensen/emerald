@@ -2,28 +2,24 @@ package core
 
 import "emerald/object"
 
-var TrueClass *object.Class
+func (rt *Runtime) InitTrueClass() {
+	rt.TrueClass = rt.DefineClass("TrueClass", rt.Object)
 
-var TRUE object.EmeraldValue
+	rt.DefineMethod(rt.TrueClass, "to_s", rt.trueToS())
+	rt.DefineMethod(rt.TrueClass, "inspect", rt.trueToS())
 
-func InitTrueClass() {
-	TrueClass = DefineClass("TrueClass", Object)
-
-	DefineMethod(TrueClass, "to_s", trueToS())
-	DefineMethod(TrueClass, "inspect", trueToS())
-
-	TRUE = TrueClass.New()
+	rt.TRUE = rt.TrueClass.New()
 }
 
-func trueToS() object.BuiltInMethod {
+func (rt *Runtime) trueToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return NewString("true")
+		return rt.NewString("true")
 	}
 }
 
-func IsTruthy(obj object.EmeraldValue) bool {
+func (rt *Runtime) IsTruthy(obj object.EmeraldValue) bool {
 	switch obj {
-	case FALSE, NULL:
+	case rt.FALSE, rt.NULL:
 		return false
 	default:
 		return true

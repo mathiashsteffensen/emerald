@@ -5,7 +5,7 @@ import "testing"
 func TestDir_pwd(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			input:    `!!(Dir.pwd =~ /emerald\/core$/)`,
+			input:    `!!(rt.Dir.pwd =~ /emerald\/core$/)`,
 			expected: true,
 		},
 	}
@@ -16,11 +16,11 @@ func TestDir_pwd(t *testing.T) {
 func TestDir_glob(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			input:    `Dir.glob("fixtures/*.rb")`,
+			input:    `rt.Dir.glob("fixtures/*.rb")`,
 			expected: []any{"fixtures/namespaced_class.rb", "fixtures/require_test.rb", "fixtures/require_test_2.rb"},
 		},
 		{
-			input: `Dir.glob("fixtures/*.{rb,em}")`,
+			input: `rt.Dir.glob("fixtures/*.{rb,em}")`,
 			expected: []any{
 				"fixtures/glob_test.em", "fixtures/namespaced_class.rb", "fixtures/require_test.rb", "fixtures/require_test_2.rb",
 			},

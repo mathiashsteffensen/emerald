@@ -5,24 +5,24 @@ import "testing"
 func TestClass_ancestors(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			name:  "singleton Class ancestors",
-			input: "Class.ancestors",
+			name:  "singleton rt.Class ancestors",
+			input: "rt.Class.ancestors",
 			expected: []any{
-				"class:Class",
-				"class:Module",
-				"class:Object",
-				"module:Kernel",
-				"class:BasicObject",
+				"class:rt.Class",
+				"class:rt.Module",
+				"class:rt.Object",
+				"module:rt.Kernel",
+				"class:rt.BasicObject",
 			},
 		},
 		{
-			name:  "Class instance ancestors",
-			input: "Class.new.ancestors",
+			name:  "rt.Class instance ancestors",
+			input: "rt.Class.new.ancestors",
 			expected: []any{
-				"instance:Class",
-				"class:Object",
-				"module:Kernel",
-				"class:BasicObject",
+				"instance:rt.Class",
+				"class:rt.Object",
+				"module:rt.Kernel",
+				"class:rt.BasicObject",
 			},
 		},
 	}
@@ -34,7 +34,7 @@ func TestClass_name(t *testing.T) {
 	tests := []coreTestCase{
 		{
 			name:     "Class",
-			input:    "Class.name",
+			input:    "rt.Class.name",
 			expected: "Class",
 		},
 		{
