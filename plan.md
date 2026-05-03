@@ -25,6 +25,13 @@
   ```
 [X] - It will wrap the boilerplate of setting up the Lexer -> Parser -> Compiler -> VM pipeline.
 
-## Step 5: Fix Commands and Tests
-- Refactor `cmd/emerald/main.go` and `cmd/iem/main.go` to use `emerald.Engine`.
-- Refactor all tests across `parser`, `compiler`, `vm`, and `core` to instantiate a `Runtime` or `Engine` instead of relying on the removed global state.
+## Step 5: Refactor usage of `object.Modules` and `object.Classes`
+[ ] - Remove `object.Modules` and `object.Classes` from `object`, and rely instead on storing and defining modules and classes in the `Runtime`.
+
+## Step 6: Final scan
+[ ] - Do a final scan of the codebase to ensure there are no remaining references to any global state.
+
+
+## Step 7: Fix Commands and Tests
+[ ] - Refactor `cmd/emerald/main.go` and `cmd/iem/main.go` to use `emerald.Engine`.
+[ ] - Refactor all tests across `parser`, `compiler`, `vm`, and `core` to instantiate a `Runtime` or `Engine` instead of relying on the removed global state.
