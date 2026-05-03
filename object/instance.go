@@ -39,7 +39,12 @@ func (i *Instance) Inspect() string {
 
 	out.WriteString("#<")
 
-	out.WriteString(RealClass(i).(*Class).Name)
+	realClass := RealClass(i)
+	if class, ok := realClass.(*Class); ok {
+		out.WriteString(class.Name)
+	} else {
+		out.WriteString("Unknown")
+	}
 
 	out.WriteString(":")
 	out.WriteString(fmt.Sprintf("%p", i))
