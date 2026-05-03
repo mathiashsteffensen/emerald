@@ -7,7 +7,6 @@ import (
 	"path"
 	"runtime/debug"
 	"strings"
-	"time"
 )
 
 const EMERALD_VERSION = "0.0.1"
@@ -75,14 +74,15 @@ var doneChan = make(chan bool)
 
 func Shutdown() {
 	doneChan <- true
+	<-doneChan
 }
 
 func writeToChan(level LogLevel, msg string) {
-	write(level, msg)
+	msgChan <- message{level: level, format: msg}
 }
 
 func writeToChanF(level LogLevel, format string, args ...any) {
-	writef(level, format, args...)
+	msgChan <- message{level: level, format: format, args: args}
 }
 
 func InternalDebug(msg string) {
@@ -111,12 +111,13 @@ func WarnF(format string, args ...any) {
 
 func Fatal(msg string) {
 	writeToChan(LogFatalLevel, msg)
+	Shutdown()
 	os.Exit(1)
 }
 
 func FatalF(format string, args ...any) {
 	writeToChanF(LogFatalLevel, format, args...)
-	time.Sleep(200 * time.Millisecond)
+	Shutdown()
 	os.Exit(1)
 }
 
@@ -161,17 +162,37 @@ func writef(level LogLevel, format string, args ...any) {
 	}
 }
 
-func logRoutine() {
+func Drain() {
 	for {
 		select {
 		case msg := <-msgChan:
-			if msg.args == nil {
-				write(msg.level, msg.format)
-			} else {
-				writef(msg.level, msg.format, msg.args...)
-			}
-		case <-doneChan:
+			processMessage(msg)
+		default:
 			return
 		}
+	}
+}
+
+func logRoutine() {
+	for {
+		select {
+		case msg, ok := <-msgChan:
+			if !ok {
+				return
+			}
+			processMessage(msg)
+		case <-doneChan:
+			Drain()
+			doneChan <- true
+			return
+		}
+	}
+}
+
+func processMessage(msg message) {
+	if msg.args == nil {
+		write(msg.level, msg.format)
+	} else {
+		writef(msg.level, msg.format, msg.args...)
 	}
 }

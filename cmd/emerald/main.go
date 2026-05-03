@@ -43,9 +43,8 @@ var rootCmd = &cobra.Command{
 			if err != nil {
 				debug.Fatal(err.Error())
 			}
-
-			debug.Shutdown()
 		}
+		debug.Shutdown()
 	},
 }
 
