@@ -52,7 +52,7 @@ func New(l *lexer.Lexer, rt *core.Runtime, options ...ConstructorOption) *Compil
 	return c
 }
 
-func CompileToBytecode(fileName string, content string, rt *core.Runtime) *bytecode.Bytecode {
+func Compile(fileName string, content string, rt *core.Runtime) *bytecode.Bytecode {
 	l := lexer.New(lexer.NewInput(fileName, content))
 	p := parser.New(l)
 	ast := p.ParseAST()
@@ -65,6 +65,12 @@ func CompileToBytecode(fileName string, content string, rt *core.Runtime) *bytec
 	c.Compile(ast)
 
 	bc := c.Bytecode()
+
+	return bc
+}
+
+func CompileBlock(fileName string, content string, rt *core.Runtime) *bytecode.Bytecode {
+	bc := Compile(fileName, content, rt)
 
 	bc.Instructions = append(bc.Instructions, byte(bytecode.OpReturn))
 

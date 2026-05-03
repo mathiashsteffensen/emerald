@@ -28,11 +28,13 @@ func runVmTests(t *testing.T, tests []vmTestCase, setupScripts ...string) {
 			rt := core.NewRuntime()
 			rt.Init()
 
-			rt.Compile = func(fileName string, content string) *bytecode.Bytecode {
-				return compiler.CompileToBytecode(fileName, content, rt)
+			rt.CompileBlock = func(fileName string, content string) *bytecode.Bytecode {
+				return compiler.Compile(fileName, content, rt)
 			}
 
-			vm := New("test", rt.Compile("test", strings.Join(inputs, "\n")), rt)
+			bc := compiler.Compile("test", strings.Join(inputs, "\n"), rt)
+
+			vm := New("test", bc, rt)
 			vm.Run()
 
 			ensureNoExceptionUnlessExpected(t, tt.expected, rt)

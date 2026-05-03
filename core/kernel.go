@@ -203,7 +203,7 @@ func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 			panic(err)
 		}
 
-		bytecode := rt.Compile(absoluteFilePath, string(sourceContent))
+		bytecode := rt.CompileBlock(absoluteFilePath, string(sourceContent))
 
 		debug.InternalDebugF("rt.Kernel#require_relative - Successfully compiled file %s", absoluteFilePath)
 

@@ -48,8 +48,8 @@ func runCoreTests(t *testing.T, tests []coreTestCase, beforeEach ...string) {
 
 			rt := core.NewRuntime()
 			rt.Init()
-			rt.Compile = func(fileName string, content string) *bytecode.Bytecode {
-				return compiler.CompileToBytecode(fileName, content, rt)
+			rt.CompileBlock = func(fileName string, content string) *bytecode.Bytecode {
+				return compiler.CompileBlock(fileName, content, rt)
 			}
 			l, program := parse(t, combinedScript)
 			comp := compiler.New(l, rt)
