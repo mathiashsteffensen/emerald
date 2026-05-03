@@ -1,13 +1,10 @@
 package vm
 
 import (
+	"emerald/bytecode"
 	"emerald/compiler"
 	"emerald/core"
-	"emerald/heap"
 	"emerald/object"
-	"emerald/parser"
-	"emerald/parser/ast"
-	"emerald/parser/lexer"
 	"fmt"
 	"strings"
 	"testing"
@@ -24,25 +21,24 @@ func runVmTests(t *testing.T, tests []vmTestCase, setupScripts ...string) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core.Object.ResetForSpec()
-			heap.Reset()
-
 			inputs := make([]string, len(setupScripts))
 			copy(inputs, setupScripts)
 			inputs = append(inputs, tt.input)
 
-			l, program := parse(strings.Join(inputs, "\n"))
-			comp := compiler.New(l)
+			rt := core.NewRuntime()
+			rt.Init()
 
-			comp.Compile(program)
+			rt.Compile = func(fileName string, content string) *bytecode.Bytecode {
+				return compiler.CompileToBytecode(fileName, content, rt)
+			}
 
-			vm := New("test", comp.Bytecode())
+			vm := New("test", rt.Compile("test", strings.Join(inputs, "\n")), rt)
 			vm.Run()
 
-			ensureNoExceptionUnlessExpected(t, tt.expected)
+			ensureNoExceptionUnlessExpected(t, tt.expected, rt)
 
 			stackElem := safePop(t, vm)
-			testExpectedObject(t, tt.expected, stackElem)
+			testExpectedObject(t, tt.expected, stackElem, rt)
 
 			if vm.currentFiber().sp != 0 {
 				if str, ok := tt.expected.(string); ok && strings.HasPrefix(str, "error:") {
@@ -65,14 +61,14 @@ func safePop(t *testing.T, vm *VM) object.EmeraldValue {
 	return vm.LastPoppedStackElem()
 }
 
-func ensureNoExceptionUnlessExpected(t *testing.T, expected any) {
+func ensureNoExceptionUnlessExpected(t *testing.T, expected any, rt *core.Runtime) {
 	if expectedString, ok := expected.(string); ok && strings.HasPrefix(expectedString, "error:") {
 		return
 	}
 
-	exception := heap.GetGlobalVariableString("$!")
+	exception := rt.Heap.GetGlobalVariableString("$!")
 
-	if exception != nil && exception != core.NULL {
+	if exception != nil && exception != rt.NULL {
 		t.Fatalf("Unexpected uncaught exception %s: %s", exception.Inspect(), exception.(object.EmeraldError).Message())
 	}
 }
@@ -81,6 +77,7 @@ func testExpectedObject(
 	t *testing.T,
 	expected any,
 	actual object.EmeraldValue,
+	rt *core.Runtime,
 ) {
 	t.Helper()
 
@@ -96,7 +93,7 @@ func testExpectedObject(
 			t.Errorf("testFloatObject failed: %s", err)
 		}
 	case bool:
-		err := testBooleanObject(expected, actual)
+		err := testBooleanObject(expected, actual, rt)
 		if err != nil {
 			t.Errorf("testBooleanObject failed: %s", err)
 		}
@@ -120,7 +117,7 @@ func testExpectedObject(
 					}
 				} else {
 					if strings.HasPrefix(expected, "error:") {
-						err := testErrorObject(expected[6:], heap.GetGlobalVariableString("$!"))
+						err := testErrorObject(expected[6:], rt.Heap.GetGlobalVariableString("$!"))
 						if err != nil {
 							t.Errorf("testErrorObject failed: %s", err)
 						}
@@ -134,30 +131,23 @@ func testExpectedObject(
 			}
 		}
 	case []any:
-		err := testArrayObject(t, expected, actual)
+		err := testArrayObject(t, expected, actual, rt)
 		if err != nil {
 			t.Errorf("testArrayObject failed: %s", err)
 		}
 	case map[object.EmeraldValue]any:
-		err := testHashObject(t, expected, actual)
+		err := testHashObject(t, expected, actual, rt)
 		if err != nil {
 			t.Errorf("testHashObject failed: %s", err)
 		}
 	case nil:
-		if actual != core.NULL {
+		if actual != rt.NULL {
 			t.Errorf("object is not Null: %T (%+v)", actual, actual)
 		}
 	}
 }
 
-func parse(input string) (*lexer.Lexer, *ast.AST) {
-	l := lexer.New(lexer.NewInput("test.rb", input))
-
-	p := parser.New(l)
-	return l, p.ParseAST()
-}
-
-func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) error {
+func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue, rt *core.Runtime) error {
 	array, ok := actual.(*core.ArrayInstance)
 	if !ok {
 		return fmt.Errorf("object not Array: %T (%+v)", actual, actual)
@@ -168,13 +158,13 @@ func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue) e
 	}
 
 	for i, expectedElem := range expected {
-		testExpectedObject(t, expectedElem, array.Value[i])
+		testExpectedObject(t, expectedElem, array.Value[i], rt)
 	}
 
 	return nil
 }
 
-func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual object.EmeraldValue) error {
+func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual object.EmeraldValue, rt *core.Runtime) error {
 	hash, ok := actual.(*core.HashInstance)
 	if !ok {
 		return fmt.Errorf("object is not Hash. got=%T (%+v)", actual, actual)
@@ -190,7 +180,7 @@ func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual o
 			return fmt.Errorf("no pair for given key in Pairs")
 		}
 
-		testExpectedObject(t, expectedValue, pair)
+		testExpectedObject(t, expectedValue, pair, rt)
 	}
 
 	return nil
@@ -218,13 +208,13 @@ func testFloatObject(expected float64, actual object.EmeraldValue) error {
 	return nil
 }
 
-func testBooleanObject(expected bool, actual object.EmeraldValue) error {
-	if actual != core.TRUE && actual != core.FALSE {
+func testBooleanObject(expected bool, actual object.EmeraldValue, rt *core.Runtime) error {
+	if actual != rt.TRUE && actual != rt.FALSE {
 		return fmt.Errorf("object is not Boolean. got=%T (%+v)", actual, actual)
 	}
 
-	if (actual == core.TRUE) != expected {
-		return fmt.Errorf("object has wrong value. got=%t, want=%t", actual == core.TRUE, expected)
+	if (actual == rt.TRUE) != expected {
+		return fmt.Errorf("object has wrong value. got=%t, want=%t", actual == rt.TRUE, expected)
 	}
 	return nil
 }

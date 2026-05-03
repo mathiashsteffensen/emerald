@@ -2,14 +2,13 @@ package compiler
 
 import (
 	"emerald/bytecode"
-	"emerald/core"
 	"emerald/parser/ast"
 )
 
 func (c *Compiler) compileModuleLiteral(node *ast.ModuleLiteral) {
 	name := node.Name.Value
 
-	c.emit(bytecode.OpOpenModule, node.Token, c.addConstant(core.NewSymbol(name)))
+	c.emit(bytecode.OpOpenModule, node.Token, c.addConstant(c.rt.NewSymbol(name)))
 
 	c.compileStatementsWithReturnValue(node.Body.Statements, node.Body.Token)
 

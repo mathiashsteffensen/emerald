@@ -2,7 +2,6 @@ package vm
 
 import (
 	"emerald/bytecode"
-	"emerald/core"
 	"emerald/object"
 	"strings"
 )
@@ -20,10 +19,10 @@ func (vm *VM) executeOpStringJoin(ins bytecode.Instructions, ip int) {
 	var out strings.Builder
 
 	for _, o := range objects {
-		stringified := vm.Send(o, "to_s", core.NULL, map[string]object.EmeraldValue{}).Inspect()
+		stringified := vm.Send(o, "to_s", vm.rt.NULL, map[string]object.EmeraldValue{}).Inspect()
 
 		out.WriteString(stringified)
 	}
 
-	vm.push(core.NewString(out.String()))
+	vm.push(vm.rt.NewString(out.String()))
 }

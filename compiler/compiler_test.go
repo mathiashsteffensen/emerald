@@ -12,5 +12,7 @@ func TestCompile(t *testing.T) {
 		}
 	}()
 
-	core.Compile("test.rb", "puts(\"Hello\")")
+	rt := core.NewRuntime()
+	rt.Init()
+	CompileToBytecode("test.rb", "puts(\"Hello\")", rt)
 }

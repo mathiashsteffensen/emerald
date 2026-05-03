@@ -1,7 +1,6 @@
 package vm
 
 import (
-	"emerald/core"
 	"emerald/object"
 	"fmt"
 )
@@ -9,7 +8,7 @@ import (
 func (vm *VM) Yield(kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 	blockToEvaluate := vm.ctx.Block
 	return vm.withExecutionContextForBlock(blockToEvaluate, func() object.EmeraldValue {
-		return vm.rawEvalBlock(blockToEvaluate, core.NULL, kwargs, args...)
+		return vm.rawEvalBlock(blockToEvaluate, vm.rt.NULL, kwargs, args...)
 	})
 }
 
@@ -50,7 +49,7 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 		return vm.evalBuiltIn(bl, block, args, kwargs)
 	case *object.ClosedBlock:
 		if bl.EnforceArity {
-			if _, err := core.EnforceArity(args, kwargs, bl.NumArgs, bl.NumArgs, bl.Kwargs...); err != nil {
+			if _, err := vm.rt.EnforceArity(args, kwargs, bl.NumArgs, bl.NumArgs, bl.Kwargs...); err != nil {
 				return err
 			}
 		}
@@ -60,7 +59,7 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 
 		// The VM accounts for the name of the method being called being on the stack when a method is evaluated
 		// So we just push something on the stack
-		vm.push(core.NULL)
+		vm.push(vm.rt.NULL)
 
 		vm.push(block)
 
@@ -70,11 +69,11 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 		}
 
 		if len(kwargs) != 0 {
-			sortedKwargsHash := core.NewHash()
+			sortedKwargsHash := vm.rt.NewHash()
 
 			// Sort kwargs first, so they match the definition order, this allows local variable references to resolve correctly
 			for kwargStringKey, value := range kwargs {
-				symbolKey := core.NewSymbol(kwargStringKey)
+				symbolKey := vm.rt.NewSymbol(kwargStringKey)
 
 				sortedKwargsHash.Set(symbolKey, value)
 			}
@@ -100,10 +99,10 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 			return vm.pop()
 		}
 	default:
-		core.Raise(core.NewException(fmt.Sprintf("yielded to not a method?, got=%s", bl.Inspect())))
+		vm.rt.Raise(vm.rt.NewException(fmt.Sprintf("yielded to not a method?, got=%s", bl.Inspect())))
 	}
 
-	return core.NULL
+	return vm.rt.NULL
 }
 
 func (vm *VM) evalBuiltIn(builtin *object.WrappedBuiltInMethod, block object.EmeraldValue, args []object.EmeraldValue, kwargs map[string]object.EmeraldValue) object.EmeraldValue {

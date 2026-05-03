@@ -2,7 +2,6 @@ package vm
 
 import (
 	"emerald/bytecode"
-	"emerald/core"
 	"emerald/object"
 )
 
@@ -18,7 +17,7 @@ func (vm *VM) executeOpCheckCaseEqual(ins bytecode.Instructions, ip int) {
 	subject := vm.StackTop()
 
 	for _, matcher := range matchers {
-		if vm.Send(matcher, "===", core.NULL, map[string]object.EmeraldValue{}, subject) == core.TRUE {
+		if vm.Send(matcher, "===", vm.rt.NULL, map[string]object.EmeraldValue{}, subject) == vm.rt.TRUE {
 			vm.pop()
 			return
 		}

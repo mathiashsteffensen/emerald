@@ -64,7 +64,7 @@ func (rt *Runtime) enumerableMap() object.BuiltInMethod {
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				arr = append(
 					arr,
-					object.EvalBlock(block.(*object.ClosedBlock), kwargs, args...),
+					rt.EvalBlock(block.(*object.ClosedBlock), kwargs, args...),
 				)
 				return rt.NULL
 			},
@@ -87,7 +87,7 @@ func (rt *Runtime) enumerableFind() object.BuiltInMethod {
 					return rt.NULL
 				}
 
-				if rt.IsTruthy(object.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)) {
+				if rt.IsTruthy(rt.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)) {
 					if len(args) < 2 {
 						firstTruthyElement = args[0]
 					} else {
@@ -119,7 +119,7 @@ func (rt *Runtime) enumerableFindIndex() object.BuiltInMethod {
 					return rt.NULL
 				}
 
-				if rt.IsTruthy(object.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)) {
+				if rt.IsTruthy(rt.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)) {
 					found = true
 					return rt.NULL
 				}
@@ -156,7 +156,7 @@ func (rt *Runtime) enumerableSum() object.BuiltInMethod {
 		wrappedBlock := &object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if blockGiven {
-					accumulated = rt.Send(accumulated, "+", rt.NULL, map[string]object.EmeraldValue{}, object.EvalBlock(block.(*object.ClosedBlock), kwargs, args...))
+					accumulated = rt.Send(accumulated, "+", rt.NULL, map[string]object.EmeraldValue{}, rt.EvalBlock(block.(*object.ClosedBlock), kwargs, args...))
 				} else {
 					accumulated = rt.Send(accumulated, "+", rt.NULL, kwargs, args...)
 				}
@@ -193,7 +193,7 @@ func (rt *Runtime) enumerableReduce() object.BuiltInMethod {
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if argGiven || passedFirst {
 					args = append([]object.EmeraldValue{accumulated}, args...)
-					accumulated = object.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)
+					accumulated = rt.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)
 				} else {
 					passedFirst = true
 				}

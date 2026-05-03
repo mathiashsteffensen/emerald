@@ -5,24 +5,24 @@ import "testing"
 func TestClass_ancestors(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			name:  "singleton rt.Class ancestors",
-			input: "rt.Class.ancestors",
+			name:  "singleton Class ancestors",
+			input: "Class.ancestors",
 			expected: []any{
-				"class:rt.Class",
-				"class:rt.Module",
-				"class:rt.Object",
-				"module:rt.Kernel",
-				"class:rt.BasicObject",
+				"class:Class",
+				"class:Module",
+				"class:Object",
+				"module:Kernel",
+				"class:BasicObject",
 			},
 		},
 		{
-			name:  "rt.Class instance ancestors",
-			input: "rt.Class.new.ancestors",
+			name:  "Class instance ancestors",
+			input: "Class.new.ancestors",
 			expected: []any{
-				"instance:rt.Class",
-				"class:rt.Object",
-				"module:rt.Kernel",
-				"class:rt.BasicObject",
+				"instance:Class",
+				"class:Object",
+				"module:Kernel",
+				"class:BasicObject",
 			},
 		},
 	}
@@ -34,7 +34,7 @@ func TestClass_name(t *testing.T) {
 	tests := []coreTestCase{
 		{
 			name:     "Class",
-			input:    "rt.Class.name",
+			input:    "Class.name",
 			expected: "Class",
 		},
 		{
@@ -91,7 +91,7 @@ func TestClass_new_instance(t *testing.T) {
 		{
 			name: "positional argument provided",
 			input: `
-								create_class(kwarfs: false)
+								create_class(kwargs: false)
 
 								instance = MyMod::MyClass.new(2)
 								instance.value

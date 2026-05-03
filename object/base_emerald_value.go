@@ -86,29 +86,6 @@ func (val *BaseEmeraldValue) RespondsTo(name string, self EmeraldValue) bool {
 	return err == nil && visibility == PUBLIC
 }
 
-var EvalBlock func(block *ClosedBlock, kwargs map[string]EmeraldValue, args ...EmeraldValue) EmeraldValue
-
-func (val *BaseEmeraldValue) SEND(
-	ctx *Context,
-	name string,
-	kwargs map[string]EmeraldValue,
-	args ...EmeraldValue,
-) EmeraldValue {
-	method, _, _, err := ctx.Self.ExtractMethod(name, ctx.Self.Class(), ctx.Self)
-	if err != nil {
-		panic(err)
-	}
-
-	switch method := method.(type) {
-	case *ClosedBlock:
-		return EvalBlock(method, kwargs, args...)
-	case *WrappedBuiltInMethod:
-		return method.Method(ctx, kwargs, args...)
-	default:
-		panic("This is a bug in the Emerald VM, no idea how the fuck we got here, my b")
-	}
-}
-
 func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue, target EmeraldValue) (EmeraldValue, MethodVisibility, bool, error) {
 	for _, ancestor := range extractFrom.Ancestors() {
 		isSelf := ancestor == extractFrom

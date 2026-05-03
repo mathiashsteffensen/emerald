@@ -17,6 +17,7 @@ type EmittedInstruction struct {
 }
 
 type Compiler struct {
+	rt           *core.Runtime
 	instructions bytecode.Instructions
 	opCount      int
 	symbolTable  *heap.SymbolTable
@@ -26,7 +27,7 @@ type Compiler struct {
 
 type ConstructorOption func(c *Compiler)
 
-func New(l *lexer.Lexer, options ...ConstructorOption) *Compiler {
+func New(l *lexer.Lexer, rt *core.Runtime, options ...ConstructorOption) *Compiler {
 	mainScope := CompilationScope{
 		bytecode: bytecode.Bytecode{
 			Instructions: bytecode.Instructions{},
@@ -38,8 +39,9 @@ func New(l *lexer.Lexer, options ...ConstructorOption) *Compiler {
 	}
 
 	c := &Compiler{
+		rt:           rt,
 		instructions: bytecode.Instructions{},
-		symbolTable:  heap.GlobalSymbolTable,
+		symbolTable:  rt.Heap.SymbolTable,
 		scopes:       []CompilationScope{mainScope},
 	}
 
@@ -50,25 +52,23 @@ func New(l *lexer.Lexer, options ...ConstructorOption) *Compiler {
 	return c
 }
 
-func init() {
-	core.Compile = func(fileName string, content string) *bytecode.Bytecode {
-		l := lexer.New(lexer.NewInput(fileName, content))
-		p := parser.New(l)
-		ast := p.ParseAST()
+func CompileToBytecode(fileName string, content string, rt *core.Runtime) *bytecode.Bytecode {
+	l := lexer.New(lexer.NewInput(fileName, content))
+	p := parser.New(l)
+	ast := p.ParseAST()
 
-		if len(p.Errors()) != 0 {
-			core.Raise(core.NewException(fmt.Sprintf("failed to parse source file %s\n\n%s", fileName, p.Errors()[0])))
-		}
-
-		c := New(l)
-		c.Compile(ast)
-
-		bc := c.Bytecode()
-
-		bc.Instructions = append(bc.Instructions, byte(bytecode.OpReturn))
-
-		return bc
+	if len(p.Errors()) != 0 {
+		rt.Raise(rt.NewException(fmt.Sprintf("failed to parse source file %s\n\n%s", fileName, p.Errors()[0])))
 	}
+
+	c := New(l, rt)
+	c.Compile(ast)
+
+	bc := c.Bytecode()
+
+	bc.Instructions = append(bc.Instructions, byte(bytecode.OpReturn))
+
+	return bc
 }
 
 func (c *Compiler) Compile(node ast.Node) {
@@ -121,10 +121,10 @@ func (c *Compiler) Compile(node ast.Node) {
 	case *ast.WhileExpression:
 		c.compileWhileExpression(node)
 	case *ast.IntegerLiteral:
-		integer := core.NewInteger(node.Value)
+		integer := c.rt.NewInteger(node.Value)
 		c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(integer))
 	case *ast.FloatLiteral:
-		float := core.NewFloat(node.Value)
+		float := c.rt.NewFloat(node.Value)
 		c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(float))
 	case *ast.BooleanLiteral:
 		if node.Value {
@@ -139,7 +139,7 @@ func (c *Compiler) Compile(node ast.Node) {
 	case *ast.StringTemplate:
 		c.compileStringTemplate(node)
 	case *ast.SymbolLiteral:
-		sym := core.NewSymbol(node.Value)
+		sym := c.rt.NewSymbol(node.Value)
 		c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(sym))
 	case *ast.RegexpLiteral:
 		c.compileRegexpLiteral(node)
@@ -253,7 +253,7 @@ func (c *Compiler) emit(op bytecode.Opcode, debugToken lexer.Token, operands ...
 }
 
 func (c *Compiler) emitConstantGet(name string, debugToken lexer.Token) {
-	symbol := core.NewSymbol(name)
+	symbol := c.rt.NewSymbol(name)
 
 	c.emit(bytecode.OpConstantGet, debugToken, c.addConstant(symbol))
 }
@@ -299,5 +299,5 @@ func (c *Compiler) setLastInstruction(op bytecode.Opcode, pos int) {
 
 // addConstant adds a constant to the constant stack and returns its location
 func (c *Compiler) addConstant(obj object.EmeraldValue) int {
-	return heap.AddConstant(obj)
+	return c.rt.Heap.AddConstant(obj)
 }

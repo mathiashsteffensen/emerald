@@ -178,7 +178,7 @@ func TestArray_index(t *testing.T) {
 		{
 			name:     "wrong type argument",
 			input:    `[12, 24, 49]["a string"]`,
-			expected: "error:TypeError:no implicit conversion of rt.String into rt.Integer",
+			expected: "error:TypeError:no implicit conversion of String into Integer",
 		},
 	}
 

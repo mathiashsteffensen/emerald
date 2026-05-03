@@ -9,8 +9,9 @@ import (
 type Runtime struct {
 	Heap *heap.Heap
 
-	Compile func(fileName string, content string) *bytecode.Bytecode
-	Send    func(self object.EmeraldValue, name string, block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue
+	Compile   func(fileName string, content string) *bytecode.Bytecode
+	EvalBlock func(block *object.ClosedBlock, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue
+	Send      func(self object.EmeraldValue, name string, block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue
 
 	GlobalSymbolInternPool SymbolInternStore
 	RequiredFilesHash      object.EmeraldValue

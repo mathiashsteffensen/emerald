@@ -16,19 +16,19 @@ func TestObject_to_s(t *testing.T) {
 func TestObject_equals(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			input:    "rt.Object.new == rt.Object.new",
+			input:    "Object.new == Object.new",
 			expected: false,
 		},
 		{
-			input:    "obj = rt.Object.new; obj == obj",
+			input:    "obj = Object.new; obj == obj",
 			expected: true,
 		},
 		{
-			input:    "rt.Object.new != rt.Object.new",
+			input:    "Object.new != Object.new",
 			expected: true,
 		},
 		{
-			input:    "obj = rt.Object.new; obj != obj",
+			input:    "obj = Object.new; obj != obj",
 			expected: false,
 		},
 	}

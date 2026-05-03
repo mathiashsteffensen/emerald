@@ -2,7 +2,6 @@ package vm
 
 import (
 	"emerald/bytecode"
-	"emerald/core"
 	"emerald/object"
 )
 
@@ -40,12 +39,12 @@ func (fiber *Fiber) popFrame() *Frame {
 	return frame
 }
 
-func (f *Frame) blockRescuingException(exception object.EmeraldError) *object.ClosedBlock {
+func (f *Frame) blockRescuingException(exception object.EmeraldError, vm *VM) *object.ClosedBlock {
 	for _, rescueBlock := range f.block.RescueBlocks {
 		caughtClassName := rescueBlock.CaughtErrorClasses.Find(func(className string) bool {
-			class := core.Object.NamespaceDefinitionGet(className)
+			class := vm.rt.Object.NamespaceDefinitionGet(className)
 
-			return core.IsTruthy(core.Send(exception, "is_a?", core.NULL, map[string]object.EmeraldValue{}, class))
+			return vm.rt.IsTruthy(vm.rt.Send(exception, "is_a?", vm.rt.NULL, map[string]object.EmeraldValue{}, class))
 		})
 
 		if caughtClassName != nil {
@@ -57,6 +56,6 @@ func (f *Frame) blockRescuingException(exception object.EmeraldError) *object.Cl
 	return nil
 }
 
-func (f *Frame) rescuesException(exception object.EmeraldError) bool {
-	return f.blockRescuingException(exception) != nil
+func (f *Frame) rescuesException(exception object.EmeraldError, vm *VM) bool {
+	return f.blockRescuingException(exception, vm) != nil
 }

@@ -2,12 +2,11 @@ package compiler
 
 import (
 	"emerald/bytecode"
-	"emerald/core"
 	"emerald/parser/ast"
 )
 
 func (c *Compiler) compileCallExpression(node ast.CallExpression) {
-	method := core.NewSymbol(node.Method.Value)
+	method := c.rt.NewSymbol(node.Method.Value)
 
 	c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(method))
 

@@ -1,11 +1,9 @@
 package vm
 
-import "emerald/core"
-
 func (vm *VM) executeOpReturn() {
 	vm.currentFiber().popFrame()
 
-	vm.push(core.NULL)
+	vm.push(vm.rt.NULL)
 }
 
 func (vm *VM) executeOpReturnValue() {

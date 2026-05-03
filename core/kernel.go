@@ -129,7 +129,7 @@ func (rt *Runtime) kernelInclude() object.BuiltInMethod {
 
 			mod, ok := arg.(*object.Module)
 			if !ok {
-				rt.Raise(rt.NewTypeError(fmt.Sprintf("wrong argument type %s (expected rt.Module)", arg.Class().Super().(*object.Class).Name)))
+				rt.Raise(rt.NewTypeError(fmt.Sprintf("wrong argument type %s (expected Module)", arg.Class().Super().(*object.Class).Name)))
 			}
 
 			ctx.Self.Include(mod)
@@ -181,10 +181,14 @@ func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 			panic(err)
 		}
 
+		if rt.RequiredFilesHash == nil {
+			panic("RequiredFilesHash is nil!")
+		}
+
 		absolutePathStr := rt.NewString(absoluteFilePath)
 
 		// rt.File has already been loaded
-		if rt.RequiredFilesHash.(*HashInstance).Get(absolutePathStr) != rt.NULL {
+		if rt.RequiredFilesHash.(*HashInstance).Get(absolutePathStr) != nil {
 			debug.InternalDebugF("rt.Kernel#require_relative - rt.File %s is already loaded, skipping", absoluteFilePath)
 			return rt.FALSE
 		}
@@ -214,7 +218,7 @@ func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 			},
 		}, &object.Block{Bytecode: *bytecode}, []object.EmeraldValue{}, "", object.PUBLIC)
 
-		object.EvalBlock(requiredBlock, map[string]object.EmeraldValue{})
+		rt.EvalBlock(requiredBlock, map[string]object.EmeraldValue{})
 
 		rt.RequiredFilesHash.(*HashInstance).Set(absolutePathStr, rt.TRUE)
 

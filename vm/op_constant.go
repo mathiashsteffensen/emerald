@@ -4,7 +4,6 @@ import (
 	"emerald/bytecode"
 	"emerald/core"
 	"emerald/debug"
-	"emerald/heap"
 	"emerald/object"
 	"fmt"
 	"unicode"
@@ -12,12 +11,12 @@ import (
 
 func (vm *VM) executeOpConstantGet(ins bytecode.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
-	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
+	name := vm.rt.Heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 
-	value, err := getConst(vm.ctx.Self, name)
+	value, err := getConst(vm.ctx.Self, name, vm.rt)
 	if err != nil {
 		debug.WarnF("\n%s", vm.currentFiber().currentFrame().block.Bytecode.InstructionSnapshot(ip))
-		core.Raise(core.NewNameError(err.Error()))
+		vm.rt.Raise(vm.rt.NewNameError(err.Error()))
 		return
 	}
 
@@ -26,7 +25,7 @@ func (vm *VM) executeOpConstantGet(ins bytecode.Instructions, ip int) {
 
 func (vm *VM) executeOpConstantSet(ins bytecode.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
-	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
+	name := vm.rt.Heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 	// Don't pop it from the stack, we leave it there since assignment expressions return the assigned value
 	value := vm.StackTop()
 
@@ -35,28 +34,28 @@ func (vm *VM) executeOpConstantSet(ins bytecode.Instructions, ip int) {
 
 func (vm *VM) executeOpScopedConstantGet(ins bytecode.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
-	name := heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
+	name := vm.rt.Heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
 
 	self := vm.pop()
 
 	var result object.EmeraldValue
 
 	if unicode.IsUpper(rune(name[0])) {
-		value, err := getConst(self, name)
+		value, err := getConst(self, name, vm.rt)
 		if err != nil {
-			err := core.NewStandardError(err.Error())
-			core.Raise(err)
+			err := vm.rt.NewStandardError(err.Error())
+			vm.rt.Raise(err)
 			return
 		}
 		result = value
 	} else {
-		result = vm.Send(self, name, core.NULL, map[string]object.EmeraldValue{})
+		result = vm.Send(self, name, vm.rt.NULL, map[string]object.EmeraldValue{})
 	}
 
 	vm.push(result)
 }
 
-func getConst(self object.EmeraldValue, name string) (object.EmeraldValue, error) {
+func getConst(self object.EmeraldValue, name string, rt *core.Runtime) (object.EmeraldValue, error) {
 	value := self.NamespaceDefinitionGet(name)
 	if value != nil {
 		return value, nil
@@ -73,12 +72,12 @@ func getConst(self object.EmeraldValue, name string) (object.EmeraldValue, error
 
 	if value == nil {
 		// Try MainObject & Object as a last resort
-		value = core.MainObject.NamespaceDefinitionGet(name)
+		value = rt.MainObject.NamespaceDefinitionGet(name)
 		if value != nil {
 			return value, nil
 		}
 
-		value = core.Object.NamespaceDefinitionGet(name)
+		value = rt.Object.NamespaceDefinitionGet(name)
 		if value != nil {
 			return value, nil
 		}

@@ -9,7 +9,7 @@ func TestRegexp_inspect(t *testing.T) {
 			expected: "/abc/",
 		},
 		{
-			input:    `rt.Regexp.new("abc").inspect`,
+			input:    `Regexp.new("abc").inspect`,
 			expected: "/abc/",
 		},
 	}
@@ -20,11 +20,11 @@ func TestRegexp_inspect(t *testing.T) {
 func TestRegexp_match(t *testing.T) {
 	tests := []coreTestCase{
 		{
-			input:    `(/a/ =~ "a").is_a?(rt.MatchData)`,
+			input:    `(/a/ =~ "a").is_a?(MatchData)`,
 			expected: true,
 		},
 		{
-			input:    `/a/.match("a").is_a?(rt.MatchData)`,
+			input:    `/a/.match("a").is_a?(MatchData)`,
 			expected: true,
 		},
 		{
@@ -34,14 +34,14 @@ func TestRegexp_match(t *testing.T) {
 		{
 			input: `
 				/a/ =~ "a"
-				$~.is_a?(rt.MatchData)
+				$~.is_a?(MatchData)
 			`,
 			expected: true,
 		},
 		{
 			input: `
 				/a/ =~ "a"
-				rt.Regexp.last_match.is_a?(rt.MatchData)
+				Regexp.last_match.is_a?(MatchData)
 			`,
 			expected: true,
 		},

@@ -2,7 +2,6 @@ package compiler
 
 import (
 	"emerald/bytecode"
-	"emerald/core"
 	"emerald/object"
 	ast "emerald/parser/ast"
 	"emerald/parser/lexer"
@@ -11,7 +10,7 @@ import (
 func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
 	block, _ := c.compileBlock(node.BlockLiteral, true)
 
-	symbol := core.NewSymbol(node.Name.(ast.IdentifierExpression).Value)
+	symbol := c.rt.NewSymbol(node.Name.(ast.IdentifierExpression).Value)
 
 	c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(symbol))
 	c.emit(bytecode.OpPushConstant, node.BlockLiteral.Token, c.addConstant(block))

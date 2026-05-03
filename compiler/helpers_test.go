@@ -3,7 +3,6 @@ package compiler
 import (
 	"emerald/bytecode"
 	"emerald/core"
-	"emerald/heap"
 	"emerald/object"
 	"emerald/parser"
 	"emerald/parser/ast"
@@ -27,7 +26,10 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 		t.Run(tt.name, func(t *testing.T) {
 			l, program := parse(tt.input)
 
-			compiler := New(l)
+			rt := core.NewRuntime()
+			rt.Init()
+
+			compiler := New(l, rt)
 
 			compiler.Compile(program)
 
@@ -38,13 +40,11 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 				t.Errorf("testInstructions failed: %s", err)
 			}
 
-			err = testConstants(tt.expectedConstants, heap.ConstantPool)
+			err = testConstants(tt.expectedConstants, rt.Heap.ConstantPool)
 
 			if err != nil {
 				t.Errorf("testConstants failed: %s", err)
 			}
-
-			heap.Reset()
 		})
 	}
 }

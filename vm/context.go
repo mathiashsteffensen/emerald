@@ -1,7 +1,6 @@
 package vm
 
 import (
-	"emerald/core"
 	"emerald/object"
 )
 
@@ -23,5 +22,5 @@ func (vm *VM) newEnclosedContext(file string, self, block object.EmeraldValue) *
 }
 
 func (vm *VM) BlockGiven() bool {
-	return vm.ctx.Block != core.NULL
+	return vm.ctx.Block != vm.rt.NULL
 }

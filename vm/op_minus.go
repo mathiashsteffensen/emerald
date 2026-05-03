@@ -1,12 +1,11 @@
 package vm
 
 import (
-	"emerald/core"
 	"emerald/object"
 )
 
 func (vm *VM) executeOpMinus() {
 	operand := vm.pop()
 
-	vm.push(vm.Send(operand, "-@", core.NULL, map[string]object.EmeraldValue{}))
+	vm.push(vm.Send(operand, "-@", vm.rt.NULL, map[string]object.EmeraldValue{}))
 }

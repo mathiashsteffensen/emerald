@@ -2,12 +2,11 @@ package compiler
 
 import (
 	"emerald/bytecode"
-	"emerald/core"
 	"emerald/parser/ast"
 )
 
 func (c *Compiler) compileStringLiteral(node *ast.StringLiteral) {
-	str := core.NewString(node.Value)
+	str := c.rt.NewString(node.Value)
 	c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(str))
 }
 

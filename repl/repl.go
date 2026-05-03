@@ -1,10 +1,9 @@
 package repl
 
 import (
+	"emerald"
 	"emerald/compiler"
-	"emerald/core"
 	"emerald/debug"
-	"emerald/heap"
 	"emerald/object"
 	"emerald/parser"
 	"emerald/parser/ast"
@@ -62,6 +61,8 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 
 	var buffer string
 
+	engine := emerald.New()
+
 	for {
 		line, err = lineReader.Readline()
 		if err != nil {
@@ -117,7 +118,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			continue
 		}
 
-		comp := compiler.New(l)
+		comp := compiler.New(l, engine.Runtime)
 		comp.Compile(program)
 
 		code := comp.Bytecode()
@@ -132,13 +133,13 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			debug.Fatal(err.Error())
 		}
 
-		machine := vm.New(currentWorkingDir, code)
+		machine := vm.New(currentWorkingDir, code, engine.Runtime)
 		machine.Run()
 
-		if exception := heap.GetGlobalVariableString("$!"); exception != nil {
+		if exception := engine.Runtime.Heap.GetGlobalVariableString("$!"); exception != nil && exception != engine.Runtime.NULL {
 			exception := exception.(object.EmeraldError)
 			printf("%s: %s\n", exception.ClassName(), exception.Message())
-			heap.SetGlobalVariableString("$!", nil)
+			engine.Runtime.Heap.SetGlobalVariableString("$!", nil)
 			continue
 		}
 
@@ -147,7 +148,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 		if evaluated != nil {
 			ctx := machine.Context()
 			ctx.Self = evaluated
-			evaluated = machine.Send(evaluated, "inspect", core.NULL, map[string]object.EmeraldValue{})
+			evaluated = machine.Send(evaluated, "inspect", engine.Runtime.NULL, map[string]object.EmeraldValue{})
 			print("=> " + evaluated.Inspect())
 		}
 

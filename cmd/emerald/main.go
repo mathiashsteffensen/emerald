@@ -1,11 +1,11 @@
 package main
 
 import (
+	"emerald"
 	"emerald/cmd/emerald/subcmd"
 	"emerald/cmd/helpers"
 	"emerald/compiler"
 	"emerald/debug"
-	"emerald/heap"
 	"emerald/object"
 	"emerald/parser"
 	"emerald/parser/lexer"
@@ -34,6 +34,8 @@ var rootCmd = &cobra.Command{
 
 		defer helpers.RecoverWithStacktrace()
 
+		engine := emerald.New()
+
 		for _, file := range args {
 			absFile, err := filepath.Abs(file)
 			helpers.CheckError("Failed to make path absolute?", err)
@@ -49,13 +51,13 @@ var rootCmd = &cobra.Command{
 				debug.FatalF("parser error: %s\n", p.Errors()[0])
 			}
 
-			c := compiler.New(l)
+			c := compiler.New(l, engine.Runtime)
 			c.Compile(program)
 
-			machine := vm.New(absFile, c.Bytecode())
+			machine := vm.New(absFile, c.Bytecode(), engine.Runtime)
 			machine.Run()
 
-			if exception := heap.GetGlobalVariableString("$!"); exception != nil {
+			if exception := engine.Runtime.Heap.GetGlobalVariableString("$!"); exception != nil && exception != engine.Runtime.NULL {
 				exception := exception.(object.EmeraldError)
 				debug.FatalF("%s: %s", exception.ClassName(), exception.Message())
 			}

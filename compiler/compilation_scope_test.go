@@ -2,12 +2,15 @@ package compiler
 
 import (
 	"emerald/bytecode"
+	"emerald/core"
 	"emerald/parser/lexer"
 	"testing"
 )
 
 func TestCompilerScopes(t *testing.T) {
-	compiler := New(lexer.New(lexer.NewInput("scope_test.rb", "")))
+	rt := core.NewRuntime()
+	rt.Init()
+	compiler := New(lexer.New(lexer.NewInput("scope_test.rb", "")), rt)
 
 	if compiler.scopeIndex != 0 {
 		t.Errorf("scopeIndex wrong. got=%d, want=%d", compiler.scopeIndex, 0)
