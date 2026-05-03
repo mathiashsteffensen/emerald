@@ -1,5 +1,7 @@
 SHELL:=/bin/bash
 
+PACKAGES := ./parser/lexer ./parser ./compiler/ ./object/ ./vm/ ./core/ ./heap/ ./bytecode/
+
 default:
 	@make lint test-all build
 
@@ -9,7 +11,7 @@ emerald:
 iem:
 	@./scripts/build iem
 
-.PHONY: build emerald iem
+.PHONY: build emerald iem test test-all ci-test coverage lint
 
 build: emerald iem
 
@@ -20,15 +22,15 @@ install:
 
 test:
 	@echo "Running test ${RUN}" && echo "" && \
-	EM_TEST=1 go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ -run=${RUN}
+	EM_TEST=1 go test $(PACKAGES) -run=${RUN}
 
-test-all:
-	@echo "Running test suite" && echo "" && \
- 	EM_TEST=1 go test ./parser/lexer ./parser ./compiler/ ./vm/ ./core/ --timeout=1s -coverprofile=./tmp/coverage.out && \
- 	go tool cover -html=tmp/coverage.out -o tmp/coverage.html && echo ""
+test-all: coverage
 
 ci-test:
-	EM_TEST=1 go test ./parser/lexer ./parser ./compiler/ ./object/ ./vm/ ./core/
+	EM_TEST=1 go test $(PACKAGES)
+
+coverage:
+	@./scripts/generate_coverage.rb $(PACKAGES)
 
 lint:
 	@echo "Linting ..." && staticcheck ./... && echo ""
