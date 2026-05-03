@@ -332,7 +332,7 @@ func testInstanceObject(expected string, actual object.EmeraldValue) error {
 			return fmt.Errorf("expected instance got=%T", actual)
 		}
 
-		class = actual.Class().Super().(*object.Class)
+		class = object.RealClass(actual).(*object.Class)
 	}
 
 	if class.Name != expected {

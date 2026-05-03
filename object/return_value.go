@@ -7,9 +7,12 @@ type ReturnValue struct {
 	Value EmeraldValue
 }
 
-func (rv *ReturnValue) ParentClass() EmeraldValue { return nil }
+func (rv *ReturnValue) Class() EmeraldValue       { return nil }
+func (rv *ReturnValue) Super() EmeraldValue       { return nil }
 func (rv *ReturnValue) Ancestors() []EmeraldValue { return []EmeraldValue{} }
 func (rv *ReturnValue) Type() EmeraldValueType    { return RETURN_VALUE }
 func (rv *ReturnValue) Inspect() string {
 	return fmt.Sprintf("return %s", rv.Value.Inspect())
 }
+func (rv *ReturnValue) HashKey() string              { return rv.Inspect() }
+func (rv *ReturnValue) SingletonClass() EmeraldValue { return nil }

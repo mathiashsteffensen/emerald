@@ -59,7 +59,7 @@ func (rt *Runtime) DefineMethod(receiver object.EmeraldValue, name string, metho
 }
 
 func (rt *Runtime) DefineSingletonMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
-	receiver.Class().BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: rt.getVisibility(visibilities)}
+	receiver.SingletonClass().BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: rt.getVisibility(visibilities)}
 }
 
 func (rt *Runtime) getVisibility(visibilities []object.MethodVisibility) object.MethodVisibility {
@@ -108,7 +108,8 @@ func (rt *Runtime) EnforceArity(
 }
 
 func EnforceArgumentType[T object.EmeraldValue](rt *Runtime, typ *object.Class, arg object.EmeraldValue) (T, object.EmeraldError) {
-	argClass := arg.Class().Super().(*object.Class)
+	argClass := object.RealClass(arg).(*object.Class)
+
 	if argClass.Name != typ.Name {
 		err := rt.NewNoConversionTypeError(typ.Name, argClass.Name)
 		rt.Raise(err)

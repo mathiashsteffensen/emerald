@@ -129,7 +129,7 @@ func (rt *Runtime) kernelInclude() object.BuiltInMethod {
 
 			mod, ok := arg.(*object.Module)
 			if !ok {
-				rt.Raise(rt.NewTypeError(fmt.Sprintf("wrong argument type %s (expected Module)", arg.Class().Super().(*object.Class).Name)))
+				rt.Raise(rt.NewTypeError(fmt.Sprintf("wrong argument type %s (expected Module)", object.RealClass(arg).(*object.Class).Name)))
 			}
 
 			ctx.Self.Include(mod)

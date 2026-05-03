@@ -131,7 +131,7 @@ func (rt *Runtime) hashEquals() object.BuiltInMethod {
 		}
 
 		otherObj := args[0]
-		if otherObj.Class().Super() != rt.Hash {
+		if object.RealClass(otherObj) != rt.Hash {
 			return rt.FALSE
 		}
 

@@ -307,7 +307,7 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 
 		vm.closeBlock(int(constIndex), int(numFreeVars))
 	case bytecode.OpStaticTrue:
-		vm.ctx.Self = vm.ctx.Self.Class()
+		vm.ctx.Self = vm.ctx.Self.SingletonClass()
 	case bytecode.OpStaticFalse:
 		vm.ctx.Self = vm.ctx.Self.(*object.SingletonClass).Instance
 	default:
@@ -434,14 +434,14 @@ func (vm *VM) extractMethod(self object.EmeraldValue, name string) (object.Emera
 func raiseUndefinedNoMethodError(name string, receiver object.EmeraldValue, rt *core.Runtime) object.EmeraldError {
 	return rt.Raise(
 		rt.NewNoMethodError(
-			fmt.Sprintf("undefined method '%s' for %s:%s", name, receiver.Inspect(), receiver.Class().Super().(*object.Class).Name),
+			fmt.Sprintf("undefined method '%s' for %s:%s", name, receiver.Inspect(), object.RealClass(receiver).(*object.Class).Name),
 		),
 	)
 }
 
 func raiseNotVisibleNoMethodError(name string, receiver object.EmeraldValue, rt *core.Runtime) object.EmeraldError {
 	var receiverPart string
-	receiverClassName := receiver.Class().Super().(*object.Class).Name
+	receiverClassName := object.RealClass(receiver).(*object.Class).Name
 	if receiverClassName == rt.Class.Name {
 		receiverPart = fmt.Sprintf("%s:%s", receiver.Inspect(), receiverClassName)
 	} else {

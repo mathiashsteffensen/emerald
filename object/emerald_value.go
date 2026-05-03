@@ -1,6 +1,8 @@
 package object
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type MethodVisibility string
 
@@ -53,6 +55,8 @@ type (
 		NamespaceDefinitionGet(name string) EmeraldValue
 		NamespaceDefinitionSet(name string, value EmeraldValue)
 		HashKey() string
+		SingletonClass() EmeraldValue
+		DefineMethod(block EmeraldValue, args ...EmeraldValue)
 	}
 )
 
@@ -85,9 +89,22 @@ func (t EmeraldValueType) String() string {
 	return ""
 }
 
-func (method *WrappedBuiltInMethod) Inspect() string           { return fmt.Sprintf("#<Block:%p>", method) }
-func (method *WrappedBuiltInMethod) Type() EmeraldValueType    { return BLOCK_VALUE }
-func (method *WrappedBuiltInMethod) Class() EmeraldValue       { return nil }
-func (method *WrappedBuiltInMethod) Super() EmeraldValue       { return nil }
-func (method *WrappedBuiltInMethod) Ancestors() []EmeraldValue { return []EmeraldValue{} }
-func (method *WrappedBuiltInMethod) HashKey() string           { return method.Inspect() }
+func (method *WrappedBuiltInMethod) Inspect() string              { return fmt.Sprintf("#<Block:%p>", method) }
+func (method *WrappedBuiltInMethod) Type() EmeraldValueType       { return BLOCK_VALUE }
+func (method *WrappedBuiltInMethod) Class() EmeraldValue          { return nil }
+func (method *WrappedBuiltInMethod) Super() EmeraldValue          { return nil }
+func (method *WrappedBuiltInMethod) Ancestors() []EmeraldValue    { return []EmeraldValue{} }
+func (method *WrappedBuiltInMethod) HashKey() string              { return method.Inspect() }
+func (method *WrappedBuiltInMethod) SingletonClass() EmeraldValue { return nil }
+
+func RealClass(val EmeraldValue) EmeraldValue {
+	if val == nil {
+		return nil
+	}
+
+	class := val.Class()
+	for class != nil && class.Type() == STATIC_CLASS_VALUE {
+		class = class.Super()
+	}
+	return class
+}

@@ -6,16 +6,29 @@ import (
 
 type Class struct {
 	*BaseEmeraldValue
-	Name  string
-	class EmeraldValue
-	super EmeraldValue
+	Name                   string
+	baseClass              EmeraldValue
+	singleton              *SingletonClass
+	super                  EmeraldValue
+	staticBuiltInMethodSet BuiltInMethodSet
 }
 
 func (c *Class) Type() EmeraldValueType { return CLASS_VALUE }
 func (c *Class) Inspect() string {
 	return c.Name
 }
-func (c *Class) Class() EmeraldValue       { return c.class }
+func (c *Class) Class() EmeraldValue {
+	if c.singleton != nil {
+		return c.singleton
+	}
+	return c.baseClass
+}
+func (c *Class) SingletonClass() EmeraldValue {
+	if c.singleton == nil {
+		c.singleton = NewSingletonClass(c, c.baseClass, &BaseEmeraldValue{builtInMethodSet: c.staticBuiltInMethodSet})
+	}
+	return c.singleton
+}
 func (c *Class) Super() EmeraldValue       { return c.super }
 func (c *Class) SetSuper(val EmeraldValue) { c.super = val }
 func (c *Class) Ancestors() []EmeraldValue {
@@ -33,14 +46,10 @@ func (c *Class) Ancestors() []EmeraldValue {
 func (c *Class) HashKey() string { return c.Inspect() }
 
 func (c *Class) New() *Instance {
-	instance := &Instance{}
-
-	singleton := NewSingletonClass(instance, BuiltInMethodSet{}, c)
-
-	instance.class = singleton
-	instance.BaseEmeraldValue = singleton.BaseEmeraldValue
-
-	return instance
+	return &Instance{
+		BaseEmeraldValue: &BaseEmeraldValue{},
+		baseClass:        c,
+	}
 }
 
 func NewClass(
@@ -58,9 +67,13 @@ func NewClass(
 			builtInMethodSet: builtInMethodSet,
 			includedModules:  modules,
 		},
+		baseClass:              staticParent,
+		staticBuiltInMethodSet: staticBuiltInMethodSet,
 	}
 
-	class.class = NewSingletonClass(class, staticBuiltInMethodSet, staticParent)
+	if len(staticBuiltInMethodSet) != 0 {
+		class.SingletonClass()
+	}
 
 	return class
 }

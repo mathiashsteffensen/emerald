@@ -68,7 +68,7 @@ func getConst(self object.EmeraldValue, name string, rt *core.Runtime) (object.E
 	switch self.Type() {
 	case object.INSTANCE_VALUE:
 		// If it's an instance, check the class namespace
-		value = self.Class().Super().NamespaceDefinitionGet(name)
+		value = object.RealClass(self).NamespaceDefinitionGet(name)
 	case object.STATIC_CLASS_VALUE:
 		// If it's a singleton class, check the class namespace
 		value = self.(*object.SingletonClass).Instance.NamespaceDefinitionGet(name)

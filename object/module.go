@@ -2,15 +2,28 @@ package object
 
 type Module struct {
 	*BaseEmeraldValue
-	Name  string
-	class EmeraldValue
+	Name                   string
+	baseClass              EmeraldValue
+	singleton              *SingletonClass
+	staticBuiltInMethodSet BuiltInMethodSet
 }
 
 func (m *Module) Type() EmeraldValueType { return MODULE_VALUE }
 func (m *Module) Inspect() string {
 	return m.Name
 }
-func (m *Module) Class() EmeraldValue { return m.class }
+func (m *Module) Class() EmeraldValue {
+	if m.singleton != nil {
+		return m.singleton
+	}
+	return m.baseClass
+}
+func (m *Module) SingletonClass() EmeraldValue {
+	if m.singleton == nil {
+		m.singleton = NewSingletonClass(m, m.baseClass, &BaseEmeraldValue{builtInMethodSet: m.staticBuiltInMethodSet})
+	}
+	return m.singleton
+}
 func (m *Module) Super() EmeraldValue { return nil }
 func (m *Module) Ancestors() []EmeraldValue {
 	ancestors := []EmeraldValue{m}
@@ -26,10 +39,14 @@ func NewModule(name string, moduleClass EmeraldValue, builtInMethodSet, staticBu
 			builtInMethodSet: builtInMethodSet,
 			includedModules:  modules,
 		},
-		Name: name,
+		Name:                   name,
+		baseClass:              moduleClass,
+		staticBuiltInMethodSet: staticBuiltInMethodSet,
 	}
 
-	mod.class = NewSingletonClass(mod, staticBuiltInMethodSet, moduleClass)
+	if len(staticBuiltInMethodSet) != 0 {
+		mod.SingletonClass()
+	}
 
 	return mod
 }
