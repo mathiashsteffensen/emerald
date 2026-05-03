@@ -24,8 +24,6 @@ type Fiber struct {
 	// Call frames
 	frames      []*Frame
 	framesIndex int
-
-	inRescue bool
 }
 
 func NewFiber(mainFrame *Frame) *Fiber {
@@ -37,10 +35,6 @@ func NewFiber(mainFrame *Frame) *Fiber {
 		frames:      frames,
 		framesIndex: 1,
 	}
-}
-
-func (vm *VM) withFiber(cb func(fiber *Fiber)) {
-	cb(vm.currentFiber())
 }
 
 func (vm *VM) currentFiber() *Fiber {

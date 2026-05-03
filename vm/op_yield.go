@@ -10,7 +10,7 @@ func (vm *VM) executeOpYield(ins bytecode.Instructions, ip int) {
 	args := vm.stack()[vm.currentFiber().sp-int(numArgs) : vm.currentFiber().sp]
 
 	result := vm.ctx.Yield(map[string]object.EmeraldValue{}, args...)
-	if vm.currentFiber().inRescue || !vm.ExceptionIsRaised() {
+	if !vm.ExceptionIsRaised() {
 		vm.push(result)
 	}
 }

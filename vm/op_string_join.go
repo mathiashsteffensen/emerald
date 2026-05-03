@@ -19,7 +19,13 @@ func (vm *VM) executeOpStringJoin(ins bytecode.Instructions, ip int) {
 	var out strings.Builder
 
 	for _, o := range objects {
-		stringified := vm.Send(o, "to_s", vm.rt.NULL, map[string]object.EmeraldValue{}).Inspect()
+		res := vm.Send(o, "to_s", vm.rt.NULL, map[string]object.EmeraldValue{})
+
+		if vm.ExceptionIsRaised() {
+			return
+		}
+
+		stringified := res.Inspect()
 
 		out.WriteString(stringified)
 	}

@@ -38,24 +38,3 @@ func (fiber *Fiber) popFrame() *Frame {
 	}
 	return frame
 }
-
-func (f *Frame) blockRescuingException(exception object.EmeraldError, vm *VM) *object.ClosedBlock {
-	for _, rescueBlock := range f.block.RescueBlocks {
-		caughtClassName := rescueBlock.CaughtErrorClasses.Find(func(className string) bool {
-			class := vm.rt.Object.NamespaceDefinitionGet(className)
-
-			return vm.rt.IsTruthy(vm.rt.Send(exception, "is_a?", vm.rt.NULL, map[string]object.EmeraldValue{}, class))
-		})
-
-		if caughtClassName != nil {
-			block := object.NewBlock(rescueBlock.Bytecode, 0, 0, []string{}, false)
-			return object.NewClosedBlock(f.block.Context, block, []object.EmeraldValue{}, f.block.File, object.PUBLIC)
-		}
-	}
-
-	return nil
-}
-
-func (f *Frame) rescuesException(exception object.EmeraldError, vm *VM) bool {
-	return f.blockRescuingException(exception, vm) != nil
-}

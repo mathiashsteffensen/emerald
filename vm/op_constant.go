@@ -20,7 +20,9 @@ func (vm *VM) executeOpConstantGet(ins bytecode.Instructions, ip int) {
 		return
 	}
 
-	vm.push(value)
+	if !vm.ExceptionIsRaised() {
+		vm.push(value)
+	}
 }
 
 func (vm *VM) executeOpConstantSet(ins bytecode.Instructions, ip int) {
@@ -52,7 +54,9 @@ func (vm *VM) executeOpScopedConstantGet(ins bytecode.Instructions, ip int) {
 		result = vm.Send(self, name, vm.rt.NULL, map[string]object.EmeraldValue{})
 	}
 
-	vm.push(result)
+	if !vm.ExceptionIsRaised() {
+		vm.push(result)
+	}
 }
 
 func getConst(self object.EmeraldValue, name string, rt *core.Runtime) (object.EmeraldValue, error) {

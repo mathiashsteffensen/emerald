@@ -1,47 +1,54 @@
 package vm
 
 import (
-	"emerald/debug"
 	"emerald/object"
 )
+
+func (vm *VM) handleRaise(err object.EmeraldError) {
+	fiber := vm.currentFiber()
+
+	for fiber.framesIndex > 0 {
+		frame := fiber.currentFrame()
+		block := frame.block
+
+		for _, entry := range block.ExceptionTable {
+			if frame.ip >= entry.StartIP && frame.ip <= entry.EndIP {
+				matches := false
+
+				if len(entry.CaughtErrorClasses) == 0 {
+					class := vm.rt.StandardError
+					if vm.rt.IsTruthy(vm.rt.Send(err, "is_a?", vm.rt.NULL, map[string]object.EmeraldValue{}, class)) {
+						matches = true
+					}
+				} else {
+					for _, className := range entry.CaughtErrorClasses {
+						class := vm.rt.Object.NamespaceDefinitionGet(className)
+						if class != nil && vm.rt.IsTruthy(vm.rt.Send(err, "is_a?", vm.rt.NULL, map[string]object.EmeraldValue{}, class)) {
+							matches = true
+							break
+						}
+					}
+				}
+
+				if matches {
+					frame.ip = entry.HandlerIP - 1
+					fiber.sp = frame.basePointer + block.NumLocals
+					vm.rt.Heap.SetGlobalVariableString("$!", nil)
+					return
+				}
+			}
+		}
+
+		fiber.popFrame()
+	}
+}
 
 func (vm *VM) ExceptionIsRaised() bool {
 	globalException := vm.rt.Heap.GetGlobalVariableString("$!")
 
-	if globalException == nil && globalException != vm.rt.NULL {
+	if globalException == nil || globalException == vm.rt.NULL {
 		return false
 	}
 
 	return true
-}
-
-func (vm *VM) popFramesUntilExceptionRescuedOrProgramTerminates() bool {
-	// If this is called we assume that this is not nil
-	raisedException := vm.rt.Heap.GetGlobalVariableString("$!").(object.EmeraldError)
-
-	debug.InternalDebugF("Raising %s in frame %d", raisedException.ClassName(), vm.currentFiber().framesIndex)
-
-	rescued := true
-
-	vm.withFiber(func(fiber *Fiber) {
-		for !fiber.currentFrame().rescuesException(raisedException, vm) {
-			fiber.popFrame()
-			if fiber.framesIndex == 0 {
-				rescued = false
-				break
-			}
-		}
-
-		if rescued {
-			debug.InternalDebugF("Rescued in frame %d!", fiber.framesIndex)
-			vm.currentFiber().inRescue = true
-			debug.InternalDebug("Evaluating rescue clause")
-			vm.rawEvalBlock(fiber.currentFrame().blockRescuingException(raisedException, vm), vm.rt.NULL, map[string]object.EmeraldValue{})
-			vm.rt.Heap.SetGlobalVariableString("$!", nil)
-			debug.InternalDebugF("Done evaluating rescue clause, framesIndex=%d", fiber.framesIndex)
-			vm.currentFiber().inRescue = false
-		}
-	})
-
-	return rescued
 }

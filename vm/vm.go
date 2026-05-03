@@ -31,6 +31,10 @@ func New(file string, bytecode *bytecode.Bytecode, rt *core.Runtime) *VM {
 
 	vm.ctx = vm.newContext(file, rt.MainObject, rt.NULL)
 
+	rt.OnRaise = func(err object.EmeraldError) {
+		vm.handleRaise(err)
+	}
+
 	rt.Heap.SetGlobalVariableString("$LOAD_PATH", rt.NewArray([]object.EmeraldValue{
 		rt.NewString(debug.BinaryDir),
 	}))
@@ -71,13 +75,6 @@ func (vm *VM) runWhile(condition func() bool) {
 	)
 
 	for condition() {
-		if !vm.currentFiber().inRescue && vm.ExceptionIsRaised() {
-			rescued := vm.popFramesUntilExceptionRescuedOrProgramTerminates()
-			if !rescued {
-				break
-			}
-		}
-
 		vm.currentFiber().currentFrame().ip++
 
 		ip, ins, op = vm.fetch()
@@ -378,8 +375,10 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 			}
 
 			result := vm.evalBuiltIn(method, block, vm.stack()[basePointer:argsEndIndex], kwargsMap)
-			vm.currentFiber().sp = basePointer - 3
-			vm.push(result)
+			if !vm.ExceptionIsRaised() {
+				vm.currentFiber().sp = basePointer - 3
+				vm.push(result)
+			}
 		}
 	})
 }
@@ -437,7 +436,11 @@ func (vm *VM) pushKwargsToStack(kwargsHash *core.HashInstance) (map[string]objec
 func (vm *VM) evalInfixOperator(op string) {
 	left := vm.pop()
 
-	vm.stack()[vm.currentFiber().sp-1] = vm.Send(left, op, vm.rt.NULL, map[string]object.EmeraldValue{}, vm.StackTop())
+	result := vm.Send(left, op, vm.rt.NULL, map[string]object.EmeraldValue{}, vm.StackTop())
+
+	if !vm.ExceptionIsRaised() {
+		vm.stack()[vm.currentFiber().sp-1] = result
+	}
 }
 
 func (vm *VM) Context() *object.Context {

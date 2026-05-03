@@ -2,30 +2,24 @@ package object
 
 import (
 	"emerald/bytecode"
-	"emerald/types"
 	"fmt"
 )
 
-type RescueBlock struct {
-	bytecode.Bytecode
-	CaughtErrorClasses *types.Slice[string]
-}
-
-func NewRescueBlock(bytecode bytecode.Bytecode, errorClasses ...string) RescueBlock {
-	return RescueBlock{
-		Bytecode:           bytecode,
-		CaughtErrorClasses: types.NewSlice(errorClasses...),
-	}
+type ExceptionTableEntry struct {
+	StartIP            int
+	EndIP              int
+	HandlerIP          int
+	CaughtErrorClasses []string
 }
 
 type Block struct {
 	*BaseEmeraldValue
 	bytecode.Bytecode
-	NumLocals    int
-	NumArgs      int
-	Kwargs       []string
-	EnforceArity bool
-	RescueBlocks []RescueBlock
+	NumLocals      int
+	NumArgs        int
+	Kwargs         []string
+	EnforceArity   bool
+	ExceptionTable []ExceptionTableEntry
 }
 
 func (b *Block) Class() EmeraldValue       { return nil }

@@ -121,6 +121,9 @@ func EnforceArgumentType[T object.EmeraldValue](rt *Runtime, typ *object.Class, 
 
 func (rt *Runtime) Raise(err object.EmeraldError) object.EmeraldError {
 	rt.Heap.SetGlobalVariableString("$!", err)
+	if rt.OnRaise != nil {
+		rt.OnRaise(err)
+	}
 	return err
 }
 

@@ -24,10 +24,50 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*obj
 	for _, p := range append(node.Arguments, node.KeywordArguments...) {
 		c.symbolTable.Define(p.Value)
 	}
+	startIP := len(c.currentInstructions())
 
 	c.Compile(node.Body)
 
 	c.ensureLastInstructionIsReturn(node.Token)
+
+	endIP := len(c.currentInstructions())
+
+	jumpsToPatch := []int{}
+
+	if len(node.RescueBlocks) > 0 {
+		jumpsToPatch = append(jumpsToPatch, c.emit(bytecode.OpJump, node.Token, 0))
+	}
+
+	exceptionTable := []object.ExceptionTableEntry{}
+
+	for i, rescueBlock := range node.RescueBlocks {
+		handlerIP := len(c.currentInstructions())
+
+		c.Compile(rescueBlock.Body)
+		c.ensureLastInstructionIsReturn(rescueBlock.Token)
+
+		// We only need to emit a jump if there are more rescue blocks to follow,
+		// otherwise we'll just fall through to the end of the method anyway.
+		if i < len(node.RescueBlocks)-1 {
+			jumpsToPatch = append(jumpsToPatch, c.emit(bytecode.OpJump, rescueBlock.Token, 0))
+		}
+
+		var errorClasses []string
+		for _, errorClass := range rescueBlock.CaughtErrorClasses {
+			errorClasses = append(errorClasses, errorClass.String(0))
+		}
+
+		exceptionTable = append(exceptionTable, object.ExceptionTableEntry{
+			StartIP:            startIP,
+			EndIP:              endIP,
+			HandlerIP:          handlerIP,
+			CaughtErrorClasses: errorClasses,
+		})
+	}
+
+	for _, pos := range jumpsToPatch {
+		c.changeOperand(pos, len(c.currentInstructions()))
+	}
 
 	freeSymbols := c.symbolTable.FreeSymbols
 	numLocals := c.symbolTable.NumDefinitions
@@ -43,23 +83,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*obj
 	}
 
 	block := object.NewBlock(bytecode, numLocals, numParams, kwargNames, enforceArity)
-
-	for _, rescueBlock := range node.RescueBlocks {
-		c.enterScope()
-
-		c.Compile(rescueBlock.Body)
-
-		c.ensureLastInstructionIsReturn(rescueBlock.Token)
-
-		var errorClasses []string
-		bytecode = c.leaveScope()
-
-		for _, errorClass := range rescueBlock.CaughtErrorClasses {
-			errorClasses = append(errorClasses, errorClass.String(0))
-		}
-
-		block.RescueBlocks = append(block.RescueBlocks, object.NewRescueBlock(bytecode, errorClasses...))
-	}
+	block.ExceptionTable = exceptionTable
 
 	return block, len(freeSymbols)
 }

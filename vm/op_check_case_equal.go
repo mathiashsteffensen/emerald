@@ -17,7 +17,13 @@ func (vm *VM) executeOpCheckCaseEqual(ins bytecode.Instructions, ip int) {
 	subject := vm.StackTop()
 
 	for _, matcher := range matchers {
-		if vm.Send(matcher, "===", vm.rt.NULL, map[string]object.EmeraldValue{}, subject) == vm.rt.TRUE {
+		res := vm.Send(matcher, "===", vm.rt.NULL, map[string]object.EmeraldValue{}, subject)
+
+		if vm.ExceptionIsRaised() {
+			return
+		}
+
+		if res == vm.rt.TRUE {
 			vm.pop()
 			return
 		}
