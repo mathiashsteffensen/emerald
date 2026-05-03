@@ -53,15 +53,14 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 	lineReader.Config.Stdout = out
 	lineReader.Config.Stderr = out
 
-	lineCount := 1
-
 	var line string
-
 	astNodes := []*ast.AST{}
-
 	var buffer string
-
+	var machine *vm.VM
+	
 	engine := emerald.New()
+	comp := compiler.New(nil, engine.Runtime)
+	lineCount := 1
 
 	for {
 		line, err = lineReader.Readline()
@@ -101,7 +100,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 				for _, msg := range p.Errors() {
 					print("\t" + msg)
 				}
-				lineReader.Config.Prompt = fmt.Sprintf(PROMPT_FMT, 1)
+				lineReader.SetPrompt(fmt.Sprintf(PROMPT_FMT, lineCount))
 			}
 
 			continue
@@ -118,23 +117,35 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			continue
 		}
 
-		comp := compiler.New(l, engine.Runtime)
+		oldInstructionsCount := len(comp.Bytecode().Instructions)
+
+		comp.SetLexer(l)
 		comp.Compile(program)
 
-		code := comp.Bytecode()
+		bc := comp.Bytecode()
 
 		if config.OutputBytecode {
-			debug.InternalDebugF("Emerald bytecode: \n%s", code.Instructions[0:])
+			debug.InternalDebugF("Emerald bytecode: \n%s", bc.Instructions[oldInstructionsCount:])
 			time.Sleep(50 * time.Millisecond)
 		}
 
-		currentWorkingDir, err := os.Getwd()
-		if err != nil {
-			debug.Fatal(err.Error())
+		if machine == nil {
+			currentWorkingDir, err := os.Getwd()
+			if err != nil {
+				debug.Fatal(err.Error())
+			}
+			machine = vm.New(currentWorkingDir, bc, engine.Runtime)
 		}
 
-		machine := vm.New(currentWorkingDir, code, engine.Runtime)
-		machine.Run()
+		newInstructions := bc.Instructions[oldInstructionsCount:]
+		newDebugTokens := make(map[int]lexer.Token)
+		for pos, token := range bc.DebugTokens {
+			if pos >= oldInstructionsCount {
+				newDebugTokens[pos-oldInstructionsCount] = token
+			}
+		}
+
+		machine.RunIncremental(newInstructions, newDebugTokens, 0)
 
 		if exception := engine.Runtime.Heap.GetGlobalVariableString("$!"); exception != nil && exception != engine.Runtime.NULL {
 			exception := exception.(object.EmeraldError)
@@ -146,13 +157,12 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 		evaluated := machine.LastPoppedStackElem()
 
 		if evaluated != nil {
-			ctx := machine.Context()
-			ctx.Self = evaluated
 			evaluated = machine.Send(evaluated, "inspect", engine.Runtime.NULL, map[string]object.EmeraldValue{})
 			print("=> " + evaluated.Inspect())
 		}
 
 		lineCount++
+		lineReader.SetPrompt(fmt.Sprintf(PROMPT_FMT, lineCount))
 	}
 
 Exit:

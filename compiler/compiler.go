@@ -52,6 +52,15 @@ func New(l *lexer.Lexer, rt *core.Runtime, options ...ConstructorOption) *Compil
 	return c
 }
 
+func (c *Compiler) SetLexer(l *lexer.Lexer) {
+	c.scopes[c.scopeIndex].bytecode.Lexer = l
+}
+
+func (c *Compiler) SetRuntime(rt *core.Runtime) {
+	c.rt = rt
+	c.symbolTable = rt.Heap.SymbolTable
+}
+
 func Compile(fileName string, content string, rt *core.Runtime) *bytecode.Bytecode {
 	l := lexer.New(lexer.NewInput(fileName, content))
 	p := parser.New(l)

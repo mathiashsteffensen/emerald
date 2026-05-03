@@ -5,6 +5,7 @@ import (
 	"emerald/core"
 	"emerald/debug"
 	"emerald/object"
+	"emerald/parser/lexer"
 	"fmt"
 	"os"
 )
@@ -54,6 +55,40 @@ func New(file string, bytecode *bytecode.Bytecode, rt *core.Runtime) *VM {
 	rt.Send = vm.Send
 
 	return vm
+}
+
+// RunIncremental appends new instructions to the current frame and continues execution.
+// It is intended for use in a REPL.
+func (vm *VM) RunIncremental(instructions bytecode.Instructions, debugTokens map[int]lexer.Token, numLocals int) {
+	fiber := vm.currentFiber()
+
+	if fiber.framesIndex == 0 {
+		// No frames, create a main frame.
+		// This can happen if the previous execution ended in an exception.
+		bc := bytecode.Bytecode{
+			Instructions: instructions,
+			DebugTokens:  debugTokens,
+		}
+		mainBlock := &object.ClosedBlock{Block: &object.Block{Bytecode: bc, NumLocals: numLocals}}
+		fiber.pushFrame(NewFrame(mainBlock, 0))
+	} else {
+		// We always want to append to the main frame in the REPL
+		frame := fiber.frames[0]
+		startIp := len(frame.block.Instructions)
+		frame.block.Instructions = append(frame.block.Instructions, instructions...)
+
+		for pos, token := range debugTokens {
+			frame.block.DebugTokens[startIp+pos] = token
+		}
+
+		if numLocals > frame.block.NumLocals {
+			frame.block.NumLocals = numLocals
+		}
+
+		frame.ip = startIp - 1
+	}
+
+	vm.Run()
 }
 
 func (vm *VM) Run() {
