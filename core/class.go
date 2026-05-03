@@ -67,6 +67,6 @@ func (rt *Runtime) classNew() object.BuiltInMethod {
 
 func (rt *Runtime) classSingletonNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return object.NewClass("", rt.Object, rt.Object.Class(), object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+		return object.NewClass("", rt.Object, rt.Class, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 	}
 }

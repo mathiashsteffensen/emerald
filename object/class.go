@@ -1,13 +1,15 @@
 package object
 
+import (
+	"reflect"
+)
+
 type Class struct {
 	*BaseEmeraldValue
 	Name  string
 	class EmeraldValue
 	super EmeraldValue
 }
-
-var Classes = map[string]*Class{}
 
 func (c *Class) Type() EmeraldValueType { return CLASS_VALUE }
 func (c *Class) Inspect() string {
@@ -20,10 +22,10 @@ func (c *Class) Ancestors() []EmeraldValue {
 	ancestors := []EmeraldValue{c}
 	ancestors = append(ancestors, c.IncludedModules()...)
 
-	// Need to type assert to pointer otherwise reflection is required to check that the interface value is nil
-	super := c.Super().(*Class)
-	if super != nil {
-		ancestors = append(ancestors, super.Ancestors()...)
+	super := c.Super()
+
+	if super != nil && !reflect.ValueOf(super).IsNil() {
+		ancestors = append(ancestors, super.(*Class).Ancestors()...)
 	}
 
 	return ancestors
@@ -58,21 +60,7 @@ func NewClass(
 		},
 	}
 
-	if classClass, ok := Classes["Class"]; ok {
-		class.class = NewSingletonClass(class, staticBuiltInMethodSet, classClass)
-	} else {
-		class.class = NewSingletonClass(class, staticBuiltInMethodSet, staticParent)
-	}
-
-	if name == "Class" {
-		for _, existingClass := range Classes {
-			existingClass.class = NewSingletonClass(existingClass, existingClass.class.BuiltInMethodSet(), class)
-		}
-	}
-
-	if name != "" {
-		Classes[name] = class
-	}
+	class.class = NewSingletonClass(class, staticBuiltInMethodSet, staticParent)
 
 	return class
 }

@@ -6,8 +6,6 @@ type Module struct {
 	class EmeraldValue
 }
 
-var Modules = map[string]*Module{}
-
 func (m *Module) Type() EmeraldValueType { return MODULE_VALUE }
 func (m *Module) Inspect() string {
 	return m.Name
@@ -22,7 +20,7 @@ func (m *Module) Ancestors() []EmeraldValue {
 }
 func (m *Module) HashKey() string { return m.Inspect() }
 
-func NewModule(name string, builtInMethodSet, staticBuiltInMethodSet BuiltInMethodSet, modules ...EmeraldValue) *Module {
+func NewModule(name string, moduleClass EmeraldValue, builtInMethodSet, staticBuiltInMethodSet BuiltInMethodSet, modules ...EmeraldValue) *Module {
 	mod := &Module{
 		BaseEmeraldValue: &BaseEmeraldValue{
 			builtInMethodSet: builtInMethodSet,
@@ -31,11 +29,7 @@ func NewModule(name string, builtInMethodSet, staticBuiltInMethodSet BuiltInMeth
 		Name: name,
 	}
 
-	mod.class = NewSingletonClass(mod, staticBuiltInMethodSet, Classes["Module"])
-
-	if name != "" {
-		Modules[name] = mod
-	}
+	mod.class = NewSingletonClass(mod, staticBuiltInMethodSet, moduleClass)
 
 	return mod
 }

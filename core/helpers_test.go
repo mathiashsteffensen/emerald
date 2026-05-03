@@ -34,16 +34,6 @@ func runCoreTests(t *testing.T, tests []coreTestCase, beforeEach ...string) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			for _, class := range object.Classes {
-				class.ResetForSpec()
-				class.Class().(*object.SingletonClass).ResetForSpec()
-			}
-
-			for _, module := range object.Modules {
-				module.ResetForSpec()
-				module.Class().(*object.SingletonClass).ResetForSpec()
-			}
-
 			combinedScript := strings.Join([]string{beforeScript.String(), tt.input}, "\n")
 
 			rt := core.NewRuntime()
@@ -126,7 +116,7 @@ func testExpectedObject(
 		}
 
 		if strings.HasPrefix(expected, "class:") {
-			err := testClassObject(expected[6:], actual)
+			err := testClassObject(expected[6:], actual, rt)
 			if err != nil {
 				t.Errorf("testClassObject failed: %s", err)
 			}
@@ -134,7 +124,7 @@ func testExpectedObject(
 		}
 
 		if strings.HasPrefix(expected, "module:") {
-			err := testModuleObject(expected[7:], actual)
+			err := testModuleObject(expected[7:], actual, rt)
 			if err != nil {
 				t.Errorf("testModuleObject failed: %s", err)
 			}
@@ -293,37 +283,37 @@ func testSymbolObject(expected string, actual object.EmeraldValue) error {
 	return nil
 }
 
-func testClassObject(expected string, actual object.EmeraldValue) error {
-	expectedClass, ok := object.Classes[expected]
-	if !ok {
+func testClassObject(expected string, actual object.EmeraldValue, rt *core.Runtime) error {
+	expectedClass := rt.Object.NamespaceDefinitionGet(expected)
+	if expectedClass == nil {
 		return fmt.Errorf("undefined class %s", expected)
 	}
 
 	actualClass, ok := actual.(*object.Class)
 	if !ok {
-		return fmt.Errorf("expected class got=%T", actual)
+		return fmt.Errorf("expected class got=%s", actual.Inspect())
 	}
 
-	if expectedClass.Name != actualClass.Name {
-		return fmt.Errorf("expectedClass was expected to be %s, got=%s", expectedClass.Name, actualClass.Name)
+	if expectedClass.Inspect() != actualClass.Name {
+		return fmt.Errorf("expectedClass was expected to be %s, got=%s", expectedClass.Inspect(), actualClass.Name)
 	}
 
 	return nil
 }
 
-func testModuleObject(expected string, actual object.EmeraldValue) error {
-	expectedClass, ok := object.Modules[expected]
-	if !ok {
+func testModuleObject(expected string, actual object.EmeraldValue, rt *core.Runtime) error {
+	expectedModule := rt.Object.NamespaceDefinitionGet(expected)
+	if expectedModule == nil {
 		return fmt.Errorf("undefined module %s", expected)
 	}
 
 	actualClass, ok := actual.(*object.Module)
 	if !ok {
-		return fmt.Errorf("expected module got=%T", actual)
+		return fmt.Errorf("expected module got=%s", actual.Inspect())
 	}
 
-	if expectedClass.Name != actualClass.Name {
-		return fmt.Errorf("expected module was expected to be %s, got=%s", expectedClass.Name, actualClass.Name)
+	if expectedModule.Inspect() != actualClass.Name {
+		return fmt.Errorf("expected module was expected to be %s, got=%s", expectedModule.Inspect(), actualClass.Name)
 	}
 
 	return nil

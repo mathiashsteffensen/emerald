@@ -13,7 +13,7 @@ import (
 )
 
 func (rt *Runtime) InitKernel() {
-	rt.Kernel = object.NewModule("Kernel", object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	rt.Kernel = object.NewModule("Kernel", rt.Module, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
 	rt.DefineMethod(rt.Kernel, "inspect", rt.kernelInspect())
 	rt.DefineMethod(rt.Kernel, "class", rt.kernelClass())

@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	"emerald/object"
+	"emerald/core"
 	"fmt"
 	"strings"
 	"testing"
@@ -10,7 +10,10 @@ import (
 func TestException_kind_of(t *testing.T) {
 	tests := []coreTestCase{}
 
-	for className := range object.Classes {
+	rt := core.NewRuntime()
+	rt.Init()
+
+	for className := range rt.Object.NamespaceDefinitions() {
 		if strings.Contains(className, "Error") {
 			tests = append(tests, coreTestCase{
 				name:     fmt.Sprintf("%s#kind_of?(Exception) == true", className),

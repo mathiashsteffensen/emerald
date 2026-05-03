@@ -5,9 +5,15 @@ import (
 )
 
 func (rt *Runtime) InitObject() {
-	rt.Object = object.NewClass("Object", rt.BasicObject, rt.BasicObject.Class(), object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	staticParent := rt.BasicObject.Class()
+	if rt.Class != nil {
+		staticParent = rt.Class
+	}
+
+	rt.Object = object.NewClass("Object", rt.BasicObject, staticParent, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 
 	rt.Object.Include(rt.Kernel)
+	rt.Object.NamespaceDefinitionSet("BasicObject", rt.BasicObject)
 
 	rt.DefineMethod(rt.Object, "to_s", rt.objectToS())
 	rt.DefineMethod(rt.Object, "!@", rt.objectBooleanNegate())

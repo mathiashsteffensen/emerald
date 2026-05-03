@@ -9,12 +9,13 @@ import (
 func (rt *Runtime) DefineClass(name string, super *object.Class) *object.Class {
 	var superClass object.EmeraldValue
 
-	if super != nil {
+	if rt.Class != nil {
+		superClass = rt.Class
+	} else if super != nil {
 		superClass = super.Class()
 	}
 
 	class := object.NewClass(name, super, superClass, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-
 	rt.Object.NamespaceDefinitionSet(name, class)
 	class.SetParentNamespace(rt.Object)
 
@@ -24,12 +25,13 @@ func (rt *Runtime) DefineClass(name string, super *object.Class) *object.Class {
 func (rt *Runtime) DefineNestedClass(namespace object.EmeraldValue, name string, super *object.Class) *object.Class {
 	var superClass object.EmeraldValue
 
-	if super != nil {
+	if rt.Class != nil {
+		superClass = rt.Class
+	} else if super != nil {
 		superClass = super.Class()
 	}
 
 	class := object.NewClass(name, super, superClass, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-
 	namespace.NamespaceDefinitionSet(name, class)
 	class.SetParentNamespace(namespace)
 
@@ -37,8 +39,7 @@ func (rt *Runtime) DefineNestedClass(namespace object.EmeraldValue, name string,
 }
 
 func (rt *Runtime) DefineModule(name string) *object.Module {
-	module := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-
+	module := object.NewModule(name, rt.Module, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
 	rt.Object.NamespaceDefinitionSet(name, module)
 	module.SetParentNamespace(rt.Object)
 
@@ -46,9 +47,8 @@ func (rt *Runtime) DefineModule(name string) *object.Module {
 }
 
 func (rt *Runtime) DefineNestedModule(namespace object.EmeraldValue, name string) *object.Module {
-	module := object.NewModule(name, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-
-	rt.Object.NamespaceDefinitionSet(name, module)
+	module := object.NewModule(name, rt.Module, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	namespace.NamespaceDefinitionSet(name, module)
 	module.SetParentNamespace(namespace)
 
 	return module

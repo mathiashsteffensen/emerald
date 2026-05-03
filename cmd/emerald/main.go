@@ -4,12 +4,7 @@ import (
 	"emerald"
 	"emerald/cmd/emerald/subcmd"
 	"emerald/cmd/helpers"
-	"emerald/compiler"
 	"emerald/debug"
-	"emerald/object"
-	"emerald/parser"
-	"emerald/parser/lexer"
-	"emerald/vm"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -43,27 +38,10 @@ var rootCmd = &cobra.Command{
 			bytes, err := os.ReadFile(absFile)
 			helpers.CheckError("error reading file", err)
 
-			l := lexer.New(lexer.NewInput(absFile, string(bytes)))
-			p := parser.New(l)
-			program := p.ParseAST()
+			_, err = engine.EvalFile(absFile, string(bytes))
 
-			if len(p.Errors()) != 0 {
-				debug.FatalF("parser error: %s\n", p.Errors()[0])
-			}
-
-			c := compiler.New(l, engine.Runtime)
-			c.Compile(program)
-
-			machine := vm.New(absFile, c.Bytecode(), engine.Runtime)
-			machine.Run()
-
-			if exception := engine.Runtime.Heap.GetGlobalVariableString("$!"); exception != nil && exception != engine.Runtime.NULL {
-				exception := exception.(object.EmeraldError)
-				debug.FatalF("%s: %s", exception.ClassName(), exception.Message())
-			}
-
-			if machine.StackTop() != nil {
-				debug.InternalDebug("StackTop was not nil")
+			if err != nil {
+				debug.Fatal(err.Error())
 			}
 
 			debug.Shutdown()
