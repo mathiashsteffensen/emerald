@@ -8,9 +8,7 @@ The `EmeraldValue` interface in `object/emerald_value.go` is currently very larg
 Ruby implementations like MRI use "Immediate Values" for small integers, booleans, and nil to avoid allocations.
 
 ## Goals
-- [ ] Redesign the `EmeraldValue` interface to be as small as possible (ideally just `Type()`, `Inspect()`, etc.).
-- [ ] Move many of the object-system specific methods (like `NamespaceDefinitionGet`) out of the interface or into a secondary interface.
-- [ ] Explore using a struct with a type tag or a smaller interface to reduce the memory footprint of every object.
+- [ ] Transitioning from an interface to a concrete universal `Value` struct (e.g., `type Value struct { typ Type; ptr unsafe.Pointer; num uint64 }`) to completely avoid interface boxing allocations and to reduce the memory footprint of every object.
 - [ ] Implement immediate values for:
     - `Integer`
     - `Float` (if possible)
