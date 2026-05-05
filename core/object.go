@@ -6,11 +6,11 @@ import (
 
 func (rt *Runtime) InitObject() {
 	staticParent := rt.BasicObject.Class()
-	if rt.Class != nil {
+	if !rt.Class.IsNil() {
 		staticParent = rt.Class
 	}
 
-	rt.Object = object.NewClass("Object", rt.BasicObject, staticParent, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	rt.Object = object.NewHeapObject(object.NewClass("Object", rt.BasicObject.Heap.(*object.Class), staticParent, object.BuiltInMethodSet{}, object.BuiltInMethodSet{}))
 
 	rt.Object.Include(rt.Kernel)
 	rt.Object.NamespaceDefinitionSet("BasicObject", rt.BasicObject)
@@ -27,7 +27,7 @@ func (rt *Runtime) InitObject() {
 	rt.Object.NamespaceDefinitionSet("Kernel", rt.Kernel)
 	rt.Kernel.SetParentNamespace(rt.Object)
 
-	rt.MainObject = rt.Object.New()
+	rt.MainObject = object.NewHeapObject(rt.Object.Heap.(*object.Class).New())
 
 	rt.DefineSingletonMethod(rt.MainObject, "to_s", rt.mainObjectToS())
 	rt.DefineSingletonMethod(rt.MainObject, "inspect", rt.mainObjectToS())

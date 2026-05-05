@@ -13,7 +13,7 @@ import (
 )
 
 func (rt *Runtime) InitKernel() {
-	rt.Kernel = object.NewModule("Kernel", rt.Module, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	rt.Kernel = object.NewHeapObject(object.NewModule("Kernel", rt.Module, object.BuiltInMethodSet{}, object.BuiltInMethodSet{}))
 
 	rt.DefineMethod(rt.Kernel, "inspect", rt.kernelInspect())
 	rt.DefineMethod(rt.Kernel, "class", rt.kernelClass())
@@ -48,7 +48,7 @@ func (rt *Runtime) kernelClass() object.BuiltInMethod {
 func (rt *Runtime) kernelKindOf() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		class := args[0]
@@ -72,11 +72,11 @@ func (rt *Runtime) kernelSleep() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var sleepArg time.Duration
 
-		switch arg := args[0].(type) {
-		case *IntegerInstance:
-			sleepArg = time.Duration(arg.Value) * time.Second
-		case *FloatInstance:
-			sleepArg = time.Duration(arg.Value) * time.Second
+		switch args[0].TypeID {
+		case object.INTEGER_VALUE:
+			sleepArg = time.Duration(int64(args[0].Num)) * time.Second
+		case object.FLOAT_VALUE:
+			sleepArg = time.Duration(math.Float64frombits(args[0].Num)) * time.Second
 		}
 
 		start := time.Now()
@@ -94,7 +94,7 @@ func (rt *Runtime) kernelPuts() object.BuiltInMethod {
 			val := rt.Send(arg, "to_s", rt.NULL, map[string]object.EmeraldValue{})
 
 			if err := rt.writeToStdout(fmt.Sprintf("%s\n", val.Inspect())); err != nil {
-				return err
+				return object.NewHeapObject(err)
 			}
 		}
 
@@ -108,7 +108,7 @@ func (rt *Runtime) kernelPrint() object.BuiltInMethod {
 			val := rt.Send(arg, "to_s", rt.NULL, map[string]object.EmeraldValue{})
 
 			if err := rt.writeToStdout(val.Inspect()); err != nil {
-				return err
+				return object.NewHeapObject(err)
 			}
 		}
 
@@ -119,20 +119,19 @@ func (rt *Runtime) kernelPrint() object.BuiltInMethod {
 func (rt *Runtime) kernelInclude() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 1, 255); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		for _, arg := range args {
-			if arg == nil {
+			if !arg.IsDefined() {
 				continue
 			}
 
-			mod, ok := arg.(*object.Module)
-			if !ok {
-				rt.Raise(rt.NewTypeError(fmt.Sprintf("wrong argument type %s (expected Module)", object.RealClass(arg).(*object.Class).Name)))
+			if _, ok := arg.Heap.(*object.Module); !ok {
+				return object.NewHeapObject(rt.Raise(rt.NewTypeError(fmt.Sprintf("wrong argument type %s (expected Module)", object.RealClass(arg).Heap.(*object.Class).Name))))
 			}
 
-			ctx.Self.Include(mod)
+			ctx.Self.Include(arg)
 		}
 
 		return ctx.Self
@@ -143,15 +142,19 @@ func (rt *Runtime) kernelRaise() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		args, err := rt.EnforceArity(args, kwargs, 1, 2)
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		switch len(args) {
 		case 1:
-			rt.Raise(rt.NewRuntimeError(args[0].(*StringInstance).Value))
+			msg, err := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
+			if err != nil {
+				return object.NewHeapObject(err)
+			}
+			rt.Raise(rt.NewRuntimeError(msg.Value))
 		case 2:
 			exception := rt.Send(args[0], "new", rt.NULL, map[string]object.EmeraldValue{}, args[1])
-			rt.Raise(exception.(object.EmeraldError))
+			rt.Raise(exception.Heap.(object.EmeraldError))
 		}
 
 		return rt.NULL
@@ -161,12 +164,12 @@ func (rt *Runtime) kernelRaise() object.BuiltInMethod {
 func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		arg, emErr := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 		if emErr != nil {
-			return emErr
+			return object.NewHeapObject(emErr)
 		}
 
 		path := arg.Value
@@ -181,14 +184,14 @@ func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 			panic(err)
 		}
 
-		if rt.RequiredFilesHash == nil {
+		if !rt.RequiredFilesHash.IsDefined() {
 			panic("RequiredFilesHash is nil!")
 		}
 
 		absolutePathStr := rt.NewString(absoluteFilePath)
 
 		// rt.File has already been loaded
-		if rt.RequiredFilesHash.(*HashInstance).Get(absolutePathStr) != nil {
+		if !rt.RequiredFilesHash.Heap.(*HashInstance).Get(absolutePathStr).IsNil() {
 			debug.InternalDebugF("rt.Kernel#require_relative - rt.File %s is already loaded, skipping", absoluteFilePath)
 			return rt.FALSE
 		}
@@ -220,7 +223,7 @@ func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 
 		rt.EvalBlock(requiredBlock, map[string]object.EmeraldValue{})
 
-		rt.RequiredFilesHash.(*HashInstance).Set(absolutePathStr, rt.TRUE)
+		rt.RequiredFilesHash.Heap.(*HashInstance).Set(absolutePathStr, rt.TRUE)
 
 		return rt.TRUE
 	}

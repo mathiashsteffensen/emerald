@@ -17,24 +17,24 @@ func (rt *Runtime) InitModule() {
 	rt.DefineMethod(rt.Module, "attr_accessor", rt.moduleAttrAccessor(), object.PRIVATE)
 	rt.DefineMethod(rt.Module, "private", rt.modulePrivate(), object.PRIVATE)
 
-	rt.Class.SetSuper(rt.Module)
-	rt.Class.Class().(*object.SingletonClass).SetSuper(rt.Module.Class())
+	rt.Class.Heap.(*object.Class).SetSuper(rt.Module)
+	rt.Class.Class().Heap.(*object.SingletonClass).SetSuper(rt.Module.Class())
 
-	rt.Kernel.Class().(*object.SingletonClass).SetSuper(rt.Module)
+	rt.Kernel.Class().Heap.(*object.SingletonClass).SetSuper(rt.Module)
 }
 
 func (rt *Runtime) moduleDefineMethod() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		name, err := EnforceArgumentType[*SymbolInstance](rt, rt.Symbol, args[0])
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
-		ctx.Self.DefinedMethodSet()[name.Value] = ctx.Block.(*object.ClosedBlock)
+		ctx.Self.DefinedMethodSet()[name.Value] = ctx.Block.Heap.(*object.ClosedBlock)
 
 		return args[0]
 	}
@@ -48,26 +48,26 @@ func (rt *Runtime) modulePrivate() object.BuiltInMethod {
 
 		for _, arg := range args {
 		Process:
-			switch argTyped := arg.(type) {
+			switch argTyped := arg.Heap.(type) {
 			case *StringInstance:
 				arg = rt.NewSymbol(argTyped.Value)
 				goto Process
 			case *SymbolInstance:
 				method, _, _, err := ctx.Self.ExtractMethod(argTyped.Value, ctx.Self, ctx.Self)
 				if err != nil {
-					return rt.Raise(rt.NewStandardError(fmt.Sprintf("undefined method `%s' for class `%s'", argTyped.Value, ctx.Self.Inspect())))
+					return object.NewHeapObject(rt.Raise(rt.NewStandardError(fmt.Sprintf("undefined method `%s' for class `%s'", argTyped.Value, ctx.Self.Inspect()))))
 				}
 
-				switch method := method.(type) {
+				switch m := method.Heap.(type) {
 				case *object.ClosedBlock:
-					method.Visibility = object.PRIVATE
+					m.Visibility = object.PRIVATE
 				case *object.WrappedBuiltInMethod:
-					method.Visibility = object.PRIVATE
+					m.Visibility = object.PRIVATE
 				}
 
-				return nil
+				return rt.NULL
 			default:
-				return rt.Raise(rt.NewTypeError(fmt.Sprintf("%s is not a symbol nor a string", arg.Inspect())))
+				return object.NewHeapObject(rt.Raise(rt.NewTypeError(fmt.Sprintf("%s is not a symbol nor a string", arg.Inspect()))))
 			}
 		}
 
@@ -83,7 +83,7 @@ func (rt *Runtime) moduleAttrReader() object.BuiltInMethod {
 			method := func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				value := ctx.Self.InstanceVariableGet(instanceVarName, ctx.Self, ctx.Self)
 
-				if value == nil {
+				if value.IsNil() {
 					return rt.NULL
 				} else {
 					return value
@@ -133,14 +133,14 @@ func (rt *Runtime) moduleCaseEquals() object.BuiltInMethod {
 func (rt *Runtime) nameAndInstanceVarFromObject(obj object.EmeraldValue) (string, string) {
 	name := ""
 
-	switch obj := obj.(type) {
+	switch o := obj.Heap.(type) {
 	case *StringInstance:
-		name = obj.Value
+		name = o.Value
 	case *SymbolInstance:
-		name = obj.Value
+		name = o.Value
 	}
 
-	instanceVarName := fmt.Sprintf("@%s", name)
+	instanceVarName := "@" + name
 
 	return name, instanceVarName
 }

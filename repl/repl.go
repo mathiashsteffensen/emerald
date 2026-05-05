@@ -147,16 +147,15 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 
 		machine.RunIncremental(newInstructions, newDebugTokens, 0)
 
-		if exception := engine.Runtime.Heap.GetGlobalVariableString("$!"); exception != nil && exception != engine.Runtime.NULL {
-			exception := exception.(object.EmeraldError)
-			printf("%s: %s\n", exception.ClassName(), exception.Message())
-			engine.Runtime.Heap.SetGlobalVariableString("$!", nil)
+		if exception := engine.Runtime.Heap.GetGlobalVariableString("$!"); !exception.IsNil() && exception != engine.Runtime.NULL {
+			printf("%s: %s\n", exception.Heap.(object.EmeraldError).ClassName(), exception.Heap.(object.EmeraldError).Message())
+			engine.Runtime.Heap.SetGlobalVariableString("$!", object.EmeraldValue{})
 			continue
 		}
 
 		evaluated := machine.LastPoppedStackElem()
 
-		if evaluated != nil {
+		if !evaluated.IsNil() {
 			evaluated = machine.Send(evaluated, "inspect", engine.Runtime.NULL, map[string]object.EmeraldValue{})
 			print("=> " + evaluated.Inspect())
 		}

@@ -14,19 +14,19 @@ type Instance struct {
 func (i *Instance) Type() EmeraldValueType { return INSTANCE_VALUE }
 func (i *Instance) Class() EmeraldValue {
 	if i.singleton != nil {
-		return i.singleton
+		return NewHeapObject(i.singleton)
 	}
 	return i.baseClass
 }
 func (i *Instance) SingletonClass() EmeraldValue {
 	if i.singleton == nil {
-		i.singleton = NewSingletonClass(i, i.baseClass, i.BaseEmeraldValue)
+		i.singleton = NewSingletonClass(NewHeapObject(i), i.baseClass, i.BaseEmeraldValue)
 	}
-	return i.singleton
+	return NewHeapObject(i.singleton)
 }
-func (i *Instance) Super() EmeraldValue { return nil }
+func (i *Instance) Super() EmeraldValue { return EmeraldValue{} }
 func (i *Instance) Ancestors() []EmeraldValue {
-	return append(i.Class().Ancestors(), i)
+	return append(i.Class().Ancestors(), NewHeapObject(i))
 }
 func (i *Instance) Include(mod EmeraldValue) {
 	i.SingletonClass().Include(mod)
@@ -39,8 +39,8 @@ func (i *Instance) Inspect() string {
 
 	out.WriteString("#<")
 
-	realClass := RealClass(i)
-	if class, ok := realClass.(*Class); ok {
+	realClass := RealClass(NewHeapObject(i))
+	if class, ok := realClass.Heap.(*Class); ok {
 		out.WriteString(class.Name)
 	} else {
 		out.WriteString("Unknown")

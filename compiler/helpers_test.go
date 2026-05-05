@@ -8,6 +8,7 @@ import (
 	"emerald/parser/ast"
 	"emerald/parser/lexer"
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 )
@@ -122,7 +123,7 @@ func testConstants(
 
 			return testStringObject(constant, actual[i])
 		case []bytecode.Instructions:
-			fn, ok := actual[i].(*object.Block)
+			fn, ok := actual[i].Heap.(*object.Block)
 			if !ok {
 				return fmt.Errorf("constant %d - not a function: %T",
 					i, actual[i])
@@ -138,29 +139,29 @@ func testConstants(
 }
 
 func testIntegerObject(expected int64, actual object.EmeraldValue) error {
-	result, ok := actual.(*core.IntegerInstance)
-	if !ok {
-		return fmt.Errorf("object is not IntegerInstance. got=%T (%+v)", actual, actual)
+	if !actual.Is(object.INTEGER_VALUE) {
+		return fmt.Errorf("object is not Integer. got=%s", actual.Inspect())
 	}
-	if result.Value != expected {
-		return fmt.Errorf("object has wrong value. got=%d, want=%d", result.Value, expected)
+	if int64(actual.Num) != expected {
+		return fmt.Errorf("object has wrong value. got=%d, want=%d", int64(actual.Num), expected)
 	}
 	return nil
 }
 
 func testFloatObject(expected float64, actual object.EmeraldValue) error {
-	result, ok := actual.(*core.FloatInstance)
-	if !ok {
-		return fmt.Errorf("object is not FloatInstance. got=%T (%+v)", actual, actual)
+	if !actual.Is(object.FLOAT_VALUE) {
+		return fmt.Errorf("object is not Float. got=%T (%+v)", actual, actual)
 	}
-	if result.Value != expected {
-		return fmt.Errorf("object has wrong value. got=%f, want=%f", result.Value, expected)
+
+	val := math.Float64frombits(actual.Num)
+	if val != expected {
+		return fmt.Errorf("object has wrong value. got=%f, want=%f", val, expected)
 	}
 	return nil
 }
 
 func testStringObject(expected string, actual object.EmeraldValue) error {
-	result, ok := actual.(*core.StringInstance)
+	result, ok := actual.Heap.(*core.StringInstance)
 	if !ok {
 		return fmt.Errorf("object is not String. got=%T (%+v)", actual, actual)
 	}
@@ -171,7 +172,7 @@ func testStringObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testRegexpObject(expected string, actual object.EmeraldValue) error {
-	result, ok := actual.(*core.RegexpInstance)
+	result, ok := actual.Heap.(*core.RegexpInstance)
 	if !ok {
 		return fmt.Errorf("object is not Regexp. got=%T (%+v)", actual, actual)
 	}
@@ -182,7 +183,7 @@ func testRegexpObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testSymbolObject(expected string, actual object.EmeraldValue) error {
-	result, ok := actual.(*core.SymbolInstance)
+	result, ok := actual.Heap.(*core.SymbolInstance)
 	if !ok {
 		return fmt.Errorf("object is not Symbol. got=%T (%+v)", actual, actual)
 	}
@@ -193,7 +194,7 @@ func testSymbolObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testClassObject(expected string, actual object.EmeraldValue) error {
-	class, ok := actual.(*object.Class)
+	class, ok := actual.Heap.(*object.Class)
 	if !ok {
 		return fmt.Errorf("object is not Class. got=%T (%+v)", actual, actual)
 	}
@@ -206,7 +207,7 @@ func testClassObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testModuleObject(expected string, actual object.EmeraldValue) error {
-	class, ok := actual.(*object.Module)
+	class, ok := actual.Heap.(*object.Module)
 	if !ok {
 		return fmt.Errorf("object is not Module. got=%T (%+v)", actual, actual)
 	}

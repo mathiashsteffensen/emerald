@@ -11,7 +11,7 @@ import (
 
 func (vm *VM) executeOpConstantGet(ins bytecode.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
-	name := vm.rt.Heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
+	name := vm.rt.Heap.GetConstant(nameIndex).Heap.(*core.SymbolInstance).Value
 
 	value, err := getConst(vm.ctx.Self, name, vm.rt)
 	if err != nil {
@@ -27,7 +27,7 @@ func (vm *VM) executeOpConstantGet(ins bytecode.Instructions, ip int) {
 
 func (vm *VM) executeOpConstantSet(ins bytecode.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
-	name := vm.rt.Heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
+	name := vm.rt.Heap.GetConstant(nameIndex).Heap.(*core.SymbolInstance).Value
 	// Don't pop it from the stack, we leave it there since assignment expressions return the assigned value
 	value := vm.StackTop()
 
@@ -36,7 +36,7 @@ func (vm *VM) executeOpConstantSet(ins bytecode.Instructions, ip int) {
 
 func (vm *VM) executeOpScopedConstantGet(ins bytecode.Instructions, ip int) {
 	nameIndex := vm.readUint16(ins, ip)
-	name := vm.rt.Heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
+	name := vm.rt.Heap.GetConstant(nameIndex).Heap.(*core.SymbolInstance).Value
 
 	self := vm.pop()
 
@@ -61,7 +61,7 @@ func (vm *VM) executeOpScopedConstantGet(ins bytecode.Instructions, ip int) {
 
 func getConst(self object.EmeraldValue, name string, rt *core.Runtime) (object.EmeraldValue, error) {
 	value := self.NamespaceDefinitionGet(name)
-	if value != nil {
+	if !value.IsNil() {
 		return value, nil
 	}
 
@@ -71,23 +71,22 @@ func getConst(self object.EmeraldValue, name string, rt *core.Runtime) (object.E
 		value = object.RealClass(self).NamespaceDefinitionGet(name)
 	case object.STATIC_CLASS_VALUE:
 		// If it's a singleton class, check the class namespace
-		value = self.(*object.SingletonClass).Instance.NamespaceDefinitionGet(name)
+		value = self.Heap.(*object.SingletonClass).Instance.NamespaceDefinitionGet(name)
 	}
 
-	if value == nil {
+	if value.IsNil() {
 		// Try MainObject & Object as a last resort
 		value = rt.MainObject.NamespaceDefinitionGet(name)
-		if value != nil {
+		if !value.IsNil() {
 			return value, nil
 		}
 
 		value = rt.Object.NamespaceDefinitionGet(name)
-		if value != nil {
+		if !value.IsNil() {
 			return value, nil
 		}
 
-		return nil, fmt.Errorf("uninitialized constant %s", name)
-
+		return object.EmeraldValue{}, fmt.Errorf("uninitialized constant %s", name)
 	}
 
 	return value, nil

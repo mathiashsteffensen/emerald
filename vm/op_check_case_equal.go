@@ -23,7 +23,7 @@ func (vm *VM) executeOpCheckCaseEqual(ins bytecode.Instructions, ip int) {
 			return
 		}
 
-		if res == vm.rt.TRUE {
+		if res.Is(object.TRUE_VALUE) {
 			vm.pop()
 			return
 		}

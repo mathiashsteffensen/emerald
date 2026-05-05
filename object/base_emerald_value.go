@@ -2,7 +2,6 @@ package object
 
 import (
 	"fmt"
-	"reflect"
 )
 
 type BaseEmeraldValue struct {
@@ -13,6 +12,9 @@ type BaseEmeraldValue struct {
 	parentNamespace      EmeraldValue
 	namespaceDefinitions map[string]EmeraldValue
 }
+
+func (val *BaseEmeraldValue) SetType(t EmeraldValueType) {}
+func (val *BaseEmeraldValue) SetHeap(h HeapObject)       {}
 
 func (val *BaseEmeraldValue) IncludedModules() []EmeraldValue {
 	direct := val.includedModules
@@ -63,7 +65,7 @@ func (val *BaseEmeraldValue) DefinedMethodSet() DefinedMethodSet {
 func (val *BaseEmeraldValue) DefineMethod(block EmeraldValue, args ...EmeraldValue) {
 	name := args[0].Inspect()[1:]
 
-	val.DefinedMethodSet()[name] = block.(*ClosedBlock)
+	val.DefinedMethodSet()[name] = block.Heap.(*ClosedBlock)
 }
 
 func (val *BaseEmeraldValue) Methods() []string {
@@ -91,15 +93,15 @@ func (val *BaseEmeraldValue) ExtractMethod(name string, extractFrom EmeraldValue
 		isSelf := ancestor == extractFrom
 
 		if method, ok := ancestor.DefinedMethodSet()[name]; ok {
-			return method, method.Visibility, isSelf, nil
+			return NewHeapObject(method), method.Visibility, isSelf, nil
 		}
 
 		if method, ok := ancestor.BuiltInMethodSet()[name]; ok {
-			return method, method.Visibility, isSelf, nil
+			return NewHeapObject(method), method.Visibility, isSelf, nil
 		}
 	}
 
-	return nil, PUBLIC, false, fmt.Errorf("undefined method %s for %s", name, target.Inspect())
+	return EmeraldValue{}, PUBLIC, false, fmt.Errorf("undefined method %s for %s", name, target.Inspect())
 }
 
 func (val *BaseEmeraldValue) InstanceVariableGet(name string, extractFrom EmeraldValue, target EmeraldValue) EmeraldValue {
@@ -109,12 +111,11 @@ func (val *BaseEmeraldValue) InstanceVariableGet(name string, extractFrom Emeral
 	}
 
 	superClass := extractFrom.Super()
-	reflected := reflect.ValueOf(superClass)
-	if superClass != nil && reflected.IsValid() && !reflected.IsNil() {
+	if !superClass.IsNil() {
 		return superClass.InstanceVariableGet(name, superClass, target)
 	}
 
-	return nil
+	return EmeraldValue{}
 }
 
 func (val *BaseEmeraldValue) InstanceVariableSet(name string, value EmeraldValue) {
@@ -128,15 +129,15 @@ func (val *BaseEmeraldValue) NamespaceDefinitionSet(name string, value EmeraldVa
 func (val *BaseEmeraldValue) NamespaceDefinitionGet(name string) EmeraldValue {
 	value := val.NamespaceDefinitions()[name]
 
-	if value != nil {
+	if !value.IsNil() {
 		return value
 	}
 
-	if val.parentNamespace != nil {
+	if !val.parentNamespace.IsNil() {
 		return val.parentNamespace.NamespaceDefinitionGet(name)
 	}
 
-	return nil
+	return EmeraldValue{}
 }
 
 func (val *BaseEmeraldValue) ParentNamespace() EmeraldValue {

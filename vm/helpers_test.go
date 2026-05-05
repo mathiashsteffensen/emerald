@@ -6,6 +6,7 @@ import (
 	"emerald/core"
 	"emerald/object"
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 )
@@ -70,8 +71,8 @@ func ensureNoExceptionUnlessExpected(t *testing.T, expected any, rt *core.Runtim
 
 	exception := rt.Heap.GetGlobalVariableString("$!")
 
-	if exception != nil && exception != rt.NULL {
-		t.Fatalf("Unexpected uncaught exception %s: %s", exception.Inspect(), exception.(object.EmeraldError).Message())
+	if !exception.IsNil() {
+		t.Fatalf("Unexpected uncaught exception %s: %s", exception.Inspect(), exception.Heap.(object.EmeraldError).Message())
 	}
 }
 
@@ -143,14 +144,14 @@ func testExpectedObject(
 			t.Errorf("testHashObject failed: %s", err)
 		}
 	case nil:
-		if actual != rt.NULL {
+		if !actual.IsNil() {
 			t.Errorf("object is not Null: %T (%+v)", actual, actual)
 		}
 	}
 }
 
 func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue, rt *core.Runtime) error {
-	array, ok := actual.(*core.ArrayInstance)
+	array, ok := actual.Heap.(*core.ArrayInstance)
 	if !ok {
 		return fmt.Errorf("object not Array: %T (%+v)", actual, actual)
 	}
@@ -167,7 +168,7 @@ func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue, r
 }
 
 func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual object.EmeraldValue, rt *core.Runtime) error {
-	hash, ok := actual.(*core.HashInstance)
+	hash, ok := actual.Heap.(*core.HashInstance)
 	if !ok {
 		return fmt.Errorf("object is not Hash. got=%T (%+v)", actual, actual)
 	}
@@ -189,40 +190,40 @@ func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual o
 }
 
 func testIntegerObject(expected int64, actual object.EmeraldValue) error {
-	result, ok := actual.(*core.IntegerInstance)
-	if !ok {
-		return fmt.Errorf("object is not IntegerInstance. got=%s", actual.Inspect())
+	if !actual.Is(object.INTEGER_VALUE) {
+		return fmt.Errorf("object is not Integer. got=%s", actual.Inspect())
 	}
-	if result.Value != expected {
-		return fmt.Errorf("object has wrong value. got=%d, want=%d", result.Value, expected)
+	if int64(actual.Num) != expected {
+		return fmt.Errorf("object has wrong value. got=%d, want=%d", int64(actual.Num), expected)
 	}
 	return nil
 }
 
 func testFloatObject(expected float64, actual object.EmeraldValue) error {
-	result, ok := actual.(*core.FloatInstance)
-	if !ok {
-		return fmt.Errorf("object is not FloatInstance. got=%T (%+v)", actual, actual)
+	if !actual.Is(object.FLOAT_VALUE) {
+		return fmt.Errorf("object is not Float. got=%T (%+v)", actual, actual)
 	}
-	if result.Value != expected {
-		return fmt.Errorf("object has wrong value. got=%f, want=%f", result.Value, expected)
+
+	val := math.Float64frombits(actual.Num)
+	if val != expected {
+		return fmt.Errorf("object has wrong value. got=%f, want=%f", val, expected)
 	}
 	return nil
 }
 
 func testBooleanObject(expected bool, actual object.EmeraldValue, rt *core.Runtime) error {
-	if actual != rt.TRUE && actual != rt.FALSE {
+	if !actual.Is(object.TRUE_VALUE) && !actual.Is(object.FALSE_VALUE) {
 		return fmt.Errorf("object is not Boolean. got=%T (%+v)", actual, actual)
 	}
 
-	if (actual == rt.TRUE) != expected {
-		return fmt.Errorf("object has wrong value. got=%t, want=%t", actual == rt.TRUE, expected)
+	if actual.Is(object.TRUE_VALUE) != expected {
+		return fmt.Errorf("object has wrong value. got=%t, want=%t", actual.Is(object.TRUE_VALUE), expected)
 	}
 	return nil
 }
 
 func testStringObject(expected string, actual object.EmeraldValue) error {
-	result, ok := actual.(*core.StringInstance)
+	result, ok := actual.Heap.(*core.StringInstance)
 	if !ok {
 		return fmt.Errorf("object is not String. got=%T (%+v)",
 			actual, actual)
@@ -235,7 +236,7 @@ func testStringObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testSymbolObject(expected string, actual object.EmeraldValue) error {
-	result, ok := actual.(*core.SymbolInstance)
+	result, ok := actual.Heap.(*core.SymbolInstance)
 	if !ok {
 		return fmt.Errorf("object is not Symbol. got=%T (%+v)",
 			actual, actual)
@@ -248,7 +249,7 @@ func testSymbolObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testClassObject(expected string, actual object.EmeraldValue) error {
-	actualClass, ok := actual.(*object.Class)
+	actualClass, ok := actual.Heap.(*object.Class)
 	if !ok {
 		return fmt.Errorf("expected class got=%s", actual.Inspect())
 	}
@@ -261,7 +262,7 @@ func testClassObject(expected string, actual object.EmeraldValue) error {
 }
 
 func testInstanceObject(expected string, actual object.EmeraldValue) error {
-	class := object.RealClass(actual).(*object.Class)
+	class := object.RealClass(actual).Heap.(*object.Class)
 
 	if class.Name != expected {
 		return fmt.Errorf("expected instance to be instance of %s, but is instance of %s", expected, class.Name)
@@ -275,7 +276,7 @@ func testErrorObject(expected string, actual object.EmeraldValue) error {
 	className := split[0]
 	msg := strings.Join(split[1:], ":")
 
-	emeraldError, ok := actual.(object.EmeraldError)
+	emeraldError, ok := actual.Heap.(object.EmeraldError)
 	if !ok {
 		return fmt.Errorf("object was not EmeraldError, got=%T", actual)
 	}

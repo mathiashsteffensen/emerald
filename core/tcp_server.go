@@ -23,35 +23,36 @@ func (rt *Runtime) InitTCPServer() {
 	rt.DefineMethod(rt.TCPServer, "super_serve", rt.tcpServerSuperServe())
 }
 
-func (rt *Runtime) NewTCPServer() *TCPServerInstance {
-	return &TCPServerInstance{
-		Instance: rt.TCPServer.New(),
+func (rt *Runtime) NewTCPServer() object.EmeraldValue {
+	return object.NewHeapObject(&TCPServerInstance{
+		Instance: rt.TCPServer.Heap.(*object.Class).New(),
 		Address:  "",
 		Listener: nil,
-	}
+	})
 }
 
 func (rt *Runtime) tcpServerNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 2, 2); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		host, err := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
-		port, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[1])
+		port, err := rt.EnforceIntegerArg(args[1])
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
-		server := rt.NewTCPServer()
+		serverVal := rt.NewTCPServer()
+		server := serverVal.Heap.(*TCPServerInstance)
 
-		server.Address = fmt.Sprintf("%s:%d", host.Value, port.Value)
+		server.Address = fmt.Sprintf("%s:%d", host.Value, port)
 
-		return server
+		return serverVal
 	}
 }
 
@@ -70,15 +71,15 @@ func (rt *Runtime) ensureListenerSet(server *TCPServerInstance) object.EmeraldEr
 
 func (rt *Runtime) tcpServerAccept() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		server := ctx.Self.(*TCPServerInstance)
+		server := ctx.Self.Heap.(*TCPServerInstance)
 
 		if err := rt.ensureListenerSet(server); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		conn, err := server.Listener.Accept()
 		if err != nil {
-			return rt.RaiseGoError(err)
+			return object.NewHeapObject(rt.RaiseGoError(err))
 		}
 
 		return rt.NewTCPSocket(conn)
@@ -110,22 +111,22 @@ func (s *superServer) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 func (rt *Runtime) tcpServerSuperServe() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if !ctx.BlockGiven() {
-			return rt.Raise(rt.newArgumentError("You must pass a block to rt.TCPServer#super_serve"))
+			return object.NewHeapObject(rt.Raise(rt.newArgumentError("You must pass a block to rt.TCPServer#super_serve")))
 		}
 
-		emeraldServer := ctx.Self.(*TCPServerInstance)
+		emeraldServer := ctx.Self.Heap.(*TCPServerInstance)
 		if err := rt.ensureListenerSet(emeraldServer); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		goServer := &http.Server{
-			Handler:     &superServer{ctx: ctx},
+			Handler:     &superServer{ctx: ctx, rt: rt},
 			ConnContext: rt.SaveConnInContext,
 		}
 
 		err := goServer.Serve(emeraldServer.Listener)
 		if err != nil {
-			return rt.RaiseGoError(err)
+			return object.NewHeapObject(rt.RaiseGoError(err))
 		}
 
 		return rt.NULL

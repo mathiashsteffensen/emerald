@@ -13,11 +13,11 @@ func TestInstance(t *testing.T) {
 		t.Errorf("expected INSTANCE_VALUE, got %s", instance.Type().String())
 	}
 
-	if instance.Class() != myClass {
+	if instance.Class().Heap != myClass {
 		t.Errorf("expected class MyClass, got %v", instance.Class())
 	}
 
-	if instance.Super() != nil {
+	if !instance.Super().IsNil() {
 		t.Error("instance should not have a super")
 	}
 
@@ -35,18 +35,18 @@ func TestInstance_SingletonClass(t *testing.T) {
 	instance := myClass.New()
 
 	singleton := instance.SingletonClass()
-	if instance.Class() != singleton {
+	if instance.Class() != singleton { // Both are EmeraldValue
 		t.Error("instance class should be its singleton")
 	}
 
-	if singleton.Super() != myClass {
+	if singleton.Super().Heap != myClass {
 		t.Error("singleton super should be the base class")
 	}
 }
 
 func TestInstance_Ancestors(t *testing.T) {
 	objectClass := &Class{Name: "Object", BaseEmeraldValue: &BaseEmeraldValue{}}
-	myClass := &Class{Name: "MyClass", BaseEmeraldValue: &BaseEmeraldValue{}, super: objectClass}
+	myClass := &Class{Name: "MyClass", BaseEmeraldValue: &BaseEmeraldValue{}, super: NewHeapObject(objectClass)}
 	instance := myClass.New()
 
 	ancestors := instance.Ancestors()
@@ -63,7 +63,7 @@ func TestInstance_Include(t *testing.T) {
 	instance := &Instance{BaseEmeraldValue: &BaseEmeraldValue{}}
 	mod := &Module{Name: "MyMod", BaseEmeraldValue: &BaseEmeraldValue{}}
 
-	instance.Include(mod)
+	instance.Include(NewHeapObject(mod))
 
 	if len(instance.SingletonClass().IncludedModules()) != 1 {
 		t.Error("module not included in singleton class")
@@ -75,5 +75,5 @@ func TestInstance_DefineMethod(t *testing.T) {
 	block := &ClosedBlock{Block: &Block{}}
 	name := &Class{Name: ":my_method"}
 
-	instance.DefineMethod(block, name)
+	instance.DefineMethod(NewHeapObject(block), NewHeapObject(name))
 }

@@ -30,7 +30,7 @@ func (err *LoadErrorInstance) ClassName() string {
 
 func (rt *Runtime) NewLoadError(msg string) object.EmeraldError {
 	return &LoadErrorInstance{
-		Instance: rt.LoadError.New(),
+		Instance: rt.LoadError.Heap.(*object.Class).New(),
 		message:  msg,
 	}
 }

@@ -20,22 +20,22 @@ func (rt *Runtime) InitEnumerable() {
 func (rt *Runtime) enumerableFirst() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 0, 1); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		var numElements = int64(1)
 
 		if len(args) == 1 {
-			arg, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[0])
+			val, err := rt.EnforceIntegerArg(args[0])
 			if err != nil {
-				return err
+				return object.NewHeapObject(err)
 			}
 
-			numElements = arg.Value
+			numElements = val
 		}
 
 		var values []object.EmeraldValue
-		wrappedBlock := &object.WrappedBuiltInMethod{
+		wrappedBlock := object.NewHeapObject(&object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				// TODO: This doesn't stop iterating after the first element has been found, should probably implement a break keyword or something
 				if int64(len(values)) != numElements {
@@ -43,11 +43,14 @@ func (rt *Runtime) enumerableFirst() object.BuiltInMethod {
 				}
 				return rt.NULL
 			},
-		}
+		})
 
 		rt.Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
 		if numElements == 1 {
+			if len(values) == 0 {
+				return rt.NULL
+			}
 			return values[0]
 		} else {
 			return rt.NewArray(values)
@@ -60,15 +63,15 @@ func (rt *Runtime) enumerableMap() object.BuiltInMethod {
 		arr := make([]object.EmeraldValue, 0)
 		block := ctx.Block
 
-		wrappedBlock := &object.WrappedBuiltInMethod{
+		wrappedBlock := object.NewHeapObject(&object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				arr = append(
 					arr,
-					rt.EvalBlock(block.(*object.ClosedBlock), kwargs, args...),
+					rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, args...),
 				)
 				return rt.NULL
 			},
-		}
+		})
 
 		rt.Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
@@ -79,28 +82,30 @@ func (rt *Runtime) enumerableMap() object.BuiltInMethod {
 func (rt *Runtime) enumerableFind() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var firstTruthyElement object.EmeraldValue
+		found := false
 		block := ctx.Block
 
-		wrappedBlock := &object.WrappedBuiltInMethod{
+		wrappedBlock := object.NewHeapObject(&object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-				if firstTruthyElement != nil {
+				if found {
 					return rt.NULL
 				}
 
-				if rt.IsTruthy(rt.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)) {
+				if rt.IsTruthy(rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, args...)) {
 					if len(args) < 2 {
 						firstTruthyElement = args[0]
 					} else {
 						firstTruthyElement = rt.NewArray(args)
 					}
+					found = true
 				}
 				return rt.NULL
 			},
-		}
+		})
 
 		rt.Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
-		if firstTruthyElement == nil {
+		if !found {
 			return rt.NULL
 		} else {
 			return firstTruthyElement
@@ -113,13 +118,13 @@ func (rt *Runtime) enumerableFindIndex() object.BuiltInMethod {
 		index, found := 0, false
 		block := ctx.Block
 
-		wrappedBlock := &object.WrappedBuiltInMethod{
+		wrappedBlock := object.NewHeapObject(&object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if found {
 					return rt.NULL
 				}
 
-				if rt.IsTruthy(rt.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)) {
+				if rt.IsTruthy(rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, args...)) {
 					found = true
 					return rt.NULL
 				}
@@ -128,7 +133,7 @@ func (rt *Runtime) enumerableFindIndex() object.BuiltInMethod {
 
 				return rt.NULL
 			},
-		}
+		})
 
 		rt.Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
@@ -153,17 +158,17 @@ func (rt *Runtime) enumerableSum() object.BuiltInMethod {
 			accumulated = rt.NewInteger(0)
 		}
 
-		wrappedBlock := &object.WrappedBuiltInMethod{
+		wrappedBlock := object.NewHeapObject(&object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if blockGiven {
-					accumulated = rt.Send(accumulated, "+", rt.NULL, map[string]object.EmeraldValue{}, rt.EvalBlock(block.(*object.ClosedBlock), kwargs, args...))
+					accumulated = rt.Send(accumulated, "+", rt.NULL, map[string]object.EmeraldValue{}, rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, args...))
 				} else {
 					accumulated = rt.Send(accumulated, "+", rt.NULL, kwargs, args...)
 				}
 
 				return rt.NULL
 			},
-		}
+		})
 
 		rt.Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
@@ -189,18 +194,18 @@ func (rt *Runtime) enumerableReduce() object.BuiltInMethod {
 
 		passedFirst := false
 
-		wrappedBlock := &object.WrappedBuiltInMethod{
+		wrappedBlock := object.NewHeapObject(&object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if argGiven || passedFirst {
 					args = append([]object.EmeraldValue{accumulated}, args...)
-					accumulated = rt.EvalBlock(block.(*object.ClosedBlock), kwargs, args...)
+					accumulated = rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, args...)
 				} else {
 					passedFirst = true
 				}
 
 				return rt.NULL
 			},
-		}
+		})
 
 		rt.Send(self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 

@@ -6,7 +6,7 @@ import (
 )
 
 func (rt *Runtime) InitClass() {
-	rt.Class = object.NewClass("Class", nil, nil, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	rt.Class = object.NewHeapObject(object.NewClass("Class", nil, object.EmeraldValue{}, object.BuiltInMethodSet{}, object.BuiltInMethodSet{}))
 
 	rt.DefineSingletonMethod(rt.Class, "new", rt.classSingletonNew())
 
@@ -26,15 +26,15 @@ func (rt *Runtime) className() object.BuiltInMethod {
 		var namespaces strings.Builder
 
 		parent := ctx.Self.ParentNamespace()
-		for parent != nil &&
+		for !parent.IsNil() &&
 			parent != rt.Object &&
 			(parent.Type() == object.CLASS_VALUE || parent.Type() == object.MODULE_VALUE) {
 
-			switch parent := parent.(type) {
+			switch p := parent.Heap.(type) {
 			case *object.Module:
-				namespaces.WriteString(parent.Name)
+				namespaces.WriteString(p.Name)
 			case *object.Class:
-				namespaces.WriteString(parent.Name)
+				namespaces.WriteString(p.Name)
 			}
 
 			namespaces.WriteString("::")
@@ -42,7 +42,7 @@ func (rt *Runtime) className() object.BuiltInMethod {
 			parent = parent.ParentNamespace()
 		}
 
-		switch self := ctx.Self.(type) {
+		switch self := ctx.Self.Heap.(type) {
 		case *object.Module:
 			namespaces.WriteString(self.Name)
 		case *object.Class:
@@ -55,7 +55,7 @@ func (rt *Runtime) className() object.BuiltInMethod {
 
 func (rt *Runtime) classNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		instance := ctx.Self.(*object.Class).New()
+		instance := object.NewHeapObject(ctx.Self.Heap.(*object.Class).New())
 
 		if instance.RespondsTo("initialize", instance) {
 			rt.Send(instance, "initialize", ctx.Block, kwargs, args...)
@@ -67,6 +67,6 @@ func (rt *Runtime) classNew() object.BuiltInMethod {
 
 func (rt *Runtime) classSingletonNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return object.NewClass("", rt.Object, rt.Class, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+		return object.NewHeapObject(object.NewClass("", rt.Object.Heap.(*object.Class), rt.Class, object.BuiltInMethodSet{}, object.BuiltInMethodSet{}))
 	}
 }

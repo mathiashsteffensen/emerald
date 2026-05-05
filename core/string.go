@@ -15,7 +15,7 @@ func (s *StringInstance) Inspect() string { return s.Value }
 func (s *StringInstance) HashKey() string { return s.Inspect() }
 
 func (rt *Runtime) NewString(val string) object.EmeraldValue {
-	return &StringInstance{rt.String.New(), val}
+	return object.NewHeapObject(&StringInstance{rt.String.Heap.(*object.Class).New(), val})
 }
 
 func (rt *Runtime) InitString() {
@@ -41,16 +41,16 @@ func (rt *Runtime) stringNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		args, err := rt.EnforceArity(args, kwargs, 0, 1)
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		if len(args) == 1 {
 			str, err := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 			if err != nil {
-				return err
+				return object.NewHeapObject(err)
 			}
 
-			return str
+			return object.NewHeapObject(str)
 		}
 
 		return rt.NewString("")
@@ -65,7 +65,7 @@ func (rt *Runtime) stringToS() object.BuiltInMethod {
 
 func (rt *Runtime) stringInspect() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewString(fmt.Sprintf("%q", ctx.Self.(*StringInstance).Value))
+		return rt.NewString(fmt.Sprintf("%q", ctx.Self.Heap.(*StringInstance).Value))
 	}
 }
 
@@ -77,28 +77,28 @@ func (rt *Runtime) stringToSym() object.BuiltInMethod {
 
 func (rt *Runtime) stringEquals() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := ctx.Self.(*StringInstance)
-		right, ok := args[0].(*StringInstance)
+		left := ctx.Self.Heap.(*StringInstance)
+		right, ok := args[0].Heap.(*StringInstance)
 
 		if ok {
 			return rt.NativeBoolToBooleanObject(left.Value == right.Value)
 		} else {
-			return rt.NativeBoolToBooleanObject(left == right)
+			return rt.NativeBoolToBooleanObject(false)
 		}
 	}
 }
 
 func (rt *Runtime) stringAdd() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		selfString := ctx.Self.(*StringInstance)
+		selfString := ctx.Self.Heap.(*StringInstance)
 
 		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
-			return rt.NULL
+			return object.NewHeapObject(err)
 		}
 
 		str, err := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		return rt.NewString(selfString.Value + str.Value)
@@ -107,20 +107,20 @@ func (rt *Runtime) stringAdd() object.BuiltInMethod {
 
 func (rt *Runtime) stringMultiply() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		selfString := ctx.Self.(*StringInstance)
+		selfString := ctx.Self.Heap.(*StringInstance)
 
 		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
-		arg, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[0])
+		times, err := rt.EnforceIntegerArg(args[0])
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		var newString strings.Builder
 
-		for i := int64(0); i < arg.Value; i++ {
+		for i := int64(0); i < times; i++ {
 			newString.WriteString(selfString.Value)
 		}
 
@@ -130,20 +130,20 @@ func (rt *Runtime) stringMultiply() object.BuiltInMethod {
 
 func (rt *Runtime) stringUpcase() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewString(strings.ToUpper(ctx.Self.(*StringInstance).Value))
+		return rt.NewString(strings.ToUpper(ctx.Self.Heap.(*StringInstance).Value))
 	}
 }
 
 func (rt *Runtime) stringMatch() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.regexStringMatch(args[0].(*RegexpInstance), ctx.Self.(*StringInstance))
+		return rt.regexStringMatch(args[0].Heap.(*RegexpInstance), ctx.Self.Heap.(*StringInstance))
 	}
 }
 
 func (rt *Runtime) stringSize() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return rt.NewInteger(
-			int64(len(ctx.Self.(*StringInstance).Value)),
+			int64(len(ctx.Self.Heap.(*StringInstance).Value)),
 		)
 	}
 }
@@ -151,7 +151,7 @@ func (rt *Runtime) stringSize() object.BuiltInMethod {
 func (rt *Runtime) stringSplit() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 0, 1); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		var sep string
@@ -161,13 +161,13 @@ func (rt *Runtime) stringSplit() object.BuiltInMethod {
 		} else {
 			arg, err := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 			if err != nil {
-				return err
+				return object.NewHeapObject(err)
 			}
 
 			sep = arg.Value
 		}
 
-		self := ctx.Self.(*StringInstance)
+		self := ctx.Self.Heap.(*StringInstance)
 
 		slice := []object.EmeraldValue{}
 

@@ -25,7 +25,7 @@ func (rt *Runtime) InitArgumentError() {
 
 func (rt *Runtime) newArgumentError(msg string) object.EmeraldError {
 	return &ArgumentErrorInstance{
-		Instance: rt.ArgumentError.New(),
+		Instance: rt.ArgumentError.Heap.(*object.Class).New(),
 		message:  msg,
 	}
 }

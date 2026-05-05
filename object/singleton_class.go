@@ -2,7 +2,6 @@ package object
 
 import (
 	"fmt"
-	"reflect"
 )
 
 type SingletonClass struct {
@@ -17,19 +16,18 @@ func (c *SingletonClass) Class() EmeraldValue       { return c.super }
 func (c *SingletonClass) Super() EmeraldValue       { return c.super }
 func (c *SingletonClass) SetSuper(val EmeraldValue) { c.super = val }
 func (c *SingletonClass) Ancestors() []EmeraldValue {
-	ancestors := []EmeraldValue{c}
+	ancestors := []EmeraldValue{NewHeapObject(c)}
 	ancestors = append(ancestors, c.IncludedModules()...)
 
 	super := c.Super()
-	reflected := reflect.ValueOf(super)
-	if super != nil && reflected.IsValid() && !reflected.IsNil() {
+	if !super.IsNil() {
 		ancestors = append(ancestors, super.Ancestors()...)
 	}
 
 	return ancestors
 }
 func (c *SingletonClass) HashKey() string              { return c.Inspect() }
-func (c *SingletonClass) SingletonClass() EmeraldValue { return nil }
+func (c *SingletonClass) SingletonClass() EmeraldValue { return EmeraldValue{} }
 
 func NewSingletonClass(instance EmeraldValue, super EmeraldValue, base *BaseEmeraldValue) *SingletonClass {
 	return &SingletonClass{

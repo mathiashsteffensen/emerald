@@ -18,7 +18,7 @@ func (rt *Runtime) InitNoMethodError() {
 
 func (rt *Runtime) NewNoMethodError(msg string) object.EmeraldError {
 	return &NoMethodErrorInstance{
-		Instance: rt.NoMethodError.New(),
+		Instance: rt.NoMethodError.Heap.(*object.Class).New(),
 		message:  msg,
 	}
 }

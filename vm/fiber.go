@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	InitialStackSize = 512
 	MaxStackSize = 2048
 	MaxFrames    = 1024
 )
@@ -15,9 +16,8 @@ var ErrStackOverflow = fmt.Errorf("stack overflow: max stack size of %d exceeded
 // Fiber is an abstract execution thread, separate from any OS level threads.
 // Currently, this is kind of meaningless, but it is to allow for a concurrency implementation in the future.
 type Fiber struct {
-	// All fibers have their own stack allocated.
-	// This allocates a []object.EmeraldValue of size MaxStackSize.
-	// 32KB.
+	// The stack for this fiber.
+	// Grows dynamically up to MaxStackSize.
 	stack []object.EmeraldValue
 	// Always points to the next value. Top of stack is stack[sp-1]
 	sp int
@@ -31,7 +31,7 @@ func NewFiber(mainFrame *Frame) *Fiber {
 	frames[0] = mainFrame
 
 	return &Fiber{
-		stack:       make([]object.EmeraldValue, MaxStackSize),
+		stack:       make([]object.EmeraldValue, InitialStackSize),
 		frames:      frames,
 		framesIndex: 1,
 	}
@@ -48,7 +48,7 @@ func (vm *VM) stack() []object.EmeraldValue {
 // StackTop fetches the object at the top of the stack
 func (fiber *Fiber) StackTop() object.EmeraldValue {
 	if fiber.sp == 0 {
-		return nil
+		return object.EmeraldValue{}
 	}
 
 	return fiber.stack[fiber.sp-1]
@@ -58,6 +58,17 @@ func (fiber *Fiber) StackTop() object.EmeraldValue {
 func (fiber *Fiber) push(obj object.EmeraldValue) {
 	if fiber.sp >= MaxStackSize {
 		panic(ErrStackOverflow)
+	}
+
+	if fiber.sp == len(fiber.stack) {
+		newSize := len(fiber.stack) * 2
+		if newSize > MaxStackSize {
+			newSize = MaxStackSize
+		}
+
+		newStack := make([]object.EmeraldValue, newSize)
+		copy(newStack, fiber.stack)
+		fiber.stack = newStack
 	}
 
 	fiber.stack[fiber.sp] = obj

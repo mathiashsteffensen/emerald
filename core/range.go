@@ -9,13 +9,13 @@ type RangeInstance struct {
 	End        object.EmeraldValue
 }
 
-func (rt *Runtime) NewRange(begin object.EmeraldValue, end object.EmeraldValue, excludeEnd bool) *RangeInstance {
-	return &RangeInstance{
-		Instance:   rt.Range.New(),
+func (rt *Runtime) NewRange(begin object.EmeraldValue, end object.EmeraldValue, excludeEnd bool) object.EmeraldValue {
+	return object.NewHeapObject(&RangeInstance{
+		Instance:   rt.Range.Heap.(*object.Class).New(),
 		ExcludeEnd: excludeEnd,
 		Begin:      begin,
 		End:        end,
-	}
+	})
 }
 
 func (rt *Runtime) InitRange() {
@@ -46,9 +46,9 @@ func (rt *Runtime) rangeNew() object.BuiltInMethod {
 
 func (rt *Runtime) rangeEach() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		r := ctx.Self.(*RangeInstance)
-		begin := r.Begin.(*IntegerInstance).Value
-		end := r.End.(*IntegerInstance).Value
+		r := ctx.Self.Heap.(*RangeInstance)
+		begin := int64(r.Begin.Num)
+		end := int64(r.End.Num)
 
 		for i := begin; i < end; i++ {
 			ctx.Yield(map[string]object.EmeraldValue{}, rt.NewInteger(i))

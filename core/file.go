@@ -15,12 +15,12 @@ func (rt *Runtime) fileIsAbsolutePath() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		_, err := rt.EnforceArity(args, kwargs, 1, 1)
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		path, err := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		return rt.NativeBoolToBooleanObject(filepath.IsAbs(path.Value))

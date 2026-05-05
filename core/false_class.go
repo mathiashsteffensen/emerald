@@ -9,7 +9,7 @@ func (rt *Runtime) InitFalseClass() {
 	rt.DefineMethod(rt.FalseClass, "inspect", rt.falseToS())
 	rt.DefineMethod(rt.FalseClass, "!@", rt.falseBooleanNegate())
 
-	rt.FALSE = rt.FalseClass.New()
+	rt.FALSE = object.EmeraldValue{TypeID: object.FALSE_VALUE, Heap: rt.FalseClass.Heap}
 }
 
 func (rt *Runtime) falseToS() object.BuiltInMethod {

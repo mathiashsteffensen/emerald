@@ -2,20 +2,13 @@ package core
 
 import (
 	"emerald/object"
+	"fmt"
+	"math"
 	"strconv"
 )
 
-type IntegerInstance struct {
-	*object.Instance
-	Value int64
-}
-
-func (i *IntegerInstance) Inspect() string {
-	return strconv.Itoa(int(i.Value))
-}
-
 func (rt *Runtime) NewInteger(val int64) object.EmeraldValue {
-	return &IntegerInstance{rt.Integer.New(), val}
+	return object.EmeraldValue{TypeID: object.INTEGER_VALUE, Heap: rt.Integer.Heap, Num: uint64(val)}
 }
 
 func (rt *Runtime) InitInteger() {
@@ -40,26 +33,25 @@ func (rt *Runtime) InitInteger() {
 
 func (rt *Runtime) integerToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		val := ctx.Self.(*IntegerInstance).Value
+		val := int64(ctx.Self.Num)
 
-		return rt.NewString(strconv.Itoa(int(val)))
+		return rt.NewString(strconv.FormatInt(val, 10))
 	}
 }
 
 func (rt *Runtime) integerCaseEq() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
-		self := ctx.Self.(*IntegerInstance)
+		self := int64(ctx.Self.Num)
 
-		switch other := args[0].(type) {
-		case *IntegerInstance:
-			return rt.NativeBoolToBooleanObject(other.Value == self.Value)
-		case *FloatInstance:
-			return rt.NativeBoolToBooleanObject(int64(other.Value) == self.Value)
-		default:
+		if args[0].Is(object.INTEGER_VALUE) {
+			return rt.NativeBoolToBooleanObject(int64(args[0].Num) == self)
+		} else if args[0].Is(object.FLOAT_VALUE) {
+			return rt.NativeBoolToBooleanObject(int64(math.Float64frombits(args[0].Num)) == self)
+		} else {
 			return rt.FALSE
 		}
 	}
@@ -107,13 +99,13 @@ func (rt *Runtime) integerNotEquals() object.BuiltInMethod {
 
 func (rt *Runtime) integerNegate() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewInteger(-ctx.Self.(*IntegerInstance).Value)
+		return rt.NewInteger(-int64(ctx.Self.Num))
 	}
 }
 
 func (rt *Runtime) integerTimes() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		for i := int64(0); i < ctx.Self.(*IntegerInstance).Value; i++ {
+		for i := int64(0); i < int64(ctx.Self.Num); i++ {
 			ctx.Yield(map[string]object.EmeraldValue{}, rt.NewInteger(i))
 		}
 
@@ -123,18 +115,19 @@ func (rt *Runtime) integerTimes() object.BuiltInMethod {
 
 func (rt *Runtime) integerToF() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewFloat(float64(ctx.Self.(*IntegerInstance).Value))
+		return rt.NewFloat(float64(int64(ctx.Self.Num)))
 	}
 }
 
 func (rt *Runtime) integerSpaceship() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := ctx.Self.(*IntegerInstance)
+		left := int64(ctx.Self.Num)
 
-		if right, ok := args[0].(*IntegerInstance); ok {
+		if args[0].Is(object.INTEGER_VALUE) {
+			right := int64(args[0].Num)
 			var result int64
 
-			diff := left.Value - right.Value
+			diff := left - right
 
 			if diff < 0 {
 				result = -1
@@ -154,13 +147,14 @@ func (rt *Runtime) integerSpaceship() object.BuiltInMethod {
 func (rt *Runtime) integerInfixOperator(cb func(left int64, right int64) object.EmeraldValue) object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
-			return err
-		}
-		right, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[0])
-		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
-		return cb(ctx.Self.(*IntegerInstance).Value, right.Value)
+		if !args[0].Is(object.INTEGER_VALUE) {
+			err := rt.NewTypeError(fmt.Sprintf("no implicit conversion of %s into Integer", args[0].Class().Inspect()))
+			return object.NewHeapObject(rt.Raise(err))
+		}
+
+		return cb(int64(ctx.Self.Num), int64(args[0].Num))
 	}
 }

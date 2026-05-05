@@ -48,10 +48,10 @@ func (rt *Runtime) comparableMethod(spaceshipCallback func(int64) object.Emerald
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		spaceshipResult := rt.Send(ctx.Self, "<=>", rt.NULL, kwargs, args...)
 
-		if spaceshipResult == rt.NULL {
+		if spaceshipResult.IsNil() {
 			return spaceshipResult
 		}
 
-		return spaceshipCallback(spaceshipResult.(*IntegerInstance).Value)
+		return spaceshipCallback(int64(spaceshipResult.Num))
 	}
 }

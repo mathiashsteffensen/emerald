@@ -18,54 +18,54 @@ type Runtime struct {
 	RequiredFilesHash      object.EmeraldValue
 
 	// Core classes & modules
-	ArgumentError *object.Class
-	Array         *object.Class
-	BasicObject   *object.Class
-	Class         *object.Class
-	Comparable    *object.Module
-	Dir           *object.Class
-	Emerald       *object.Module
-	Enumerable    *object.Module
-	Exception     *object.Class
-	FalseClass    *object.Class
-	File          *object.Class
-	Float         *object.Class
-	Hash          *object.Class
-	IO            *object.Class
-	Integer       *object.Class
-	Kernel        *object.Module
-	LoadError     *object.Class
-	MatchData     *object.Class
-	Module        *object.Class
-	NameError     *object.Class
-	NilClass      *object.Class
-	NoMethodError *object.Class
-	Numeric       *object.Class
-	Object        *object.Class
-	Range         *object.Class
-	Regexp        *object.Class
-	RuntimeError  *object.Class
-	StandardError *object.Class
-	String        *object.Class
-	Symbol        *object.Class
-	TCPServer     *object.Class
-	TCPSocket     *object.Class
-	Time          *object.Class
-	TrueClass     *object.Class
-	TypeError     *object.Class
+	ArgumentError object.EmeraldValue
+	Array         object.EmeraldValue
+	BasicObject   object.EmeraldValue
+	Class         object.EmeraldValue
+	Comparable    object.EmeraldValue
+	Dir           object.EmeraldValue
+	Emerald       object.EmeraldValue
+	Enumerable    object.EmeraldValue
+	Exception     object.EmeraldValue
+	FalseClass    object.EmeraldValue
+	File          object.EmeraldValue
+	Float         object.EmeraldValue
+	Hash          object.EmeraldValue
+	IO            object.EmeraldValue
+	Integer       object.EmeraldValue
+	Kernel        object.EmeraldValue
+	LoadError     object.EmeraldValue
+	MatchData     object.EmeraldValue
+	Module        object.EmeraldValue
+	NameError     object.EmeraldValue
+	NilClass      object.EmeraldValue
+	NoMethodError object.EmeraldValue
+	Numeric       object.EmeraldValue
+	Object        object.EmeraldValue
+	Range         object.EmeraldValue
+	Regexp        object.EmeraldValue
+	RuntimeError  object.EmeraldValue
+	StandardError object.EmeraldValue
+	String        object.EmeraldValue
+	Symbol        object.EmeraldValue
+	TCPServer     object.EmeraldValue
+	TCPSocket     object.EmeraldValue
+	Time          object.EmeraldValue
+	TrueClass     object.EmeraldValue
+	TypeError     object.EmeraldValue
 
 	// Singletons
 	TRUE       object.EmeraldValue
 	FALSE      object.EmeraldValue
-	NULL       *object.Instance
-	MainObject *object.Instance
+	NULL       object.EmeraldValue
+	MainObject object.EmeraldValue
 }
 
 func NewRuntime() *Runtime {
 	rt := &Runtime{
 		Heap:                   heap.NewHeap(),
 		GlobalSymbolInternPool: SymbolInternStore{},
-		RequiredFilesHash:      nil,
+		RequiredFilesHash:      object.EmeraldValue{},
 	}
 
 	return rt

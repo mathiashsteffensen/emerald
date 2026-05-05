@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"emerald/core"
 	"emerald/object"
 	"fmt"
 )
@@ -15,7 +16,7 @@ func (vm *VM) Yield(kwargs map[string]object.EmeraldValue, args ...object.Emeral
 func (vm *VM) withExecutionContextForBlock(block object.EmeraldValue, cb func() object.EmeraldValue) object.EmeraldValue {
 	oldCtx := vm.ctx
 
-	if closedBlock, ok := block.(*object.ClosedBlock); ok && closedBlock.Context != nil {
+	if closedBlock, ok := block.Heap.(*object.ClosedBlock); ok && closedBlock.Context != nil {
 		vm.ctx = closedBlock.Context
 	}
 
@@ -32,7 +33,7 @@ func (vm *VM) Send(self object.EmeraldValue, name string, block object.EmeraldVa
 
 	method, err := vm.extractMethod(self, name)
 	if err != nil {
-		return err
+		return object.NewHeapObject(err)
 	}
 
 	result := vm.rawEvalBlock(method, block, kwargs, args...)
@@ -43,14 +44,14 @@ func (vm *VM) Send(self object.EmeraldValue, name string, block object.EmeraldVa
 }
 
 func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-	switch bl := method.(type) {
+	switch bl := method.Heap.(type) {
 	case *object.WrappedBuiltInMethod:
 		// Builtin methods are easy, just call some Go code
 		return vm.evalBuiltIn(bl, block, args, kwargs)
 	case *object.ClosedBlock:
 		if bl.EnforceArity {
 			if _, err := vm.rt.EnforceArity(args, kwargs, bl.NumArgs, bl.NumArgs, bl.Kwargs...); err != nil {
-				return err
+				return object.NewHeapObject(err)
 			}
 		}
 
@@ -69,7 +70,8 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 		}
 
 		if len(kwargs) != 0 {
-			sortedKwargsHash := vm.rt.NewHash()
+			sortedKwargsHashVal := vm.rt.NewHash()
+			sortedKwargsHash := sortedKwargsHashVal.Heap.(*core.HashInstance)
 
 			// Sort kwargs first, so they match the definition order, this allows local variable references to resolve correctly
 			for kwargStringKey, value := range kwargs {
@@ -99,7 +101,7 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 			return vm.pop()
 		}
 	default:
-		vm.rt.Raise(vm.rt.NewException(fmt.Sprintf("yielded to not a method?, got=%s", bl.Inspect())))
+		vm.rt.Raise(vm.rt.NewException(fmt.Sprintf("yielded to not a method?, got=%s", method.Inspect())))
 	}
 
 	return vm.rt.NULL

@@ -14,11 +14,11 @@ func (time *TimeInstance) Inspect() string {
 	return time.Value.Format("2006-01-02 15:04:05.000000 -0700")
 }
 
-func (rt *Runtime) NewTime(val time.Time) *TimeInstance {
-	return &TimeInstance{
-		Instance: rt.Time.New(),
+func (rt *Runtime) NewTime(val time.Time) object.EmeraldValue {
+	return object.NewHeapObject(&TimeInstance{
+		Instance: rt.Time.Heap.(*object.Class).New(),
 		Value:    val,
-	}
+	})
 }
 
 func (rt *Runtime) InitTime() {
@@ -39,14 +39,14 @@ func (rt *Runtime) timeNew() object.BuiltInMethod {
 
 func (rt *Runtime) timeToF() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewFloat(float64(ctx.Self.(*TimeInstance).Value.UnixNano()) / 1_000_000.0)
+		return rt.NewFloat(float64(ctx.Self.Heap.(*TimeInstance).Value.UnixNano()) / 1_000_000_000.0)
 	}
 }
 
 func (rt *Runtime) timeSubtract() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		newVal := ctx.Self.(*TimeInstance).Value.Sub(args[0].(*TimeInstance).Value)
+		newVal := ctx.Self.Heap.(*TimeInstance).Value.Sub(args[0].Heap.(*TimeInstance).Value)
 
-		return rt.NewInteger(newVal.Milliseconds())
+		return rt.NewFloat(newVal.Seconds())
 	}
 }

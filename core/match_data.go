@@ -9,7 +9,7 @@ import (
 
 type MatchDataInstance struct {
 	*object.Instance
-	Regexp *RegexpInstance
+	Regexp object.EmeraldValue
 	Match  *regexp2.Match
 	Groups []regexp2.Group
 }
@@ -24,33 +24,35 @@ func (rt *Runtime) InitMatchData() {
 	rt.DefineMethod(rt.MatchData, "regexp", rt.matchDataRegexp())
 }
 
-func (rt *Runtime) NewMatchData(regexp *RegexpInstance, match *regexp2.Match) *MatchDataInstance {
+func (rt *Runtime) NewMatchData(regexp object.EmeraldValue, match *regexp2.Match) object.EmeraldValue {
 	instance := &MatchDataInstance{
-		Instance: rt.MatchData.New(),
+		Instance: rt.MatchData.Heap.(*object.Class).New(),
 		Regexp:   regexp,
 		Match:    match,
 		Groups:   match.Groups(),
 	}
 
-	rt.Heap.SetGlobalVariableString("$~", instance)
+	val := object.NewHeapObject(instance)
+
+	rt.Heap.SetGlobalVariableString("$~", val)
 	rt.Heap.SetGlobalVariableString("$&", rt.NewString(instance.Groups[0].String()))
 
 	for i, group := range instance.Groups[1:] {
 		rt.Heap.SetGlobalVariableString(fmt.Sprintf("$%d", i+1), rt.NewString(group.String()))
 	}
 
-	return instance
+	return val
 }
 
 func (rt *Runtime) matchDataToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewString(ctx.Self.(*MatchDataInstance).Groups[0].String())
+		return rt.NewString(ctx.Self.Heap.(*MatchDataInstance).Groups[0].String())
 	}
 }
 
 func (rt *Runtime) matchDataToA() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		groups := ctx.Self.(*MatchDataInstance).Groups
+		groups := ctx.Self.Heap.(*MatchDataInstance).Groups
 		captures := []object.EmeraldValue{}
 
 		for _, group := range groups {
@@ -63,8 +65,11 @@ func (rt *Runtime) matchDataToA() object.BuiltInMethod {
 
 func (rt *Runtime) matchDataIndexAccessor() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		groups := ctx.Self.(*MatchDataInstance).Groups
-		index := args[0].(*IntegerInstance).Value
+		groups := ctx.Self.Heap.(*MatchDataInstance).Groups
+		index, err := rt.EnforceIntegerArg(args[0])
+		if err != nil {
+			return object.NewHeapObject(err)
+		}
 
 		if index > int64(len(groups)-1) {
 			return rt.NULL
@@ -76,7 +81,7 @@ func (rt *Runtime) matchDataIndexAccessor() object.BuiltInMethod {
 
 func (rt *Runtime) matchDataCaptures() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		groups := ctx.Self.(*MatchDataInstance).Groups[1:]
+		groups := ctx.Self.Heap.(*MatchDataInstance).Groups[1:]
 		captures := []object.EmeraldValue{}
 
 		for _, group := range groups {
@@ -89,6 +94,6 @@ func (rt *Runtime) matchDataCaptures() object.BuiltInMethod {
 
 func (rt *Runtime) matchDataRegexp() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return ctx.Self.(*MatchDataInstance).Regexp
+		return ctx.Self.Heap.(*MatchDataInstance).Regexp
 	}
 }

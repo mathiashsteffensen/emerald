@@ -37,8 +37,8 @@ func (e *Engine) EvalFile(fileName string, content string) (object.EmeraldValue,
 	machine.Run()
 
 	globalException := e.Runtime.Heap.GetGlobalVariableString("$!")
-	if globalException != nil && globalException != e.Runtime.NULL {
-		return nil, fmt.Errorf("exception: %s", globalException.Inspect())
+	if !globalException.IsNil() && globalException != e.Runtime.NULL {
+		return object.EmeraldValue{}, fmt.Errorf("exception: %s", globalException.Inspect())
 	}
 
 	return machine.LastPoppedStackElem(), nil

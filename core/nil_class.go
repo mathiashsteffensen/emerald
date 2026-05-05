@@ -7,11 +7,11 @@ import (
 func (rt *Runtime) InitNilClass() {
 	rt.NilClass = rt.DefineClass("NilClass", rt.Object)
 
-	rt.NULL = rt.NilClass.New()
+	rt.NULL = object.EmeraldValue{TypeID: object.NIL_VALUE, Heap: rt.NilClass.Heap}
 
-	rt.DefineSingletonMethod(rt.NULL, "to_s", rt.nilToS())
-	rt.DefineSingletonMethod(rt.NULL, "inspect", rt.nilInspect())
-	rt.DefineSingletonMethod(rt.NULL, "!@", rt.nilBooleanNegate())
+	rt.DefineMethod(rt.NilClass, "to_s", rt.nilToS())
+	rt.DefineMethod(rt.NilClass, "inspect", rt.nilInspect())
+	rt.DefineMethod(rt.NilClass, "!@", rt.nilBooleanNegate())
 }
 
 func (rt *Runtime) nilToS() object.BuiltInMethod {

@@ -1,8 +1,5 @@
 package object
 
-import (
-	"reflect"
-)
 
 type Class struct {
 	*BaseEmeraldValue
@@ -19,26 +16,26 @@ func (c *Class) Inspect() string {
 }
 func (c *Class) Class() EmeraldValue {
 	if c.singleton != nil {
-		return c.singleton
+		return NewHeapObject(c.singleton)
 	}
 	return c.baseClass
 }
 func (c *Class) SingletonClass() EmeraldValue {
 	if c.singleton == nil {
-		c.singleton = NewSingletonClass(c, c.baseClass, &BaseEmeraldValue{builtInMethodSet: c.staticBuiltInMethodSet})
+		c.singleton = NewSingletonClass(NewHeapObject(c), c.baseClass, &BaseEmeraldValue{builtInMethodSet: c.staticBuiltInMethodSet})
 	}
-	return c.singleton
+	return NewHeapObject(c.singleton)
 }
 func (c *Class) Super() EmeraldValue       { return c.super }
 func (c *Class) SetSuper(val EmeraldValue) { c.super = val }
 func (c *Class) Ancestors() []EmeraldValue {
-	ancestors := []EmeraldValue{c}
+	ancestors := []EmeraldValue{NewHeapObject(c)}
 	ancestors = append(ancestors, c.IncludedModules()...)
 
 	super := c.Super()
 
-	if super != nil && !reflect.ValueOf(super).IsNil() {
-		ancestors = append(ancestors, super.(*Class).Ancestors()...)
+	if !super.IsNil() {
+		ancestors = append(ancestors, super.Heap.(*Class).Ancestors()...)
 	}
 
 	return ancestors
@@ -48,7 +45,7 @@ func (c *Class) HashKey() string { return c.Inspect() }
 func (c *Class) New() *Instance {
 	return &Instance{
 		BaseEmeraldValue: &BaseEmeraldValue{},
-		baseClass:        c,
+		baseClass:        NewHeapObject(c),
 	}
 }
 
@@ -62,7 +59,7 @@ func NewClass(
 ) *Class {
 	class := &Class{
 		Name:  name,
-		super: super,
+		super: NewHeapObject(super),
 		BaseEmeraldValue: &BaseEmeraldValue{
 			builtInMethodSet: builtInMethodSet,
 			includedModules:  modules,

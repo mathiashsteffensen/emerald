@@ -45,18 +45,18 @@ func (rt *Runtime) InitTCPSocket() {
 	rt.DefineMethod(rt.TCPSocket, "timeout=", rt.tcpSocketTimeoutSet())
 }
 
-func (rt *Runtime) NewTCPSocket(conn net.Conn) *TCPSocketInstance {
-	return &TCPSocketInstance{
-		Instance: rt.TCPSocket.New(),
+func (rt *Runtime) NewTCPSocket(conn net.Conn) object.EmeraldValue {
+	return object.NewHeapObject(&TCPSocketInstance{
+		Instance: rt.TCPSocket.Heap.(*object.Class).New(),
 		Conn:     conn,
 		tp:       textproto.NewReader(bufio.NewReader(conn)),
 		timeout:  &tcpSocketTimeout{},
-	}
+	})
 }
 
 func (rt *Runtime) tcpSocketTimeoutGet() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		socket := ctx.Self.(*TCPSocketInstance)
+		socket := ctx.Self.Heap.(*TCPSocketInstance)
 
 		if !socket.timeout.IsValid {
 			return rt.NULL
@@ -70,27 +70,27 @@ func (rt *Runtime) tcpSocketTimeoutSet() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		rt.EnforceArity(args, kwargs, 1, 1)
 
-		socket := ctx.Self.(*TCPSocketInstance)
+		socket := ctx.Self.Heap.(*TCPSocketInstance)
 
-		if args[0] == rt.NULL {
+		if args[0].IsNil() {
 			socket.timeout.Reset()
 			return rt.NULL
 		}
 
-		newValue, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[0])
+		newValue, err := rt.EnforceIntegerArg(args[0])
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
-		socket.timeout.Set(time.Duration(newValue.Value) * time.Millisecond)
+		socket.timeout.Set(time.Duration(newValue) * time.Millisecond)
 
-		return newValue
+		return args[0]
 	}
 }
 
 func (rt *Runtime) tcpSocketGets() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		socket := ctx.Self.(*TCPSocketInstance)
+		socket := ctx.Self.Heap.(*TCPSocketInstance)
 
 		line, err := socket.tp.ReadLine()
 		if err != nil {
@@ -110,18 +110,18 @@ func (rt *Runtime) tcpSocketWrite() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		rt.EnforceArity(args, kwargs, 1, 1)
 
-		socket := ctx.Self.(*TCPSocketInstance)
+		socket := ctx.Self.Heap.(*TCPSocketInstance)
 
 		content, emeraldErr := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 		if emeraldErr != nil {
-			return emeraldErr
+			return object.NewHeapObject(emeraldErr)
 		}
 
 		debug.InternalDebugF("Writing to TCPSocket: %s", content.Value)
 
 		bytesWritten, err := socket.Conn.Write([]byte(content.Value))
 		if err != nil {
-			return rt.RaiseGoError(err)
+			return object.NewHeapObject(rt.RaiseGoError(err))
 		}
 
 		return rt.NewInteger(int64(bytesWritten))
@@ -130,11 +130,11 @@ func (rt *Runtime) tcpSocketWrite() object.BuiltInMethod {
 
 func (rt *Runtime) tcpSocketClose() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		socket := ctx.Self.(*TCPSocketInstance)
+		socket := ctx.Self.Heap.(*TCPSocketInstance)
 
 		err := socket.Conn.Close()
 		if err != nil {
-			return rt.RaiseGoError(err)
+			return object.NewHeapObject(rt.RaiseGoError(err))
 		}
 
 		return rt.NULL

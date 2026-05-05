@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"emerald/bytecode"
+	"emerald/object"
 	ast "emerald/parser/ast"
 )
 
@@ -12,7 +13,7 @@ func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) {
 	// OpOpenClass expects this top be top of stack
 	if node.Parent == nil {
 		// If no parent is specified, it inherits from c.rt.Object
-		c.emitConstantGet(c.rt.Object.Name, node.Token)
+		c.emitConstantGet(c.rt.Object.Heap.(*object.Class).Name, node.Token)
 	} else {
 		c.Compile(node.Parent)
 	}

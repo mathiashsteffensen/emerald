@@ -20,14 +20,14 @@ func (rt *Runtime) InitException() {
 
 func (rt *Runtime) NewException(msg string) object.EmeraldError {
 	return &ExceptionInstance{
-		Instance: rt.Exception.New(),
+		Instance: rt.Exception.Heap.(*object.Class).New(),
 		message:  msg,
 	}
 }
 
 func (rt *Runtime) exceptionToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewString(ctx.Self.(object.EmeraldError).Message())
+		return rt.NewString(ctx.Self.Heap.(object.EmeraldError).Message())
 	}
 }
 
@@ -39,6 +39,6 @@ func (rt *Runtime) exceptionNew(initializer func(msg string) object.EmeraldError
 			msg = args[0].Inspect()
 		}
 
-		return initializer(msg)
+		return object.NewHeapObject(initializer(msg))
 	}
 }

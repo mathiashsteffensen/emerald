@@ -1,7 +1,7 @@
 package object
 
 type EmeraldError interface {
-	EmeraldValue
+	HeapObject
 	Message() string
 	ClassName() string
 }

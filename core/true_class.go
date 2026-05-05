@@ -8,7 +8,7 @@ func (rt *Runtime) InitTrueClass() {
 	rt.DefineMethod(rt.TrueClass, "to_s", rt.trueToS())
 	rt.DefineMethod(rt.TrueClass, "inspect", rt.trueToS())
 
-	rt.TRUE = rt.TrueClass.New()
+	rt.TRUE = object.EmeraldValue{TypeID: object.TRUE_VALUE, Heap: rt.TrueClass.Heap}
 }
 
 func (rt *Runtime) trueToS() object.BuiltInMethod {
@@ -18,10 +18,8 @@ func (rt *Runtime) trueToS() object.BuiltInMethod {
 }
 
 func (rt *Runtime) IsTruthy(obj object.EmeraldValue) bool {
-	switch obj {
-	case rt.FALSE, rt.NULL:
+	if obj.IsFalse() || obj.IsNil() {
 		return false
-	default:
-		return true
 	}
+	return true
 }

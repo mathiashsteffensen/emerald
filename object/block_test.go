@@ -18,11 +18,11 @@ func TestBlock(t *testing.T) {
 		t.Errorf("unexpected inspect format: %s", block.Inspect())
 	}
 
-	if block.Class() != nil {
+	if !block.Class().IsNil() {
 		t.Error("block class should be nil")
 	}
 
-	if block.Super() != nil {
+	if !block.Super().IsNil() {
 		t.Error("block super should be nil")
 	}
 
@@ -30,7 +30,7 @@ func TestBlock(t *testing.T) {
 		t.Error("block should have no ancestors")
 	}
 
-	if block.SingletonClass() != nil {
+	if !block.SingletonClass().IsNil() {
 		t.Error("block should have no singleton class")
 	}
 

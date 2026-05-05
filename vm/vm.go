@@ -47,9 +47,9 @@ func New(file string, bytecode *bytecode.Bytecode, rt *core.Runtime) *VM {
 	rt.Heap.SetGlobalVariableString("$*", rt.NewArray(argv))
 	setConst(rt.MainObject, "ARGV", rt.NewArray(argv))
 
-	rt.EvalBlock = func(block *object.ClosedBlock, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return vm.withExecutionContextForBlock(block, func() object.EmeraldValue {
-			return vm.rawEvalBlock(block, rt.NULL, kwargs, args...)
+	rt.EvalBlock = func(blockVal *object.ClosedBlock, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		return vm.withExecutionContextForBlock(object.NewHeapObject(blockVal), func() object.EmeraldValue {
+			return vm.rawEvalBlock(object.NewHeapObject(blockVal), rt.NULL, kwargs, args...)
 		})
 	}
 	rt.Send = vm.Send
@@ -184,7 +184,7 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 	case bytecode.OpGetGlobal:
 		globalIndex := vm.readUint16(ins, ip)
 		value := vm.rt.Heap.GetGlobalVariable(globalIndex)
-		if value == nil {
+		if value.IsNil() {
 			value = vm.rt.NULL
 		}
 		vm.push(value)
@@ -211,9 +211,9 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		name := vm.rt.Heap.GetConstant(constIndex)
 		target := vm.ctx.Self
 
-		val := target.InstanceVariableGet(name.(*core.SymbolInstance).Value, target, target)
+		val := target.InstanceVariableGet(name.Heap.(*core.SymbolInstance).Value, target, target)
 
-		if val == nil {
+		if val.IsNil() {
 			val = vm.rt.NULL
 		}
 
@@ -232,7 +232,7 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		val := vm.StackTop()
 		target := vm.ctx.Self
 
-		target.InstanceVariableSet(name.(*core.SymbolInstance).Value, val)
+		target.InstanceVariableSet(name.Heap.(*core.SymbolInstance).Value, val)
 	case bytecode.OpArray:
 		numElements := int(bytecode.ReadUint16(ins[ip+1:]))
 		vm.currentFiber().currentFrame().ip += 2
@@ -260,8 +260,8 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 	case bytecode.OpReturnValue:
 		vm.executeOpReturnValue()
 	case bytecode.OpDefineMethod:
-		block := vm.pop().(*object.Block)
-		name := vm.stack()[vm.currentFiber().sp-1].(*core.SymbolInstance)
+		block := vm.pop().Heap.(*object.Block)
+		name := vm.stack()[vm.currentFiber().sp-1].Heap.(*core.SymbolInstance)
 
 		vm.ctx.Self.DefinedMethodSet()[name.Value] = object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File, vm.ctx.DefaultMethodVisibility)
 	case bytecode.OpSend:
@@ -271,7 +271,7 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 	case bytecode.OpOpenClass:
 		// Fetch the symbol name from the heap
 		nameIndex := vm.readUint16(ins, ip)
-		name := vm.rt.Heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
+		name := vm.rt.Heap.GetConstant(nameIndex).Heap.(*core.SymbolInstance).Value
 
 		// Parent class is top off stack
 		parent := vm.pop()
@@ -280,7 +280,7 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		class, err := getConst(vm.ctx.Self, name, vm.rt)
 		if err != nil {
 			// If not create a new class object
-			class = vm.rt.DefineNestedClass(vm.ctx.Self, name, parent.(*object.Class))
+			class = vm.rt.DefineNestedClass(vm.ctx.Self, name, parent)
 		}
 
 		// Create and set a new Context with this class as Self
@@ -288,7 +288,7 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 	case bytecode.OpOpenModule:
 		outerCtx := vm.ctx
 		nameIndex := vm.readUint16(ins, ip)
-		name := vm.rt.Heap.GetConstant(nameIndex).(*core.SymbolInstance).Value
+		name := vm.rt.Heap.GetConstant(nameIndex).Heap.(*core.SymbolInstance).Value
 
 		module, err := getConst(vm.ctx.Self, name, vm.rt)
 		if err != nil {
@@ -309,7 +309,7 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 	case bytecode.OpStaticTrue:
 		vm.ctx.Self = vm.ctx.Self.SingletonClass()
 	case bytecode.OpStaticFalse:
-		vm.ctx.Self = vm.ctx.Self.(*object.SingletonClass).Instance
+		vm.ctx.Self = vm.ctx.Self.Heap.(*object.SingletonClass).Instance
 	default:
 		def, err := bytecode.Lookup(byte(op))
 		if err != nil {
@@ -322,7 +322,7 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 
 func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 	constant := vm.rt.Heap.GetConstant(uint16(constIndex))
-	block := constant.(*object.Block)
+	block := constant.Heap.(*object.Block)
 
 	free := make([]object.EmeraldValue, numFreeVars)
 	for i := 0; i < numFreeVars; i++ {
@@ -331,20 +331,20 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 
 	vm.currentFiber().sp = vm.currentFiber().sp - numFreeVars
 
-	vm.push(object.NewClosedBlock(vm.ctx, block, free, "", object.PUBLIC))
+	vm.push(object.NewHeapObject(object.NewClosedBlock(vm.ctx, block, free, "", object.PUBLIC)))
 }
 
 func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 	var (
 		kwargsHash   *core.HashInstance
-		kwargsMap    = map[string]object.EmeraldValue{}
+		kwargsMap    map[string]object.EmeraldValue
 		basePointer  int
 		argsEndIndex int
 	)
 
 	if hasKwargs {
 		var ok bool
-		kwargsHash, ok = vm.currentFiber().pop().(*core.HashInstance)
+		kwargsHash, ok = vm.currentFiber().pop().Heap.(*core.HashInstance)
 		if !ok {
 			debug.FatalBugF("Keyword arguments instance was not a hash? got %s", vm.currentFiber().StackTop().Inspect())
 		}
@@ -354,13 +354,14 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 	}
 
 	receiver := vm.stack()[basePointer-3]
-	name, ok := vm.stack()[basePointer-2].(*core.SymbolInstance)
+	nameSymbol, ok := vm.stack()[basePointer-2].Heap.(*core.SymbolInstance)
 	if !ok {
 		debug.FatalBugF("Method name instance was not a symbol? got %q", vm.stack()[basePointer-2].Inspect())
 	}
+	name := nameSymbol.Value
 	block := vm.stack()[basePointer-1]
 
-	method, err := vm.extractMethod(receiver, name.Value)
+	method, err := vm.extractMethod(receiver, name)
 	if err != nil {
 		return
 	}
@@ -369,13 +370,14 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 	// debug.DebugF("Calling method %s#%s %d %s", receiver.Inspect(), name.Value, numArgs)
 
 	vm.withExecutionContext(receiver, block, func() {
-		switch method := method.(type) {
+		switch m := method.Heap.(type) {
 		case *object.ClosedBlock:
 			if hasKwargs {
-				sortedKwargsHash := vm.rt.NewHash()
+				sortedKwargsHashVal := vm.rt.NewHash()
+				sortedKwargsHash := sortedKwargsHashVal.Heap.(*core.HashInstance)
 
 				// Sort kwargs first, so they match the definition order, this allows local variable references to resolve correctly
-				for _, kwargStringKey := range method.Kwargs {
+				for _, kwargStringKey := range m.Kwargs {
 					symbolKey := vm.rt.NewSymbol(kwargStringKey)
 
 					sortedKwargsHash.Set(symbolKey, kwargsHash.Get(symbolKey))
@@ -386,17 +388,17 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 				argsEndIndex = vm.currentFiber().sp
 			}
 
-			if _, err := vm.rt.EnforceArity(vm.stack()[basePointer:argsEndIndex], kwargsMap, method.NumArgs, method.NumArgs, method.Kwargs...); err != nil {
+			if _, err := vm.rt.EnforceArity(vm.stack()[basePointer:argsEndIndex], kwargsMap, m.NumArgs, m.NumArgs, m.Kwargs...); err != nil {
 				return
 			}
 
-			frame := NewFrame(method, basePointer)
+			frame := NewFrame(m, basePointer)
 			vm.currentFiber().pushFrame(frame)
-			vm.currentFiber().sp = frame.basePointer + method.NumLocals
+			vm.currentFiber().sp = frame.basePointer + m.NumLocals
 			originalFrameIndex := vm.currentFiber().framesIndex
 
-			if method.File != "" {
-				vm.ctx.File = method.File
+			if m.File != "" {
+				vm.ctx.File = m.File
 			}
 
 			vm.runWhile(func() bool {
@@ -409,7 +411,7 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 				argsEndIndex = vm.currentFiber().sp
 			}
 
-			result := vm.evalBuiltIn(method, block, vm.stack()[basePointer:argsEndIndex], kwargsMap)
+			result := vm.evalBuiltIn(m, block, vm.stack()[basePointer:argsEndIndex], kwargsMap)
 			if !vm.ExceptionIsRaised() {
 				vm.currentFiber().sp = basePointer - 3
 				vm.push(result)
@@ -419,40 +421,36 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 }
 
 func (vm *VM) extractMethod(self object.EmeraldValue, name string) (object.EmeraldValue, object.EmeraldError) {
-	method, visibility, isDefinedOnReceiver, err := self.Class().ExtractMethod(name, self.Class(), self)
+	method, visibility, isDefinedOnReceiver, err := self.Class().Heap.ExtractMethod(name, self.Class(), self)
 	if err != nil {
-		return nil, raiseUndefinedNoMethodError(name, self, vm.rt)
+		return object.EmeraldValue{}, raiseUndefinedNoMethodError(name, self, vm.rt)
 	}
 
 	if ok := vm.ctx.ValidateMethodVisibility(self, visibility, isDefinedOnReceiver); !ok {
-		return nil, raiseNotVisibleNoMethodError(name, self, vm.rt)
+		return object.EmeraldValue{}, raiseNotVisibleNoMethodError(name, self, vm.rt)
 	}
 
 	return method, nil
 }
 
 func raiseUndefinedNoMethodError(name string, receiver object.EmeraldValue, rt *core.Runtime) object.EmeraldError {
-	return rt.Raise(
-		rt.NewNoMethodError(
-			fmt.Sprintf("undefined method '%s' for %s:%s", name, receiver.Inspect(), object.RealClass(receiver).(*object.Class).Name),
-		),
-	)
+	return rt.Raise(rt.NewNoMethodError(
+		fmt.Sprintf("undefined method '%s' for %s:%s", name, receiver.Inspect(), object.RealClass(receiver).Heap.(*object.Class).Name),
+	))
 }
 
 func raiseNotVisibleNoMethodError(name string, receiver object.EmeraldValue, rt *core.Runtime) object.EmeraldError {
 	var receiverPart string
-	receiverClassName := object.RealClass(receiver).(*object.Class).Name
-	if receiverClassName == rt.Class.Name {
+	receiverClassName := object.RealClass(receiver).Heap.(*object.Class).Name
+	if receiverClassName == rt.Class.Heap.(*object.Class).Name {
 		receiverPart = fmt.Sprintf("%s:%s", receiver.Inspect(), receiverClassName)
 	} else {
 		receiverPart = receiverClassName
 	}
 
-	return rt.Raise(
-		rt.NewNoMethodError(
-			fmt.Sprintf("private method `%s' called for %s", name, receiverPart),
-		),
-	)
+	return rt.Raise(rt.NewNoMethodError(
+		fmt.Sprintf("private method `%s' called for %s", name, receiverPart),
+	))
 }
 
 func (vm *VM) pushKwargsToStack(kwargsHash *core.HashInstance) (map[string]object.EmeraldValue, int) {
@@ -471,7 +469,7 @@ func (vm *VM) pushKwargsToStack(kwargsHash *core.HashInstance) (map[string]objec
 func (vm *VM) evalInfixOperator(op string) {
 	left := vm.pop()
 
-	result := vm.Send(left, op, vm.rt.NULL, map[string]object.EmeraldValue{}, vm.StackTop())
+	result := vm.Send(left, op, vm.rt.NULL, nil, vm.StackTop())
 
 	if !vm.ExceptionIsRaised() {
 		vm.stack()[vm.currentFiber().sp-1] = result
@@ -524,13 +522,14 @@ func (vm *VM) buildArray(startIndex, endIndex int) object.EmeraldValue {
 }
 
 func (vm *VM) buildHash(startIndex, endIndex int) object.EmeraldValue {
-	hash := vm.rt.NewHash()
+	hashVal := vm.rt.NewHash()
+	hash := hashVal.Heap.(*core.HashInstance)
 
 	for i := startIndex; i < endIndex; i += 2 {
 		hash.Set(vm.stack()[i], vm.stack()[i+1])
 	}
 
-	return hash
+	return hashVal
 }
 
 func (vm *VM) conditionalJump(condition bool, ins bytecode.Instructions, ip int) {

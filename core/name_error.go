@@ -29,5 +29,5 @@ func (err *NameErrorInstance) ClassName() string {
 }
 
 func (rt *Runtime) NewNameError(msg string) object.EmeraldError {
-	return &NameErrorInstance{rt.NameError.New(), msg}
+	return &NameErrorInstance{rt.NameError.Heap.(*object.Class).New(), msg}
 }

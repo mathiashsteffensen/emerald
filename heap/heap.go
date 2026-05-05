@@ -35,7 +35,7 @@ func (h *Heap) GetGlobalVariable(index uint16) object.EmeraldValue {
 
 func (h *Heap) GetGlobalVariableString(name string) object.EmeraldValue {
 	if symbol, ok := h.SymbolTable.Resolve(name); !ok {
-		return nil
+		return object.EmeraldValue{}
 	} else {
 		return h.GetGlobalVariable(uint16(symbol.Index))
 	}

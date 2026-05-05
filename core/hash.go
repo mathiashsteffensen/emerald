@@ -26,18 +26,18 @@ type HashInstance struct {
 	Keys   map[string]object.EmeraldValue
 }
 
-func (rt *Runtime) NewHash() *HashInstance {
-	return &HashInstance{
-		Instance: rt.Hash.New(),
+func (rt *Runtime) NewHash() object.EmeraldValue {
+	return object.NewHeapObject(&HashInstance{
+		Instance: rt.Hash.Heap.(*object.Class).New(),
 		Values:   orderedmap.NewOrderedMap[string, object.EmeraldValue](),
 		Keys:     map[string]object.EmeraldValue{},
-	}
+	})
 }
 
 func (hash *HashInstance) Get(key object.EmeraldValue) object.EmeraldValue {
-	val := hash.Values.GetOrDefault(key.HashKey(), nil)
-	if val == nil {
-		return nil
+	val, ok := hash.Values.Get(key.HashKey())
+	if !ok {
+		return object.EmeraldValue{}
 	}
 	return val
 }
@@ -57,17 +57,17 @@ func (hash *HashInstance) Each(callback func(key object.EmeraldValue, value obje
 func (rt *Runtime) hashToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 0, 0); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		pairs := []string{}
 
-		ctx.Self.(*HashInstance).Each(func(key object.EmeraldValue, value object.EmeraldValue) {
+		ctx.Self.Heap.(*HashInstance).Each(func(key object.EmeraldValue, value object.EmeraldValue) {
 			var out strings.Builder
 
-			out.WriteString(rt.Send(key, "to_s", rt.NULL, map[string]object.EmeraldValue{}).(*StringInstance).Value)
+			out.WriteString(rt.Send(key, "to_s", rt.NULL, map[string]object.EmeraldValue{}).Inspect())
 			out.WriteString(" => ")
-			out.WriteString(rt.Send(value, "to_s", rt.NULL, map[string]object.EmeraldValue{}).(*StringInstance).Value)
+			out.WriteString(rt.Send(value, "to_s", rt.NULL, map[string]object.EmeraldValue{}).Inspect())
 
 			pairs = append(pairs, out.String())
 		})
@@ -87,11 +87,11 @@ func (rt *Runtime) hashToS() object.BuiltInMethod {
 func (rt *Runtime) hashIndexAccessor() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
-		val := ctx.Self.(*HashInstance).Get(args[0])
-		if val == nil {
+		val := ctx.Self.Heap.(*HashInstance).Get(args[0])
+		if val.IsNil() {
 			return rt.NULL
 		}
 		return val
@@ -101,10 +101,10 @@ func (rt *Runtime) hashIndexAccessor() object.BuiltInMethod {
 func (rt *Runtime) hashIndexSetter() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 2, 2); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
-		ctx.Self.(*HashInstance).Set(args[0], args[1])
+		ctx.Self.Heap.(*HashInstance).Set(args[0], args[1])
 
 		return args[1]
 	}
@@ -112,13 +112,13 @@ func (rt *Runtime) hashIndexSetter() object.BuiltInMethod {
 
 func (rt *Runtime) hashEach() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		hash := ctx.Self.(*HashInstance)
+		hash := ctx.Self.Heap.(*HashInstance)
 
 		hash.Each(func(key object.EmeraldValue, value object.EmeraldValue) {
 			ctx.Yield(map[string]object.EmeraldValue{}, key, value)
 		})
 
-		return hash
+		return ctx.Self
 	}
 }
 
@@ -127,7 +127,7 @@ func (rt *Runtime) hashEquals() object.BuiltInMethod {
 		args, err := rt.EnforceArity(args, kwargs, 1, 1)
 
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
 		otherObj := args[0]
@@ -135,8 +135,8 @@ func (rt *Runtime) hashEquals() object.BuiltInMethod {
 			return rt.FALSE
 		}
 
-		hash := ctx.Self.(*HashInstance)
-		otherHash := otherObj.(*HashInstance)
+		hash := ctx.Self.Heap.(*HashInstance)
+		otherHash := otherObj.Heap.(*HashInstance)
 
 		for el := hash.Values.Front(); el != nil; el = el.Next() {
 			otherValue, ok := otherHash.Values.Get(el.Key)

@@ -8,8 +8,8 @@ import (
 func TestEmeraldValueSize(t *testing.T) {
 	var value EmeraldValue
 
-	if unsafe.Sizeof(value) != 16 {
-		t.Errorf("blank EmeraldValue takes up %d bytes", unsafe.Sizeof(value))
+	if unsafe.Sizeof(value) > 32 {
+		t.Errorf("EmeraldValue takes up too much space: %d bytes", unsafe.Sizeof(value))
 	}
 }
 
@@ -35,41 +35,45 @@ func TestEmeraldValueType_String(t *testing.T) {
 }
 
 func TestRealClass(t *testing.T) {
-	if RealClass(nil) != nil {
+	if !RealClass(EmeraldValue{}).IsNil() {
 		t.Error("RealClass(nil) should be nil")
 	}
 
 	class := &Class{Name: "MyClass"}
-	if RealClass(class) != nil {
+	if !RealClass(NewHeapObject(class)).IsNil() {
 		t.Error("RealClass(class) should be nil if Class() is nil")
 	}
 
-	singleton := &SingletonClass{BaseEmeraldValue: &BaseEmeraldValue{}, super: class}
+	singleton := &SingletonClass{BaseEmeraldValue: &BaseEmeraldValue{}, super: NewHeapObject(class)}
 	instance := &Instance{BaseEmeraldValue: &BaseEmeraldValue{}, singleton: singleton}
-	if RealClass(instance) != class {
-		t.Errorf("expected RealClass(instance) to be class, got %v", RealClass(instance))
+	if RealClass(NewHeapObject(instance)).Heap != class {
+		t.Errorf("expected RealClass(instance) to be class, got %v", RealClass(NewHeapObject(instance)))
 	}
 
-	if RealClass(singleton) != class { 
-		t.Errorf("expected RealClass(singleton) to be class, got %v", RealClass(singleton))
+	if RealClass(NewHeapObject(singleton)).Heap != class { 
+		t.Errorf("expected RealClass(singleton) to be class, got %v", RealClass(NewHeapObject(singleton)))
 	}
 }
 
 func TestWrappedBuiltInMethod(t *testing.T) {
-	method := &WrappedBuiltInMethod{}
+	method := &WrappedBuiltInMethod{
+		BaseEmeraldValue: &BaseEmeraldValue{},
+	}
 	if method.Type() != BLOCK_VALUE {
 		t.Errorf("expected BLOCK_VALUE, got %s", method.Type().String())
 	}
-	if method.Class() != nil {
+	if !method.Class().IsNil() {
 		t.Error("expected nil Class")
 	}
-	if method.Super() != nil {
+	if !method.Super().IsNil() {
 		t.Error("expected nil Super")
 	}
+	// Ancestors() on BaseEmeraldValue (which WrappedBuiltInMethod uses via embedding)
+	// might return something if it's not overridden.
 	if len(method.Ancestors()) != 0 {
 		t.Error("expected empty Ancestors")
 	}
-	if method.SingletonClass() != nil {
+	if !method.SingletonClass().IsNil() {
 		t.Error("expected nil SingletonClass")
 	}
 	if method.HashKey() == "" {

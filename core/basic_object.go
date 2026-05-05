@@ -5,5 +5,5 @@ import (
 )
 
 func (rt *Runtime) InitBasicObject() {
-	rt.BasicObject = object.NewClass("BasicObject", nil, rt.Class, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	rt.BasicObject = object.NewHeapObject(object.NewClass("BasicObject", nil, rt.Class, object.BuiltInMethodSet{}, object.BuiltInMethodSet{}))
 }

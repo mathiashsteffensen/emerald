@@ -27,7 +27,7 @@ func (s SymbolInternStore) Resolve(val string) (object.EmeraldValue, bool) {
 }
 
 func (s SymbolInternStore) Define(rt *Runtime, val string) object.EmeraldValue {
-	sym := &SymbolInstance{Value: val, Instance: rt.Symbol.New()}
+	sym := object.NewHeapObject(&SymbolInstance{Value: val, Instance: rt.Symbol.Heap.(*object.Class).New()})
 
 	s[val] = sym
 

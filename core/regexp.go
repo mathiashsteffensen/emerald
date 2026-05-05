@@ -13,12 +13,12 @@ type RegexpInstance struct {
 	Expression *regexp2.Regexp
 }
 
-func (rt *Runtime) NewRegexp(pattern string) *RegexpInstance {
-	return &RegexpInstance{
-		Instance:   rt.Regexp.New(),
+func (rt *Runtime) NewRegexp(pattern string) object.EmeraldValue {
+	return object.NewHeapObject(&RegexpInstance{
+		Instance:   rt.Regexp.Heap.(*object.Class).New(),
 		Source:     pattern,
 		Expression: regexp2.MustCompile(pattern, 0),
-	}
+	})
 }
 
 func (rt *Runtime) InitRegexp() {
@@ -34,14 +34,14 @@ func (rt *Runtime) InitRegexp() {
 
 func (rt *Runtime) regexpNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewRegexp(args[0].(*StringInstance).Value)
+		return rt.NewRegexp(args[0].Heap.(*StringInstance).Value)
 	}
 }
 
 func (rt *Runtime) regexpLastMatch() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		lastMatch := rt.Heap.GetGlobalVariableString("$~")
-		if lastMatch == nil {
+		if lastMatch.IsNil() {
 			return rt.NULL
 		}
 		return lastMatch
@@ -50,13 +50,13 @@ func (rt *Runtime) regexpLastMatch() object.BuiltInMethod {
 
 func (rt *Runtime) regexpInspect() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewString(fmt.Sprintf("/%s/", ctx.Self.(*RegexpInstance).Source))
+		return rt.NewString(fmt.Sprintf("/%s/", ctx.Self.Heap.(*RegexpInstance).Source))
 	}
 }
 
 func (rt *Runtime) regexpMatch() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.regexStringMatch(ctx.Self.(*RegexpInstance), args[0].(*StringInstance))
+		return rt.regexStringMatch(ctx.Self.Heap.(*RegexpInstance), args[0].Heap.(*StringInstance))
 	}
 }
 
@@ -66,7 +66,7 @@ func (rt *Runtime) regexStringMatch(regex *RegexpInstance, str *StringInstance) 
 	} else if m == nil {
 		return rt.NULL
 	} else {
-		result := rt.NewMatchData(regex, m)
+		result := rt.NewMatchData(object.NewHeapObject(regex), m)
 
 		return result
 	}

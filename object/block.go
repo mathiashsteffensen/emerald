@@ -22,13 +22,13 @@ type Block struct {
 	ExceptionTable []ExceptionTableEntry
 }
 
-func (b *Block) Class() EmeraldValue          { return nil }
-func (b *Block) Super() EmeraldValue          { return nil }
+func (b *Block) Class() EmeraldValue          { return EmeraldValue{} }
+func (b *Block) Super() EmeraldValue          { return EmeraldValue{} }
 func (b *Block) Ancestors() []EmeraldValue    { return []EmeraldValue{} }
 func (b *Block) Type() EmeraldValueType       { return BLOCK_VALUE }
 func (b *Block) Inspect() string              { return fmt.Sprintf("#<Block:%p>", b) }
 func (b *Block) HashKey() string              { return b.Inspect() }
-func (b *Block) SingletonClass() EmeraldValue { return nil }
+func (b *Block) SingletonClass() EmeraldValue { return EmeraldValue{} }
 
 func NewBlock(bytecode bytecode.Bytecode, numLocals int, numArgs int, kwargs []string, enforceArity bool) *Block {
 	return &Block{

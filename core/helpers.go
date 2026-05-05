@@ -2,56 +2,60 @@ package core
 
 import (
 	"emerald/object"
+	"fmt"
+	"math"
 )
 
 // rt.Send is a function for calling methods that is dependency injected by the emerald/vm package
 
-func (rt *Runtime) DefineClass(name string, super *object.Class) *object.Class {
+func (rt *Runtime) DefineClass(name string, super object.EmeraldValue) object.EmeraldValue {
 	var superClass object.EmeraldValue
 
-	if rt.Class != nil {
+	if !rt.Class.IsNil() {
 		superClass = rt.Class
-	} else if super != nil {
+	} else if !super.IsNil() {
 		superClass = super.Class()
 	}
 
-	class := object.NewClass(name, super, superClass, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-	rt.Object.NamespaceDefinitionSet(name, class)
-	class.SetParentNamespace(rt.Object)
-
-	return class
-}
-
-func (rt *Runtime) DefineNestedClass(namespace object.EmeraldValue, name string, super *object.Class) *object.Class {
-	var superClass object.EmeraldValue
-
-	if rt.Class != nil {
-		superClass = rt.Class
-	} else if super != nil {
-		superClass = super.Class()
+	var superPtr *object.Class
+	if !super.IsNil() {
+		superPtr = super.Heap.(*object.Class)
 	}
 
-	class := object.NewClass(name, super, superClass, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-	namespace.NamespaceDefinitionSet(name, class)
-	class.SetParentNamespace(namespace)
+	class := object.NewClass(name, superPtr, superClass, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
+	classVal := object.NewHeapObject(class)
+	if !rt.Object.IsNil() {
+		rt.Object.NamespaceDefinitionSet(name, classVal)
+		class.SetParentNamespace(rt.Object)
+	}
 
-	return class
+	return classVal
 }
 
-func (rt *Runtime) DefineModule(name string) *object.Module {
-	module := object.NewModule(name, rt.Module, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-	rt.Object.NamespaceDefinitionSet(name, module)
-	module.SetParentNamespace(rt.Object)
-
-	return module
+func (rt *Runtime) DefineNestedClass(namespace object.EmeraldValue, name string, super object.EmeraldValue) object.EmeraldValue {
+	classVal := rt.DefineClass(name, super)
+	namespace.NamespaceDefinitionSet(name, classVal)
+	classVal.SetParentNamespace(namespace)
+	return classVal
 }
 
-func (rt *Runtime) DefineNestedModule(namespace object.EmeraldValue, name string) *object.Module {
+func (rt *Runtime) DefineModule(name string) object.EmeraldValue {
 	module := object.NewModule(name, rt.Module, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})
-	namespace.NamespaceDefinitionSet(name, module)
-	module.SetParentNamespace(namespace)
+	moduleVal := object.NewHeapObject(module)
+	if !rt.Object.IsNil() {
+		rt.Object.NamespaceDefinitionSet(name, moduleVal)
+		module.SetParentNamespace(rt.Object)
+	}
 
-	return module
+	return moduleVal
+}
+
+func (rt *Runtime) DefineNestedModule(namespace object.EmeraldValue, name string) object.EmeraldValue {
+	moduleVal := rt.DefineModule(name)
+	namespace.NamespaceDefinitionSet(name, moduleVal)
+	moduleVal.SetParentNamespace(namespace)
+
+	return moduleVal
 }
 
 func (rt *Runtime) DefineMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
@@ -82,33 +86,47 @@ func (rt *Runtime) EnforceArity(
 ) ([]object.EmeraldValue, object.EmeraldError) {
 	var err object.EmeraldError
 
-	argsWithoutNilPointers := []object.EmeraldValue{}
-	for _, arg := range args {
-		if arg != nil {
-			argsWithoutNilPointers = append(argsWithoutNilPointers, arg)
-		}
-	}
-	numArgsGiven := len(argsWithoutNilPointers)
+	numArgsGiven := len(args)
 
 	if numArgsGiven < minArgs || numArgsGiven > maxArgs {
 		err = rt.NewArgumentError(numArgsGiven, maxArgs)
 		rt.Raise(err)
-		return argsWithoutNilPointers, err
+		return args, err
 	}
 
 	for _, kwarg := range requiredKwargs {
 		if _, ok := kwargs[":"+kwarg]; !ok {
 			err = rt.NewKeywordMissingArgumentError(kwarg)
 			rt.Raise(err)
-			return argsWithoutNilPointers, err
+			return args, err
 		}
 	}
 
-	return argsWithoutNilPointers, nil
+	return args, nil
 }
 
-func EnforceArgumentType[T object.EmeraldValue](rt *Runtime, typ *object.Class, arg object.EmeraldValue) (T, object.EmeraldError) {
-	argClass := object.RealClass(arg).(*object.Class)
+func (rt *Runtime) EnforceIntegerArg(arg object.EmeraldValue) (int64, object.EmeraldError) {
+	if !arg.Is(object.INTEGER_VALUE) {
+		err := rt.NewNoConversionTypeError(rt.Integer.Heap.(*object.Class).Name, object.RealClass(arg).Heap.(*object.Class).Name)
+		rt.Raise(err)
+		return 0, err
+	}
+	return int64(arg.Num), nil
+}
+
+func (rt *Runtime) EnforceFloatArg(arg object.EmeraldValue) (float64, object.EmeraldError) {
+	if !arg.Is(object.FLOAT_VALUE) {
+		err := rt.NewNoConversionTypeError(rt.Float.Heap.(*object.Class).Name, object.RealClass(arg).Heap.(*object.Class).Name)
+		rt.Raise(err)
+		return 0, err
+	}
+	return math.Float64frombits(arg.Num), nil
+}
+
+func EnforceArgumentType[T any](rt *Runtime, typVal object.EmeraldValue, arg object.EmeraldValue) (T, object.EmeraldError) {
+	typ := typVal.Heap.(*object.Class)
+	realClass := object.RealClass(arg)
+	argClass := realClass.Heap.(*object.Class)
 
 	if argClass.Name != typ.Name {
 		err := rt.NewNoConversionTypeError(typ.Name, argClass.Name)
@@ -117,11 +135,16 @@ func EnforceArgumentType[T object.EmeraldValue](rt *Runtime, typ *object.Class, 
 		return empty, err
 	}
 
-	return arg.(T), nil
+	if heap, ok := arg.Heap.(T); ok {
+		return heap, nil
+	}
+
+	var empty T
+	return empty, rt.RaiseGoError(fmt.Errorf("could not cast %T to %T", arg.Heap, empty))
 }
 
 func (rt *Runtime) Raise(err object.EmeraldError) object.EmeraldError {
-	rt.Heap.SetGlobalVariableString("$!", err)
+	rt.Heap.SetGlobalVariableString("$!", object.NewHeapObject(err))
 	if rt.OnRaise != nil {
 		rt.OnRaise(err)
 	}

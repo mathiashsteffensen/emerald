@@ -14,19 +14,19 @@ func (m *Module) Inspect() string {
 }
 func (m *Module) Class() EmeraldValue {
 	if m.singleton != nil {
-		return m.singleton
+		return NewHeapObject(m.singleton)
 	}
 	return m.baseClass
 }
 func (m *Module) SingletonClass() EmeraldValue {
 	if m.singleton == nil {
-		m.singleton = NewSingletonClass(m, m.baseClass, &BaseEmeraldValue{builtInMethodSet: m.staticBuiltInMethodSet})
+		m.singleton = NewSingletonClass(NewHeapObject(m), m.baseClass, &BaseEmeraldValue{builtInMethodSet: m.staticBuiltInMethodSet})
 	}
-	return m.singleton
+	return NewHeapObject(m.singleton)
 }
-func (m *Module) Super() EmeraldValue { return nil }
+func (m *Module) Super() EmeraldValue { return EmeraldValue{} }
 func (m *Module) Ancestors() []EmeraldValue {
-	ancestors := []EmeraldValue{m}
+	ancestors := []EmeraldValue{NewHeapObject(m)}
 	ancestors = append(ancestors, m.IncludedModules()...)
 
 	return ancestors

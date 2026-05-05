@@ -2,6 +2,7 @@ package core
 
 import (
 	"emerald/object"
+	"fmt"
 	"math"
 	"strconv"
 )
@@ -22,35 +23,30 @@ func (rt *Runtime) InitFloat() {
 	rt.DefineMethod(rt.Float, "round", rt.floatRound())
 }
 
-type FloatInstance struct {
-	*object.Instance
-	Value float64
-}
-
-func (rt *Runtime) NewFloat(val float64) *FloatInstance {
-	return &FloatInstance{
-		Instance: rt.Float.New(),
-		Value:    val,
+func (rt *Runtime) NewFloat(val float64) object.EmeraldValue {
+	return object.EmeraldValue{
+		TypeID: object.FLOAT_VALUE,
+		Heap:   rt.Float.Heap,
+		Num:    math.Float64bits(val),
 	}
 }
 
 func (rt *Runtime) floatToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewString(strconv.FormatFloat(ctx.Self.(*FloatInstance).Value, 'f', -1, 64))
+		return rt.NewString(strconv.FormatFloat(math.Float64frombits(ctx.Self.Num), 'f', -1, 64))
 	}
 }
 
 func (rt *Runtime) floatAdd() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := ctx.Self.(*FloatInstance)
+		left := math.Float64frombits(ctx.Self.Num)
 
 		var newValue float64
 
-		switch right := args[0].(type) {
-		case *IntegerInstance:
-			newValue = left.Value + float64(right.Value)
-		case *FloatInstance:
-			newValue = left.Value + right.Value
+		if args[0].Is(object.INTEGER_VALUE) {
+			newValue = left + float64(int64(args[0].Num))
+		} else if args[0].Is(object.FLOAT_VALUE) {
+			newValue = left + math.Float64frombits(args[0].Num)
 		}
 
 		return rt.NewFloat(newValue)
@@ -59,15 +55,14 @@ func (rt *Runtime) floatAdd() object.BuiltInMethod {
 
 func (rt *Runtime) floatSubtract() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := ctx.Self.(*FloatInstance)
+		left := math.Float64frombits(ctx.Self.Num)
 
 		var newValue float64
 
-		switch right := args[0].(type) {
-		case *IntegerInstance:
-			newValue = left.Value - float64(right.Value)
-		case *FloatInstance:
-			newValue = left.Value - right.Value
+		if args[0].Is(object.INTEGER_VALUE) {
+			newValue = left - float64(int64(args[0].Num))
+		} else if args[0].Is(object.FLOAT_VALUE) {
+			newValue = left - math.Float64frombits(args[0].Num)
 		}
 
 		return rt.NewFloat(newValue)
@@ -76,15 +71,14 @@ func (rt *Runtime) floatSubtract() object.BuiltInMethod {
 
 func (rt *Runtime) floatMultiply() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := ctx.Self.(*FloatInstance)
+		left := math.Float64frombits(ctx.Self.Num)
 
 		var newValue float64
 
-		switch right := args[0].(type) {
-		case *IntegerInstance:
-			newValue = left.Value * float64(right.Value)
-		case *FloatInstance:
-			newValue = left.Value * right.Value
+		if args[0].Is(object.INTEGER_VALUE) {
+			newValue = left * float64(int64(args[0].Num))
+		} else if args[0].Is(object.FLOAT_VALUE) {
+			newValue = left * math.Float64frombits(args[0].Num)
 		}
 
 		return rt.NewFloat(newValue)
@@ -93,15 +87,14 @@ func (rt *Runtime) floatMultiply() object.BuiltInMethod {
 
 func (rt *Runtime) floatDivide() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := ctx.Self.(*FloatInstance)
+		left := math.Float64frombits(ctx.Self.Num)
 
 		var newValue float64
 
-		switch right := args[0].(type) {
-		case *IntegerInstance:
-			newValue = left.Value / float64(right.Value)
-		case *FloatInstance:
-			newValue = left.Value / right.Value
+		if args[0].Is(object.INTEGER_VALUE) {
+			newValue = left / float64(int64(args[0].Num))
+		} else if args[0].Is(object.FLOAT_VALUE) {
+			newValue = left / math.Float64frombits(args[0].Num)
 		}
 
 		return rt.NewFloat(newValue)
@@ -110,17 +103,18 @@ func (rt *Runtime) floatDivide() object.BuiltInMethod {
 
 func (rt *Runtime) floatNegate() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.NewFloat(-ctx.Self.(*FloatInstance).Value)
+		return rt.NewFloat(-math.Float64frombits(ctx.Self.Num))
 	}
 }
 
 func (rt *Runtime) floatSpaceship() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := ctx.Self.(*FloatInstance)
-		if right, ok := args[0].(*FloatInstance); ok {
+		left := math.Float64frombits(ctx.Self.Num)
+		if args[0].Is(object.FLOAT_VALUE) {
+			right := math.Float64frombits(args[0].Num)
 			var result int64
 
-			diff := left.Value - right.Value
+			diff := left - right
 
 			if diff < 0 {
 				result = -1
@@ -146,17 +140,18 @@ func (rt *Runtime) floatRound() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		rt.EnforceArity(args, kwargs, 0, 1)
 
-		float := ctx.Self.(*FloatInstance)
+		val := math.Float64frombits(ctx.Self.Num)
 
 		if len(args) == 1 {
-			precision, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[0])
-			if err != nil {
-				return err
+			if !args[0].Is(object.INTEGER_VALUE) {
+				err := rt.NewTypeError(fmt.Sprintf("no implicit conversion of %s into Integer", args[0].Class().Inspect()))
+				return object.NewHeapObject(rt.Raise(err))
 			}
+			precision := int64(args[0].Num)
 
-			return rt.NewFloat(rt.roundFloatToPrecision(float.Value, precision.Value))
+			return rt.NewFloat(rt.roundFloatToPrecision(val, precision))
 		} else {
-			return rt.NewInteger(int64(math.Round(float.Value)))
+			return rt.NewInteger(int64(math.Round(val)))
 		}
 	}
 }

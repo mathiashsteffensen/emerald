@@ -29,5 +29,5 @@ func (err *RuntimeErrorInstance) ClassName() string {
 }
 
 func (rt *Runtime) NewRuntimeError(msg string) object.EmeraldError {
-	return &RuntimeErrorInstance{rt.RuntimeError.New(), msg}
+	return &RuntimeErrorInstance{rt.RuntimeError.Heap.(*object.Class).New(), msg}
 }

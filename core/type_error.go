@@ -34,7 +34,7 @@ func (rt *Runtime) NewNoConversionTypeError(expected string, actual string) obje
 
 func (rt *Runtime) NewTypeError(msg string) object.EmeraldError {
 	return &TypeErrorInstance{
-		Instance: rt.TypeError.New(),
+		Instance: rt.TypeError.Heap.(*object.Class).New(),
 		message:  msg,
 	}
 }

@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"emerald/bytecode"
+	"emerald/object"
 	"emerald/parser/ast"
 )
 
@@ -13,7 +14,7 @@ func (c *Compiler) compileCallExpression(node ast.CallExpression) {
 	if node.Block != nil {
 		block, freeSymbolCount := c.compileBlock(node.Block, false)
 
-		c.emit(bytecode.OpCloseBlock, node.Block.Token, c.addConstant(block), freeSymbolCount)
+		c.emit(bytecode.OpCloseBlock, node.Block.Token, c.addConstant(object.NewHeapObject(block)), freeSymbolCount)
 	} else {
 		c.emit(bytecode.OpNull, node.Token)
 	}

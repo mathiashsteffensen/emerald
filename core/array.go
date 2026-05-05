@@ -30,29 +30,31 @@ func (rt *Runtime) InitArray() {
 	rt.DefineMethod(rt.Array, "inspect", rt.arrayToS())
 }
 
-func (rt *Runtime) NewArray(val []object.EmeraldValue) *ArrayInstance {
-	return &ArrayInstance{
-		Instance: rt.Array.New(),
+func (rt *Runtime) NewArray(val []object.EmeraldValue) object.EmeraldValue {
+	return object.NewHeapObject(&ArrayInstance{
+		Instance: rt.Array.Heap.(*object.Class).New(),
 		Value:    val,
-	}
+	})
 }
 
 func (rt *Runtime) arrayIndexAccessor() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
-		intArg, err := EnforceArgumentType[*IntegerInstance](rt, rt.Integer, args[0])
+		index, err := rt.EnforceIntegerArg(args[0])
 
 		if err != nil {
-			return err
+			return object.NewHeapObject(err)
 		}
 
-		arr := ctx.Self.(*ArrayInstance).Value
+		arr := ctx.Self.Heap.(*ArrayInstance).Value
 
-		index := intArg.Value
+		if index < 0 {
+			index = int64(len(arr)) + index
+		}
 
-		if index >= int64(len(arr)) {
+		if index < 0 || index >= int64(len(arr)) {
 			return rt.NULL
 		}
 
@@ -62,17 +64,17 @@ func (rt *Runtime) arrayIndexAccessor() object.BuiltInMethod {
 
 func (rt *Runtime) arrayPush() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := ctx.Self.(*ArrayInstance)
+		arr := ctx.Self.Heap.(*ArrayInstance)
 
 		arr.Value = append(arr.Value, args...)
 
-		return arr
+		return ctx.Self
 	}
 }
 
 func (rt *Runtime) arrayPop() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := ctx.Self.(*ArrayInstance)
+		arr := ctx.Self.Heap.(*ArrayInstance)
 
 		if len(arr.Value) == 0 {
 			return rt.NULL
@@ -89,23 +91,23 @@ func (rt *Runtime) arrayPop() object.BuiltInMethod {
 
 func (rt *Runtime) arrayEach() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := ctx.Self.(*ArrayInstance)
+		arr := ctx.Self.Heap.(*ArrayInstance)
 
 		for _, val := range arr.Value {
 			ctx.Yield(map[string]object.EmeraldValue{}, val)
 		}
 
-		return arr
+		return ctx.Self
 	}
 }
 
 func (rt *Runtime) arrayCompactBang() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := ctx.Self.(*ArrayInstance)
+		arr := ctx.Self.Heap.(*ArrayInstance)
 
 		i := 0 // output index
 		for _, x := range arr.Value {
-			if x != rt.NULL {
+			if !x.IsNil() {
 				// copy and increment index
 				arr.Value[i] = x
 				i++
@@ -113,18 +115,18 @@ func (rt *Runtime) arrayCompactBang() object.BuiltInMethod {
 		}
 		// Prevent memory leak by erasing truncated values
 		for j := i; j < len(arr.Value); j++ {
-			arr.Value[j] = nil
+			arr.Value[j] = object.EmeraldValue{}
 		}
 		arr.Value = arr.Value[:i]
 
-		return arr
+		return ctx.Self
 	}
 }
 
 func (rt *Runtime) arrayEquals() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		arr := ctx.Self.(*ArrayInstance)
-		otherArr, ok := args[0].(*ArrayInstance)
+		arr := ctx.Self.Heap.(*ArrayInstance)
+		otherArr, ok := args[0].Heap.(*ArrayInstance)
 		if !ok {
 			return rt.FALSE
 		}
@@ -149,7 +151,7 @@ func (rt *Runtime) arrayToS() object.BuiltInMethod {
 
 		out.WriteString("[")
 
-		values := ctx.Self.(*ArrayInstance).Value
+		values := ctx.Self.Heap.(*ArrayInstance).Value
 		for i, value := range values {
 			out.WriteString(rt.Send(value, "inspect", rt.NULL, map[string]object.EmeraldValue{}).Inspect())
 

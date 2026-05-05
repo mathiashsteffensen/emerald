@@ -16,11 +16,11 @@ type IOInstance struct {
 	Closed         bool
 }
 
-func (rt *Runtime) NewIO(fd uintptr) *IOInstance {
-	return &IOInstance{
-		Instance:       rt.IO.New(),
+func (rt *Runtime) NewIO(fd uintptr) object.EmeraldValue {
+	return object.NewHeapObject(&IOInstance{
+		Instance:       rt.IO.Heap.(*object.Class).New(),
 		FileDescriptor: fd,
-	}
+	})
 }
 
 func (rt *Runtime) InitIO() {
@@ -37,7 +37,7 @@ func (rt *Runtime) InitIO() {
 
 func (rt *Runtime) ioNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		fd := args[0].(*IntegerInstance).Value
+		fd := int64(args[0].Num)
 
 		return rt.NewIO(uintptr(fd))
 	}
@@ -45,7 +45,7 @@ func (rt *Runtime) ioNew() object.BuiltInMethod {
 
 func (rt *Runtime) ioSysopen() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		path := args[0].(*StringInstance).Value
+		path := args[0].Heap.(*StringInstance).Value
 
 		var resolvedPath string
 		if filepath.IsAbs(path) {
@@ -59,7 +59,7 @@ func (rt *Runtime) ioSysopen() object.BuiltInMethod {
 		fd, err := syscall.Open("/"+resolvedPath, syscall.O_NONBLOCK, 0)
 		if err != nil {
 			panic(fmt.Sprintf("rt.IO.sysopen: %s (%q)", err, resolvedPath))
-			return rt.Raise(rt.newArgumentError(fmt.Sprintf("%s (%q)", err, resolvedPath)))
+			return object.NewHeapObject(rt.Raise(rt.newArgumentError(fmt.Sprintf("%s (%q)", err, resolvedPath))))
 		}
 
 		return rt.NewInteger(int64(fd))
@@ -84,13 +84,13 @@ func (rt *Runtime) ioOpen() object.BuiltInMethod {
 
 func (rt *Runtime) ioRead() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		fd := rt.Send(rt.IO, "sysopen", rt.NULL, kwargs, args...).(*IntegerInstance).Value
+		fd := int64(rt.Send(rt.IO, "sysopen", rt.NULL, kwargs, args...).Num)
 
 		file := os.NewFile(uintptr(fd), "filename")
 
 		content, err := io.ReadAll(file)
 		if err != nil {
-			return rt.RaiseGoError(err)
+			return object.NewHeapObject(rt.RaiseGoError(err))
 		}
 
 		return rt.NewString(string(content))
@@ -99,7 +99,7 @@ func (rt *Runtime) ioRead() object.BuiltInMethod {
 
 func (rt *Runtime) ioClose() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		ioInstance := ctx.Self.(*IOInstance)
+		ioInstance := ctx.Self.Heap.(*IOInstance)
 
 		if !ioInstance.Closed {
 			err := syscall.Close(int(ioInstance.FileDescriptor))
@@ -114,7 +114,7 @@ func (rt *Runtime) ioClose() object.BuiltInMethod {
 
 func (rt *Runtime) ioGetbyte() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		fd := ctx.Self.(*IOInstance).FileDescriptor
+		fd := ctx.Self.Heap.(*IOInstance).FileDescriptor
 
 		buffer := make([]byte, 1)
 

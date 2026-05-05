@@ -13,7 +13,7 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
 	symbol := c.rt.NewSymbol(node.Name.(ast.IdentifierExpression).Value)
 
 	c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(symbol))
-	c.emit(bytecode.OpPushConstant, node.BlockLiteral.Token, c.addConstant(block))
+	c.emit(bytecode.OpPushConstant, node.BlockLiteral.Token, c.addConstant(object.NewHeapObject(block)))
 	c.emit(bytecode.OpDefineMethod, node.Token)
 }
 
