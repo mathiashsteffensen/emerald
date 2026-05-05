@@ -7,8 +7,8 @@ import (
 
 const (
 	InitialStackSize = 512
-	MaxStackSize = 2048
-	MaxFrames    = 1024
+	MaxStackSize     = 2048
+	MaxFrames        = 1024
 )
 
 var ErrStackOverflow = fmt.Errorf("stack overflow: max stack size of %d exceeded", MaxStackSize)
@@ -17,7 +17,7 @@ var ErrStackOverflow = fmt.Errorf("stack overflow: max stack size of %d exceeded
 // Currently, this is kind of meaningless, but it is to allow for a concurrency implementation in the future.
 type Fiber struct {
 	// The stack for this fiber.
-	// Grows dynamically up to MaxStackSize.
+	// Grows dynamically up to MaxStackSize. The initial size is 16KB. The max size is 64KB.
 	stack []object.EmeraldValue
 	// Always points to the next value. Top of stack is stack[sp-1]
 	sp int
