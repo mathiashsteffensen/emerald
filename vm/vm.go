@@ -93,12 +93,7 @@ func (vm *VM) RunIncremental(instructions bytecode.Instructions, debugTokens map
 
 func (vm *VM) Run() {
 	vm.runWhile(func() bool {
-		poppedLastFrame := vm.currentFiber().framesIndex == 0
-		frameHasMoreInstructions := func() bool {
-			return vm.currentFiber().currentFrame().ip < len(vm.currentFiber().currentFrame().Instructions())-1
-		}
-
-		return !poppedLastFrame && frameHasMoreInstructions()
+		return true
 	})
 }
 
@@ -109,7 +104,12 @@ func (vm *VM) runWhile(condition func() bool) {
 		op  bytecode.Opcode
 	)
 
-	for condition() {
+	for condition() && vm.currentFiber().framesIndex > 0 {
+		frame := vm.currentFiber().currentFrame()
+		if frame.ip >= len(frame.Instructions())-1 {
+			break
+		}
+
 		vm.currentFiber().currentFrame().ip++
 
 		ip, ins, op = vm.fetch()

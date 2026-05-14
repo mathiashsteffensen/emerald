@@ -18,7 +18,7 @@ func New() *Engine {
 	rt.Init()
 
 	rt.CompileBlock = func(fileName string, content string) *bytecode.Bytecode {
-		return compiler.Compile(fileName, content, rt)
+		return compiler.CompileBlock(fileName, content, rt)
 	}
 
 	return &Engine{

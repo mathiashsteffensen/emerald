@@ -115,6 +115,7 @@ func (rt *Runtime) Init() {
 	rt.InitIO()
 	rt.InitDir()
 	rt.InitFile()
+	rt.InitTime()
 
 	// Networking core classes
 	rt.InitTCPServer()

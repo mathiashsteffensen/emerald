@@ -34,7 +34,7 @@ type (
 
 	EmeraldValueType uint8
 
-	// EmeraldValue struct replaces the interface
+	// EmeraldValue **everything** in Emerald is an EmeraldValue
 	EmeraldValue struct {
 		TypeID EmeraldValueType
 		Heap   HeapObject
