@@ -6,8 +6,6 @@ import (
 	"math"
 )
 
-// rt.Send is a function for calling methods that is dependency injected by the emerald/vm package
-
 func (rt *Runtime) DefineClass(name string, super object.EmeraldValue) object.EmeraldValue {
 	var superClass object.EmeraldValue
 
@@ -64,6 +62,14 @@ func (rt *Runtime) DefineMethod(receiver object.EmeraldValue, name string, metho
 
 func (rt *Runtime) DefineSingletonMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
 	receiver.SingletonClass().BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: rt.getVisibility(visibilities)}
+}
+
+func (rt *Runtime) DefineConstant(name string, value, namespace object.EmeraldValue) {
+	namespace.NamespaceDefinitionSet(name, value)
+}
+
+func (rt *Runtime) DefineGlobalConstant(name string, value object.EmeraldValue) {
+	rt.DefineConstant(name, value, rt.Object)
 }
 
 func (rt *Runtime) getVisibility(visibilities []object.MethodVisibility) object.MethodVisibility {
