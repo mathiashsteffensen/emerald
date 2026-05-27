@@ -151,6 +151,10 @@ end`,
 			"[] << 2",
 			"([] << 2)",
 		},
+		{
+			"puts add x, y",
+			"puts(add(x, y))",
+		},
 	}
 
 	for _, tt := range tests {
