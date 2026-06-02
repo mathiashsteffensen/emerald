@@ -28,6 +28,8 @@ func (rt *Runtime) InitArray() {
 	rt.DefineMethod(rt.Array, "compact!", rt.arrayCompactBang())
 	rt.DefineMethod(rt.Array, "to_s", rt.arrayToS())
 	rt.DefineMethod(rt.Array, "inspect", rt.arrayToS())
+	rt.DefineMethod(rt.Array, "length", rt.arrayLength())
+	rt.DefineMethod(rt.Array, "size", rt.arrayLength())
 }
 
 func (rt *Runtime) NewArray(val []object.EmeraldValue) object.EmeraldValue {
@@ -163,5 +165,12 @@ func (rt *Runtime) arrayToS() object.BuiltInMethod {
 		out.WriteString("]")
 
 		return rt.NewString(out.String())
+	}
+}
+func (rt *Runtime) arrayLength() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		arr := ctx.Self.Heap.(*ArrayInstance)
+
+		return rt.NewInteger(int64(len(arr.Value)))
 	}
 }
