@@ -34,6 +34,9 @@ func TestHashLiteralParsing(t *testing.T) {
 		expectStatementLength(t, program.Statements, 1)
 
 		testExpressionStatement(t, program.Statements[0], func(expression *ast.HashLiteral) {
+			if expression.TokenLiteral() != "{" {
+				t.Fatalf("expected hash literal token to be %q, got %q", "{", expression.TokenLiteral())
+			}
 			testHashLiteral(t, expression, tt.expected)
 		})
 	}

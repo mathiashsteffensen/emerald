@@ -9,6 +9,7 @@ import (
 	"emerald/parser/ast"
 	"emerald/parser/lexer"
 	"fmt"
+	"reflect"
 )
 
 type EmittedInstruction struct {
@@ -23,6 +24,7 @@ type Compiler struct {
 	symbolTable  *heap.SymbolTable
 	scopes       []CompilationScope
 	scopeIndex   int
+	aborted      bool
 }
 
 type ConstructorOption func(c *Compiler)
@@ -62,45 +64,104 @@ func (c *Compiler) SetRuntime(rt *core.Runtime) {
 }
 
 func Compile(fileName string, content string, rt *core.Runtime) *bytecode.Bytecode {
+	bc, _ := compile(fileName, content, rt)
+
+	return bc
+}
+
+func compile(fileName string, content string, rt *core.Runtime) (*bytecode.Bytecode, bool) {
 	l := lexer.New(lexer.NewInput(fileName, content))
 	p := parser.New(l)
 	ast := p.ParseAST()
 
 	if len(p.Errors()) != 0 {
 		rt.Raise(rt.NewException(fmt.Sprintf("failed to parse source file %s\n\n%s", fileName, p.Errors()[0])))
+		return emptyBytecode(l), false
 	}
 
 	c := New(l, rt)
 	c.Compile(ast)
 
+	if c.aborted {
+		return emptyBytecode(l), false
+	}
+
 	bc := c.Bytecode()
 
-	return bc
+	return bc, true
 }
 
 func CompileBlock(fileName string, content string, rt *core.Runtime) *bytecode.Bytecode {
-	bc := Compile(fileName, content, rt)
+	bc, ok := compile(fileName, content, rt)
+	if !ok {
+		return bc
+	}
 
 	bc.Instructions = append(bc.Instructions, byte(bytecode.OpReturn))
 
 	return bc
 }
 
+func emptyBytecode(l *lexer.Lexer) *bytecode.Bytecode {
+	return &bytecode.Bytecode{
+		Instructions: bytecode.Instructions{},
+		DebugTokens:  map[int]lexer.Token{},
+		Lexer:        l,
+	}
+}
+
+func (c *Compiler) abort(message string) {
+	if c.aborted {
+		return
+	}
+
+	c.aborted = true
+	c.rt.Raise(c.rt.NewException(message))
+
+	for i := range c.scopes {
+		c.scopes[i].bytecode.Instructions = bytecode.Instructions{}
+		c.scopes[i].bytecode.DebugTokens = map[int]lexer.Token{}
+		c.scopes[i].lastInstruction = EmittedInstruction{}
+		c.scopes[i].previousInstruction = EmittedInstruction{}
+	}
+}
+
 func (c *Compiler) Compile(node ast.Node) {
+	if c.aborted {
+		return
+	}
+
+	if isNilNode(node) {
+		c.abort("compiler received nil AST node")
+		return
+	}
+
 	switch node := node.(type) {
 	case *ast.AST:
 		for _, s := range node.Statements {
 			c.Compile(s)
+			if c.aborted {
+				return
+			}
 		}
 	case *ast.ExpressionStatement:
 		c.Compile(node.Expression)
+		if c.aborted {
+			return
+		}
 		c.emit(bytecode.OpPop, node.Token)
 	case *ast.BlockStatement:
 		for _, s := range node.Statements {
 			c.Compile(s)
+			if c.aborted {
+				return
+			}
 		}
 	case *ast.ReturnStatement:
 		c.Compile(node.ReturnValue)
+		if c.aborted {
+			return
+		}
 		c.emit(bytecode.OpReturnValue, node.Token)
 	case *ast.PrefixExpression:
 		c.compilePrefixExpression(node)
@@ -173,6 +234,20 @@ func (c *Compiler) Compile(node ast.Node) {
 	}
 }
 
+func isNilNode(node ast.Node) bool {
+	if node == nil {
+		return true
+	}
+
+	value := reflect.ValueOf(node)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return value.IsNil()
+	default:
+		return false
+	}
+}
+
 func (c *Compiler) compileStatementsWithReturnValue(statements []ast.Statement, debugToken lexer.Token) {
 	if len(statements) == 0 {
 		c.emit(bytecode.OpNull, debugToken)
@@ -220,6 +295,10 @@ func (c *Compiler) leaveScope() bytecode.Bytecode {
 }
 
 func (c *Compiler) lastInstructionIs(op bytecode.Opcode) bool {
+	if c.aborted {
+		return false
+	}
+
 	if len(c.currentInstructions()) == 0 {
 		return false
 	}
@@ -227,6 +306,10 @@ func (c *Compiler) lastInstructionIs(op bytecode.Opcode) bool {
 }
 
 func (c *Compiler) removeLastPop() {
+	if c.aborted {
+		return
+	}
+
 	last := c.scopes[c.scopeIndex].lastInstruction
 	previous := c.scopes[c.scopeIndex].previousInstruction
 	old := c.currentInstructions()
@@ -236,7 +319,15 @@ func (c *Compiler) removeLastPop() {
 }
 
 func (c *Compiler) replaceInstruction(pos int, newInstruction []byte) {
+	if c.aborted {
+		return
+	}
+
 	ins := c.currentInstructions()
+	if pos < 0 || pos+len(newInstruction) > len(ins) {
+		c.abort("compiler attempted to replace an invalid instruction range")
+		return
+	}
 
 	for i := 0; i < len(newInstruction); i++ {
 		ins[pos+i] = newInstruction[i]
@@ -244,12 +335,25 @@ func (c *Compiler) replaceInstruction(pos int, newInstruction []byte) {
 }
 
 func (c *Compiler) replaceLastInstructionWith(op bytecode.Opcode) {
+	if c.aborted {
+		return
+	}
+
 	lastPos := c.scopes[c.scopeIndex].lastInstruction.Position
 	c.replaceInstruction(lastPos, bytecode.Make(op))
 	c.scopes[c.scopeIndex].lastInstruction.Opcode = op
 }
 
 func (c *Compiler) changeOperand(opPos int, operands ...int) {
+	if c.aborted {
+		return
+	}
+
+	if opPos < 0 || opPos >= len(c.currentInstructions()) {
+		c.abort("compiler attempted to change an invalid instruction operand")
+		return
+	}
+
 	op := bytecode.Opcode(c.currentInstructions()[opPos])
 	newInstruction := bytecode.Make(op, operands...)
 
@@ -257,6 +361,10 @@ func (c *Compiler) changeOperand(opPos int, operands ...int) {
 }
 
 func (c *Compiler) emit(op bytecode.Opcode, debugToken lexer.Token, operands ...int) int {
+	if c.aborted {
+		return -1
+	}
+
 	ins := bytecode.Make(op, operands...)
 	pos := c.addInstruction(ins, debugToken)
 

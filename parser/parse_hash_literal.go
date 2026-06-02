@@ -6,6 +6,7 @@ import (
 )
 
 func (p *Parser) parseHashLiteral() ast.Expression {
+	token := p.curToken
 	values := []*ast.HashLiteralElement{}
 
 	p.nextIfNewline()
@@ -19,12 +20,20 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 		p.nextToken()
 
 		key := p.parseHashLiteralKey()
+		if key == nil {
+			return nil
+		}
 
 		p.nextToken()
 
+		value := p.parseExpression(LOWEST)
+		if value == nil {
+			return nil
+		}
+
 		values = append(values, &ast.HashLiteralElement{
 			Key:   key,
-			Value: p.parseExpression(LOWEST),
+			Value: value,
 		})
 
 		if !p.peekTokenIs(lexer.COMMA) {
@@ -40,7 +49,7 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 
 	return &ast.HashLiteral{
 		Values: values,
-		Token:  p.curToken,
+		Token:  token,
 	}
 }
 
