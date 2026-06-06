@@ -1,6 +1,5 @@
 package object
 
-
 type Class struct {
 	*BaseEmeraldValue
 	Name                   string

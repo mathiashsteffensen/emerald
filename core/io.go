@@ -58,7 +58,6 @@ func (rt *Runtime) ioSysopen() object.BuiltInMethod {
 
 		fd, err := syscall.Open("/"+resolvedPath, syscall.O_NONBLOCK, 0)
 		if err != nil {
-			panic(fmt.Sprintf("rt.IO.sysopen: %s (%q)", err, resolvedPath))
 			return object.NewHeapObject(rt.Raise(rt.newArgumentError(fmt.Sprintf("%s (%q)", err, resolvedPath))))
 		}
 

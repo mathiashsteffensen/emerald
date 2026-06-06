@@ -265,9 +265,11 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 
 		vm.ctx.Self.DefinedMethodSet()[name.Value] = object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File, vm.ctx.DefaultMethodVisibility)
 	case bytecode.OpSend:
-		numArgs := vm.readUint8(ins, ip)
-		hasKwargs := vm.readUint8(ins, ip+1)
-		vm.callMethod(int(numArgs), hasKwargs == 1)
+		nameIndex := vm.readUint16(ins, ip)
+		numArgs := vm.readUint8(ins, ip+2)
+		hasKwargs := vm.readUint8(ins, ip+3)
+		name := vm.rt.Heap.GetConstant(nameIndex).Heap.(*core.SymbolInstance).Value
+		vm.callMethod(name, int(numArgs), hasKwargs == 1)
 	case bytecode.OpOpenClass:
 		// Fetch the symbol name from the heap
 		nameIndex := vm.readUint16(ins, ip)
@@ -334,7 +336,7 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 	vm.push(object.NewHeapObject(object.NewClosedBlock(vm.ctx, block, free, "", object.PUBLIC)))
 }
 
-func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
+func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) {
 	var (
 		kwargsHash   *core.HashInstance
 		kwargsMap    map[string]object.EmeraldValue
@@ -353,12 +355,7 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 		basePointer = vm.currentFiber().sp - numArgs
 	}
 
-	receiver := vm.stack()[basePointer-3]
-	nameSymbol, ok := vm.stack()[basePointer-2].Heap.(*core.SymbolInstance)
-	if !ok {
-		debug.FatalBugF("Method name instance was not a symbol? got %q", vm.stack()[basePointer-2].Inspect())
-	}
-	name := nameSymbol.Value
+	receiver := vm.stack()[basePointer-2]
 	block := vm.stack()[basePointer-1]
 
 	method, err := vm.extractMethod(receiver, name)
@@ -413,7 +410,7 @@ func (vm *VM) callMethod(numArgs int, hasKwargs bool) {
 
 			result := vm.evalBuiltIn(m, block, vm.stack()[basePointer:argsEndIndex], kwargsMap)
 			if !vm.ExceptionIsRaised() {
-				vm.currentFiber().sp = basePointer - 3
+				vm.currentFiber().sp = basePointer - 2
 				vm.push(result)
 			}
 		}

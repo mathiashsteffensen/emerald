@@ -58,10 +58,6 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 		// Method receiver
 		vm.push(vm.ctx.Self)
 
-		// The VM accounts for the name of the method being called being on the stack when a method is evaluated
-		// So we just push something on the stack
-		vm.push(vm.rt.NULL)
-
 		vm.push(block)
 
 		// Add the arguments to the stack

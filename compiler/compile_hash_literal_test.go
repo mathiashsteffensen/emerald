@@ -22,10 +22,9 @@ func TestCompileHashLiteral(t *testing.T) {
 			expectedConstants: []any{":[]", ":key"},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpHash, 0),
-				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpNull),
 				bytecode.Make(bytecode.OpPushConstant, 1),
-				bytecode.Make(bytecode.OpSend, 1),
+				bytecode.Make(bytecode.OpSend, 0, 1, 0),
 				bytecode.Make(bytecode.OpPop),
 			},
 		},

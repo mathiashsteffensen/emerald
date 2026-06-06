@@ -28,10 +28,9 @@ func TestCompileIdentifierExpression(t *testing.T) {
 				bytecode.Make(bytecode.OpPushConstant, 2), // The compiled block
 				bytecode.Make(bytecode.OpDefineMethod),
 				bytecode.Make(bytecode.OpPop),
-				bytecode.Make(bytecode.OpSelf),            // Receiver, implicit self
-				bytecode.Make(bytecode.OpPushConstant, 3), // The symbol name of the method
-				bytecode.Make(bytecode.OpNull),            // Null block
-				bytecode.Make(bytecode.OpSend, 0),
+				bytecode.Make(bytecode.OpSelf), // Receiver, implicit self
+				bytecode.Make(bytecode.OpNull), // Null block
+				bytecode.Make(bytecode.OpSend, 3, 0, 0),
 				bytecode.Make(bytecode.OpPop),
 			},
 		},

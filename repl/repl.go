@@ -57,7 +57,7 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 	astNodes := []*ast.AST{}
 	var buffer string
 	var machine *vm.VM
-	
+
 	engine := emerald.New()
 	comp := compiler.New(nil, engine.Runtime)
 	lineCount := 1

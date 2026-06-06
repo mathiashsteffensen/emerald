@@ -53,7 +53,7 @@ func TestInstance_Ancestors(t *testing.T) {
 	// Ancestors for instance: Class.Ancestors() + instance
 	// myClass.Ancestors() = [myClass, objectClass]
 	// instance.Ancestors() = [myClass, objectClass, instance]
-	
+
 	if len(ancestors) != 3 {
 		t.Fatalf("expected 3 ancestors, got %d", len(ancestors))
 	}

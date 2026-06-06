@@ -6,6 +6,7 @@ import (
 	"emerald/core"
 	"emerald/object"
 	"emerald/vm"
+	"errors"
 	"fmt"
 )
 
@@ -30,6 +31,11 @@ func (e *Engine) Eval(content string) (object.EmeraldValue, error) {
 	return e.EvalFile("(irb)", content)
 }
 
+type EvalError struct {
+	error
+	Stacktrace []byte
+}
+
 func (e *Engine) EvalFile(fileName string, content string) (object.EmeraldValue, error) {
 	bc := compiler.Compile(fileName, content, e.Runtime)
 
@@ -38,7 +44,12 @@ func (e *Engine) EvalFile(fileName string, content string) (object.EmeraldValue,
 
 	globalException := e.Runtime.Heap.GetGlobalVariableString("$!")
 	if !globalException.IsNil() && globalException != e.Runtime.NULL {
-		return object.EmeraldValue{}, fmt.Errorf("exception: %s", globalException.Inspect())
+		if emErr, ok := globalException.Heap.(object.EmeraldError); ok {
+			message := fmt.Sprintf("%s: %s", emErr.ClassName(), emErr.Message())
+			return object.EmeraldValue{}, EvalError{error: errors.New(message), Stacktrace: []byte("")}
+		}
+
+		return object.EmeraldValue{}, fmt.Errorf("non-emerald-error exception: %s", globalException.Inspect())
 	}
 
 	return machine.LastPoppedStackElem(), nil

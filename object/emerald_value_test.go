@@ -50,7 +50,7 @@ func TestRealClass(t *testing.T) {
 		t.Errorf("expected RealClass(instance) to be class, got %v", RealClass(NewHeapObject(instance)))
 	}
 
-	if RealClass(NewHeapObject(singleton)).Heap != class { 
+	if RealClass(NewHeapObject(singleton)).Heap != class {
 		t.Errorf("expected RealClass(singleton) to be class, got %v", RealClass(NewHeapObject(singleton)))
 	}
 }
@@ -80,4 +80,3 @@ func TestWrappedBuiltInMethod(t *testing.T) {
 		t.Error("expected non-empty HashKey")
 	}
 }
-

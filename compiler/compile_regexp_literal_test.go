@@ -16,10 +16,9 @@ func TestCompileRegexpLiteral(t *testing.T) {
 			},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
-				bytecode.Make(bytecode.OpPushConstant, 1),
 				bytecode.Make(bytecode.OpNull),
 				bytecode.Make(bytecode.OpPushConstant, 2),
-				bytecode.Make(bytecode.OpSend, 1),
+				bytecode.Make(bytecode.OpSend, 1, 1, 0),
 				bytecode.Make(bytecode.OpPop),
 			},
 		},

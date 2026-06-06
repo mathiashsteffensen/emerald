@@ -19,10 +19,10 @@ func (c *Compiler) compileIdentifierExpression(node ast.Expression) {
 				c.emitSymbol(symbol, node.Token)
 			} else {
 				// Method call with no arguments
-				c.emit(bytecode.OpSelf, node.Token)                                                    // Call on self
-				c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(c.rt.NewSymbol(node.Value))) // Identifier value is method name
-				c.emit(bytecode.OpNull, node.Token)                                                    // No arguments
-				c.emit(bytecode.OpSend, node.Token)                                                    // Send the method
+				methodIndex := c.addConstant(c.rt.NewSymbol(node.Value))
+				c.emit(bytecode.OpSelf, node.Token) // Call on self
+				c.emit(bytecode.OpNull, node.Token) // No block
+				c.emit(bytecode.OpSend, node.Token, methodIndex, 0, 0)
 			}
 		}
 	case *ast.InstanceVariable:

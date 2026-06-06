@@ -32,7 +32,7 @@ func (fiber *Fiber) pushFrame(f *Frame) {
 func (fiber *Fiber) popFrame() *Frame {
 	fiber.framesIndex--
 	frame := fiber.frames[fiber.framesIndex]
-	fiber.sp = frame.basePointer - 3
+	fiber.sp = frame.basePointer - 2
 	if fiber.sp < 0 {
 		fiber.sp = 0
 	}

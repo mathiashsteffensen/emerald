@@ -82,7 +82,7 @@ func TestBaseEmeraldValue_InstanceVariableInheritance(t *testing.T) {
 
 func TestBaseEmeraldValue_Methods(t *testing.T) {
 	base := &BaseEmeraldValue{}
-	
+
 	method1 := &WrappedBuiltInMethod{}
 	base.BuiltInMethodSet()["method1"] = method1
 

@@ -43,6 +43,8 @@ func (ins Instructions) fmtInstruction(def *Definition, operands []int) string {
 		return fmt.Sprintf("%s %d", def.Name, operands[0])
 	case 2:
 		return fmt.Sprintf("%s %d %d", def.Name, operands[0], operands[1])
+	case 3:
+		return fmt.Sprintf("%s %d %d %d", def.Name, operands[0], operands[1], operands[2])
 	}
 
 	return fmt.Sprintf("ERROR: unhandled operandCount for %s\n", def.Name)

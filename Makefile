@@ -33,4 +33,7 @@ coverage:
 	@./scripts/generate_coverage.rb $(PACKAGES)
 
 lint:
-	@echo "Linting ..." && staticcheck ./... && echo ""
+	@./scripts/ensure-command.sh staticcheck "go install honnef.co/go/tools/cmd/staticcheck@latest"
+	@echo "Vetting ..." && go vet ./... && echo "Success ✓"
+	@echo "Formatting ..." && go mod tidy && go fmt ./... && echo "Success ✓"
+	@echo "Linting ..." && staticcheck ./... && echo "Success ✓"
