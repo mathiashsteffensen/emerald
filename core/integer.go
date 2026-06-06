@@ -107,6 +107,9 @@ func (rt *Runtime) integerTimes() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		for i := int64(0); i < int64(ctx.Self.Num); i++ {
 			ctx.Yield(map[string]object.EmeraldValue{}, rt.NewInteger(i))
+			if rt.ExceptionIsRaised() {
+				return rt.NULL
+			}
 		}
 
 		return ctx.Self

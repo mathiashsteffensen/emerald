@@ -44,7 +44,5 @@ func (vm *VM) handleRaise(err object.EmeraldError) {
 }
 
 func (vm *VM) ExceptionIsRaised() bool {
-	globalException := vm.rt.Heap.GetGlobalVariableString("$!")
-
-	return !globalException.IsNil()
+	return vm.rt.ExceptionIsRaised()
 }

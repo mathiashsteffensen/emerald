@@ -157,6 +157,12 @@ func (rt *Runtime) Raise(err object.EmeraldError) object.EmeraldError {
 	return err
 }
 
+func (rt *Runtime) ExceptionIsRaised() bool {
+	exception := rt.Heap.GetGlobalVariableString("$!")
+
+	return !exception.IsNil()
+}
+
 func (rt *Runtime) RaiseGoError(err error) object.EmeraldError {
 	emeraldErr := rt.NewStandardError(err.Error())
 	return rt.Raise(emeraldErr)

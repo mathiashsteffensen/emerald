@@ -20,6 +20,12 @@ type vmTestCase struct {
 func runVmTests(t *testing.T, tests []vmTestCase, setupScripts ...string) {
 	t.Helper()
 
+	runVmTestsWithRuntimeSetup(t, tests, nil, setupScripts...)
+}
+
+func runVmTestsWithRuntimeSetup(t *testing.T, tests []vmTestCase, setupRuntime func(*core.Runtime), setupScripts ...string) {
+	t.Helper()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			inputs := make([]string, len(setupScripts))
@@ -29,8 +35,12 @@ func runVmTests(t *testing.T, tests []vmTestCase, setupScripts ...string) {
 			rt := core.NewRuntime()
 			rt.Init()
 
+			if setupRuntime != nil {
+				setupRuntime(rt)
+			}
+
 			rt.CompileBlock = func(fileName string, content string) *bytecode.Bytecode {
-				return compiler.Compile(fileName, content, rt)
+				return compiler.CompileBlock(fileName, content, rt)
 			}
 
 			bc := compiler.Compile("test", strings.Join(inputs, "\n"), rt)

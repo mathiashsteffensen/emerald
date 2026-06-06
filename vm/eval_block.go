@@ -30,6 +30,9 @@ func (vm *VM) withExecutionContextForBlock(block object.EmeraldValue, cb func() 
 func (vm *VM) Send(self object.EmeraldValue, name string, block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 	oldCtx := vm.ctx
 	vm.ctx = vm.newEnclosedContext(oldCtx.File, self, block)
+	defer func() {
+		vm.ctx = oldCtx
+	}()
 
 	method, err := vm.extractMethod(self, name)
 	if err != nil {
@@ -37,8 +40,6 @@ func (vm *VM) Send(self object.EmeraldValue, name string, block object.EmeraldVa
 	}
 
 	result := vm.rawEvalBlock(method, block, kwargs, args...)
-
-	vm.ctx = oldCtx
 
 	return result
 }

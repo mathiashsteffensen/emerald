@@ -52,10 +52,16 @@ func (rt *Runtime) rangeEach() object.BuiltInMethod {
 
 		for i := begin; i < end; i++ {
 			ctx.Yield(map[string]object.EmeraldValue{}, rt.NewInteger(i))
+			if rt.ExceptionIsRaised() {
+				return rt.NULL
+			}
 		}
 
 		if !r.ExcludeEnd {
 			ctx.Yield(map[string]object.EmeraldValue{}, r.End)
+			if rt.ExceptionIsRaised() {
+				return rt.NULL
+			}
 		}
 
 		return ctx.Self

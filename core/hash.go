@@ -115,8 +115,15 @@ func (rt *Runtime) hashEach() object.BuiltInMethod {
 		hash := ctx.Self.Heap.(*HashInstance)
 
 		hash.Each(func(key object.EmeraldValue, value object.EmeraldValue) {
+			if rt.ExceptionIsRaised() {
+				return
+			}
+
 			ctx.Yield(map[string]object.EmeraldValue{}, key, value)
 		})
+		if rt.ExceptionIsRaised() {
+			return rt.NULL
+		}
 
 		return ctx.Self
 	}
