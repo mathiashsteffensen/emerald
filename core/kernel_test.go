@@ -1,6 +1,11 @@
 package core_test
 
-import "testing"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 func TestKernel_raise(t *testing.T) {
 	tests := []coreTestCase{
@@ -19,6 +24,13 @@ func TestKernel_raise(t *testing.T) {
 }
 
 func TestKernel_require_relative(t *testing.T) {
+	dir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	rootDir := filepath.Join(dir, "../")
+
 	tests := []coreTestCase{
 		{
 			input: `
@@ -39,7 +51,7 @@ func TestKernel_require_relative(t *testing.T) {
 		{
 			name:     "when file doesn't exist",
 			input:    `require_relative("../lib/main")`,
-			expected: "error:LoadError:cannot load such file -- /Users/mathias/code/emerald/lib/main",
+			expected: fmt.Sprintf("error:LoadError:cannot load such file -- %s/lib/main", rootDir),
 		},
 		{
 			name: "resolving namespaced constant name in required file",
