@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: emerald
+
+env:
+  GO_ENV: test
+  EM_TEST: 1
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout emerald
+        uses: actions/checkout@v4
+        with:
+          path: emerald
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: emerald/go.mod
+          cache-dependency-path: emerald/go.sum
+
+      - name: Download Go dependencies
+        run: go mod download
+
+      - name: Lint
+        run: |
+          make lint
+          git diff --exit-code
+
+      - name: Test
+        run: make test-all
+
+      - name: Upload coverage.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: emerald/coverage.json
+          if-no-files-found: error
