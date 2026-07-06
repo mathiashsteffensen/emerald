@@ -109,25 +109,7 @@ func (rt *Runtime) floatNegate() object.BuiltInMethod {
 
 func (rt *Runtime) floatSpaceship() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := math.Float64frombits(ctx.Self.Num)
-		if args[0].Is(object.FLOAT_VALUE) {
-			right := math.Float64frombits(args[0].Num)
-			var result int64
-
-			diff := left - right
-
-			if diff < 0 {
-				result = -1
-			} else if diff > 0 {
-				result = 1
-			} else {
-				result = 0
-			}
-
-			return rt.NewInteger(result)
-		} else {
-			return rt.NULL
-		}
+		return rt.numericSpaceship(ctx.Self, args[0])
 	}
 }
 

@@ -124,26 +124,7 @@ func (rt *Runtime) integerToF() object.BuiltInMethod {
 
 func (rt *Runtime) integerSpaceship() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := int64(ctx.Self.Num)
-
-		if args[0].Is(object.INTEGER_VALUE) {
-			right := int64(args[0].Num)
-			var result int64
-
-			diff := left - right
-
-			if diff < 0 {
-				result = -1
-			} else if diff > 0 {
-				result = 1
-			} else {
-				result = 0
-			}
-
-			return rt.NewInteger(result)
-		} else {
-			return rt.NULL
-		}
+		return rt.numericSpaceship(ctx.Self, args[0])
 	}
 }
 

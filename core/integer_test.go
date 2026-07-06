@@ -151,6 +151,18 @@ func TestInteger_spaceship(t *testing.T) {
 			expected: -1,
 		},
 		{
+			input:    "70 <=> 100.0",
+			expected: -1,
+		},
+		{
+			input:    "70 <=> 70.0",
+			expected: 0,
+		},
+		{
+			input:    "100 <=> 70.0",
+			expected: 1,
+		},
+		{
 			input:    `-2 <=> "boop"`,
 			expected: nil,
 		},

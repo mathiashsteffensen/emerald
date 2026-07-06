@@ -32,6 +32,26 @@ func TestFloat_infix_operators(t *testing.T) {
 			expected: nil,
 		},
 		{
+			input:    "70.0 <=> 100",
+			expected: -1,
+		},
+		{
+			input:    "70.0 <=> 70",
+			expected: 0,
+		},
+		{
+			input:    "100.0 <=> 70",
+			expected: 1,
+		},
+		{
+			input:    "100.0 > 70",
+			expected: true,
+		},
+		{
+			input:    "30.0 <= 30",
+			expected: true,
+		},
+		{
 			input:    "3.1 + 4.2",
 			expected: 7.3,
 		},
