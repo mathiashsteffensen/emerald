@@ -99,3 +99,40 @@ Logger.debug()
 		testIdentifier(t, exp.Method, "debug")
 	})
 }
+
+func TestMethodCallBlockRescueAfterSequentialIfs(t *testing.T) {
+	input := `
+result = {}
+
+$symbols.each do |symbol|
+  if rsi(symbol, 3) <= 20 && rsi(symbol, 30) > 40
+    result[symbol] = { side: BUY, position: { type: :percent, value: 20 } }
+  end
+
+  if rsi(symbol, 3) >= 70
+    result[symbol] = { side: SELL, position: { type: :percent, value: 100 } }
+  end
+rescue
+  # Not enough data, move on
+end
+
+result
+	`
+
+	program := testParseAST(t, input)
+
+	expectStatementLength(t, program.Statements, 3)
+	testExpressionStatement(t, program.Statements[1], func(exp *ast.MethodCall) {
+		if exp.Block == nil {
+			t.Fatalf("method call was not passed a block")
+		}
+
+		expectStatementLength(t, exp.Block.Body.Statements, 2)
+
+		if len(exp.Block.RescueBlocks) != 1 {
+			t.Fatalf("block was not passed 1 rescue clause, got=%d", len(exp.Block.RescueBlocks))
+		}
+
+		expectStatementLength(t, exp.Block.RescueBlocks[0].Body.Statements, 0)
+	})
+}

@@ -40,7 +40,7 @@
       "lexer.go:Snapshot": 91.3
     },
     "emerald/parser": {
-      "parser.go:parseExpressionStatement": 100.0,
+      "parser.go:parseExpression": 100.0,
       "op_precedence.go:curPrecedence": 100.0,
       "parse_assignment_expression.go:parseAssignmentExpression": 100.0,
       "parse_assignment_expression.go:appendAssignmentToMethodCall": 100.0,
@@ -111,8 +111,9 @@
       "parser.go:parseBlockStatement": 100.0,
       "parser.go:parseStatement": 100.0,
       "parser.go:parseReturnStatement": 100.0,
+      "parser.go:parseExpressionStatement": 100.0,
       "op_precedence.go:peekPrecedence": 100.0,
-      "parser.go:parseExpression": 100.0,
+      "parser.go:newlineBeforeStatementModifier": 100.0,
       "parser.go:parseAsPrefix": 100.0,
       "parser.go:parsePrefixExpression": 100.0,
       "parser.go:parseInfixExpression": 100.0,
