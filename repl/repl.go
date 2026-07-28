@@ -134,7 +134,10 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 			if err != nil {
 				debug.Fatal(err.Error())
 			}
-			machine = vm.New(currentWorkingDir, bc, engine.Runtime)
+			machine = vm.NewWithOptions(currentWorkingDir, bc, engine.Runtime, vm.Options{
+				Args:     os.Args,
+				LoadPath: []string{debug.BinaryDir},
+			})
 		}
 
 		newInstructions := bc.Instructions[oldInstructionsCount:]

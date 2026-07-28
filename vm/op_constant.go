@@ -3,7 +3,6 @@ package vm
 import (
 	"emerald/bytecode"
 	"emerald/core"
-	"emerald/debug"
 	"emerald/object"
 	"fmt"
 	"unicode"
@@ -15,7 +14,6 @@ func (vm *VM) executeOpConstantGet(ins bytecode.Instructions, ip int) {
 
 	value, err := getConst(vm.ctx.Self, name, vm.rt)
 	if err != nil {
-		debug.WarnF("\n%s", vm.currentFiber().currentFrame().block.Bytecode.InstructionSnapshot(ip))
 		vm.rt.Raise(vm.rt.NewNameError(err.Error()))
 		return
 	}

@@ -25,6 +25,46 @@ func TestBaseEmeraldValue_IncludedModules(t *testing.T) {
 	}
 }
 
+func TestBaseEmeraldValue_IncludedModulesHandlesCycles(t *testing.T) {
+	mod1 := &Module{BaseEmeraldValue: &BaseEmeraldValue{}, Name: "Mod1"}
+	mod2 := &Module{BaseEmeraldValue: &BaseEmeraldValue{}, Name: "Mod2"}
+
+	mod1.Include(NewHeapObject(mod2))
+	mod2.Include(NewHeapObject(mod1))
+
+	base := &Class{BaseEmeraldValue: &BaseEmeraldValue{}, Name: "Base"}
+	base.Include(NewHeapObject(mod1))
+
+	included := base.IncludedModules()
+	if len(included) != 2 {
+		t.Fatalf("expected 2 unique included modules, got %d", len(included))
+	}
+}
+
+func TestBaseEmeraldValue_DirectIncludesPrecedeTransitiveIncludes(t *testing.T) {
+	transitive := &Module{BaseEmeraldValue: &BaseEmeraldValue{}, Name: "Transitive"}
+	container := &Module{BaseEmeraldValue: &BaseEmeraldValue{}, Name: "Container"}
+	direct := &Module{BaseEmeraldValue: &BaseEmeraldValue{}, Name: "Direct"}
+
+	transitiveMethod := &ClosedBlock{Block: &Block{}}
+	directMethod := &ClosedBlock{Block: &Block{}}
+	transitive.DefinedMethodSet()["value"] = transitiveMethod
+	direct.DefinedMethodSet()["value"] = directMethod
+	container.Include(NewHeapObject(transitive))
+
+	class := &Class{BaseEmeraldValue: &BaseEmeraldValue{}, Name: "Example"}
+	class.Include(NewHeapObject(container))
+	class.Include(NewHeapObject(direct))
+
+	method, _, _, err := class.ExtractMethod("value", NewHeapObject(class), NewHeapObject(class))
+	if err != nil {
+		t.Fatalf("extract value method: %s", err)
+	}
+	if method != NewHeapObject(directMethod) {
+		t.Fatal("expected direct include to take precedence over transitive include")
+	}
+}
+
 func TestBaseEmeraldValue_NamespaceDefinitions(t *testing.T) {
 	parent := &Class{BaseEmeraldValue: &BaseEmeraldValue{}, Name: "Parent"}
 	child := &Class{BaseEmeraldValue: &BaseEmeraldValue{}, Name: "Child"}
@@ -43,6 +83,15 @@ func TestBaseEmeraldValue_NamespaceDefinitions(t *testing.T) {
 
 	if child.ParentNamespace() != NewHeapObject(parent) {
 		t.Error("parent namespace not set correctly")
+	}
+}
+
+func TestBaseEmeraldValue_NamespaceDefinitionsHandlesCycles(t *testing.T) {
+	namespace := &Module{BaseEmeraldValue: &BaseEmeraldValue{}, Name: "Namespace"}
+	namespace.SetParentNamespace(NewHeapObject(namespace))
+
+	if value := namespace.NamespaceDefinitionGet("Missing"); value.IsDefined() {
+		t.Fatalf("expected missing value, got %s", value.Inspect())
 	}
 }
 

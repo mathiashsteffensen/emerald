@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"context"
 	"strconv"
 	"testing"
 	"time"
@@ -360,6 +361,27 @@ func TestLexer_Run(t *testing.T) {
 
 func TestLexer_Feed(t *testing.T) {
 
+}
+
+func TestLexer_TrailingCommentAtEOF(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	l := NewContext(ctx, NewInput("test.rb", "1 # trailing comment"))
+	l.RunContext(ctx)
+	defer l.Close()
+
+	token, err := l.NextTokenContext(ctx)
+	if err != nil {
+		t.Fatalf("failed to read integer token: %v", err)
+	}
+	testToken(t, token, "1", INT)
+
+	token, err = l.NextTokenContext(ctx)
+	if err != nil {
+		t.Fatalf("failed to read EOF token: %v", err)
+	}
+	testToken(t, token, "", EOF)
 }
 
 func TestLexer_Snapshot(t *testing.T) {

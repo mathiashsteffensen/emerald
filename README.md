@@ -25,6 +25,42 @@ To start the Emerald REPL:
 ./iem
 ```
 
+## Embedding
+
+Use `Engine` for a stateful, full runtime. Host inputs are explicit:
+
+```go
+engine := emerald.New()
+value, err := engine.EvalWithOptions(source, emerald.EvalOptions{
+    Args:     []string{"one", "two"},
+    LoadPath: []string{"/app/lib"},
+})
+```
+
+`Engine` keeps globals, classes, and methods between evaluations and is not
+safe for concurrent evaluation.
+
+Use `Sandbox` for isolated scripts with no filesystem, process output,
+networking, sleep, or clock APIs:
+
+```go
+sandbox, err := emerald.NewSandbox(emerald.SandboxOptions{
+    Timeout: 250 * time.Millisecond,
+})
+value, err := sandbox.Eval(source)
+
+if errors.Is(err, emerald.ErrSandboxTimeout) {
+    // The complete evaluation exceeded its deadline.
+}
+```
+
+Each sandbox evaluation uses a fresh runtime, so state is not shared and one
+`Sandbox` may be used concurrently. `EvalFile` accepts a source name for error
+reporting; it does not read that file.
+
+The sandbox is an in-process capability boundary. It does not impose a memory
+limit or protect the host from defects in the VM itself.
+
 ## Architecture
 
 ### Lexer

@@ -121,6 +121,10 @@ func (rt *Runtime) stringMultiply() object.BuiltInMethod {
 		var newString strings.Builder
 
 		for i := int64(0); i < times; i++ {
+			if ctx.ExecutionError() != nil {
+				return rt.NULL
+			}
+
 			newString.WriteString(selfString.Value)
 		}
 
@@ -136,7 +140,7 @@ func (rt *Runtime) stringUpcase() object.BuiltInMethod {
 
 func (rt *Runtime) stringMatch() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.regexStringMatch(args[0].Heap.(*RegexpInstance), ctx.Self.Heap.(*StringInstance))
+		return rt.regexStringMatch(ctx, args[0].Heap.(*RegexpInstance), ctx.Self.Heap.(*StringInstance))
 	}
 }
 

@@ -51,15 +51,23 @@ func (rt *Runtime) rangeEach() object.BuiltInMethod {
 		end := int64(r.End.Num)
 
 		for i := begin; i < end; i++ {
+			if ctx.ExecutionError() != nil {
+				return rt.NULL
+			}
+
 			ctx.Yield(map[string]object.EmeraldValue{}, rt.NewInteger(i))
-			if rt.ExceptionIsRaised() {
+			if ctx.ExecutionError() != nil || rt.ExceptionIsRaised() {
 				return rt.NULL
 			}
 		}
 
 		if !r.ExcludeEnd {
+			if ctx.ExecutionError() != nil {
+				return rt.NULL
+			}
+
 			ctx.Yield(map[string]object.EmeraldValue{}, r.End)
-			if rt.ExceptionIsRaised() {
+			if ctx.ExecutionError() != nil || rt.ExceptionIsRaised() {
 				return rt.NULL
 			}
 		}

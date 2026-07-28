@@ -15,16 +15,16 @@ func (vm *VM) Yield(kwargs map[string]object.EmeraldValue, args ...object.Emeral
 
 func (vm *VM) withExecutionContextForBlock(block object.EmeraldValue, cb func() object.EmeraldValue) object.EmeraldValue {
 	oldCtx := vm.ctx
+	defer func() {
+		vm.ctx = oldCtx
+	}()
 
 	if closedBlock, ok := block.Heap.(*object.ClosedBlock); ok && closedBlock.Context != nil {
 		vm.ctx = closedBlock.Context
+		vm.ctx.ExecutionContext = vm.executionContext
 	}
 
-	val := cb()
-
-	vm.ctx = oldCtx
-
-	return val
+	return cb()
 }
 
 func (vm *VM) Send(self object.EmeraldValue, name string, block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
@@ -93,7 +93,7 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 			return vm.currentFiber().framesIndex > startFrameIndex
 		})
 
-		if !vm.ExceptionIsRaised() {
+		if vm.executionError == nil && !vm.ExceptionIsRaised() {
 			// Return value is left on the stack
 			return vm.pop()
 		}
@@ -105,12 +105,18 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 }
 
 func (vm *VM) evalBuiltIn(builtin *object.WrappedBuiltInMethod, block object.EmeraldValue, args []object.EmeraldValue, kwargs map[string]object.EmeraldValue) object.EmeraldValue {
+	if !vm.checkContext() {
+		return vm.rt.NULL
+	}
+
 	oldBlock := vm.ctx.Block
 	vm.ctx.Block = block
+	defer func() {
+		vm.ctx.Block = oldBlock
+	}()
 
 	result := builtin.Method(vm.ctx, kwargs, args...)
-
-	vm.ctx.Block = oldBlock
+	vm.checkContext()
 
 	return result
 }

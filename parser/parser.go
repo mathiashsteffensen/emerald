@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"emerald/debug"
+	"context"
 	ast "emerald/parser/ast"
 	"emerald/parser/lexer"
 	"fmt"
@@ -14,7 +14,9 @@ type (
 )
 
 type Parser struct {
+	ctx            context.Context
 	l              *lexer.Lexer
+	err            error
 	errors         []string
 	curToken       lexer.Token
 	peekToken      lexer.Token
@@ -30,12 +32,21 @@ func (p *Parser) registerInfix(tokenType lexer.TokenType, fn infixParseFn) {
 }
 
 func New(l *lexer.Lexer) *Parser {
+	return NewContext(context.Background(), l)
+}
+
+func NewContext(ctx context.Context, l *lexer.Lexer) *Parser {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	p := &Parser{
+		ctx:    ctx,
 		l:      l,
 		errors: []string{},
 	}
 
-	p.l.Run()
+	p.l.RunContext(ctx)
 
 	p.prefixParseFns = make(map[lexer.TokenType]prefixParseFn)
 	p.registerPrefix(lexer.IDENT, p.parseIdentifierExpression)
@@ -104,12 +115,18 @@ func New(l *lexer.Lexer) *Parser {
 	return p
 }
 
+func (p *Parser) Err() error {
+	if p.err == nil {
+		return p.ctx.Err()
+	}
+	return p.err
+}
+
 func (p *Parser) Errors() []string {
 	return p.errors
 }
 
 func (p *Parser) addError(msg string) {
-	debug.InternalDebugF("SyntaxError: %s", msg)
 	p.errors = append(p.errors, msg)
 }
 
@@ -139,18 +156,29 @@ func (p *Parser) noPrefixParseFnError() {
 }
 
 func (p *Parser) nextToken() {
-	if p.curTokenIs(lexer.EOF) {
+	if p.err != nil || p.curTokenIs(lexer.EOF) {
 		return
 	}
 
 	p.curToken = p.peekToken
-	p.peekToken = p.l.NextToken()
+
+	token, err := p.l.NextTokenContext(p.ctx)
+	if err != nil {
+		p.err = err
+		p.curToken = lexer.Token{Type: lexer.EOF}
+		p.peekToken = lexer.Token{Type: lexer.EOF}
+		return
+	}
+
+	p.peekToken = token
 }
 
 func (p *Parser) ParseAST() *ast.AST {
+	defer p.l.Wait()
+
 	program := &ast.AST{}
 	program.Statements = []ast.Statement{}
-	for p.curToken.Type != lexer.EOF {
+	for p.err == nil && p.curToken.Type != lexer.EOF {
 		stmt := p.parseStatement()
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt)

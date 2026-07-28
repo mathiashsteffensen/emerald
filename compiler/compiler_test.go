@@ -1,10 +1,12 @@
 package compiler
 
 import (
+	"context"
 	"emerald/core"
 	"emerald/object"
 	"emerald/parser/ast"
 	"emerald/parser/lexer"
+	"errors"
 	"strings"
 	"testing"
 )
@@ -19,6 +21,22 @@ func TestCompile(t *testing.T) {
 	rt := core.NewRuntime()
 	rt.Init()
 	Compile("test.rb", "puts(\"Hello\")", rt)
+}
+
+func TestCompileContextReturnsCancellation(t *testing.T) {
+	rt := core.NewRuntime()
+	rt.Init()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	bytecode, err := CompileContext(ctx, "test.rb", "1 + 2", rt)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context cancellation, got %v", err)
+	}
+	if bytecode != nil {
+		t.Fatalf("expected no bytecode after cancellation, got:\n%s", bytecode.Instructions)
+	}
 }
 
 func TestCompileDoesNotEmitBytecodeAfterParserError(t *testing.T) {

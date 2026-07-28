@@ -1,33 +1,47 @@
 package vm
 
 import (
+	"context"
 	"emerald/bytecode"
 	"emerald/core"
 	"emerald/debug"
 	"emerald/object"
 	"emerald/parser/lexer"
 	"fmt"
-	"os"
 )
+
+// Options contains host-provided inputs for a VM.
+type Options struct {
+	Args     []string
+	LoadPath []string
+}
 
 // VM is our virtual machine responsible for the fetch, decode, execute cycle
 type VM struct {
-	rt         *core.Runtime
-	ctx        *object.Context
-	fibers     []*Fiber
-	fiberIndex int
+	rt               *core.Runtime
+	ctx              *object.Context
+	executionContext context.Context
+	executionError   error
+	fibers           []*Fiber
+	fiberIndex       int
 }
 
 func New(file string, bytecode *bytecode.Bytecode, rt *core.Runtime) *VM {
+	return NewWithOptions(file, bytecode, rt, Options{})
+}
+
+// NewWithOptions creates a VM with explicit arguments and load paths.
+func NewWithOptions(file string, bytecode *bytecode.Bytecode, rt *core.Runtime, options Options) *VM {
 	mainBlock := &object.ClosedBlock{Block: &object.Block{Bytecode: *bytecode}}
 	mainFrame := NewFrame(mainBlock, 0)
 
 	rootFiber := NewFiber(mainFrame)
 
 	vm := &VM{
-		rt:         rt,
-		fibers:     []*Fiber{rootFiber},
-		fiberIndex: 0,
+		rt:               rt,
+		executionContext: context.Background(),
+		fibers:           []*Fiber{rootFiber},
+		fiberIndex:       0,
 	}
 
 	vm.ctx = vm.newContext(file, rt.MainObject, rt.NULL)
@@ -36,12 +50,14 @@ func New(file string, bytecode *bytecode.Bytecode, rt *core.Runtime) *VM {
 		vm.handleRaise(err)
 	}
 
-	rt.Heap.SetGlobalVariableString("$LOAD_PATH", rt.NewArray([]object.EmeraldValue{
-		rt.NewString(debug.BinaryDir),
-	}))
+	loadPath := make([]object.EmeraldValue, len(options.LoadPath))
+	for i, path := range options.LoadPath {
+		loadPath[i] = rt.NewString(path)
+	}
+	rt.Heap.SetGlobalVariableString("$LOAD_PATH", rt.NewArray(loadPath))
 
-	argv := make([]object.EmeraldValue, len(os.Args))
-	for i, arg := range os.Args {
+	argv := make([]object.EmeraldValue, len(options.Args))
+	for i, arg := range options.Args {
 		argv[i] = rt.NewString(arg)
 	}
 	rt.Heap.SetGlobalVariableString("$*", rt.NewArray(argv))
@@ -92,9 +108,37 @@ func (vm *VM) RunIncremental(instructions bytecode.Instructions, debugTokens map
 }
 
 func (vm *VM) Run() {
+	_ = vm.RunContext(context.Background())
+}
+
+// RunContext executes bytecode until completion or context cancellation.
+func (vm *VM) RunContext(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	vm.executionContext = ctx
+	vm.executionError = nil
+	vm.ctx.ExecutionContext = ctx
+
 	vm.runWhile(func() bool {
 		return true
 	})
+
+	return vm.executionError
+}
+
+func (vm *VM) checkContext() bool {
+	if vm.executionError != nil {
+		return false
+	}
+
+	if err := vm.ctx.ExecutionError(); err != nil {
+		vm.executionError = err
+		return false
+	}
+
+	return true
 }
 
 func (vm *VM) runWhile(condition func() bool) {
@@ -104,7 +148,7 @@ func (vm *VM) runWhile(condition func() bool) {
 		op  bytecode.Opcode
 	)
 
-	for condition() && vm.currentFiber().framesIndex > 0 {
+	for vm.checkContext() && condition() && vm.currentFiber().framesIndex > 0 {
 		frame := vm.currentFiber().currentFrame()
 		if frame.ip >= len(frame.Instructions())-1 {
 			break
@@ -409,7 +453,7 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) {
 			}
 
 			result := vm.evalBuiltIn(m, block, vm.stack()[basePointer:argsEndIndex], kwargsMap)
-			if !vm.ExceptionIsRaised() {
+			if vm.executionError == nil && !vm.ExceptionIsRaised() {
 				vm.currentFiber().sp = basePointer - 2
 				vm.push(result)
 			}

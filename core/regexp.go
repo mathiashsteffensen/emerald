@@ -3,6 +3,7 @@ package core
 import (
 	"emerald/object"
 	"fmt"
+	"time"
 
 	"github.com/dlclark/regexp2"
 )
@@ -56,12 +57,26 @@ func (rt *Runtime) regexpInspect() object.BuiltInMethod {
 
 func (rt *Runtime) regexpMatch() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return rt.regexStringMatch(ctx.Self.Heap.(*RegexpInstance), args[0].Heap.(*StringInstance))
+		return rt.regexStringMatch(ctx, ctx.Self.Heap.(*RegexpInstance), args[0].Heap.(*StringInstance))
 	}
 }
 
-func (rt *Runtime) regexStringMatch(regex *RegexpInstance, str *StringInstance) object.EmeraldValue {
+func (rt *Runtime) regexStringMatch(ctx *object.Context, regex *RegexpInstance, str *StringInstance) object.EmeraldValue {
+	regex.Expression.MatchTimeout = regexp2.DefaultMatchTimeout
+	if ctx.ExecutionContext != nil {
+		if deadline, ok := ctx.ExecutionContext.Deadline(); ok {
+			remaining := time.Until(deadline)
+			if remaining <= 0 {
+				return rt.NULL
+			}
+			regex.Expression.MatchTimeout = remaining
+		}
+	}
+
 	if m, err := regex.Expression.FindStringMatch(str.Value); err != nil {
+		if ctx.ExecutionError() != nil {
+			return rt.NULL
+		}
 		panic(err)
 	} else if m == nil {
 		return rt.NULL

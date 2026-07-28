@@ -1,7 +1,9 @@
 package lexer
 
 import (
+	"context"
 	"strings"
+	"sync"
 )
 
 type Lexer struct {
@@ -15,13 +17,29 @@ type Lexer struct {
 	lastEmitted  Token
 
 	templateNesting uint8
+
+	ctx       context.Context
+	cancel    context.CancelFunc
+	done      chan struct{}
+	runOnce   sync.Once
+	closeOnce sync.Once
 }
 
 func New(input *Input) *Lexer {
+	return NewContext(context.Background(), input)
+}
+
+func NewContext(ctx context.Context, input *Input) *Lexer {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	l := &Lexer{
 		outputChan: make(chan Token, 500),
 		Line:       1,
 		Column:     -1,
+		ctx:        ctx,
+		done:       make(chan struct{}),
 	}
 
 	l.currentInput = input
@@ -85,318 +103,386 @@ func (l *Lexer) inTemplate() bool {
 }
 
 func (l *Lexer) Run() {
-	go func() {
-		var tok Token
+	l.RunContext(l.ctx)
+}
 
-		for tok.Type != EOF {
+func (l *Lexer) RunContext(ctx context.Context) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
-			l.eatWhitespace()
+	l.runOnce.Do(func() {
+		l.ctx, l.cancel = context.WithCancel(ctx)
 
-			switch l.currentChar {
-			case '\n':
-				l.Column = 1
-				l.Line += 1
-				tok = l.newToken(NEWLINE, l.currentChar)
-			case '#':
-				for l.currentChar != '\n' {
-					l.readChar()
-				}
-				continue
+		go l.run()
+	})
+}
+
+func (l *Lexer) run() {
+	defer close(l.done)
+
+	var tok Token
+
+	for tok.Type != EOF && !l.canceled() {
+		l.eatWhitespace()
+
+		if l.canceled() {
+			return
+		}
+
+		switch l.currentChar {
+		case '\n':
+			l.Column = 1
+			l.Line += 1
+			tok = l.newToken(NEWLINE, l.currentChar)
+		case '#':
+			for l.currentChar != '\n' && l.currentChar != 0 && !l.canceled() {
+				l.readChar()
+			}
+			continue
+		case '=':
+			switch l.peekChar() {
 			case '=':
-				switch l.peekChar() {
-				case '=':
-					first := string(l.currentChar)
-					l.readChar()
+				first := string(l.currentChar)
+				l.readChar()
 
-					if l.peekChar() == '=' {
-						first += string(l.currentChar)
-						l.readChar()
-						tok = l.newTokenStr(CASE_EQ, first+string(l.currentChar))
-					} else {
-						tok = l.newTokenStr(EQ, first+string(l.currentChar))
-					}
-				case '>':
-					tok = l.combineCurrentAndPeek(ARROW)
-				case '~':
-					tok = l.combineCurrentAndPeek(MATCH)
-				default:
-					tok = l.newToken(ASSIGN, l.currentChar)
-				}
-			case '!':
 				if l.peekChar() == '=' {
-					tok = l.combineCurrentAndPeek(NOT_EQ)
-				} else {
-					tok = l.newToken(BANG, l.currentChar)
-				}
-			case '?':
-				tok = l.newToken(QUESTION, l.currentChar)
-			case '<':
-				if l.peekChar() == '=' {
-					char := l.currentChar
+					first += string(l.currentChar)
 					l.readChar()
-
-					if l.peekChar() == '>' {
-						tok = l.newTokenStr(SPACESHIP, string(char)+string(l.currentChar)+string(l.peekChar()))
-						l.readChar()
-					} else {
-						tok = l.newTokenStr(LT_OR_EQ, string(char)+string(l.currentChar))
-					}
+					tok = l.newTokenStr(CASE_EQ, first+string(l.currentChar))
 				} else {
-					if l.peekChar() == '<' {
-						char := l.currentChar
-						l.readChar()
-						tok = l.newTokenStr(APPEND, string(char)+string(l.currentChar))
-					} else {
-						tok = l.newToken(LT, l.currentChar)
-					}
+					tok = l.newTokenStr(EQ, first+string(l.currentChar))
 				}
 			case '>':
-				if l.peekChar() == '=' {
-					char := l.currentChar
-					l.readChar()
-					tok = Token{Type: GT_OR_EQ, Literal: string(char) + string(l.currentChar)}
-				} else {
-					tok = l.newToken(GT, l.currentChar)
-				}
-			case ';':
-				tok = l.newToken(SEMICOLON, l.currentChar)
-			case '(':
-				tok = l.newToken(LPAREN, l.currentChar)
-			case ')':
-				tok = l.newToken(RPAREN, l.currentChar)
-			case ',':
-				tok = l.newToken(COMMA, l.currentChar)
-			case '+':
-				if l.peekChar() == '=' {
-					tok = l.combineCurrentAndPeek(PLUS_ASSIGN)
-				} else {
-					tok = l.newToken(PLUS, l.currentChar)
-				}
-			case '-':
-				if l.peekChar() == '=' {
-					tok = l.combineCurrentAndPeek(MINUS_ASSIGN)
-				} else {
-					tok = l.newToken(MINUS, l.currentChar)
-				}
-			case '/':
-				if l.isRegexpStart() {
-					pattern := l.readRegexp()
-					tok = l.newTokenStr(REGEXP, pattern)
-				} else {
-					if l.peekChar() == '=' {
-						tok = l.combineCurrentAndPeek(SLASH_ASSIGN)
-					} else {
-						tok = l.newToken(SLASH, l.currentChar)
-					}
-				}
-			case '*':
-				if l.peekChar() == '=' {
-					tok = l.combineCurrentAndPeek(ASTERISK_ASSIGN)
-				} else {
-					tok = l.newToken(ASTERISK, l.currentChar)
-				}
-			case '{':
-				tok = l.newToken(LBRACE, l.currentChar)
-			case '}':
-				tok = l.newToken(RBRACE, l.currentChar)
-
-				// If we are in a template i.e.
-				// "This is a #{template <We are here>}"
-				if l.inTemplate() {
-					// Emit the RBRACE token immediately
-					l.sendToken(tok)
-
-					// Returns true if we are about to start another template
-					// If we aren't we need to make sure to send ending string token
-					if !l.lexDoubleQuotedString(&tok) {
-						// Slight optimization, we only send the token if the ending string has characters
-						//
-						// This ending string doesn't have characters, so we end up only joining 2 strings
-						// "This is a #{template <We are here>}"
-						//
-						// This ending string has characters, so we have to join 3 strings
-						// "This is a #{template <We are here>} blah blah"
-						if tok.Literal != "" {
-							l.sendToken(tok)
-						}
-
-						l.readChar()
-					}
-
-					l.templateNesting -= 1
-
-					continue
-				}
-			case '[':
-				tok = l.newToken(LBRACKET, l.currentChar)
-			case ']':
-				tok = l.newToken(RBRACKET, l.currentChar)
-			case ':':
-				if l.peekChar() == ':' {
-					// Scope operator
-					// File::Stat
-					char := l.currentChar
-					l.readChar()
-					tok = Token{Type: SCOPE, Literal: string(char) + string(l.currentChar)}
-				} else if isLetter(l.peekChar()) {
-					// A "normal" symbol
-					// :symbol
-					char := l.currentChar
-					tok.Pos = l.position
-					tok.Column = l.Column
-					tok.Line = l.Line
-					tok.Type = SYMBOL
-
-					l.readChar()
-					tok.Literal = string(char) + l.readIdentifier()
-					l.sendToken(tok)
-
-					continue
-				} else if peek := l.peekChar(); peek == '"' || peek == '\'' {
-					// A quoted symbol (does not support interpolation yet)
-					// :"symbol" or :'symbol'
-					char := l.currentChar
-					tok.Pos = l.position
-					tok.Column = l.Column
-					tok.Line = l.Line
-					tok.Type = SYMBOL
-
-					l.readChar()
-					tok.Literal = string(char) + l.readString(peek)
-					l.readChar()
-					l.sendToken(tok)
-
-					continue
-				} else {
-					tok = l.newToken(COLON, l.currentChar)
-				}
-			case '.':
-				if l.peekChar() == '.' {
-					tok = l.combineCurrentAndPeek(RANGE_INCLUSIVE)
-
-					if l.peekChar() == '.' {
-						tok.Type = RANGE_EXCLUSIVE
-						tok.Literal = tok.Literal + string(l.currentChar)
-						l.readChar()
-					}
-				} else {
-					tok = l.newToken(DOT, l.currentChar)
-				}
-			case '"':
-				if l.lexDoubleQuotedString(&tok) {
-					continue
-				}
-			case '\'':
-				l.lexSingleQuotedString(&tok)
-			case '&':
-				if l.peekChar() == '&' {
-					char := l.currentChar
-					l.readChar()
-
-					if l.peekChar() == '=' {
-						secondChar := l.currentChar
-						l.readChar()
-						tok = Token{Type: BOOL_AND_ASSIGN, Literal: string(char) + string(secondChar) + string(l.currentChar)}
-					} else {
-						tok = Token{Type: BOOL_AND, Literal: string(char) + string(l.currentChar)}
-					}
-				} else {
-					tok = l.newToken(BIT_AND, l.currentChar)
-				}
-			case '|':
-				if l.peekChar() == '|' {
-					char := l.currentChar
-					l.readChar()
-
-					if l.peekChar() == '=' {
-						secondChar := l.currentChar
-						l.readChar()
-						tok = Token{Type: BOOL_OR_ASSIGN, Literal: string(char) + string(secondChar) + string(l.currentChar)}
-					} else {
-						tok = Token{Type: BOOL_OR, Literal: string(char) + string(l.currentChar)}
-					}
-				} else {
-					tok = l.newToken(BIT_OR, l.currentChar)
-				}
-			case '@':
-				tok.Type = INSTANCE_VAR
-
-				char := l.currentChar
-
-				l.readChar()
-
-				tok.Literal = string(char) + l.readIdentifier()
-
-				l.sendToken(tok)
-				continue
-			case '$':
-				tok.Type = GLOBAL_IDENT
-
-				char := l.currentChar
-
-				l.readChar()
-
-				var ident string
-
-				if !isLetter(l.currentChar) {
-					ident = string(char) + string(l.currentChar)
-					l.readChar()
-				} else {
-					ident = string(char) + l.readIdentifier()
-				}
-
-				tok.Literal = ident
-
-				l.sendToken(tok)
-				continue
-			case 0:
-				tok.Literal = ""
-				tok.Type = EOF
+				tok = l.combineCurrentAndPeek(ARROW)
+			case '~':
+				tok = l.combineCurrentAndPeek(MATCH)
 			default:
-				if isLetter(l.currentChar) {
-					tok.Pos = l.position
-					tok.Column = l.Column
-					tok.Line = l.Line
-					tok.Literal = l.readIdentifier()
-					tok.Type = lookupIdent(tok.Literal)
-					l.sendToken(tok)
+				tok = l.newToken(ASSIGN, l.currentChar)
+			}
+		case '!':
+			if l.peekChar() == '=' {
+				tok = l.combineCurrentAndPeek(NOT_EQ)
+			} else {
+				tok = l.newToken(BANG, l.currentChar)
+			}
+		case '?':
+			tok = l.newToken(QUESTION, l.currentChar)
+		case '<':
+			if l.peekChar() == '=' {
+				char := l.currentChar
+				l.readChar()
 
-					l.eatWhitespace()
-
-					if tok.Type == DEF && l.peekChar() == '@' && (l.currentChar == '-' || l.currentChar == '!') {
-						l.sendToken(l.combineCurrentAndPeek(IDENT))
-						l.readChar()
-					}
-
-					continue
-				} else if isDigit(l.currentChar) {
-					l.lexNumber(&tok)
-					continue
+				if l.peekChar() == '>' {
+					tok = l.newTokenStr(SPACESHIP, string(char)+string(l.currentChar)+string(l.peekChar()))
+					l.readChar()
 				} else {
-					tok = l.newToken(ILLEGAL, l.currentChar)
+					tok = l.newTokenStr(LT_OR_EQ, string(char)+string(l.currentChar))
+				}
+			} else {
+				if l.peekChar() == '<' {
+					char := l.currentChar
+					l.readChar()
+					tok = l.newTokenStr(APPEND, string(char)+string(l.currentChar))
+				} else {
+					tok = l.newToken(LT, l.currentChar)
 				}
 			}
+		case '>':
+			if l.peekChar() == '=' {
+				char := l.currentChar
+				l.readChar()
+				tok = Token{Type: GT_OR_EQ, Literal: string(char) + string(l.currentChar)}
+			} else {
+				tok = l.newToken(GT, l.currentChar)
+			}
+		case ';':
+			tok = l.newToken(SEMICOLON, l.currentChar)
+		case '(':
+			tok = l.newToken(LPAREN, l.currentChar)
+		case ')':
+			tok = l.newToken(RPAREN, l.currentChar)
+		case ',':
+			tok = l.newToken(COMMA, l.currentChar)
+		case '+':
+			if l.peekChar() == '=' {
+				tok = l.combineCurrentAndPeek(PLUS_ASSIGN)
+			} else {
+				tok = l.newToken(PLUS, l.currentChar)
+			}
+		case '-':
+			if l.peekChar() == '=' {
+				tok = l.combineCurrentAndPeek(MINUS_ASSIGN)
+			} else {
+				tok = l.newToken(MINUS, l.currentChar)
+			}
+		case '/':
+			if l.isRegexpStart() {
+				pattern := l.readRegexp()
+				tok = l.newTokenStr(REGEXP, pattern)
+			} else {
+				if l.peekChar() == '=' {
+					tok = l.combineCurrentAndPeek(SLASH_ASSIGN)
+				} else {
+					tok = l.newToken(SLASH, l.currentChar)
+				}
+			}
+		case '*':
+			if l.peekChar() == '=' {
+				tok = l.combineCurrentAndPeek(ASTERISK_ASSIGN)
+			} else {
+				tok = l.newToken(ASTERISK, l.currentChar)
+			}
+		case '{':
+			tok = l.newToken(LBRACE, l.currentChar)
+		case '}':
+			tok = l.newToken(RBRACE, l.currentChar)
+
+			// If we are in a template i.e.
+			// "This is a #{template <We are here>}"
+			if l.inTemplate() {
+				// Emit the RBRACE token immediately
+				l.sendToken(tok)
+
+				// Returns true if we are about to start another template
+				// If we aren't we need to make sure to send ending string token
+				if !l.lexDoubleQuotedString(&tok) {
+					// Slight optimization, we only send the token if the ending string has characters
+					//
+					// This ending string doesn't have characters, so we end up only joining 2 strings
+					// "This is a #{template <We are here>}"
+					//
+					// This ending string has characters, so we have to join 3 strings
+					// "This is a #{template <We are here>} blah blah"
+					if tok.Literal != "" {
+						l.sendToken(tok)
+					}
+
+					l.readChar()
+				}
+
+				l.templateNesting -= 1
+
+				continue
+			}
+		case '[':
+			tok = l.newToken(LBRACKET, l.currentChar)
+		case ']':
+			tok = l.newToken(RBRACKET, l.currentChar)
+		case ':':
+			if l.peekChar() == ':' {
+				// Scope operator
+				// File::Stat
+				char := l.currentChar
+				l.readChar()
+				tok = Token{Type: SCOPE, Literal: string(char) + string(l.currentChar)}
+			} else if isLetter(l.peekChar()) {
+				// A "normal" symbol
+				// :symbol
+				char := l.currentChar
+				tok.Pos = l.position
+				tok.Column = l.Column
+				tok.Line = l.Line
+				tok.Type = SYMBOL
+
+				l.readChar()
+				tok.Literal = string(char) + l.readIdentifier()
+				l.sendToken(tok)
+
+				continue
+			} else if peek := l.peekChar(); peek == '"' || peek == '\'' {
+				// A quoted symbol (does not support interpolation yet)
+				// :"symbol" or :'symbol'
+				char := l.currentChar
+				tok.Pos = l.position
+				tok.Column = l.Column
+				tok.Line = l.Line
+				tok.Type = SYMBOL
+
+				l.readChar()
+				tok.Literal = string(char) + l.readString(peek)
+				l.readChar()
+				l.sendToken(tok)
+
+				continue
+			} else {
+				tok = l.newToken(COLON, l.currentChar)
+			}
+		case '.':
+			if l.peekChar() == '.' {
+				tok = l.combineCurrentAndPeek(RANGE_INCLUSIVE)
+
+				if l.peekChar() == '.' {
+					tok.Type = RANGE_EXCLUSIVE
+					tok.Literal = tok.Literal + string(l.currentChar)
+					l.readChar()
+				}
+			} else {
+				tok = l.newToken(DOT, l.currentChar)
+			}
+		case '"':
+			if l.lexDoubleQuotedString(&tok) {
+				continue
+			}
+		case '\'':
+			l.lexSingleQuotedString(&tok)
+		case '&':
+			if l.peekChar() == '&' {
+				char := l.currentChar
+				l.readChar()
+
+				if l.peekChar() == '=' {
+					secondChar := l.currentChar
+					l.readChar()
+					tok = Token{Type: BOOL_AND_ASSIGN, Literal: string(char) + string(secondChar) + string(l.currentChar)}
+				} else {
+					tok = Token{Type: BOOL_AND, Literal: string(char) + string(l.currentChar)}
+				}
+			} else {
+				tok = l.newToken(BIT_AND, l.currentChar)
+			}
+		case '|':
+			if l.peekChar() == '|' {
+				char := l.currentChar
+				l.readChar()
+
+				if l.peekChar() == '=' {
+					secondChar := l.currentChar
+					l.readChar()
+					tok = Token{Type: BOOL_OR_ASSIGN, Literal: string(char) + string(secondChar) + string(l.currentChar)}
+				} else {
+					tok = Token{Type: BOOL_OR, Literal: string(char) + string(l.currentChar)}
+				}
+			} else {
+				tok = l.newToken(BIT_OR, l.currentChar)
+			}
+		case '@':
+			tok.Type = INSTANCE_VAR
+
+			char := l.currentChar
 
 			l.readChar()
 
+			tok.Literal = string(char) + l.readIdentifier()
+
 			l.sendToken(tok)
+			continue
+		case '$':
+			tok.Type = GLOBAL_IDENT
+
+			char := l.currentChar
+
+			l.readChar()
+
+			var ident string
+
+			if !isLetter(l.currentChar) {
+				ident = string(char) + string(l.currentChar)
+				l.readChar()
+			} else {
+				ident = string(char) + l.readIdentifier()
+			}
+
+			tok.Literal = ident
+
+			l.sendToken(tok)
+			continue
+		case 0:
+			tok.Literal = ""
+			tok.Type = EOF
+		default:
+			if isLetter(l.currentChar) {
+				tok.Pos = l.position
+				tok.Column = l.Column
+				tok.Line = l.Line
+				tok.Literal = l.readIdentifier()
+				tok.Type = lookupIdent(tok.Literal)
+				l.sendToken(tok)
+
+				l.eatWhitespace()
+
+				if tok.Type == DEF && l.peekChar() == '@' && (l.currentChar == '-' || l.currentChar == '!') {
+					l.sendToken(l.combineCurrentAndPeek(IDENT))
+					l.readChar()
+				}
+
+				continue
+			} else if isDigit(l.currentChar) {
+				l.lexNumber(&tok)
+				continue
+			} else {
+				tok = l.newToken(ILLEGAL, l.currentChar)
+			}
 		}
 
+		l.readChar()
+
 		l.sendToken(tok)
-	}()
+	}
+
+	if !l.canceled() {
+		l.sendToken(tok)
+	}
 }
 
 func (l *Lexer) Close() {
-	close(l.outputChan)
+	l.closeOnce.Do(func() {
+		notStarted := false
+		l.runOnce.Do(func() {
+			notStarted = true
+			close(l.done)
+		})
+
+		if !notStarted {
+			l.cancel()
+			<-l.done
+		}
+
+		close(l.outputChan)
+	})
 }
 
 func (l *Lexer) sendToken(token Token) {
 	l.lastEmitted = token
-	l.outputChan <- token
+
+	select {
+	case l.outputChan <- token:
+	case <-l.ctx.Done():
+	}
 }
 
 func (l *Lexer) NextToken() Token {
-	return <-l.outputChan
+	token, _ := l.NextTokenContext(l.ctx)
+	return token
+}
+
+func (l *Lexer) NextTokenContext(ctx context.Context) (Token, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	select {
+	case token, ok := <-l.outputChan:
+		if !ok {
+			return Token{Type: EOF}, nil
+		}
+		return token, nil
+	case <-ctx.Done():
+		return Token{}, ctx.Err()
+	}
+}
+
+func (l *Lexer) Wait() {
+	<-l.done
+}
+
+func (l *Lexer) canceled() bool {
+	select {
+	case <-l.ctx.Done():
+		return true
+	default:
+		return false
+	}
 }
 
 func (l *Lexer) newToken(tokenType TokenType, ch byte) Token {
@@ -431,14 +517,14 @@ func (l *Lexer) peekChar() byte {
 }
 
 func (l *Lexer) eatWhitespace() {
-	for isWhiteSpace(l.currentChar) {
+	for isWhiteSpace(l.currentChar) && !l.canceled() {
 		l.readChar()
 	}
 }
 
 func (l *Lexer) readNumber() string {
 	position := l.position
-	for isDigit(l.currentChar) || l.currentChar == '_' {
+	for (isDigit(l.currentChar) || l.currentChar == '_') && !l.canceled() {
 		l.readChar()
 	}
 	return l.currentInput.content[position:l.position]
@@ -449,7 +535,7 @@ func (l *Lexer) readRegexp() string {
 	for {
 		prevChar := l.currentChar
 		l.readChar()
-		if (l.currentChar == '/' && prevChar != '\\') || l.currentChar == 0 {
+		if (l.currentChar == '/' && prevChar != '\\') || l.currentChar == 0 || l.canceled() {
 			break
 		}
 	}
@@ -458,7 +544,7 @@ func (l *Lexer) readRegexp() string {
 
 func (l *Lexer) readIdentifier() string {
 	position := l.position
-	for isLetter(l.currentChar) || isDigit(l.currentChar) {
+	for (isLetter(l.currentChar) || isDigit(l.currentChar)) && !l.canceled() {
 		l.readChar()
 	}
 

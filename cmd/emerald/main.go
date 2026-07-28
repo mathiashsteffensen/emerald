@@ -38,7 +38,10 @@ var rootCmd = &cobra.Command{
 			bytes, err := os.ReadFile(absFile)
 			helpers.CheckError("error reading file", err)
 
-			_, err = engine.EvalFile(absFile, string(bytes))
+			_, err = engine.EvalFileWithOptions(absFile, string(bytes), emerald.EvalOptions{
+				Args:     os.Args,
+				LoadPath: []string{debug.BinaryDir},
+			})
 
 			if err != nil {
 				debug.Fatal(err.Error())

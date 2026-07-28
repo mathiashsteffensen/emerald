@@ -25,6 +25,10 @@ func (l *Lexer) readString(endChar byte) string {
 	for {
 		l.readChar()
 
+		if l.canceled() {
+			break
+		}
+
 		if l.nextIsLTEMPLATE() {
 			break
 		}

@@ -22,6 +22,9 @@ func (rt *Runtime) InitKernel() {
 	rt.DefineMethod(rt.Kernel, "include", rt.kernelInclude())
 
 	rt.definePrivateKernelMethod("raise", rt.kernelRaise())
+}
+
+func (rt *Runtime) InitKernelHostMethods() {
 	rt.definePrivateKernelMethod("require_relative", rt.kernelRequireRelative())
 	rt.definePrivateKernelMethod("sleep", rt.kernelSleep())
 	rt.definePrivateKernelMethod("puts", rt.kernelPuts())

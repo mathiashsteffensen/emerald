@@ -72,6 +72,31 @@ func NewRuntime() *Runtime {
 }
 
 func (rt *Runtime) Init() {
+	rt.initCore()
+
+	rt.InitKernelHostMethods()
+
+	// Initialize filesystem core classes
+	rt.InitIO()
+	rt.InitDir()
+	rt.InitFile()
+
+	rt.InitTime()
+
+	// Initialize networking core classes
+	rt.InitTCPServer()
+	rt.InitTCPSocket()
+
+	rt.RequiredFilesHash = rt.NewHash()
+}
+
+// InitSandbox initializes only core classes and methods without host I/O access.
+func (rt *Runtime) InitSandbox() {
+	rt.initCore()
+}
+
+// initCore is an allowlist of core classes and methods that do not access host I/O.
+func (rt *Runtime) initCore() {
 	// Initialize object hierarchy base
 	rt.InitClass()
 	rt.InitBasicObject()
@@ -112,14 +137,4 @@ func (rt *Runtime) Init() {
 	rt.InitRegexp()
 	rt.InitMatchData()
 	rt.InitRange()
-	rt.InitIO()
-	rt.InitDir()
-	rt.InitFile()
-	rt.InitTime()
-
-	// Networking core classes
-	rt.InitTCPServer()
-	rt.InitTCPSocket()
-
-	rt.RequiredFilesHash = rt.NewHash()
 }

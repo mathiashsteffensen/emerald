@@ -9,6 +9,7 @@ func (vm *VM) newContext(file string, self, block object.EmeraldValue) *object.C
 		File:                    file,
 		Self:                    self,
 		Block:                   block,
+		ExecutionContext:        vm.executionContext,
 		Yield:                   vm.Yield,
 		BlockGiven:              vm.BlockGiven,
 		DefaultMethodVisibility: object.PUBLIC,

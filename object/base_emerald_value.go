@@ -17,13 +17,36 @@ func (val *BaseEmeraldValue) SetType(t EmeraldValueType) {}
 func (val *BaseEmeraldValue) SetHeap(h HeapObject)       {}
 
 func (val *BaseEmeraldValue) IncludedModules() []EmeraldValue {
-	direct := val.includedModules
+	included := []EmeraldValue{}
+	collectIncludedModules(val.includedModules, map[HeapObject]struct{}{}, &included)
+	return included
+}
 
-	for _, module := range direct {
-		direct = append(direct, module.IncludedModules()...)
+func collectIncludedModules(
+	modules []EmeraldValue,
+	visited map[HeapObject]struct{},
+	included *[]EmeraldValue,
+) {
+	direct := make([]EmeraldValue, 0, len(modules))
+
+	for _, module := range modules {
+		if module.Heap == nil {
+			continue
+		}
+		if _, seen := visited[module.Heap]; seen {
+			continue
+		}
+
+		visited[module.Heap] = struct{}{}
+		*included = append(*included, module)
+		direct = append(direct, module)
 	}
 
-	return direct
+	for _, module := range direct {
+		if provider, ok := module.Heap.(baseEmeraldValueProvider); ok {
+			collectIncludedModules(provider.baseEmeraldValue().includedModules, visited, included)
+		}
+	}
 }
 
 func (val *BaseEmeraldValue) Include(mod EmeraldValue) {
@@ -127,17 +150,41 @@ func (val *BaseEmeraldValue) NamespaceDefinitionSet(name string, value EmeraldVa
 }
 
 func (val *BaseEmeraldValue) NamespaceDefinitionGet(name string) EmeraldValue {
-	value := val.NamespaceDefinitions()[name]
+	visited := map[*BaseEmeraldValue]struct{}{}
+	current := val
 
-	if !value.IsNil() {
-		return value
-	}
+	for current != nil {
+		if _, seen := visited[current]; seen {
+			return EmeraldValue{}
+		}
+		visited[current] = struct{}{}
 
-	if !val.parentNamespace.IsNil() {
-		return val.parentNamespace.NamespaceDefinitionGet(name)
+		value := current.NamespaceDefinitions()[name]
+		if !value.IsNil() {
+			return value
+		}
+
+		parent := current.parentNamespace
+		if parent.IsNil() || parent.Heap == nil {
+			return EmeraldValue{}
+		}
+
+		provider, ok := parent.Heap.(baseEmeraldValueProvider)
+		if !ok {
+			return EmeraldValue{}
+		}
+		current = provider.baseEmeraldValue()
 	}
 
 	return EmeraldValue{}
+}
+
+type baseEmeraldValueProvider interface {
+	baseEmeraldValue() *BaseEmeraldValue
+}
+
+func (val *BaseEmeraldValue) baseEmeraldValue() *BaseEmeraldValue {
+	return val
 }
 
 func (val *BaseEmeraldValue) ParentNamespace() EmeraldValue {

@@ -1,6 +1,6 @@
 SHELL:=/bin/bash
 
-PACKAGES := ./parser/lexer ./parser ./compiler/ ./object/ ./vm/ ./core/ ./heap/ ./bytecode/
+PACKAGES := ./ ./parser/lexer ./parser ./compiler/ ./object/ ./vm/ ./core/ ./heap/ ./bytecode/
 
 default:
 	@make lint test-all build

@@ -96,8 +96,12 @@ func (rt *Runtime) arrayEach() object.BuiltInMethod {
 		arr := ctx.Self.Heap.(*ArrayInstance)
 
 		for _, val := range arr.Value {
+			if ctx.ExecutionError() != nil {
+				return rt.NULL
+			}
+
 			ctx.Yield(map[string]object.EmeraldValue{}, val)
-			if rt.ExceptionIsRaised() {
+			if ctx.ExecutionError() != nil || rt.ExceptionIsRaised() {
 				return rt.NULL
 			}
 		}

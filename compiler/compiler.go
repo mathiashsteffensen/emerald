@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"context"
 	"emerald/bytecode"
 	"emerald/core"
 	"emerald/heap"
@@ -18,6 +19,8 @@ type EmittedInstruction struct {
 }
 
 type Compiler struct {
+	ctx          context.Context
+	err          error
 	rt           *core.Runtime
 	instructions bytecode.Instructions
 	opCount      int
@@ -30,6 +33,14 @@ type Compiler struct {
 type ConstructorOption func(c *Compiler)
 
 func New(l *lexer.Lexer, rt *core.Runtime, options ...ConstructorOption) *Compiler {
+	return NewContext(context.Background(), l, rt, options...)
+}
+
+func NewContext(ctx context.Context, l *lexer.Lexer, rt *core.Runtime, options ...ConstructorOption) *Compiler {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	mainScope := CompilationScope{
 		bytecode: bytecode.Bytecode{
 			Instructions: bytecode.Instructions{},
@@ -41,6 +52,7 @@ func New(l *lexer.Lexer, rt *core.Runtime, options ...ConstructorOption) *Compil
 	}
 
 	c := &Compiler{
+		ctx:          ctx,
 		rt:           rt,
 		instructions: bytecode.Instructions{},
 		symbolTable:  rt.Heap.SymbolTable,
@@ -64,31 +76,55 @@ func (c *Compiler) SetRuntime(rt *core.Runtime) {
 }
 
 func Compile(fileName string, content string, rt *core.Runtime) *bytecode.Bytecode {
-	bc, _ := compile(fileName, content, rt)
+	bc, _ := CompileContext(context.Background(), fileName, content, rt)
 
 	return bc
 }
 
+func CompileContext(ctx context.Context, fileName string, content string, rt *core.Runtime) (*bytecode.Bytecode, error) {
+	bc, _, err := compileContext(ctx, fileName, content, rt)
+	return bc, err
+}
+
 func compile(fileName string, content string, rt *core.Runtime) (*bytecode.Bytecode, bool) {
-	l := lexer.New(lexer.NewInput(fileName, content))
-	p := parser.New(l)
+	bc, ok, _ := compileContext(context.Background(), fileName, content, rt)
+	return bc, ok
+}
+
+func compileContext(ctx context.Context, fileName string, content string, rt *core.Runtime) (*bytecode.Bytecode, bool, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	l := lexer.NewContext(ctx, lexer.NewInput(fileName, content))
+	defer l.Close()
+
+	p := parser.NewContext(ctx, l)
 	ast := p.ParseAST()
+
+	if err := p.Err(); err != nil {
+		return nil, false, err
+	}
 
 	if len(p.Errors()) != 0 {
 		rt.Raise(rt.NewException(fmt.Sprintf("failed to parse source file %s\n\n%s", fileName, p.Errors()[0])))
-		return emptyBytecode(l), false
+		return emptyBytecode(l), false, nil
 	}
 
-	c := New(l, rt)
+	c := NewContext(ctx, l, rt)
 	c.Compile(ast)
 
+	if err := c.Err(); err != nil {
+		return nil, false, err
+	}
+
 	if c.aborted {
-		return emptyBytecode(l), false
+		return emptyBytecode(l), false, nil
 	}
 
 	bc := c.Bytecode()
 
-	return bc, true
+	return bc, true, nil
 }
 
 func CompileBlock(fileName string, content string, rt *core.Runtime) *bytecode.Bytecode {
@@ -110,14 +146,27 @@ func emptyBytecode(l *lexer.Lexer) *bytecode.Bytecode {
 	}
 }
 
-func (c *Compiler) abort(message string) {
+func (c *Compiler) Err() error {
+	c.stopIfCanceled()
+	return c.err
+}
+
+func (c *Compiler) stopIfCanceled() bool {
 	if c.aborted {
-		return
+		return true
 	}
 
-	c.aborted = true
-	c.rt.Raise(c.rt.NewException(message))
+	if err := c.ctx.Err(); err != nil {
+		c.err = err
+		c.aborted = true
+		c.clearBytecode()
+		return true
+	}
 
+	return false
+}
+
+func (c *Compiler) clearBytecode() {
 	for i := range c.scopes {
 		c.scopes[i].bytecode.Instructions = bytecode.Instructions{}
 		c.scopes[i].bytecode.DebugTokens = map[int]lexer.Token{}
@@ -126,8 +175,18 @@ func (c *Compiler) abort(message string) {
 	}
 }
 
-func (c *Compiler) Compile(node ast.Node) {
+func (c *Compiler) abort(message string) {
 	if c.aborted {
+		return
+	}
+
+	c.aborted = true
+	c.rt.Raise(c.rt.NewException(message))
+	c.clearBytecode()
+}
+
+func (c *Compiler) Compile(node ast.Node) {
+	if c.stopIfCanceled() {
 		return
 	}
 
@@ -361,7 +420,7 @@ func (c *Compiler) changeOperand(opPos int, operands ...int) {
 }
 
 func (c *Compiler) emit(op bytecode.Opcode, debugToken lexer.Token, operands ...int) int {
-	if c.aborted {
+	if c.stopIfCanceled() {
 		return -1
 	}
 
@@ -422,5 +481,9 @@ func (c *Compiler) setLastInstruction(op bytecode.Opcode, pos int) {
 
 // addConstant adds a constant to the constant stack and returns its location
 func (c *Compiler) addConstant(obj object.EmeraldValue) int {
+	if c.stopIfCanceled() {
+		return -1
+	}
+
 	return c.rt.Heap.AddConstant(obj)
 }

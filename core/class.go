@@ -24,11 +24,19 @@ func (rt *Runtime) classAncestors() object.BuiltInMethod {
 func (rt *Runtime) className() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		var namespaces strings.Builder
+		visited := map[object.HeapObject]struct{}{}
 
 		parent := ctx.Self.ParentNamespace()
 		for !parent.IsNil() &&
 			parent != rt.Object &&
 			(parent.Type() == object.CLASS_VALUE || parent.Type() == object.MODULE_VALUE) {
+			if ctx.ExecutionError() != nil {
+				return rt.NULL
+			}
+			if _, seen := visited[parent.Heap]; seen {
+				break
+			}
+			visited[parent.Heap] = struct{}{}
 
 			switch p := parent.Heap.(type) {
 			case *object.Module:
