@@ -11,7 +11,8 @@ git clone git@github.com:mathiashsteffensen/emerald.git
 cd emerald && ./scripts/install
 ```
 
-This will build an `emerald` & an `iem` executable in the current directory.
+This will build `emerald`, `iem`, and `emerald-sandbox-worker` executables in
+the current directory.
 
 To run a source file of Ruby code:
 
@@ -45,7 +46,9 @@ networking, sleep, or clock APIs:
 
 ```go
 sandbox, err := emerald.NewSandbox(emerald.SandboxOptions{
-    Timeout: 250 * time.Millisecond,
+    Timeout:          250 * time.Millisecond,
+    MemoryLimitBytes: 256 << 20,
+    WorkerPath:       "/usr/local/bin/emerald-sandbox-worker",
 })
 value, err := sandbox.Eval(source)
 
@@ -56,10 +59,25 @@ if errors.Is(err, emerald.ErrSandboxTimeout) {
 
 Each sandbox evaluation uses a fresh runtime, so state is not shared and one
 `Sandbox` may be used concurrently. `EvalFile` accepts a source name for error
-reporting; it does not read that file.
+reporting; it does not read that file. The worker executable must be installed
+alongside the host application: `make install` installs
+`emerald-sandbox-worker` at `/usr/local/bin`, or deploy the built sidecar and
+set `WorkerPath` to its absolute path.
 
-The sandbox is an in-process capability boundary. It does not impose a memory
-limit or protect the host from defects in the VM itself.
+Results are transferred between processes, so `Eval*` supports only nil,
+booleans, integers, floats, strings, symbols, and acyclic arrays and hashes of
+those values. Classes, blocks, user instances, regexps, aliases, and cycles are
+rejected.
+
+An abrupt worker exit, protocol error, or unrecoverable memory failure matches
+`ErrSandboxWorkerFailed`; an untransferable return value matches
+`ErrSandboxUnsupportedResult`.
+
+On Linux, the worker receives a hard address-space limit before it receives
+untrusted source. On macOS, `GOMEMLIMIT` and RSS controls are best effort only.
+Each evaluation runs in a separate worker process, so VM defects cannot take
+down the embedding process; this is not a security boundary against arbitrary
+native-code compromise.
 
 ## Architecture
 

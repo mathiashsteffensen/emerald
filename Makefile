@@ -1,6 +1,6 @@
 SHELL:=/bin/bash
 
-PACKAGES := ./ ./parser/lexer ./parser ./compiler/ ./object/ ./vm/ ./core/ ./heap/ ./bytecode/
+PACKAGES := ./ ./parser/lexer ./parser ./compiler/ ./object/ ./vm/ ./core/ ./heap/ ./bytecode/ ./internal/sandboxwire/
 
 default:
 	@make lint test-all build
@@ -11,14 +11,18 @@ emerald:
 iem:
 	@./scripts/build iem
 
-.PHONY: build emerald iem test test-all ci-test coverage lint
+emerald-sandbox-worker:
+	@./scripts/build emerald-sandbox-worker
 
-build: emerald iem
+.PHONY: build emerald iem emerald-sandbox-worker test test-all ci-test coverage lint
+
+build: emerald iem emerald-sandbox-worker
 
 install:
 	@make build && \
 	cp ./emerald /usr/local/bin/emerald && \
-	cp ./iem /usr/local/bin/iem
+	cp ./iem /usr/local/bin/iem && \
+	cp ./emerald-sandbox-worker /usr/local/bin/emerald-sandbox-worker
 
 test:
 	@echo "Running test ${RUN}" && echo "" && \

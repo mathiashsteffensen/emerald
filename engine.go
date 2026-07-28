@@ -84,8 +84,22 @@ func (e *Engine) evalFileContext(
 	content string,
 	options EvalOptions,
 ) (object.EmeraldValue, error) {
+	return e.evalFileContextWithPhase(ctx, fileName, content, options, nil)
+}
+
+func (e *Engine) evalFileContextWithPhase(
+	ctx context.Context,
+	fileName string,
+	content string,
+	options EvalOptions,
+	onPhase func(string),
+) (object.EmeraldValue, error) {
 	e.Runtime.Heap.SetGlobalVariableString("$!", object.EmeraldValue{})
 	e.Runtime.OnRaise = nil
+
+	if onPhase != nil {
+		onPhase("compile")
+	}
 
 	bc, err := compiler.CompileContext(ctx, fileName, content, e.Runtime)
 	if err != nil {
@@ -94,6 +108,10 @@ func (e *Engine) evalFileContext(
 
 	if err := e.evalError(); err != nil {
 		return object.EmeraldValue{}, err
+	}
+
+	if onPhase != nil {
+		onPhase("execute")
 	}
 
 	machine := vm.NewWithOptions(fileName, bc, e.Runtime, vm.Options{
