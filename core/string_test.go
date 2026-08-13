@@ -94,3 +94,65 @@ func TestString_split(t *testing.T) {
 
 	runCoreTests(t, tests)
 }
+
+func TestString_start_with(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			name:     "matches an exact prefix",
+			input:    `"hello".start_with?("hello")`,
+			expected: true,
+		},
+		{
+			name:     "matches a shorter prefix",
+			input:    `"hello".start_with?("he")`,
+			expected: true,
+		},
+		{
+			name:     "does not match text occurring later",
+			input:    `"hello".start_with?("ell")`,
+			expected: false,
+		},
+		{
+			name:     "does not match a prefix longer than the receiver",
+			input:    `"hi".start_with?("hello")`,
+			expected: false,
+		},
+		{
+			name:     "matches an empty prefix",
+			input:    `"hello".start_with?("")`,
+			expected: true,
+		},
+		{
+			name:     "does not match a nonempty prefix on an empty receiver",
+			input:    `"".start_with?("hello")`,
+			expected: false,
+		},
+		{
+			name:     "returns false without prefixes",
+			input:    `"hello".start_with?`,
+			expected: false,
+		},
+		{
+			name:     "matches any prefix argument",
+			input:    `"hello".start_with?("no", "he")`,
+			expected: true,
+		},
+		{
+			name:     "returns false when no prefixes match",
+			input:    `"hello".start_with?("no", "x")`,
+			expected: false,
+		},
+		{
+			name:     "short circuits after a matching prefix",
+			input:    `"hello".start_with?("he", 1)`,
+			expected: true,
+		},
+		{
+			name:     "requires string prefixes until a match is found",
+			input:    `"hello".start_with?("no", 1)`,
+			expected: "error:TypeError:no implicit conversion of Integer into String",
+		},
+	}
+
+	runCoreTests(t, tests)
+}

@@ -35,6 +35,7 @@ func (rt *Runtime) InitString() {
 	rt.DefineMethod(rt.String, "size", rt.stringSize())
 	rt.DefineMethod(rt.String, "length", rt.stringSize())
 	rt.DefineMethod(rt.String, "split", rt.stringSplit())
+	rt.DefineMethod(rt.String, "start_with?", rt.stringStartWith())
 }
 
 func (rt *Runtime) stringNew() object.BuiltInMethod {
@@ -180,5 +181,24 @@ func (rt *Runtime) stringSplit() object.BuiltInMethod {
 		}
 
 		return rt.NewArray(slice)
+	}
+}
+
+func (rt *Runtime) stringStartWith() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		self := ctx.Self.Heap.(*StringInstance)
+
+		for _, arg := range args {
+			prefix, err := EnforceArgumentType[*StringInstance](rt, rt.String, arg)
+			if err != nil {
+				return object.NewHeapObject(err)
+			}
+
+			if strings.HasPrefix(self.Value, prefix.Value) {
+				return rt.TRUE
+			}
+		}
+
+		return rt.FALSE
 	}
 }
