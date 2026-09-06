@@ -2,6 +2,15 @@ package vm
 
 import "testing"
 
+func TestEmptyConditionalBodies(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{input: "if true; end", expected: nil},
+		{input: "if false; 1; else; end", expected: nil},
+		{input: "if false; 1; elsif true; end", expected: nil},
+		{input: "unless false; end", expected: nil},
+	})
+}
+
 func TestIfExpression(t *testing.T) {
 	tests := []vmTestCase{
 		{

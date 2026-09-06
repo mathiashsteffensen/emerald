@@ -15,7 +15,7 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) {
 	if node.Consequence == nil {
 		c.emit(bytecode.OpNull, node.Token)
 	} else {
-		c.Compile(node.Consequence)
+		c.compileStatementsWithReturnValue(node.Consequence.Statements, node.Token)
 
 		if c.lastInstructionIs(bytecode.OpPop) {
 			c.removeLastPop()
@@ -40,7 +40,7 @@ func (c *Compiler) compileIfExpression(node *ast.IfExpression) {
 	if node.Alternative == nil {
 		c.emit(bytecode.OpNull, node.Token)
 	} else {
-		c.Compile(node.Alternative)
+		c.compileStatementsWithReturnValue(node.Alternative.Statements, node.Token)
 		if c.lastInstructionIs(bytecode.OpPop) {
 			c.removeLastPop()
 		}
@@ -62,7 +62,7 @@ func (c *Compiler) compileElsifBranch(elsIf ast.ElseIf) int {
 	if elsIf.Consequence == nil {
 		c.emit(bytecode.OpNull, elsIf.Consequence.Token)
 	} else {
-		c.Compile(elsIf.Consequence)
+		c.compileStatementsWithReturnValue(elsIf.Consequence.Statements, elsIf.Consequence.Token)
 
 		if c.lastInstructionIs(bytecode.OpPop) {
 			c.removeLastPop()
