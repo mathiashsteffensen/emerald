@@ -49,7 +49,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*obj
 			c.compileAssignmentTarget(&ast.AssignmentExpression{Token: rescueBlock.Token, Name: rescueBlock.ErrorVarName})
 			c.emit(bytecode.OpPop, rescueBlock.Token)
 		}
-		c.Compile(rescueBlock.Body)
+		c.compileStatementsWithReturnValue(rescueBlock.Body.Statements, rescueBlock.Token)
 		c.ensureLastInstructionIsReturn(rescueBlock.Token)
 
 		// We only need to emit a jump if there are more rescue blocks to follow,

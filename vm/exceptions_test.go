@@ -2,6 +2,33 @@ package vm
 
 import "testing"
 
+func TestEmptyBoundRescueReturnsNil(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "typed rescue binding", input: `
+			def f
+				raise "boom"
+			rescue StandardError => error
+			end
+			f
+		`, expected: nil},
+		{name: "default rescue binding", input: "def f; raise \"boom\"\nrescue => error\nend; f", expected: nil},
+		{name: "existing local binding", input: `
+			def f
+				error = nil
+				raise "boom"
+			rescue StandardError => error
+			end
+			f
+		`, expected: nil},
+		{name: "empty yielded rescue binding", input: `
+			[1].map do |n|
+				raise "boom"
+			rescue StandardError => error
+			end
+		`, expected: []any{nil}},
+	})
+}
+
 func TestRescueVariableBinding(t *testing.T) {
 	runVmTests(t, []vmTestCase{
 		{input: `def f; raise "boom"; rescue RuntimeError, TypeError => error; error.to_s; end; f`, expected: "boom"},
