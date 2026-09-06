@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+# Go tests cover embedding/sandbox, CLI/REPL, and isolated installer checks.
+EM_TEST=1 make
+./emerald scripts/readme_features.rb

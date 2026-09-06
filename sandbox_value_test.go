@@ -27,6 +27,18 @@ func TestSandboxValueRoundTripsFloatBits(t *testing.T) {
 	}
 }
 
+func TestSandboxValueRejectsBlocks(t *testing.T) {
+	block := &object.Block{}
+	for _, value := range []object.EmeraldValue{
+		object.NewHeapObject(block),
+		object.NewHeapObject(object.NewClosedBlock(nil, block, nil, "", object.PUBLIC)),
+	} {
+		if _, err := encodeSandboxValue(value); !errors.Is(err, ErrSandboxUnsupportedResult) {
+			t.Fatalf("expected unsupported block result, got %v", err)
+		}
+	}
+}
+
 func TestSandboxValueRejectsCompositeAlias(t *testing.T) {
 	rt := core.NewRuntime()
 	rt.InitSandbox()

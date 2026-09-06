@@ -26,6 +26,18 @@ To start the Emerald REPL:
 ./iem
 ```
 
+## Checking supported features
+
+```bash
+./scripts/check-readme
+```
+
+This runs `EM_TEST=1 make` and the assertion-based
+`scripts/readme_features.rb` against Emerald. The script covers every checked
+language feature below, including edge cases and interactions; unchecked
+roadmap items are excluded. Go tests cover embedding, sandbox isolation,
+CLI/REPL behavior, and installation into a temporary home directory.
+
 ## Embedding
 
 Use `Engine` for a stateful, full runtime. Host inputs are explicit:
