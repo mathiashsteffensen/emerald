@@ -243,6 +243,10 @@ func (p *Parser) parseBoolModifierFromStatement(stmt ast.Statement) ast.Expressi
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	stmt := &ast.ReturnStatement{Token: p.curToken}
+	if p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON, lexer.END, lexer.RBRACE, lexer.RESCUE, lexer.EOF) {
+		stmt.ReturnValue = &ast.NullExpression{Token: p.curToken}
+		return stmt
+	}
 
 	p.nextToken()
 

@@ -4,6 +4,14 @@ import (
 	"testing"
 )
 
+func TestBareReturn(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "newline", input: "def f; return\n1; end; f", expected: nil},
+		{name: "semicolon", input: "def f; return; 1; end; f", expected: nil},
+		{name: "end", input: "def f; return end; f", expected: nil},
+	})
+}
+
 func TestTopLevelMethodCall(t *testing.T) {
 	tests := []vmTestCase{
 		{
