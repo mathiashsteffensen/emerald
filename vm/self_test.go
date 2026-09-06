@@ -79,6 +79,18 @@ func TestCompoundSetterAssignment(t *testing.T) {
 	item = Item.new`)
 }
 
+func TestSetterAssignmentValueWithKeywords(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "integer RHS", input: "box.value(key: 42) = 7", expected: 7},
+		{name: "nil RHS", input: "box.value(key: 42) = nil", expected: nil},
+		{name: "false RHS", input: "box.value(key: 42) = false", expected: false},
+		{name: "keyword forwarding", input: "box.value(key: 42) = 7; $received", expected: []any{7, 42}},
+	}, `class Box
+		def value=(x, key:); $received = [x, key]; -1; end
+	end
+	box = Box.new`)
+}
+
 func TestSetterAssignmentValue(t *testing.T) {
 	runVmTests(t, []vmTestCase{
 		{name: "setter returns assigned value", input: `

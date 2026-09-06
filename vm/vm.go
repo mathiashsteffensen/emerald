@@ -340,6 +340,9 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		hasKwargs := vm.readUint8(ins, ip+3)
 		name := vm.rt.Heap.GetConstant(nameIndex).Heap.(*core.SymbolInstance).Value
 		assigned := vm.StackTop()
+		if op == bytecode.OpSendAssign && hasKwargs == 1 {
+			assigned = vm.stack()[vm.currentFiber().sp-2]
+		}
 		completed := vm.callMethod(name, int(numArgs), hasKwargs == 1)
 		if op == bytecode.OpSendAssign && completed {
 			vm.stack()[vm.currentFiber().sp-1] = assigned
