@@ -204,11 +204,12 @@ check("newline escape", "
 ", "\n")
 check("vertical tab escape", "", "\v")
 check("form feed escape", "", "\f")
-check("carriage return escape", "", "\r")
+check("carriage return escape", "
+", "\r")
 check("space escape", " ", "\s")
 check("symbol literal", :word, :"word")
 check("quoted symbol", "two words", :"two words".to_s)
-check("singleton symbols", :word.object_id, :"word".object_id)
+check("singleton symbols", :word, "word".to_sym)
 check("empty array", 0, [].length)
 array = [1, "two", nil, [4]]
 check("array indexing", "two", array[1])
@@ -218,8 +219,10 @@ check("index out of bounds", nil, array[4])
 check("negative out of bounds", nil, array[-5])
 check("empty indexing", nil, [][0])
 appended = []
-check("append result", appended.object_id, (appended << 1).object_id)
-appended << 2 << 3
+append_result = appended << 1
+append_result << 2
+appended << 3
+check("append aliases receiver", [1, 2, 3], append_result)
 check("append contents", [1, 2, 3], appended)
 check("hash rocket", 1, {"a" => 1}["a"])
 check("hash labels", 2, {b: 2}[:b])
@@ -332,7 +335,7 @@ check("inherited constructor", 3, child.value)
 check("inherited module", "label", child.label)
 check("parent method", "parent", parent.description)
 check("method override", "child", child.description)
-check("self", child.object_id, child.identity.object_id)
+check("self", child, child.identity)
 check("uninitialized ivar", nil, child.unset)
 check("ivar op assign", 4, child.increment)
 check("instance isolation", 2, parent.value)
