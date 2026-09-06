@@ -40,6 +40,15 @@ func (rt *Runtime) InitString() {
 
 func (rt *Runtime) stringNew() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if ctx.Self != rt.String {
+			// Preserve subclasses' Class#new initialization semantics with native string storage.
+			instance := object.NewHeapObject(&StringInstance{Instance: ctx.Self.Heap.(*object.Class).New()})
+			if instance.RespondsTo("initialize", instance) {
+				rt.Send(instance, "initialize", ctx.Block, kwargs, args...)
+			}
+			return instance
+		}
+
 		args, err := rt.EnforceArity(args, kwargs, 0, 1)
 		if err != nil {
 			return object.NewHeapObject(err)

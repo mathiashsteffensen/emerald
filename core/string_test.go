@@ -2,6 +2,129 @@ package core_test
 
 import "testing"
 
+func TestString_new_subclass(t *testing.T) {
+	runCoreTests(t, []coreTestCase{
+		{
+			name:     "preserves subclass identity",
+			input:    `SpecialString.new.class`,
+			expected: "class:SpecialString",
+		},
+		{
+			name:     "dispatches subclass methods",
+			input:    `SpecialString.new.marker`,
+			expected: 42,
+		},
+		{
+			name: "retains native string storage",
+			input: `
+				s = SpecialString.new
+				[s.size, s.upcase, s + "hello", s * 2, s == "", s.start_with?(""), s.to_s.class]
+			`,
+			expected: []any{0, "", "hello", "", true, true, "class:SpecialString"},
+		},
+		{
+			name: "inherits class methods through another subclass",
+			input: `
+				class ChildString < SpecialString; end
+				[ChildString.build.class, ChildString.build.marker]
+			`,
+			expected: []any{"class:ChildString", 42},
+		},
+		{
+			name: "preserves ignored arguments without initialize",
+			input: `
+				s = SpecialString.new("ignored", 2, value: 3)
+				[s.class, s.size]
+			`,
+			expected: []any{"class:SpecialString", 0},
+		},
+		{
+			name: "forwards initializer arguments keywords and block once",
+			input: `
+				class InitializedString < SpecialString
+					def initialize(left, right, value:)
+						@values = [left, right, value, yield(left + right), size]
+						99
+					end
+					def values; @values; end
+				end
+				class ChildString < InitializedString; end
+				calls = 0
+				s = ChildString.new(2, 3, value: 7) { |sum| calls += 1; sum * 2 }
+				[s.class, s.marker, s.values, calls, s.upcase]
+			`,
+			expected: []any{"class:ChildString", 42, []any{2, 3, 7, 10, 0}, 1, ""},
+		},
+		{
+			name: "initializer validates positional arity",
+			input: `
+				class SpecialString
+					def initialize(value); end
+				end
+				SpecialString.new
+			`,
+			expected: "error:ArgumentError:wrong number of arguments (given 0, expected 1)",
+		},
+		{
+			name: "initializer validates keywords",
+			input: `
+				class SpecialString
+					def initialize(value:); end
+				end
+				SpecialString.new
+			`,
+			expected: "error:ArgumentError:missing keyword: :value",
+		},
+		{
+			name: "propagates initializer exceptions",
+			input: `
+				class SpecialString
+					def initialize; raise "initialization failed"; end
+				end
+				SpecialString.new
+			`,
+			expected: "error:RuntimeError:initialization failed",
+		},
+	}, `
+		class SpecialString < String
+			def marker; 42; end
+			class << self
+				def build; new; end
+			end
+		end
+	`)
+}
+
+func TestString_new(t *testing.T) {
+	runCoreTests(t, []coreTestCase{
+		{
+			name:     "empty string",
+			input:    `[String.new.class, String.new, String.new.size]`,
+			expected: []any{"class:String", "", 0},
+		},
+		{
+			name:     "existing string remains the same object",
+			input:    `s = "hello"; [String.new(s).class, String.new(s).upcase, String.new(s) != s]`,
+			expected: []any{"class:String", "HELLO", false},
+		},
+		{
+			name:     "rejects nonstrings",
+			input:    `String.new(42)`,
+			expected: "error:TypeError:no implicit conversion of Integer into String",
+		},
+		{
+			name:     "rejects extra arguments",
+			input:    `String.new("a", "b")`,
+			expected: "error:ArgumentError:wrong number of arguments (given 2, expected 1)",
+		},
+		{
+			name:     "rejects keywords",
+			input:    `String.new(value: "a")`,
+			expected: "error:ArgumentError:unknown keyword: :value",
+		},
+	})
+}
+
 func TestString_to_sym(t *testing.T) {
 	tests := []coreTestCase{
 		{
