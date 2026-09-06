@@ -196,17 +196,15 @@ check("string addition", "abcd", "ab" + "cd")
 check("interpolation", "n=3, yes=true, nil=", "n=#{1 + 2}, yes=#{true}, nil=#{nil}")
 check("nested interpolation", "outer inner 3", "outer #{"inner #{1 + 2}"}")
 check("interpolation order", "a1b2", "a#{1}b#{2}")
-# The expected characters below are literal bytes, independent of escape decoding.
-check("bell escape", "", "\a")
-check("backspace escape", "", "\b")
-check("tab escape", "	", "\t")
-check("newline escape", "
-", "\n")
-check("vertical tab escape", "", "\v")
-check("form feed escape", "", "\f")
-check("carriage return escape", "
-", "\r")
-check("space escape", " ", "\s")
+# Regex hex escapes provide an oracle independent of string escape decoding.
+check("bell escape", true, /^\x07$/ === "\a")
+check("backspace escape", true, /^\x08$/ === "\b")
+check("tab escape", true, /^\x09$/ === "\t")
+check("newline escape", true, /^\x0a$/ === "\n")
+check("vertical tab escape", true, /^\x0b$/ === "\v")
+check("form feed escape", true, /^\x0c$/ === "\f")
+check("carriage return escape", true, /^\x0d$/ === "\r")
+check("space escape", true, /^\x20$/ === "\s")
 check("symbol literal", :word, :"word")
 check("quoted symbol", "two words", :"two words".to_s)
 check("singleton symbols", :word, "word".to_sym)
