@@ -511,5 +511,36 @@ second_key = Object.new
 object_keys = {first_key => 1, second_key => 2}
 check("distinct object hash keys", [1, 2], [object_keys[first_key], object_keys[second_key]])
 check("hash assignment result", 3, (object_keys[first_key] = 3))
+puts "README: review regressions"
+def readme_rescued_setter
+  n = 42
+  Object.new.nope = 7
+rescue NoMethodError
+  n
+end
+check("rescued setter preserves locals", 42, readme_rescued_setter)
+class ReadmeReviewBox
+  def value(key:)
+    yield(key)
+  end
+  def value=(x, key:)
+    -1
+  end
+end
+review_box = ReadmeReviewBox.new
+check("conditional getter forwards block and keywords", 42, (review_box.value(key: 42) { |n| n } ||= 7))
+check("conditional setter forwards keywords", 7, (review_box.value(key: nil) { |n| n } ||= 7))
+check("keyword setter returns RHS", 7, (review_box.value(key: 42) = 7))
+class ReadmeString < String
+  def marker
+    42
+  end
+end
+check("String subclass construction", [ReadmeString, 42, 0], [ReadmeString.new.class, ReadmeString.new.marker, ReadmeString.new.size])
+def readme_empty_rescue
+  raise "boom"
+rescue StandardError => error
+end
+check("empty bound rescue returns nil", nil, readme_empty_rescue)
 puts "PASS: #{$checks} README feature checks"
 $checks
