@@ -11,6 +11,7 @@ type CallExpression struct {
 	Arguments        []Expression
 	KeywordArguments []*HashLiteralElement
 	Block            *BlockLiteral
+	Assignment       bool
 }
 
 func (ce CallExpression) expressionNode()      {}

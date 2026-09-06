@@ -263,7 +263,7 @@ func TestCompileMethodCall(t *testing.T) {
 				bytecode.Make(bytecode.OpConstantGet, 5),
 				bytecode.Make(bytecode.OpNull),
 				bytecode.Make(bytecode.OpPushConstant, 7),
-				bytecode.Make(bytecode.OpSend, 6, 1, 0),
+				bytecode.Make(bytecode.OpSendAssign, 6, 1, 0),
 				bytecode.Make(bytecode.OpPop),
 			},
 		},

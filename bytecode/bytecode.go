@@ -113,6 +113,8 @@ const (
 	// OpSend invokes a method.
 	// Takes operands for the method name constant, number of arguments, and whether keyword arguments were passed.
 	OpSend
+	// OpSendAssign invokes a setter but evaluates to its last argument.
+	OpSendAssign
 
 	// OpOpenClass takes an argument with a constant index pointing to a symbol name of the class to be set as self,
 	// If no class exists with the specified name, it creates one.
@@ -183,6 +185,7 @@ var definitions = map[Opcode]*Definition{
 	OpReturnValue:       {"OpReturnValue", []int{}},
 	OpDefineMethod:      {"OpDefineMethod", []int{}},
 	OpSend:              {"OpSend", []int{2, 1, 1}},
+	OpSendAssign:        {"OpSendAssign", []int{2, 1, 1}},
 	OpOpenClass:         {"OpOpenClass", []int{2}},
 	OpOpenModule:        {"OpOpenModule", []int{2}},
 	OpUnwrapContext:     {"OpUnwrapContext", []int{}},

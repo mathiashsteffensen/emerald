@@ -308,12 +308,16 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		name := vm.stack()[vm.currentFiber().sp-1].Heap.(*core.SymbolInstance)
 
 		vm.ctx.Self.DefinedMethodSet()[name.Value] = object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File, vm.ctx.DefaultMethodVisibility)
-	case bytecode.OpSend:
+	case bytecode.OpSend, bytecode.OpSendAssign:
 		nameIndex := vm.readUint16(ins, ip)
 		numArgs := vm.readUint8(ins, ip+2)
 		hasKwargs := vm.readUint8(ins, ip+3)
 		name := vm.rt.Heap.GetConstant(nameIndex).Heap.(*core.SymbolInstance).Value
+		assigned := vm.StackTop()
 		vm.callMethod(name, int(numArgs), hasKwargs == 1)
+		if op == bytecode.OpSendAssign && vm.executionError == nil && !vm.ExceptionIsRaised() {
+			vm.stack()[vm.currentFiber().sp-1] = assigned
+		}
 	case bytecode.OpOpenClass:
 		// Fetch the symbol name from the heap
 		nameIndex := vm.readUint16(ins, ip)

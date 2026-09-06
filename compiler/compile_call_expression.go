@@ -32,5 +32,9 @@ func (c *Compiler) compileCallExpression(node ast.CallExpression) {
 		hasKwargsOperand = 1
 	}
 
-	c.emit(bytecode.OpSend, node.Token, methodIndex, len(node.Arguments)+numKwargs, hasKwargsOperand)
+	op := bytecode.OpSend
+	if node.Assignment {
+		op = bytecode.OpSendAssign
+	}
+	c.emit(op, node.Token, methodIndex, len(node.Arguments)+numKwargs, hasKwargsOperand)
 }

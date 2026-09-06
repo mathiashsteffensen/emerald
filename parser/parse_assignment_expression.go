@@ -29,6 +29,7 @@ func (p *Parser) appendAssignmentToMethodCall(left *ast.MethodCall, assignedExpr
 	left.Method.Token.Literal = left.Method.TokenLiteral() + "="
 
 	left.Arguments = append(left.Arguments, assignedExpression)
+	left.Assignment = true
 
 	return left
 }
