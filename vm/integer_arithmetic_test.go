@@ -2,6 +2,17 @@ package vm
 
 import "testing"
 
+func TestIntegerLeftShift(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{input: "3 << 3", expected: 24},
+		{input: "3 << 0", expected: 3},
+		{input: "-2 << 2", expected: -8},
+		{input: "8 << -1", expected: 4},
+		{input: "-8 << -1", expected: -4},
+		{input: "1 << nil", expected: "error:TypeError:no implicit conversion of NilClass into Integer"},
+	})
+}
+
 func TestIntegerArithmetic(t *testing.T) {
 	tests := []vmTestCase{
 		{"adding", "1 + 2", 3},

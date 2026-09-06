@@ -26,6 +26,7 @@ func (rt *Runtime) InitInteger() {
 	rt.DefineMethod(rt.Integer, "-", rt.integerSubtract())
 	rt.DefineMethod(rt.Integer, "*", rt.integerMultiply())
 	rt.DefineMethod(rt.Integer, "/", rt.integerDivide())
+	rt.DefineMethod(rt.Integer, "<<", rt.integerLeftShift())
 	rt.DefineMethod(rt.Integer, "-@", rt.integerNegate())
 	rt.DefineMethod(rt.Integer, "to_f", rt.integerToF())
 	rt.DefineMethod(rt.Integer, "times", rt.integerTimes())
@@ -72,6 +73,15 @@ func (rt *Runtime) integerSubtract() object.BuiltInMethod {
 func (rt *Runtime) integerMultiply() object.BuiltInMethod {
 	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
 		return rt.NewInteger(left * right)
+	})
+}
+
+func (rt *Runtime) integerLeftShift() object.BuiltInMethod {
+	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
+		if right < 0 {
+			return rt.NewInteger(left >> uint64(-right))
+		}
+		return rt.NewInteger(left << uint64(right))
 	})
 }
 
