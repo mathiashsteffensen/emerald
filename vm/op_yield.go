@@ -7,10 +7,12 @@ import (
 
 func (vm *VM) executeOpYield(ins bytecode.Instructions, ip int) {
 	numArgs := vm.readUint8(ins, ip)
-	args := vm.stack()[vm.currentFiber().sp-int(numArgs) : vm.currentFiber().sp]
+	argsStart := vm.currentFiber().sp - int(numArgs)
+	args := vm.stack()[argsStart:vm.currentFiber().sp]
 
 	result := vm.ctx.Yield(map[string]object.EmeraldValue{}, args...)
-	if !vm.ExceptionIsRaised() {
+	if vm.executionError == nil && !vm.ExceptionIsRaised() {
+		vm.currentFiber().sp = argsStart
 		vm.push(result)
 	}
 }
