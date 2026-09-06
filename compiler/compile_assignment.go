@@ -44,7 +44,10 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) {
 	}
 
 	c.Compile(node.Value)
+	c.compileAssignmentTarget(node)
+}
 
+func (c *Compiler) compileAssignmentTarget(node *ast.AssignmentExpression) {
 	switch name := node.Name.(type) {
 	case ast.IdentifierExpression:
 		if unicode.IsUpper(rune(name.Value[0])) {

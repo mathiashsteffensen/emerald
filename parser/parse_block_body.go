@@ -56,6 +56,8 @@ func (p *Parser) parseBlockRescueParts() []*ast.RescueBlock {
 
 	if p.peekTokenIs(lexer.ARROW) {
 		p.nextToken()
+	}
+	if p.curTokenIs(lexer.ARROW) {
 		p.nextToken()
 		rescues[0].ErrorVarName = p.parseIdentifierExpression()
 		p.nextToken()
@@ -76,7 +78,6 @@ func (p *Parser) parseRescueBlockErrorClasses() []ast.Expression {
 	errorClasses := []ast.Expression{}
 
 	if p.curTokenIs(lexer.ARROW) || p.curTokenIs(lexer.NEWLINE) {
-		p.nextToken()
 		return errorClasses
 	}
 

@@ -44,6 +44,11 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*obj
 	for i, rescueBlock := range node.RescueBlocks {
 		handlerIP := len(c.currentInstructions())
 
+		if rescueBlock.ErrorVarName != nil {
+			c.emit(bytecode.OpRescuedError, rescueBlock.Token)
+			c.compileAssignmentTarget(&ast.AssignmentExpression{Token: rescueBlock.Token, Name: rescueBlock.ErrorVarName})
+			c.emit(bytecode.OpPop, rescueBlock.Token)
+		}
 		c.Compile(rescueBlock.Body)
 		c.ensureLastInstructionIsReturn(rescueBlock.Token)
 

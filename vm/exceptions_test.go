@@ -2,6 +2,14 @@ package vm
 
 import "testing"
 
+func TestRescueVariableBinding(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{input: `def f; raise "boom"; rescue RuntimeError, TypeError => error; error.to_s; end; f`, expected: "boom"},
+		{input: `def f; error = nil; raise "boom"; rescue StandardError => error; error.to_s; end; f`, expected: "boom"},
+		{input: "def f; raise \"boom\"\nrescue => error\nerror.to_s; end; f", expected: "boom"},
+	})
+}
+
 func TestErrorHandling(t *testing.T) {
 	tests := []vmTestCase{
 		{

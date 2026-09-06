@@ -325,6 +325,10 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		vm.executeOpReturn()
 	case bytecode.OpReturnValue:
 		vm.executeOpReturnValue()
+	case bytecode.OpRescuedError:
+		frame := vm.currentFiber().currentFrame()
+		vm.push(frame.rescuedError)
+		frame.rescuedError = object.EmeraldValue{}
 	case bytecode.OpDefineMethod:
 		block := vm.pop().Heap.(*object.Block)
 		name := vm.stack()[vm.currentFiber().sp-1].Heap.(*core.SymbolInstance)

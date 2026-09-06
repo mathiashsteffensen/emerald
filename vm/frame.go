@@ -6,10 +6,11 @@ import (
 )
 
 type Frame struct {
-	block       *object.ClosedBlock
-	ip          int
-	basePointer int
-	locals      map[int]*object.EmeraldValue
+	block        *object.ClosedBlock
+	ip           int
+	basePointer  int
+	locals       map[int]*object.EmeraldValue
+	rescuedError object.EmeraldValue
 }
 
 func NewFrame(block *object.ClosedBlock, basePointer int) *Frame {

@@ -492,14 +492,14 @@ def multiple_rescues
 rescue ArgumentError
   :wrong
 rescue RuntimeError, TypeError => error
-  error.message
+  error.to_s
 end
 check("multiple rescues and binding", "boom", multiple_rescues)
 
+readme_plain_global = 42
 def plain_global_reader
   readme_plain_global
 end
-readme_plain_global = 42
 check("Emerald plain globals", 42, plain_global_reader)
 # Separate instances of the same class must remain separate hash keys.
 first_key = Object.new

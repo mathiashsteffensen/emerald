@@ -113,6 +113,7 @@ const (
 
 	OpReturn
 	OpReturnValue
+	OpRescuedError
 	OpDefineMethod
 
 	// OpSend invokes a method.
@@ -191,6 +192,7 @@ var definitions = map[Opcode]*Definition{
 	OpSetFree:           {"OpSetFree", []int{1}},
 	OpReturn:            {"OpReturn", []int{}},
 	OpReturnValue:       {"OpReturnValue", []int{}},
+	OpRescuedError:      {"OpRescuedError", []int{}},
 	OpDefineMethod:      {"OpDefineMethod", []int{}},
 	OpSend:              {"OpSend", []int{2, 1, 1}},
 	OpSendAssign:        {"OpSendAssign", []int{2, 1, 1}},

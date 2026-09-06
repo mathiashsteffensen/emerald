@@ -33,6 +33,7 @@ func (vm *VM) handleRaise(err object.EmeraldError) {
 				if matches {
 					frame.ip = entry.HandlerIP - 1
 					fiber.sp = frame.basePointer + block.NumLocals
+					frame.rescuedError = object.NewHeapObject(err)
 					vm.rt.Heap.SetGlobalVariableString("$!", object.EmeraldValue{})
 					return
 				}
