@@ -10,6 +10,10 @@ func TestReadOperands(t *testing.T) {
 		operands  []int
 		bytesRead int
 	}{
+		{OpDupN, []int{255}, 2},
+		{OpDupN, []int{256}, 2},
+		{OpDropN, []int{255}, 2},
+		{OpDropN, []int{256}, 2},
 		{OpPushConstant, []int{65535}, 2},
 		{OpGetLocal, []int{255}, 1},
 		{OpCloseBlock, []int{65535, 255}, 3},

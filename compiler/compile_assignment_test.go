@@ -155,7 +155,7 @@ func TestCompileAssignment(t *testing.T) {
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpTrue),
 				bytecode.Make(bytecode.OpDupN, 1),
-				bytecode.Make(bytecode.OpJumpNotTruthy, 14),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 15),
 				bytecode.Make(bytecode.OpPop),
 				bytecode.Make(bytecode.OpPop),
 				bytecode.Make(bytecode.OpPushConstant, 0),
@@ -170,7 +170,7 @@ func TestCompileAssignment(t *testing.T) {
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpFalse),
 				bytecode.Make(bytecode.OpDupN, 1),
-				bytecode.Make(bytecode.OpJumpTruthy, 14),
+				bytecode.Make(bytecode.OpJumpTruthy, 15),
 				bytecode.Make(bytecode.OpPop),
 				bytecode.Make(bytecode.OpPop),
 				bytecode.Make(bytecode.OpPushConstant, 0),

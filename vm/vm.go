@@ -173,13 +173,13 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 	case bytecode.OpPop:
 		vm.pop()
 	case bytecode.OpDupN:
-		count := int(vm.readUint8(ins, ip))
+		count := int(vm.readUint16(ins, ip))
 		start := vm.currentFiber().sp - count
 		for i := 0; i < count; i++ {
 			vm.push(vm.stack()[start+i])
 		}
 	case bytecode.OpDropN:
-		count := int(vm.readUint8(ins, ip))
+		count := int(vm.readUint16(ins, ip))
 		value := vm.pop()
 		vm.currentFiber().sp -= count
 		vm.push(value)

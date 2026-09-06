@@ -168,7 +168,7 @@ func TestCompileInfixExpression(t *testing.T) {
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpTrue),
 				bytecode.Make(bytecode.OpDupN, 1),
-				bytecode.Make(bytecode.OpJumpNotTruthy, 9),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 10),
 				bytecode.Make(bytecode.OpPop),
 				bytecode.Make(bytecode.OpPop),
 				bytecode.Make(bytecode.OpFalse),
@@ -184,7 +184,7 @@ func TestCompileInfixExpression(t *testing.T) {
 				bytecode.Make(bytecode.OpPushConstant, 1),
 				bytecode.Make(bytecode.OpAdd),
 				bytecode.Make(bytecode.OpDupN, 1),
-				bytecode.Make(bytecode.OpJumpTruthy, 15),
+				bytecode.Make(bytecode.OpJumpTruthy, 16),
 				bytecode.Make(bytecode.OpPop),
 				bytecode.Make(bytecode.OpPop),
 				bytecode.Make(bytecode.OpFalse),
@@ -198,7 +198,7 @@ func TestCompileInfixExpression(t *testing.T) {
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpFalse),
 				bytecode.Make(bytecode.OpDupN, 1),
-				bytecode.Make(bytecode.OpJumpNotTruthy, 11),
+				bytecode.Make(bytecode.OpJumpNotTruthy, 12),
 				bytecode.Make(bytecode.OpPop),
 				bytecode.Make(bytecode.OpPop),
 				bytecode.Make(bytecode.OpPushConstant, 0),
