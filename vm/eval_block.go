@@ -61,6 +61,8 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 
 		vm.push(block)
 
+		basePointer := vm.currentFiber().sp
+
 		// Add the arguments to the stack
 		for _, arg := range args {
 			vm.push(arg)
@@ -80,7 +82,6 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 
 		// Prepare the call frame
 		startFrameIndex := vm.currentFiber().framesIndex
-		basePointer := vm.currentFiber().sp - len(args) - len(kwargs)
 		vm.currentFiber().pushFrame(NewFrame(bl, basePointer))
 
 		// Prepare the vm stack pointer

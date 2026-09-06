@@ -542,5 +542,15 @@ def readme_empty_rescue
 rescue StandardError => error
 end
 check("empty bound rescue returns nil", nil, readme_empty_rescue)
+class ReadmeRawItem
+  define_method(:initialize) { |value| @value = value }
+  def value; @value; end
+end
+check("raw initializer extra keywords", [42, 42, 42], [ReadmeRawItem.new(42).value, ReadmeRawItem.new(42, extra: 1).value, ReadmeRawItem.new(42, extra: 1, other: 2).value])
+class ReadmeRawPair
+  define_method(:initialize) { |value, left:, right:| @values = [value, left, right] }
+  def values; @values; end
+end
+check("raw initializer declared and extra keywords", [42, 1, 2], ReadmeRawPair.new(42, right: 2, extra: 9, left: 1).values)
 puts "PASS: #{$checks} README feature checks"
 $checks
