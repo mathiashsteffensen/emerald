@@ -469,8 +469,10 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) bool {
 					kwargsMap[key.Inspect()] = value
 				})
 			}
-			if _, err := vm.rt.EnforceArity(vm.stack()[basePointer:vm.currentFiber().sp], kwargsMap, m.NumArgs, m.NumArgs, m.Kwargs...); err != nil {
-				return
+			if m.EnforceArity {
+				if _, err := vm.rt.EnforceArity(vm.stack()[basePointer:vm.currentFiber().sp], kwargsMap, m.NumArgs, m.NumArgs, m.Kwargs...); err != nil {
+					return
+				}
 			}
 
 			if hasKwargs {

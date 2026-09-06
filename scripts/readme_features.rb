@@ -552,5 +552,11 @@ class ReadmeRawPair
   def values; @values; end
 end
 check("raw initializer declared and extra keywords", [42, 1, 2], ReadmeRawPair.new(42, right: 2, extra: 9, left: 1).values)
+class ReadmeOperatorValue
+  define_method(:"+") { 42 }
+end
+review_box = ReadmeSpace::Parent.new(ReadmeOperatorValue.new)
+check("block-backed infix operator", 42, review_box.value + 1)
+check("block-backed compound operator", 42, (review_box.value += 1))
 puts "PASS: #{$checks} README feature checks"
 $checks

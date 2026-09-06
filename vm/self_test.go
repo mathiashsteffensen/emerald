@@ -134,6 +134,23 @@ func TestSetterAssignmentValue(t *testing.T) {
 	})
 }
 
+func TestCompoundDefinedOperatorArity(t *testing.T) {
+	for _, op := range []string{"+", "-", "*", "/"} {
+		runVmTests(t, []vmTestCase{
+			{name: "infix " + op, input: "box.value " + op + " 1", expected: 42},
+			{name: "compound " + op, input: "box.value " + op + "= 1", expected: 42},
+		}, `class Value; define_method(:"`+op+`") { 42 }; end
+		class Box; attr_accessor :value; end
+		box = Box.new; box.value = Value.new`)
+		runVmTests(t, []vmTestCase{
+			{name: "strict infix " + op, input: "box.value " + op + " 1", expected: "error:ArgumentError:wrong number of arguments (given 1, expected 0)"},
+			{name: "strict compound " + op, input: "box.value " + op + "= 1", expected: "error:ArgumentError:wrong number of arguments (given 1, expected 0)"},
+		}, `class Value; def `+op+`; 42; end; end
+		class Box; attr_accessor :value; end
+		box = Box.new; box.value = Value.new`)
+	}
+}
+
 func TestSelf(t *testing.T) {
 	tests := []vmTestCase{
 		{
