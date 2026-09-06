@@ -11,6 +11,13 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 	p.nextToken()
 
 	methodIdent := ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
+	if p.curTokenIs(lexer.LBRACKET) {
+		if !p.expectPeek(lexer.RBRACKET) {
+			return nil
+		}
+		methodIdent.Value = "[]"
+		methodIdent.Token.Literal = "[]"
+	}
 	p.nextIfSemicolonOrNewline()
 
 	if p.peekTokenIs(lexer.ASSIGN) {

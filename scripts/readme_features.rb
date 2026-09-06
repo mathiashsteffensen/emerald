@@ -403,5 +403,109 @@ results = {}
   end
 end
 check("combined branches", [:small, "child:3", "child:4"], [results[1], results[2], results[3]])
+puts "README: edge cases and evaluation order"
+# Comments also work after code. The hash inside this string is not a comment.
+check("hash character in string", "#", "#") # trailing comment
+check("empty if body", nil, if true; end)
+check("empty else body", nil, if false; 1; else; end)
+check("empty unless body", nil, unless false; end)
+$effects = 0
+check("side-effecting or", 9, effect || 10)
+check("or evaluates left once", 1, $effects)
+check("side-effecting and", 10, effect && 10)
+check("and evaluates left once", 2, $effects)
+def false_effect
+  $effects += 1
+  false
+end
+check("false left and", false, false_effect && 10)
+check("false and evaluates left once", 3, $effects)
+
+def captured_sum(values)
+  total = 0
+  values.each do |n|
+    total += n
+  end
+  total
+end
+check("mutating captured method local", 6, captured_sum([1, 2, 3]))
+check("fresh closure invocation", 9, captured_sum([4, 5]))
+
+class ReadmeIndex
+  def initialize
+    @values = {}
+  end
+  def [](key)
+    @values[key]
+  end
+  def []=(key, value)
+    @values[key] = value
+    -1
+  end
+end
+indexed = ReadmeIndex.new
+check("custom index assignment", 10, (indexed[:key] = 10))
+check("custom index getter", 10, indexed[:key])
+indexed[:key] += 2
+indexed[:key] -= 1
+indexed[:key] *= 3
+indexed[:key] /= 3
+check("custom compound index assignment", 11, indexed[:key])
+$receiver_calls = 0
+$key_calls = 0
+$indexed = indexed
+def index_receiver
+  $receiver_calls += 1
+  $indexed
+end
+def index_key
+  $key_calls += 1
+  :key
+end
+index_receiver[index_key] += 1
+check("compound receiver once", 1, $receiver_calls)
+check("compound index once", 1, $key_calls)
+$receiver_calls = 0
+$key_calls = 0
+index_receiver[index_key] ||= effect
+check("conditional receiver once", 1, $receiver_calls)
+check("conditional index once", 1, $key_calls)
+check("conditional value preserved", 12, indexed[:key])
+indexed[:missing] ||= 7
+indexed[:key] &&= 8
+check("conditional index writes", [7, 8], [indexed[:missing], indexed[:key]])
+
+def missing_keyword
+  keyword_sum(left: 1)
+rescue ArgumentError
+  :missing
+end
+check("missing required keyword", :missing, missing_keyword)
+def unknown_keyword
+  keyword_sum(left: 1, right: 2, extra: 3)
+rescue ArgumentError
+  :unknown
+end
+check("unknown keyword", :unknown, unknown_keyword)
+def multiple_rescues
+  raise "boom"
+rescue ArgumentError
+  :wrong
+rescue RuntimeError, TypeError => error
+  error.message
+end
+check("multiple rescues and binding", "boom", multiple_rescues)
+
+def plain_global_reader
+  readme_plain_global
+end
+readme_plain_global = 42
+check("Emerald plain globals", 42, plain_global_reader)
+# Separate instances of the same class must remain separate hash keys.
+first_key = Object.new
+second_key = Object.new
+object_keys = {first_key => 1, second_key => 2}
+check("distinct object hash keys", [1, 2], [object_keys[first_key], object_keys[second_key]])
+check("hash assignment result", 3, (object_keys[first_key] = 3))
 puts "PASS: #{$checks} README feature checks"
 $checks
