@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 make build
 
-mkdir -p /home/"$USER"/.emerald
-mkdir -p /home/"$USER"/.emerald/bin
+mkdir -p "$HOME/.emerald/bin"
 
-cp ./emerald /home/"$USER"/.emerald/bin/emerald
-cp ./iem /home/"$USER"/.emerald/bin/iem
-cp ./emerald-sandbox-worker /home/"$USER"/.emerald/bin/emerald-sandbox-worker
+cp ./emerald "$HOME/.emerald/bin/emerald"
+cp ./iem "$HOME/.emerald/bin/iem"
+cp ./emerald-sandbox-worker "$HOME/.emerald/bin/emerald-sandbox-worker"
 
-BASHRC="/home/$USER/.bashrc"
+BASHRC="$HOME/.bashrc"
+touch "$BASHRC"
 
 function bashrc-add-if-not-present() {
-  grep -qxF "$1" "$BASHRC" || echo $1 >> $BASHRC
+  grep -qxF "$1" "$BASHRC" || printf '%s\n' "$1" >> "$BASHRC"
 }
 
-bashrc-add-if-not-present "export PATH=$PATH:/home/$USER/.emerald/bin"
-bashrc-add-if-not-present "export GEM_HOME=/home/$USER/.emerald/vendor"
-bashrc-add-if-not-present "export GEM_PATH=/home/$USER/.emerald/vendor"
+bashrc-add-if-not-present 'export PATH="$PATH:$HOME/.emerald/bin"'
+bashrc-add-if-not-present 'export GEM_HOME="$HOME/.emerald/vendor"'
+bashrc-add-if-not-present 'export GEM_PATH="$HOME/.emerald/vendor"'

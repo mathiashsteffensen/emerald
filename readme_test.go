@@ -102,6 +102,82 @@ func TestReadmeSandboxStartupDeadline(t *testing.T) {
 	}
 }
 
+func TestReadmeInstallIntoTemporaryHome(t *testing.T) {
+	installer, err := filepath.Abs("scripts/install")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	home := filepath.Join(dir, "home with spaces")
+	if err := os.Mkdir(home, 0700); err != nil {
+		t.Fatal(err)
+	}
+	names := []string{"emerald", "iem", "emerald-sandbox-worker"}
+	for _, name := range names {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte("#!/bin/sh\nexit 0\n"), 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for i := 0; i < 2; i++ {
+		cmd := exec.Command("bash", "-c", `make() { return 0; }; source "$INSTALLER"`)
+		cmd.Dir = dir
+		cmd.Env = append(os.Environ(), "HOME="+home, "INSTALLER="+installer)
+		if output, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("install: %v\n%s", err, output)
+		}
+	}
+	for _, name := range names {
+		info, err := os.Stat(filepath.Join(home, ".emerald", "bin", name))
+		if err != nil || info.Mode()&0111 == 0 {
+			t.Fatalf("missing executable %s: %v", name, err)
+		}
+	}
+	bashrc, err := os.ReadFile(filepath.Join(home, ".bashrc"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Count(string(bashrc), "\n") != 3 || !strings.Contains(string(bashrc), `export PATH="$PATH:$HOME/.emerald/bin"`) {
+		t.Fatalf("shell setup must be literal and idempotent: %s", bashrc)
+	}
+}
+
+func TestReadmeInstaller(t *testing.T) {
+	installer, err := filepath.Abs("scripts/install")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, status := range []string{"0", "23"} {
+		t.Run("make-exit-"+status, func(t *testing.T) {
+			home := t.TempDir()
+			// Intercept filesystem commands: the old installer hardcodes /home.
+			cmd := exec.Command("bash", "-c", `
+				make() { return "$MAKE_EXIT"; }
+				mkdir() { printf 'mkdir %s\n' "$*"; }
+				cp() { printf 'cp %s\n' "$*"; }
+				grep() { return 0; }
+				source "$INSTALLER"
+			`)
+			cmd.Env = append(os.Environ(), "HOME="+home, "MAKE_EXIT="+status, "INSTALLER="+installer)
+			output, err := cmd.CombinedOutput()
+			if status != "0" {
+				if err == nil || strings.Contains(string(output), "cp ") {
+					t.Fatalf("installer continued after failed build: %v\n%s", err, output)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("installer failed: %v\n%s", err, output)
+			}
+			for _, name := range []string{"emerald", "iem", "emerald-sandbox-worker"} {
+				want := filepath.Join(home, ".emerald", "bin", name)
+				if !strings.Contains(string(output), want) {
+					t.Fatalf("installer must copy %s under HOME, wanted %s:\n%s", name, want, output)
+				}
+			}
+		})
+	}
+}
+
 func TestReadmeBuildFailure(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "go"), []byte("#!/bin/sh\nexit 23\n"), 0755); err != nil {
