@@ -4,6 +4,17 @@ import (
 	"testing"
 )
 
+func TestReturnModifiers(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "if false continues", input: "def f; return 7 if false; 9; end; f", expected: 9},
+		{name: "if true returns", input: "def f; return 7 if true; 9; end; f", expected: 7},
+		{name: "unless true continues", input: "def f; return 7 unless true; 9; end; f", expected: 9},
+		{name: "unless false returns", input: "def f; return 7 unless false; 9; end; f", expected: 7},
+		{name: "bare conditional return", input: "def f; return if true; 9; end; f", expected: nil},
+		{name: "bare skipped return", input: "def f; return unless true; 9; end; f", expected: 9},
+	})
+}
+
 func TestBareReturn(t *testing.T) {
 	runVmTests(t, []vmTestCase{
 		{name: "newline", input: "def f; return\n1; end; f", expected: nil},

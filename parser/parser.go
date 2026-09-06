@@ -236,21 +236,24 @@ func (p *Parser) parseBoolModifierFromStatement(stmt ast.Statement) ast.Expressi
 	switch p.curToken.Type {
 	case lexer.IF:
 		return p.parseIfModifierFromStatement(stmt)
+	case lexer.UNLESS:
+		return p.parseUnlessModifierFromStatement(stmt)
 	default:
 		return nil
 	}
 }
 
-func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
-	stmt := &ast.ReturnStatement{Token: p.curToken}
-	if p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON, lexer.END, lexer.RBRACE, lexer.RESCUE, lexer.EOF) {
-		stmt.ReturnValue = &ast.NullExpression{Token: p.curToken}
-		return stmt
+func (p *Parser) parseReturnStatement() ast.Statement {
+	stmt := &ast.ReturnStatement{Token: p.curToken, ReturnValue: &ast.NullExpression{Token: p.curToken}}
+	if !p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON, lexer.END, lexer.RBRACE, lexer.RESCUE, lexer.EOF, lexer.IF, lexer.UNLESS) {
+		p.nextToken()
+		stmt.ReturnValue = p.parseExpression(MODIFIER)
 	}
 
-	p.nextToken()
-
-	stmt.ReturnValue = p.parseExpression(LOWEST)
+	if !p.curTokenIs(lexer.NEWLINE) && p.peekTokenIsMultiple(lexer.IF, lexer.UNLESS) {
+		p.nextToken()
+		return &ast.ExpressionStatement{Token: stmt.Token, Expression: p.parseBoolModifierFromStatement(stmt)}
+	}
 
 	return stmt
 }
