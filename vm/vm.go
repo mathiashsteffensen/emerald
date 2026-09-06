@@ -340,8 +340,8 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		hasKwargs := vm.readUint8(ins, ip+3)
 		name := vm.rt.Heap.GetConstant(nameIndex).Heap.(*core.SymbolInstance).Value
 		assigned := vm.StackTop()
-		vm.callMethod(name, int(numArgs), hasKwargs == 1)
-		if op == bytecode.OpSendAssign && vm.executionError == nil && !vm.ExceptionIsRaised() {
+		completed := vm.callMethod(name, int(numArgs), hasKwargs == 1)
+		if op == bytecode.OpSendAssign && completed {
 			vm.stack()[vm.currentFiber().sp-1] = assigned
 		}
 	case bytecode.OpOpenClass:
@@ -421,7 +421,9 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 	vm.push(object.NewHeapObject(object.NewClosedBlock(vm.ctx, block, free, "", object.PUBLIC)))
 }
 
-func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) {
+func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) bool {
+	caller := vm.currentFiber().currentFrame()
+	resumeIP := caller.ip
 	var (
 		kwargsHash   *core.HashInstance
 		kwargsMap    map[string]object.EmeraldValue
@@ -445,7 +447,7 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) {
 
 	method, err := vm.extractMethod(receiver, name)
 	if err != nil {
-		return
+		return false
 	}
 
 	// Handy for debugging, but makes the VM quite slow when calling DebugF in a hot path
@@ -504,6 +506,10 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) {
 			}
 		}
 	})
+
+	// A rescue may clear $! while redirecting execution to another instruction/frame.
+	return vm.executionError == nil && !vm.ExceptionIsRaised() &&
+		vm.currentFiber().framesIndex > 0 && vm.currentFiber().currentFrame() == caller && caller.ip == resumeIP
 }
 
 func (vm *VM) extractMethod(self object.EmeraldValue, name string) (object.EmeraldValue, object.EmeraldError) {

@@ -2,6 +2,46 @@ package vm
 
 import "testing"
 
+func TestRescuedSetterPreservesLocals(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "missing setter", input: `
+			def f
+				n = 42
+				Object.new.nope = 7
+			rescue NoMethodError
+				n
+			end
+			f
+		`, expected: 42},
+		{name: "wrong setter arity", input: `
+			class Box; def value=(a, b); a; end; end
+			def f
+				n = 42
+				Box.new.value = 7
+			rescue ArgumentError
+				n
+			end
+			f
+		`, expected: 42},
+		{name: "setter raises to caller", input: `
+			class Box; def value=(x); raise "boom"; end; end
+			def f
+				n = 42
+				Box.new.value = 7
+			rescue StandardError
+				n
+			end
+			f
+		`, expected: 42},
+		{name: "setter rescues internally and returns normally", input: `
+			class Box
+				def value=(x); raise "boom"; rescue StandardError; -1; end
+			end
+			Box.new.value = 7
+		`, expected: 7},
+	})
+}
+
 func TestConditionalSetterEvaluation(t *testing.T) {
 	runVmTests(t, []vmTestCase{
 		{input: "$hash = {key: 10}; value = (receiver[key] ||= rhs); [value, $receivers, $keys, $rhs]", expected: []any{10, 1, 1, 0}},
