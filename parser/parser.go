@@ -217,7 +217,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	var result ast.Statement
 
 	switch p.curToken.Type {
-	case lexer.NEWLINE:
+	case lexer.NEWLINE, lexer.SEMICOLON:
 		result = nil
 	case lexer.RETURN:
 		result = p.parseReturnStatement()
