@@ -38,19 +38,18 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) {
 		op = bytecode.OpNotEqual
 	case "<<":
 		op = bytecode.OpBinShiftLeft
-	case "&&":
-		c.compileIfExpression(&ast.IfExpression{
-			Condition:   node.Left,
-			Consequence: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Right}}},
-			Alternative: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Left}}},
-		})
-		return
-	case "||":
-		c.compileIfExpression(&ast.IfExpression{
-			Condition:   node.Left,
-			Consequence: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Left}}},
-			Alternative: &ast.BlockStatement{Statements: []ast.Statement{&ast.ExpressionStatement{Expression: node.Right}}},
-		})
+	case "&&", "||":
+		c.Compile(node.Left)
+		c.emit(bytecode.OpDupN, node.Token, 1)
+		jump := bytecode.OpJumpNotTruthy
+		if node.Operator == "||" {
+			jump = bytecode.OpJumpTruthy
+		}
+		end := c.emit(jump, node.Token, 9999)
+		c.emit(bytecode.OpPop, node.Token)
+		c.emit(bytecode.OpPop, node.Token)
+		c.Compile(node.Right)
+		c.changeOperand(end, len(c.currentInstructions()))
 		return
 	default:
 		panic(fmt.Errorf("unknown infix operator %s", node.Operator))

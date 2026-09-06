@@ -2,6 +2,15 @@ package vm
 
 import "testing"
 
+func TestBooleanOperandsEvaluateOnce(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{input: "$calls = 0; value = (left(7) || left(9)); [value, $calls]", expected: []any{7, 1}},
+		{input: "$calls = 0; value = (left(false) && left(9)); [value, $calls]", expected: []any{false, 1}},
+		{input: "$calls = 0; value = (left(nil) || left(9)); [value, $calls]", expected: []any{9, 2}},
+		{input: "$calls = 0; value = (left(7) && left(9)); [value, $calls]", expected: []any{9, 2}},
+	}, "def left(value); $calls += 1; value; end")
+}
+
 func TestBooleanExpression(t *testing.T) {
 	tests := []vmTestCase{
 		{"true", "true", true},
