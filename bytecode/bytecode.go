@@ -40,6 +40,8 @@ const (
 	OpPop
 	// OpDupN duplicates the top N values, preserving their order.
 	OpDupN
+	// OpDropN removes N values below the top value.
+	OpDropN
 
 	// Infix operators
 	OpAdd
@@ -154,6 +156,7 @@ var definitions = map[Opcode]*Definition{
 	OpAdd:               {"OpAdd", []int{}},
 	OpPop:               {"OpPop", []int{}},
 	OpDupN:              {"OpDupN", []int{1}},
+	OpDropN:             {"OpDropN", []int{1}},
 	OpSub:               {"OpSub", []int{}},
 	OpMul:               {"OpMul", []int{}},
 	OpDiv:               {"OpDiv", []int{}},

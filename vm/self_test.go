@@ -2,6 +2,18 @@ package vm
 
 import "testing"
 
+func TestConditionalSetterEvaluation(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{input: "$hash = {key: 10}; value = (receiver[key] ||= rhs); [value, $receivers, $keys, $rhs]", expected: []any{10, 1, 1, 0}},
+		{input: "$hash = {key: false}; value = (receiver[key] &&= rhs); [value, $receivers, $keys, $rhs]", expected: []any{false, 1, 1, 0}},
+		{input: "$hash = {}; value = (receiver[key] ||= rhs); [value, $hash[:key], $receivers, $keys, $rhs]", expected: []any{7, 7, 1, 1, 1}},
+		{input: "$hash = {key: 10}; value = (receiver[key] &&= rhs); [value, $hash[:key], $receivers, $keys, $rhs]", expected: []any{7, 7, 1, 1, 1}},
+	}, `$receivers = 0; $keys = 0; $rhs = 0
+	def receiver; $receivers += 1; $hash; end
+	def key; $keys += 1; :key; end
+	def rhs; $rhs += 1; 7; end`)
+}
+
 func TestCompoundSetterAssignment(t *testing.T) {
 	runVmTests(t, []vmTestCase{
 		{name: "property assignment", input: "item.value += 2; item.value", expected: 12},

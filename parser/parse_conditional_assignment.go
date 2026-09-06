@@ -14,7 +14,7 @@ func (p *Parser) parseBoolOrAssign(left ast.Expression) ast.Expression {
 
 	switch left := left.(type) {
 	case *ast.MethodCall:
-		alternative = p.appendAssignmentToMethodCall(left.Dup(), right)
+		return &ast.AssignmentExpression{Name: left, Value: &ast.InfixExpression{Left: left, Operator: "||", Right: right}}
 	default:
 		alternative = &ast.AssignmentExpression{
 			Name:  left,
@@ -40,7 +40,7 @@ func (p *Parser) parseBoolAndAssign(left ast.Expression) ast.Expression {
 
 	switch left := left.(type) {
 	case *ast.MethodCall:
-		consequence = p.appendAssignmentToMethodCall(left.Dup(), right)
+		return &ast.AssignmentExpression{Name: left, Value: &ast.InfixExpression{Left: left, Operator: "&&", Right: right}}
 	default:
 		consequence = &ast.AssignmentExpression{
 			Name:  left,

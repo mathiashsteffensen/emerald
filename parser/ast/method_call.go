@@ -12,13 +12,6 @@ type MethodCall struct {
 	CallExpression
 }
 
-func (m MethodCall) Dup() *MethodCall {
-	return &MethodCall{
-		Left:           m.Left,
-		Token:          m.Token,
-		CallExpression: m.CallExpression,
-	}
-}
 func (m MethodCall) TokenLiteral() string { return m.Token.Literal }
 func (m MethodCall) String(indents ...int) string {
 	var out strings.Builder
