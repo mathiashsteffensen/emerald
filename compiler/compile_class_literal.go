@@ -30,7 +30,11 @@ func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) {
 }
 
 func (c *Compiler) compileStaticClassLiteral(node *ast.StaticClassLiteral) {
-	c.Compile(node.Receiver)
+	if node.Receiver == nil {
+		c.emit(bytecode.OpSelf, node.Token)
+	} else {
+		c.Compile(node.Receiver)
+	}
 	c.emit(bytecode.OpStaticTrue, node.Token)
 
 	c.compileStatementsWithReturnValue(node.Body.Statements, node.Body.Token)

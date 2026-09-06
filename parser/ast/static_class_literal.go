@@ -7,7 +7,7 @@ import (
 
 type StaticClassLiteral struct {
 	Token    lexer.Token // The class token
-	Receiver Expression
+	Receiver Expression  // nil preserves the legacy implicit self receiver.
 	Body     *BlockStatement
 }
 
@@ -20,7 +20,11 @@ func (cl *StaticClassLiteral) String(indents ...int) string {
 
 	out.WriteString(strings.Repeat("	", indent))
 	out.WriteString("class << ")
-	out.WriteString(cl.Receiver.String(0))
+	if cl.Receiver == nil {
+		out.WriteString("self")
+	} else {
+		out.WriteString(cl.Receiver.String(0))
+	}
 	out.WriteString("\n")
 
 	for _, value := range cl.Body.Statements {
