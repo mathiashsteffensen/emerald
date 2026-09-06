@@ -42,6 +42,8 @@ const (
 	OpDupN
 	// OpDropN removes N values below the top value.
 	OpDropN
+	// OpSwap exchanges the top two values.
+	OpSwap
 
 	// Infix operators
 	OpAdd
@@ -158,6 +160,7 @@ var definitions = map[Opcode]*Definition{
 	OpPop:               {"OpPop", []int{}},
 	OpDupN:              {"OpDupN", []int{1}},
 	OpDropN:             {"OpDropN", []int{1}},
+	OpSwap:              {"OpSwap", []int{}},
 	OpSub:               {"OpSub", []int{}},
 	OpMul:               {"OpMul", []int{}},
 	OpDiv:               {"OpDiv", []int{}},

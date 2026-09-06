@@ -183,6 +183,10 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		value := vm.pop()
 		vm.currentFiber().sp -= count
 		vm.push(value)
+	case bytecode.OpSwap:
+		stack := vm.stack()
+		top := vm.currentFiber().sp - 1
+		stack[top], stack[top-1] = stack[top-1], stack[top]
 	case bytecode.OpSelf:
 		vm.push(vm.ctx.Self)
 	case bytecode.OpTrue:

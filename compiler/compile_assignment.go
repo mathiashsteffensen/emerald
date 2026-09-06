@@ -11,12 +11,10 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) {
 	if target, ok := node.Name.(*ast.MethodCall); ok {
 		value := node.Value.(*ast.InfixExpression)
 		c.Compile(target.Left)
-		c.emit(bytecode.OpNull, node.Token)
-		for _, arg := range target.Arguments {
-			c.Compile(arg)
-		}
-		c.emit(bytecode.OpDupN, node.Token, len(target.Arguments)+2)
-		c.emit(bytecode.OpSend, node.Token, c.addConstant(c.rt.NewSymbol(target.Method.Value)), len(target.Arguments), 0)
+		numArgs, hasKwargs := c.compileCallArguments(target.CallExpression)
+		frameSize := len(target.Arguments) + 2 + hasKwargs
+		c.emit(bytecode.OpDupN, node.Token, frameSize)
+		c.emit(bytecode.OpSend, node.Token, c.addConstant(c.rt.NewSymbol(target.Method.Value)), numArgs, hasKwargs)
 		skip := -1
 		if value.Operator == "||" || value.Operator == "&&" {
 			c.emit(bytecode.OpDupN, node.Token, 1)
@@ -33,11 +31,14 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) {
 				Token: node.Token, Method: ast.IdentifierExpression{Value: value.Operator}, Arguments: []ast.Expression{value.Right},
 			})
 		}
-		c.emit(bytecode.OpSendAssign, node.Token, c.addConstant(c.rt.NewSymbol(target.Method.Value+"=")), len(target.Arguments)+1, 0)
+		if hasKwargs == 1 {
+			c.emit(bytecode.OpSwap, node.Token) // Keyword hash follows the positional RHS.
+		}
+		c.emit(bytecode.OpSendAssign, node.Token, c.addConstant(c.rt.NewSymbol(target.Method.Value+"=")), numArgs+1, hasKwargs)
 		if skip != -1 {
 			end := c.emit(bytecode.OpJump, node.Token, 9999)
 			c.changeOperand(skip, len(c.currentInstructions()))
-			c.emit(bytecode.OpDropN, node.Token, len(target.Arguments)+2)
+			c.emit(bytecode.OpDropN, node.Token, frameSize)
 			c.changeOperand(end, len(c.currentInstructions()))
 		}
 		return

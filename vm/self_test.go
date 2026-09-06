@@ -42,6 +42,34 @@ func TestRescuedSetterPreservesLocals(t *testing.T) {
 	})
 }
 
+func TestConditionalSetterForwardsBlock(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{input: "value = (box.value { 42 } ||= 7); [value, $gets, $sets, $yielded]", expected: []any{42, 1, 0, nil}},
+		{input: "value = (box.value { nil } ||= 7); [value, $gets, $sets, $yielded]", expected: []any{7, 1, 1, nil}},
+		{input: "value = (box.value { false } &&= 7); [value, $gets, $sets, $yielded]", expected: []any{false, 1, 0, nil}},
+		{input: "value = (box.value { 42 } &&= 7); [value, $gets, $sets, $yielded]", expected: []any{7, 1, 1, 42}},
+	}, `class Box
+		def value; $gets += 1; yield; end
+		def value=(x); $sets += 1; $yielded = yield; -1; end
+	end
+	box = Box.new; $gets = 0; $sets = 0; $yielded = nil`)
+}
+
+func TestConditionalSetterForwardsKeywords(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{input: "value = (box.value(5, key: key(42)) ||= 7); [value, $gets, $keys, $received]", expected: []any{42, 1, 1, nil}},
+		{input: "value = (box.value(5, key: key(nil)) ||= 7); [value, $gets, $keys, $received]", expected: []any{7, 1, 1, []any{5, 7, nil}}},
+		{input: "value = (box.value(5, key: key(false)) &&= 7); [value, $gets, $keys, $received]", expected: []any{false, 1, 1, nil}},
+		{input: "value = (box.value(5, key: key(42)) &&= 7); [value, $gets, $keys, $received]", expected: []any{7, 1, 1, []any{5, 7, 42}}},
+		{input: "value = (box.value(5, key: key(42)) += 7); [value, $gets, $keys, $received]", expected: []any{49, 1, 1, []any{5, 49, 42}}},
+	}, `class Box
+		def value(index, key:); $gets += 1; key; end
+		def value=(index, x, key:); $received = [index, x, key]; -1; end
+	end
+	def key(value); $keys += 1; value; end
+	box = Box.new; $gets = 0; $keys = 0; $received = nil`)
+}
+
 func TestConditionalSetterEvaluation(t *testing.T) {
 	runVmTests(t, []vmTestCase{
 		{input: "$hash = {key: 10}; value = (receiver[key] ||= rhs); [value, $receivers, $keys, $rhs]", expected: []any{10, 1, 1, 0}},

@@ -8,7 +8,15 @@ import (
 
 func (c *Compiler) compileCallExpression(node ast.CallExpression) {
 	methodIndex := c.addConstant(c.rt.NewSymbol(node.Method.Value))
+	numArgs, hasKwargs := c.compileCallArguments(node)
+	op := bytecode.OpSend
+	if node.Assignment {
+		op = bytecode.OpSendAssign
+	}
+	c.emit(op, node.Token, methodIndex, numArgs, hasKwargs)
+}
 
+func (c *Compiler) compileCallArguments(node ast.CallExpression) (int, int) {
 	if node.Block != nil {
 		block, freeSymbolCount := c.compileBlock(node.Block, false)
 
@@ -32,9 +40,5 @@ func (c *Compiler) compileCallExpression(node ast.CallExpression) {
 		hasKwargsOperand = 1
 	}
 
-	op := bytecode.OpSend
-	if node.Assignment {
-		op = bytecode.OpSendAssign
-	}
-	c.emit(op, node.Token, methodIndex, len(node.Arguments)+numKwargs, hasKwargsOperand)
+	return len(node.Arguments) + numKwargs, hasKwargsOperand
 }
