@@ -271,10 +271,10 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		freeIndex := bytecode.ReadUint8(ins[ip+1:])
 		vm.currentFiber().currentFrame().ip += 1
 
-		vm.push(*vm.currentFiber().currentFrame().block.FreeVariables[freeIndex])
+		vm.push(*vm.currentFiber().currentFrame().block.FreeVariable(int(freeIndex)))
 	case bytecode.OpSetFree:
 		freeIndex := vm.readUint8(ins, ip)
-		*vm.currentFiber().currentFrame().block.FreeVariables[freeIndex] = vm.StackTop()
+		*vm.currentFiber().currentFrame().block.FreeVariable(int(freeIndex)) = vm.StackTop()
 	case bytecode.OpInstanceVarGet:
 		constIndex := vm.readUint16(ins, ip)
 
@@ -421,11 +421,11 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 			}
 			free[i] = frame.locals[binding.Index]
 		} else {
-			free[i] = frame.block.FreeVariables[binding.Index]
+			free[i] = frame.block.FreeVariable(binding.Index)
 		}
 	}
 
-	vm.push(object.NewHeapObject(object.NewClosedBlock(vm.ctx, block, free, "", object.PUBLIC)))
+	vm.push(object.NewHeapObject(object.NewClosedBlockWithCells(vm.ctx, block, free, "", object.PUBLIC)))
 }
 
 func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) bool {

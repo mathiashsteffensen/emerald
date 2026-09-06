@@ -48,13 +48,16 @@ func NewBlock(bytecode bytecode.Bytecode, numLocals int, numArgs int, kwargs []s
 
 type ClosedBlock struct {
 	*Block
-	FreeVariables []*EmeraldValue
+	// FreeVariables holds legacy mutable captures. For cell-backed closures it is
+	// a capture-time snapshot; use FreeVariable to access the shared live value.
+	FreeVariables []EmeraldValue
+	freeCells     []*EmeraldValue
 	Context       *Context
 	File          string
 	Visibility    MethodVisibility
 }
 
-func NewClosedBlock(ctx *Context, block *Block, free []*EmeraldValue, file string, visibility MethodVisibility) *ClosedBlock {
+func NewClosedBlock(ctx *Context, block *Block, free []EmeraldValue, file string, visibility MethodVisibility) *ClosedBlock {
 	return &ClosedBlock{
 		Block:         block,
 		FreeVariables: free,
@@ -62,4 +65,24 @@ func NewClosedBlock(ctx *Context, block *Block, free []*EmeraldValue, file strin
 		File:          file,
 		Visibility:    visibility,
 	}
+}
+
+// NewClosedBlockWithCells captures shared mutable cells. FreeVariables exposes
+// their initial values only; execution must access the cells through FreeVariable.
+func NewClosedBlockWithCells(ctx *Context, block *Block, cells []*EmeraldValue, file string, visibility MethodVisibility) *ClosedBlock {
+	free := make([]EmeraldValue, len(cells))
+	for i, cell := range cells {
+		free[i] = *cell
+	}
+	closed := NewClosedBlock(ctx, block, free, file, visibility)
+	closed.freeCells = cells
+	return closed
+}
+
+// FreeVariable returns a shared cell, or the legacy slice element itself.
+func (b *ClosedBlock) FreeVariable(index int) *EmeraldValue {
+	if b.freeCells != nil {
+		return b.freeCells[index]
+	}
+	return &b.FreeVariables[index]
 }
