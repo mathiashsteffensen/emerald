@@ -2,6 +2,36 @@ package vm
 
 import "testing"
 
+func TestInheritedClassMethods(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "inherit and override", input: `
+			class Parent
+				class << self
+					def value; 7; end
+				end
+			end
+			class Child < Parent; end
+			class Other < Parent
+				class << self
+					def value; 9; end
+				end
+			end
+			[Parent.value, Child.value, Other.value, Child.class]
+		`, expected: []any{7, 7, 9, "class:Class"}},
+		{name: "parent method added later", input: `
+			class Parent; end
+			class Child < Parent; end
+			Child.new
+			class Parent
+				class << self
+					def value; 7; end
+				end
+			end
+			Child.value
+		`, expected: 7},
+	})
+}
+
 func TestSingletonClassReceiver(t *testing.T) {
 	runVmTests(t, []vmTestCase{
 		{name: "object receiver and outer self", input: `

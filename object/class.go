@@ -14,14 +14,15 @@ func (c *Class) Inspect() string {
 	return c.Name
 }
 func (c *Class) Class() EmeraldValue {
-	if c.singleton != nil {
-		return NewHeapObject(c.singleton)
-	}
-	return c.baseClass
+	return c.SingletonClass()
 }
 func (c *Class) SingletonClass() EmeraldValue {
 	if c.singleton == nil {
-		c.singleton = NewSingletonClass(NewHeapObject(c), c.baseClass, &BaseEmeraldValue{builtInMethodSet: c.staticBuiltInMethodSet})
+		super := c.baseClass
+		if !c.super.IsNil() {
+			super = c.super.SingletonClass()
+		}
+		c.singleton = NewSingletonClass(NewHeapObject(c), super, &BaseEmeraldValue{builtInMethodSet: c.staticBuiltInMethodSet})
 	}
 	return NewHeapObject(c.singleton)
 }
