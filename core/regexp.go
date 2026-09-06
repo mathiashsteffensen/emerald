@@ -31,6 +31,7 @@ func (rt *Runtime) InitRegexp() {
 	rt.DefineMethod(rt.Regexp, "inspect", rt.regexpInspect())
 	rt.DefineMethod(rt.Regexp, "match", rt.regexpMatch())
 	rt.DefineMethod(rt.Regexp, "=~", rt.regexpMatch())
+	rt.DefineMethod(rt.Regexp, "===", rt.regexpCaseEqual())
 }
 
 func (rt *Runtime) regexpNew() object.BuiltInMethod {
@@ -52,6 +53,19 @@ func (rt *Runtime) regexpLastMatch() object.BuiltInMethod {
 func (rt *Runtime) regexpInspect() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return rt.NewString(fmt.Sprintf("/%s/", ctx.Self.Heap.(*RegexpInstance).Source))
+	}
+}
+
+func (rt *Runtime) regexpCaseEqual() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
+			return object.NewHeapObject(err)
+		}
+		str, ok := args[0].Heap.(*StringInstance)
+		if !ok {
+			return rt.FALSE
+		}
+		return rt.NativeBoolToBooleanObject(rt.IsTruthy(rt.regexStringMatch(ctx, ctx.Self.Heap.(*RegexpInstance), str)))
 	}
 }
 
