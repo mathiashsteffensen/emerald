@@ -2,6 +2,38 @@ package vm
 
 import "testing"
 
+func TestCapturedLocalMutation(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "captured sum", input: `
+			def sum(values)
+				total = 0
+				values.each { |n| total += n }
+				total
+			end
+			[sum([1, 2, 3]), sum([4, 5])]
+		`, expected: []any{6, 9}},
+		{name: "nested capture", input: `
+			def f
+				n = 0
+				[1, 2].each { |a| [3, 4].each { |b| n += a + b } }
+				n
+			end
+			f
+		`, expected: 20},
+		{name: "escaped sibling closures share updates", input: `
+			class Counter
+				[10].each do |n|
+					define_method(:increment) { n += 1 }
+					define_method(:value) { n }
+					n = 20
+				end
+			end
+			counter = Counter.new
+			[counter.increment, counter.increment, counter.value]
+		`, expected: []any{21, 22, 22}},
+	})
+}
+
 func TestMethodCall(t *testing.T) {
 	tests := []vmTestCase{
 		{

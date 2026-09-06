@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"emerald/bytecode"
+	"emerald/heap"
 	"emerald/object"
 	ast "emerald/parser/ast"
 	"emerald/parser/lexer"
@@ -73,10 +74,6 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*obj
 	numLocals := c.symbolTable.NumDefinitions
 	bytecode := c.leaveScope()
 
-	for _, s := range freeSymbols {
-		c.emitSymbol(s, node.Token)
-	}
-
 	var kwargNames []string
 	for _, argument := range node.KeywordArguments {
 		kwargNames = append(kwargNames, argument.Value)
@@ -84,6 +81,9 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*obj
 
 	block := object.NewBlock(bytecode, numLocals, numParams, kwargNames, enforceArity)
 	block.ExceptionTable = exceptionTable
+	for _, symbol := range freeSymbols {
+		block.FreeBindings = append(block.FreeBindings, object.FreeBinding{Index: symbol.Index, Local: symbol.Scope == heap.LocalScope})
+	}
 
 	return block, len(freeSymbols)
 }

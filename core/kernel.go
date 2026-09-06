@@ -222,7 +222,7 @@ func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 			BlockGiven: func() bool {
 				return false
 			},
-		}, &object.Block{Bytecode: *bytecode}, []object.EmeraldValue{}, "", object.PUBLIC)
+		}, &object.Block{Bytecode: *bytecode}, nil, "", object.PUBLIC)
 
 		rt.EvalBlock(requiredBlock, map[string]object.EmeraldValue{})
 

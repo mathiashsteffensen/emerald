@@ -45,6 +45,8 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) {
 			c.emit(bytecode.OpSetGlobal, node.Token, symbol.Index)
 		case heap.LocalScope:
 			c.emit(bytecode.OpSetLocal, node.Token, symbol.Index)
+		case heap.FreeScope:
+			c.emit(bytecode.OpSetFree, node.Token, symbol.Index)
 		}
 	case *ast.InstanceVariable:
 		c.emit(bytecode.OpInstanceVarSet, node.Token, c.addConstant(c.rt.NewSymbol(name.Value)))

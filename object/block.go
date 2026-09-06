@@ -12,6 +12,11 @@ type ExceptionTableEntry struct {
 	CaughtErrorClasses []string
 }
 
+type FreeBinding struct {
+	Index int
+	Local bool
+}
+
 type Block struct {
 	*BaseEmeraldValue
 	bytecode.Bytecode
@@ -20,6 +25,7 @@ type Block struct {
 	Kwargs         []string
 	EnforceArity   bool
 	ExceptionTable []ExceptionTableEntry
+	FreeBindings   []FreeBinding
 }
 
 func (b *Block) Class() EmeraldValue          { return EmeraldValue{} }
@@ -42,13 +48,13 @@ func NewBlock(bytecode bytecode.Bytecode, numLocals int, numArgs int, kwargs []s
 
 type ClosedBlock struct {
 	*Block
-	FreeVariables []EmeraldValue
+	FreeVariables []*EmeraldValue
 	Context       *Context
 	File          string
 	Visibility    MethodVisibility
 }
 
-func NewClosedBlock(ctx *Context, block *Block, free []EmeraldValue, file string, visibility MethodVisibility) *ClosedBlock {
+func NewClosedBlock(ctx *Context, block *Block, free []*EmeraldValue, file string, visibility MethodVisibility) *ClosedBlock {
 	return &ClosedBlock{
 		Block:         block,
 		FreeVariables: free,

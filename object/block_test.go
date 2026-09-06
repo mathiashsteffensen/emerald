@@ -42,7 +42,7 @@ func TestBlock(t *testing.T) {
 func TestClosedBlock(t *testing.T) {
 	block := &Block{}
 	ctx := &Context{}
-	closed := NewClosedBlock(ctx, block, []EmeraldValue{}, "file.rb", PUBLIC)
+	closed := NewClosedBlock(ctx, block, nil, "file.rb", PUBLIC)
 
 	if closed.Block != block {
 		t.Error("closed block should wrap the original block")

@@ -244,17 +244,28 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 	case bytecode.OpGetLocal:
 		localIndex := vm.readUint8(ins, ip)
 		frame := vm.currentFiber().currentFrame()
-		vm.push(vm.stack()[frame.basePointer+int(localIndex)])
+		if cell := frame.locals[int(localIndex)]; cell != nil {
+			vm.push(*cell)
+		} else {
+			vm.push(vm.stack()[frame.basePointer+int(localIndex)])
+		}
 	case bytecode.OpSetLocal:
 		localIndex := bytecode.ReadUint8(ins[ip+1:])
 		vm.currentFiber().currentFrame().ip += 1
 		frame := vm.currentFiber().currentFrame()
-		vm.stack()[frame.basePointer+int(localIndex)] = vm.StackTop()
+		if cell := frame.locals[int(localIndex)]; cell != nil {
+			*cell = vm.StackTop()
+		} else {
+			vm.stack()[frame.basePointer+int(localIndex)] = vm.StackTop()
+		}
 	case bytecode.OpGetFree:
 		freeIndex := bytecode.ReadUint8(ins[ip+1:])
 		vm.currentFiber().currentFrame().ip += 1
 
-		vm.push(vm.currentFiber().currentFrame().block.FreeVariables[freeIndex])
+		vm.push(*vm.currentFiber().currentFrame().block.FreeVariables[freeIndex])
+	case bytecode.OpSetFree:
+		freeIndex := vm.readUint8(ins, ip)
+		*vm.currentFiber().currentFrame().block.FreeVariables[freeIndex] = vm.StackTop()
 	case bytecode.OpInstanceVarGet:
 		constIndex := vm.readUint16(ins, ip)
 
@@ -313,7 +324,7 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		block := vm.pop().Heap.(*object.Block)
 		name := vm.stack()[vm.currentFiber().sp-1].Heap.(*core.SymbolInstance)
 
-		vm.ctx.Self.DefinedMethodSet()[name.Value] = object.NewClosedBlock(nil, block, []object.EmeraldValue{}, vm.ctx.File, vm.ctx.DefaultMethodVisibility)
+		vm.ctx.Self.DefinedMethodSet()[name.Value] = object.NewClosedBlock(nil, block, nil, vm.ctx.File, vm.ctx.DefaultMethodVisibility)
 	case bytecode.OpSend, bytecode.OpSendAssign:
 		nameIndex := vm.readUint16(ins, ip)
 		numArgs := vm.readUint8(ins, ip+2)
@@ -381,12 +392,22 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 	constant := vm.rt.Heap.GetConstant(uint16(constIndex))
 	block := constant.Heap.(*object.Block)
 
-	free := make([]object.EmeraldValue, numFreeVars)
-	for i := 0; i < numFreeVars; i++ {
-		free[i] = vm.stack()[vm.currentFiber().sp-numFreeVars+i]
+	free := make([]*object.EmeraldValue, numFreeVars)
+	frame := vm.currentFiber().currentFrame()
+	for i, binding := range block.FreeBindings {
+		if binding.Local {
+			if frame.locals == nil {
+				frame.locals = make(map[int]*object.EmeraldValue)
+			}
+			if frame.locals[binding.Index] == nil {
+				value := vm.stack()[frame.basePointer+binding.Index]
+				frame.locals[binding.Index] = &value
+			}
+			free[i] = frame.locals[binding.Index]
+		} else {
+			free[i] = frame.block.FreeVariables[binding.Index]
+		}
 	}
-
-	vm.currentFiber().sp = vm.currentFiber().sp - numFreeVars
 
 	vm.push(object.NewHeapObject(object.NewClosedBlock(vm.ctx, block, free, "", object.PUBLIC)))
 }

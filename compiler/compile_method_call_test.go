@@ -133,7 +133,6 @@ func TestCompileMethodCall(t *testing.T) {
 				},
 				[]bytecode.Instructions{
 					bytecode.Make(bytecode.OpSelf),
-					bytecode.Make(bytecode.OpGetLocal, 0),
 					bytecode.Make(bytecode.OpCloseBlock, 7, 1),
 					bytecode.Make(bytecode.OpGetLocal, 0),
 					bytecode.Make(bytecode.OpSend, 6, 1, 0),

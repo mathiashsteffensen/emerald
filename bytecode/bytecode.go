@@ -107,6 +107,7 @@ const (
 
 	// OpGetFree like it's local & global variants resolves a variable reference, but from a blocks free variable pool
 	OpGetFree
+	OpSetFree
 
 	OpReturn
 	OpReturnValue
@@ -134,8 +135,8 @@ const (
 	OpStaticTrue
 	OpStaticFalse
 
-	// OpCloseBlock creates a closure over a Block by fetching its free variables from the stack
-	// and adding them to object.Block#FreeVariables
+	// OpCloseBlock creates a closure using the Block's free-variable bindings.
+	// Captured locals share heap cells with their defining frame.
 	// Has 2 operands, constant index of the block & number of free variables
 	// NOTE: second operand is only 1 byte, so there is a hard limit on 256 free variables
 	OpCloseBlock
@@ -184,6 +185,7 @@ var definitions = map[Opcode]*Definition{
 	OpGetLocal:          {"OpGetLocal", []int{1}},
 	OpSetLocal:          {"OpSetLocal", []int{1}},
 	OpGetFree:           {"OpGetFree", []int{1}},
+	OpSetFree:           {"OpSetFree", []int{1}},
 	OpReturn:            {"OpReturn", []int{}},
 	OpReturnValue:       {"OpReturnValue", []int{}},
 	OpDefineMethod:      {"OpDefineMethod", []int{}},
