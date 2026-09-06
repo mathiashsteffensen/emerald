@@ -4,6 +4,8 @@ import (
 	"emerald/object"
 	"fmt"
 	"math"
+	"slices"
+	"strings"
 )
 
 func (rt *Runtime) DefineClass(name string, super object.EmeraldValue) object.EmeraldValue {
@@ -103,6 +105,14 @@ func (rt *Runtime) EnforceArity(
 	for _, kwarg := range requiredKwargs {
 		if _, ok := kwargs[":"+kwarg]; !ok {
 			err = rt.NewKeywordMissingArgumentError(kwarg)
+			rt.Raise(err)
+			return args, err
+		}
+	}
+
+	for kwarg := range kwargs {
+		if !slices.Contains(requiredKwargs, strings.TrimPrefix(kwarg, ":")) {
+			err = rt.newArgumentError(fmt.Sprintf("unknown keyword: %s", kwarg))
 			rt.Raise(err)
 			return args, err
 		}

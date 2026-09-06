@@ -450,6 +450,16 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) {
 	vm.withExecutionContext(receiver, block, func() {
 		switch m := method.Heap.(type) {
 		case *object.ClosedBlock:
+			kwargsMap = map[string]object.EmeraldValue{}
+			if hasKwargs {
+				kwargsHash.Each(func(key, value object.EmeraldValue) {
+					kwargsMap[key.Inspect()] = value
+				})
+			}
+			if _, err := vm.rt.EnforceArity(vm.stack()[basePointer:vm.currentFiber().sp], kwargsMap, m.NumArgs, m.NumArgs, m.Kwargs...); err != nil {
+				return
+			}
+
 			if hasKwargs {
 				sortedKwargsHashVal := vm.rt.NewHash()
 				sortedKwargsHash := sortedKwargsHashVal.Heap.(*core.HashInstance)
@@ -461,13 +471,7 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) {
 					sortedKwargsHash.Set(symbolKey, kwargsHash.Get(symbolKey))
 				}
 
-				kwargsMap, argsEndIndex = vm.pushKwargsToStack(sortedKwargsHash)
-			} else {
-				argsEndIndex = vm.currentFiber().sp
-			}
-
-			if _, err := vm.rt.EnforceArity(vm.stack()[basePointer:argsEndIndex], kwargsMap, m.NumArgs, m.NumArgs, m.Kwargs...); err != nil {
-				return
+				vm.pushKwargsToStack(sortedKwargsHash)
 			}
 
 			frame := NewFrame(m, basePointer)

@@ -2,6 +2,25 @@ package vm
 
 import "testing"
 
+func TestConstructorKeywordBinding(t *testing.T) {
+	runVmTests(t, []vmTestCase{{input: `
+		class Pair
+			def initialize(left:, right:); @left = left; @right = right; end
+			def values; [@left, @right]; end
+		end
+		Pair.new(right: 2, left: 1).values
+	`, expected: []any{1, 2}}})
+}
+
+func TestKeywordValidation(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{input: "f(left: 1)", expected: "error:ArgumentError:missing keyword: :right"},
+		{input: "f(left: 1, right: 2, extra: 3)", expected: "error:ArgumentError:unknown keyword: :extra"},
+		{input: "f(right: 2, left: nil)", expected: []any{nil, 2}},
+		{input: "f(right: 2, left: 1)", expected: []any{1, 2}},
+	}, "def f(left:, right:); [left, right]; end")
+}
+
 func TestCapturedLocalMutation(t *testing.T) {
 	runVmTests(t, []vmTestCase{
 		{name: "captured sum", input: `

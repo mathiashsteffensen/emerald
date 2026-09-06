@@ -71,10 +71,8 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 			sortedKwargsHash := sortedKwargsHashVal.Heap.(*core.HashInstance)
 
 			// Sort kwargs first, so they match the definition order, this allows local variable references to resolve correctly
-			for kwargStringKey, value := range kwargs {
-				symbolKey := vm.rt.NewSymbol(kwargStringKey)
-
-				sortedKwargsHash.Set(symbolKey, value)
+			for _, name := range bl.Kwargs {
+				sortedKwargsHash.Set(vm.rt.NewSymbol(name), kwargs[":"+name])
 			}
 
 			vm.pushKwargsToStack(sortedKwargsHash)
