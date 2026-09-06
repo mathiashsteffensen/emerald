@@ -12,8 +12,8 @@ func TestCompileMethodLiteral(t *testing.T) {
 				return 5 + 10
 			end`,
 			expectedConstants: []any{
-				10,
 				5,
+				10,
 				":method",
 				[]bytecode.Instructions{
 					bytecode.Make(bytecode.OpPushConstant, 0),
@@ -34,8 +34,8 @@ func TestCompileMethodLiteral(t *testing.T) {
 				5 + 10
 			end`,
 			expectedConstants: []any{
-				10,
 				5,
+				10,
 				":method",
 				[]bytecode.Instructions{
 					bytecode.Make(bytecode.OpPushConstant, 0),

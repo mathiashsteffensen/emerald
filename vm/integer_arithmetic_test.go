@@ -12,6 +12,15 @@ func TestIntegerArithmetic(t *testing.T) {
 		{"negating", "-5", -5},
 		{"negating and adding", "-50 + 100 + -50", 0},
 		{"mixed", "(5 + 10 * 2 + 15 / 3) * 2 + -10", 50},
+		{
+			"evaluates operands left to right",
+			`$order = ""
+			def left; $order = $order + "left"; 2; end
+			def right; $order = $order + "right"; 1; end
+			left > right
+			$order`,
+			"leftright",
+		},
 	}
 	runVmTests(t, tests)
 }

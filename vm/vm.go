@@ -508,9 +508,10 @@ func (vm *VM) pushKwargsToStack(kwargsHash *core.HashInstance) (map[string]objec
 }
 
 func (vm *VM) evalInfixOperator(op string) {
-	left := vm.pop()
+	right := vm.pop()
+	left := vm.StackTop()
 
-	result := vm.Send(left, op, vm.rt.NULL, nil, vm.StackTop())
+	result := vm.Send(left, op, vm.rt.NULL, nil, right)
 
 	if !vm.ExceptionIsRaised() {
 		vm.stack()[vm.currentFiber().sp-1] = result

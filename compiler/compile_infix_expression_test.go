@@ -10,7 +10,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "addition",
 			input:             "1.0 + 2",
-			expectedConstants: []any{2, 1.0},
+			expectedConstants: []any{1.0, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -21,7 +21,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "subtracting",
 			input:             "1 - 2",
-			expectedConstants: []any{2, 1},
+			expectedConstants: []any{1, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -32,7 +32,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "multiplying",
 			input:             "1 * 2",
-			expectedConstants: []any{2, 1},
+			expectedConstants: []any{1, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -43,7 +43,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "dividing",
 			input:             "2 / 1",
-			expectedConstants: []any{1, 2},
+			expectedConstants: []any{2, 1},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -65,7 +65,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "adding strings",
 			input:             `"eme" + "rald"`,
-			expectedConstants: []any{"rald", "eme"},
+			expectedConstants: []any{"eme", "rald"},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -76,7 +76,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "greater than",
 			input:             "1 > 2",
-			expectedConstants: []any{2, 1},
+			expectedConstants: []any{1, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -87,7 +87,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "greater than or eq",
 			input:             "1 >= 2",
-			expectedConstants: []any{2, 1},
+			expectedConstants: []any{1, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -98,7 +98,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "less than",
 			input:             "1 < 2",
-			expectedConstants: []any{2, 1},
+			expectedConstants: []any{1, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -109,7 +109,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "less than or eq",
 			input:             "1 <= 2",
-			expectedConstants: []any{2, 1},
+			expectedConstants: []any{1, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -120,7 +120,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "integers equals",
 			input:             "1 == 2",
-			expectedConstants: []any{2, 1},
+			expectedConstants: []any{1, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -131,7 +131,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "integers not equals",
 			input:             "1 != 2",
-			expectedConstants: []any{2, 1},
+			expectedConstants: []any{1, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -144,8 +144,8 @@ func TestCompileInfixExpression(t *testing.T) {
 			input:             "true == false",
 			expectedConstants: []any{},
 			expectedInstructions: []bytecode.Instructions{
-				bytecode.Make(bytecode.OpFalse),
 				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpFalse),
 				bytecode.Make(bytecode.OpEqual),
 				bytecode.Make(bytecode.OpPop),
 			},
@@ -155,8 +155,8 @@ func TestCompileInfixExpression(t *testing.T) {
 			input:             "true != false",
 			expectedConstants: []any{},
 			expectedInstructions: []bytecode.Instructions{
-				bytecode.Make(bytecode.OpFalse),
 				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpFalse),
 				bytecode.Make(bytecode.OpNotEqual),
 				bytecode.Make(bytecode.OpPop),
 			},
@@ -178,7 +178,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "boolean or",
 			input:             "1 + 2 || false",
-			expectedConstants: []any{2, 1, 2, 1},
+			expectedConstants: []any{1, 2, 1, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -210,7 +210,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "spaceship",
 			input:             "1 <=> 2",
-			expectedConstants: []any{2, 1},
+			expectedConstants: []any{1, 2},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -221,7 +221,7 @@ func TestCompileInfixExpression(t *testing.T) {
 		{
 			name:              "matching",
 			input:             `/a/ =~ "a"`,
-			expectedConstants: []any{"a", "/a/"},
+			expectedConstants: []any{"/a/", "a"},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),
@@ -245,8 +245,8 @@ func TestCompileInfixExpression(t *testing.T) {
 			input:             "[] << 2",
 			expectedConstants: []any{2},
 			expectedInstructions: []bytecode.Instructions{
-				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpArray),
+				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpBinShiftLeft),
 				bytecode.Make(bytecode.OpPop),
 			},

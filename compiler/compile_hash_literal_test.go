@@ -57,7 +57,7 @@ func TestCompileHashLiteral(t *testing.T) {
 		{
 			name:              "with expression values",
 			input:             "{1 => 2 + 3, 4 => 5 * 6}",
-			expectedConstants: []any{1, 3, 2, 4, 6, 5},
+			expectedConstants: []any{1, 2, 3, 4, 5, 6},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpPushConstant, 1),

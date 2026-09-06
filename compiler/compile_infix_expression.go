@@ -56,7 +56,7 @@ func (c *Compiler) compileInfixExpression(node *ast.InfixExpression) {
 		panic(fmt.Errorf("unknown infix operator %s", node.Operator))
 	}
 
-	c.Compile(node.Right)
 	c.Compile(node.Left)
+	c.Compile(node.Right)
 	c.emit(op, node.Token)
 }

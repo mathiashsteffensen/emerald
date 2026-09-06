@@ -56,8 +56,8 @@ func TestCompileMethodCall(t *testing.T) {
 				":map",
 				2,
 				[]bytecode.Instructions{
-					bytecode.Make(bytecode.OpPushConstant, 2),
 					bytecode.Make(bytecode.OpGetLocal, 0),
+					bytecode.Make(bytecode.OpPushConstant, 2),
 					bytecode.Make(bytecode.OpAdd),
 					bytecode.Make(bytecode.OpReturnValue),
 				},

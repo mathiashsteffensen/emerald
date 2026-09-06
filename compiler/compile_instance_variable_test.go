@@ -11,8 +11,8 @@ func TestCompileInstanceVariable(t *testing.T) {
 			name:  "setting an instance var",
 			input: "@var = 2 + 6",
 			expectedConstants: []any{
-				6,
 				2,
+				6,
 				":@var",
 			},
 			expectedInstructions: []bytecode.Instructions{
