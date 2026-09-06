@@ -353,9 +353,10 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 
 		vm.closeBlock(int(constIndex), int(numFreeVars))
 	case bytecode.OpStaticTrue:
-		vm.ctx.Self = vm.ctx.Self.SingletonClass()
+		receiver := vm.pop()
+		vm.ctx = vm.newEnclosedContext(vm.ctx.File, receiver.SingletonClass(), vm.ctx.Block)
 	case bytecode.OpStaticFalse:
-		vm.ctx.Self = vm.ctx.Self.Heap.(*object.SingletonClass).Instance
+		vm.ctx = vm.ctx.Outer
 	default:
 		def, err := bytecode.Lookup(byte(op))
 		if err != nil {

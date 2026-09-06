@@ -2,6 +2,20 @@ package vm
 
 import "testing"
 
+func TestSingletonClassReceiver(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "object receiver and outer self", input: `
+			obj = Object.new
+			outer = self
+			class << obj
+				def value; 7; end
+			end
+			[obj.value, self == outer]
+		`, expected: []any{7, true}},
+		{name: "empty singleton body", input: "class << self; end", expected: nil},
+	})
+}
+
 func TestClassLiteral(t *testing.T) {
 	tests := []vmTestCase{
 		{

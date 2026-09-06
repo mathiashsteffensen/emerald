@@ -436,9 +436,8 @@ func (p *Parser) parseStaticClassLiteral() ast.Expression {
 
 	p.nextToken()
 
-	if !p.expectPeek(lexer.SELF) {
-		return nil
-	}
+	p.nextToken()
+	class.Receiver = p.parseExpression(LOWEST)
 
 	p.nextIfSemicolonOrNewline()
 

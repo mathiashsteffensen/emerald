@@ -6,8 +6,9 @@ import (
 )
 
 type StaticClassLiteral struct {
-	Token lexer.Token // The class token
-	Body  *BlockStatement
+	Token    lexer.Token // The class token
+	Receiver Expression
+	Body     *BlockStatement
 }
 
 func (cl *StaticClassLiteral) expressionNode()      {}
@@ -18,7 +19,8 @@ func (cl *StaticClassLiteral) String(indents ...int) string {
 	indent := indents[0]
 
 	out.WriteString(strings.Repeat("	", indent))
-	out.WriteString("class << self")
+	out.WriteString("class << ")
+	out.WriteString(cl.Receiver.String(0))
 	out.WriteString("\n")
 
 	for _, value := range cl.Body.Statements {

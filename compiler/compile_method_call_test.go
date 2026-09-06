@@ -204,6 +204,7 @@ func TestCompileMethodCall(t *testing.T) {
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpConstantGet, 0),
 				bytecode.Make(bytecode.OpOpenClass, 1),
+				bytecode.Make(bytecode.OpSelf),
 				bytecode.Make(bytecode.OpStaticTrue),
 				bytecode.Make(bytecode.OpPushConstant, 6),
 				bytecode.Make(bytecode.OpPushConstant, 7),
@@ -251,6 +252,7 @@ func TestCompileMethodCall(t *testing.T) {
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpConstantGet, 0),
 				bytecode.Make(bytecode.OpOpenClass, 1),
+				bytecode.Make(bytecode.OpSelf),
 				bytecode.Make(bytecode.OpStaticTrue),
 				bytecode.Make(bytecode.OpPushConstant, 3),
 				bytecode.Make(bytecode.OpPushConstant, 4),

@@ -89,6 +89,7 @@ func TestCompileClassLiteral(t *testing.T) {
 				bytecode.Make(bytecode.OpPushConstant, 4),
 				bytecode.Make(bytecode.OpDefineMethod),
 				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpSelf),
 				bytecode.Make(bytecode.OpStaticTrue),
 				bytecode.Make(bytecode.OpPushConstant, 6),
 				bytecode.Make(bytecode.OpPushConstant, 7),

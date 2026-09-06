@@ -30,14 +30,13 @@ func (c *Compiler) compileClassLiteral(node *ast.ClassLiteral) {
 }
 
 func (c *Compiler) compileStaticClassLiteral(node *ast.StaticClassLiteral) {
+	c.Compile(node.Receiver)
 	c.emit(bytecode.OpStaticTrue, node.Token)
 
-	c.Compile(node.Body)
+	c.compileStatementsWithReturnValue(node.Body.Statements, node.Body.Token)
 
 	if c.lastInstructionIs(bytecode.OpPop) {
-		lastPos := c.scopes[c.scopeIndex].lastInstruction.Position
-		c.replaceInstruction(lastPos, bytecode.Make(bytecode.OpStaticFalse))
-		c.scopes[c.scopeIndex].lastInstruction.Opcode = bytecode.OpStaticFalse
+		c.replaceLastInstructionWith(bytecode.OpStaticFalse)
 	} else {
 		c.emit(bytecode.OpStaticFalse, node.Token)
 	}
