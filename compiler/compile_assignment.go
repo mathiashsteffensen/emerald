@@ -8,6 +8,22 @@ import (
 )
 
 func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) {
+	if target, ok := node.Name.(*ast.MethodCall); ok {
+		value := node.Value.(*ast.InfixExpression)
+		c.Compile(target.Left)
+		c.emit(bytecode.OpNull, node.Token)
+		for _, arg := range target.Arguments {
+			c.Compile(arg)
+		}
+		c.emit(bytecode.OpDupN, node.Token, len(target.Arguments)+2)
+		c.emit(bytecode.OpSend, node.Token, c.addConstant(c.rt.NewSymbol(target.Method.Value)), len(target.Arguments), 0)
+		c.compileCallExpression(ast.CallExpression{
+			Token: node.Token, Method: ast.IdentifierExpression{Value: value.Operator}, Arguments: []ast.Expression{value.Right},
+		})
+		c.emit(bytecode.OpSendAssign, node.Token, c.addConstant(c.rt.NewSymbol(target.Method.Value+"=")), len(target.Arguments)+1, 0)
+		return
+	}
+
 	c.Compile(node.Value)
 
 	switch name := node.Name.(type) {

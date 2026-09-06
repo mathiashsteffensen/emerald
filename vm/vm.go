@@ -172,6 +172,12 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 	switch op {
 	case bytecode.OpPop:
 		vm.pop()
+	case bytecode.OpDupN:
+		count := int(vm.readUint8(ins, ip))
+		start := vm.currentFiber().sp - count
+		for i := 0; i < count; i++ {
+			vm.push(vm.stack()[start+i])
+		}
 	case bytecode.OpSelf:
 		vm.push(vm.ctx.Self)
 	case bytecode.OpTrue:

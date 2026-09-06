@@ -38,6 +38,8 @@ const (
 	// OpPushConstant pushes a constant from the constant pool onto the stack
 	OpPushConstant
 	OpPop
+	// OpDupN duplicates the top N values, preserving their order.
+	OpDupN
 
 	// Infix operators
 	OpAdd
@@ -150,6 +152,7 @@ var definitions = map[Opcode]*Definition{
 	OpPushConstant:      {"OpPushConstant", []int{2}},
 	OpAdd:               {"OpAdd", []int{}},
 	OpPop:               {"OpPop", []int{}},
+	OpDupN:              {"OpDupN", []int{1}},
 	OpSub:               {"OpSub", []int{}},
 	OpMul:               {"OpMul", []int{}},
 	OpDiv:               {"OpDiv", []int{}},
