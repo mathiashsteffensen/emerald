@@ -8,7 +8,7 @@ import (
 func (rt *Runtime) InitRuntimeError() {
 	rt.RuntimeError = rt.DefineClass("RuntimeError", rt.StandardError)
 
-	rt.DefineSingletonMethod(rt.RuntimeError, "new", rt.exceptionNew(rt.NewRuntimeError))
+	rt.defineNativeConstructor(rt.RuntimeError, rt.exceptionNew(rt.NewRuntimeError))
 }
 
 type RuntimeErrorInstance struct {

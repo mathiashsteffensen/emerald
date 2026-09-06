@@ -24,7 +24,7 @@ func (rt *Runtime) NewTime(val time.Time) object.EmeraldValue {
 func (rt *Runtime) InitTime() {
 	rt.Time = rt.DefineClass("Time", rt.Object)
 
-	rt.DefineSingletonMethod(rt.Time, "new", rt.timeNew())
+	rt.defineNativeConstructor(rt.Time, rt.timeNew())
 	rt.DefineSingletonMethod(rt.Time, "now", rt.timeNew())
 
 	rt.DefineMethod(rt.Time, "-", rt.timeSubtract())

@@ -25,7 +25,7 @@ func (rt *Runtime) NewRegexp(pattern string) object.EmeraldValue {
 func (rt *Runtime) InitRegexp() {
 	rt.Regexp = rt.DefineClass("Regexp", rt.Object)
 
-	rt.DefineSingletonMethod(rt.Regexp, "new", rt.regexpNew())
+	rt.defineNativeConstructor(rt.Regexp, rt.regexpNew())
 	rt.DefineSingletonMethod(rt.Regexp, "last_match", rt.regexpLastMatch())
 
 	rt.DefineMethod(rt.Regexp, "inspect", rt.regexpInspect())

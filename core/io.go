@@ -26,7 +26,7 @@ func (rt *Runtime) NewIO(fd uintptr) object.EmeraldValue {
 func (rt *Runtime) InitIO() {
 	rt.IO = rt.DefineClass("IO", rt.Object)
 
-	rt.DefineSingletonMethod(rt.IO, "new", rt.ioNew())
+	rt.defineNativeConstructor(rt.IO, rt.ioNew())
 	rt.DefineSingletonMethod(rt.IO, "sysopen", rt.ioSysopen())
 	rt.DefineSingletonMethod(rt.IO, "open", rt.ioOpen())
 	rt.DefineSingletonMethod(rt.IO, "read", rt.ioRead())
@@ -113,7 +113,11 @@ func (rt *Runtime) ioClose() object.BuiltInMethod {
 
 func (rt *Runtime) ioGetbyte() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		fd := ctx.Self.Heap.(*IOInstance).FileDescriptor
+		instance := ctx.Self.Heap.(*IOInstance)
+		if instance.Closed {
+			return object.NewHeapObject(rt.Raise(rt.NewRuntimeError("closed stream")))
+		}
+		fd := instance.FileDescriptor
 
 		buffer := make([]byte, 1)
 

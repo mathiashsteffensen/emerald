@@ -8,7 +8,7 @@ import (
 func (rt *Runtime) InitStandardError() {
 	rt.StandardError = rt.DefineClass("StandardError", rt.Exception)
 
-	rt.DefineSingletonMethod(rt.StandardError, "new", rt.exceptionNew(rt.NewStandardError))
+	rt.defineNativeConstructor(rt.StandardError, rt.exceptionNew(rt.NewStandardError))
 }
 
 type StandardErrorInstance struct {

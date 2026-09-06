@@ -8,7 +8,7 @@ import (
 func (rt *Runtime) InitLoadError() {
 	rt.LoadError = rt.DefineClass("LoadError", rt.StandardError)
 
-	rt.DefineSingletonMethod(rt.LoadError, "new", rt.exceptionNew(rt.NewLoadError))
+	rt.defineNativeConstructor(rt.LoadError, rt.exceptionNew(rt.NewLoadError))
 }
 
 type LoadErrorInstance struct {

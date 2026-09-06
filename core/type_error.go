@@ -8,7 +8,7 @@ import (
 func (rt *Runtime) InitTypeError() {
 	rt.TypeError = rt.DefineClass("TypeError", rt.StandardError)
 
-	rt.DefineSingletonMethod(rt.TypeError, "new", rt.exceptionNew(rt.NewTypeError))
+	rt.defineNativeConstructor(rt.TypeError, rt.exceptionNew(rt.NewTypeError))
 }
 
 type TypeErrorInstance struct {

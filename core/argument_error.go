@@ -20,7 +20,7 @@ func (err *ArgumentErrorInstance) Inspect() string {
 func (rt *Runtime) InitArgumentError() {
 	rt.ArgumentError = rt.DefineClass("ArgumentError", rt.StandardError)
 
-	rt.DefineSingletonMethod(rt.ArgumentError, "new", rt.exceptionNew(rt.newArgumentError))
+	rt.defineNativeConstructor(rt.ArgumentError, rt.exceptionNew(rt.newArgumentError))
 }
 
 func (rt *Runtime) newArgumentError(msg string) object.EmeraldError {

@@ -13,7 +13,7 @@ func (err *ExceptionInstance) ClassName() string { return "Exception" }
 func (rt *Runtime) InitException() {
 	rt.Exception = rt.DefineClass("Exception", rt.Object)
 
-	rt.DefineSingletonMethod(rt.Exception, "new", rt.exceptionNew(rt.NewException))
+	rt.defineNativeConstructor(rt.Exception, rt.exceptionNew(rt.NewException))
 
 	rt.DefineMethod(rt.Exception, "to_s", rt.exceptionToS())
 }

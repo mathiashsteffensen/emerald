@@ -8,7 +8,7 @@ import (
 func (rt *Runtime) InitNameError() {
 	rt.NameError = rt.DefineClass("NameError", rt.StandardError)
 
-	rt.DefineSingletonMethod(rt.NameError, "new", rt.exceptionNew(rt.NewNameError))
+	rt.defineNativeConstructor(rt.NameError, rt.exceptionNew(rt.NewNameError))
 }
 
 type NameErrorInstance struct {

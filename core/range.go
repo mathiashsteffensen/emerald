@@ -23,7 +23,7 @@ func (rt *Runtime) InitRange() {
 
 	rt.Range.Include(rt.Enumerable)
 
-	rt.DefineSingletonMethod(rt.Range, "new", rt.rangeNew())
+	rt.defineNativeConstructor(rt.Range, rt.rangeNew())
 
 	rt.DefineMethod(rt.Range, "each", rt.rangeEach())
 }

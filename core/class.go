@@ -8,7 +8,7 @@ import (
 func (rt *Runtime) InitClass() {
 	rt.Class = object.NewHeapObject(object.NewClass("Class", nil, object.EmeraldValue{}, object.BuiltInMethodSet{}, object.BuiltInMethodSet{}))
 
-	rt.DefineSingletonMethod(rt.Class, "new", rt.classSingletonNew())
+	rt.defineNativeConstructor(rt.Class, rt.classSingletonNew())
 
 	rt.DefineMethod(rt.Class, "new", rt.classNew())
 	rt.DefineMethod(rt.Class, "name", rt.className())

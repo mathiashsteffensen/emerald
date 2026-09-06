@@ -17,7 +17,7 @@ type TCPServerInstance struct {
 func (rt *Runtime) InitTCPServer() {
 	rt.TCPServer = rt.DefineClass("TCPServer", rt.Object)
 
-	rt.DefineSingletonMethod(rt.TCPServer, "new", rt.tcpServerNew())
+	rt.defineNativeConstructor(rt.TCPServer, rt.tcpServerNew())
 
 	rt.DefineMethod(rt.TCPServer, "accept", rt.tcpServerAccept())
 	rt.DefineMethod(rt.TCPServer, "super_serve", rt.tcpServerSuperServe())
@@ -58,6 +58,9 @@ func (rt *Runtime) tcpServerNew() object.BuiltInMethod {
 
 func (rt *Runtime) ensureListenerSet(server *TCPServerInstance) object.EmeraldError {
 	if server.Listener == nil {
+		if server.Address == "" {
+			return rt.Raise(rt.NewRuntimeError("uninitialized TCPServer"))
+		}
 		listener, err := net.Listen("tcp", server.Address)
 		if err != nil {
 			return rt.RaiseGoError(err)

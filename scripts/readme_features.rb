@@ -558,5 +558,17 @@ end
 review_box = ReadmeSpace::Parent.new(ReadmeOperatorValue.new)
 check("block-backed infix operator", 42, review_box.value + 1)
 check("block-backed compound operator", 42, (review_box.value += 1))
+class ReadmeCustomError < StandardError
+  def marker; 42; end
+end
+custom_error = ReadmeCustomError.new("boom")
+check("native error subclass identity and methods", [ReadmeCustomError, 42], [custom_error.class, custom_error.marker])
+class ReadmeCustomRegexp < Regexp
+  def initialize; @value = 42; end
+  def value; @value; end
+end
+custom_regexp = ReadmeCustomRegexp.new
+check("native regexp subclass initializer", [ReadmeCustomRegexp, 42], [custom_regexp.class, custom_regexp.value])
+check("native regexp subclass storage", ["//", true], [custom_regexp.inspect, custom_regexp === "abc"])
 puts "PASS: #{$checks} README feature checks"
 $checks
