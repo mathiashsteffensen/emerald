@@ -7,8 +7,13 @@ type ExceptionInstance struct {
 	message string
 }
 
-func (err *ExceptionInstance) Message() string   { return err.message }
-func (err *ExceptionInstance) ClassName() string { return "Exception" }
+func (err *ExceptionInstance) Message() string { return err.message }
+func (err *ExceptionInstance) ClassName() string {
+	if err.Instance == nil {
+		return "Exception"
+	}
+	return object.RealClass(object.NewHeapObject(err)).Inspect()
+}
 
 func (rt *Runtime) InitException() {
 	rt.Exception = rt.DefineClass("Exception", rt.Object)

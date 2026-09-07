@@ -7,6 +7,13 @@ import (
 	"testing"
 )
 
+func TestExceptionClassNameWithoutInstance(t *testing.T) {
+	err := &core.ExceptionInstance{}
+	if got := err.ClassName(); got != "Exception" {
+		t.Fatalf("class name = %q, want Exception", got)
+	}
+}
+
 func TestException_kind_of(t *testing.T) {
 	tests := []coreTestCase{}
 
