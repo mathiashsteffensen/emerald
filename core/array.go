@@ -24,6 +24,7 @@ func (rt *Runtime) InitArray() {
 	rt.DefineMethod(rt.Array, "<<", rt.arrayPush())
 	rt.DefineMethod(rt.Array, "push", rt.arrayPush())
 	rt.DefineMethod(rt.Array, "pop", rt.arrayPop())
+	rt.DefineMethod(rt.Array, "last", rt.arrayLast())
 	rt.DefineMethod(rt.Array, "each", rt.arrayEach())
 	rt.DefineMethod(rt.Array, "compact!", rt.arrayCompactBang())
 	rt.DefineMethod(rt.Array, "to_s", rt.arrayToS())
@@ -179,5 +180,40 @@ func (rt *Runtime) arrayLength() object.BuiltInMethod {
 		arr := ctx.Self.Heap.(*ArrayInstance)
 
 		return rt.NewInteger(int64(len(arr.Value)))
+	}
+}
+
+func (rt *Runtime) arrayLast() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := rt.EnforceArity(args, kwargs, 0, 1); err != nil {
+			return object.NewHeapObject(err)
+		}
+
+		arr := ctx.Self.Heap.(*ArrayInstance).Value
+
+		if len(args) == 0 {
+			if len(arr) == 0 {
+				return rt.NULL
+			}
+			return arr[len(arr)-1]
+		}
+
+		count, err := rt.EnforceIntegerArg(args[0])
+		if err != nil {
+			return object.NewHeapObject(err)
+		}
+		if count < 0 {
+			err := rt.newArgumentError("negative array size")
+			rt.Raise(err)
+			return object.NewHeapObject(err)
+		}
+		if count > int64(len(arr)) {
+			count = int64(len(arr))
+		}
+
+		values := make([]object.EmeraldValue, count)
+		copy(values, arr[int64(len(arr))-count:])
+
+		return rt.NewArray(values)
 	}
 }

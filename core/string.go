@@ -26,6 +26,7 @@ func (rt *Runtime) InitString() {
 	rt.DefineMethod(rt.String, "to_s", rt.stringToS())
 	rt.DefineMethod(rt.String, "inspect", rt.stringInspect())
 	rt.DefineMethod(rt.String, "to_sym", rt.stringToSym())
+	rt.DefineMethod(rt.String, "to_i", rt.stringToI())
 	rt.DefineMethod(rt.String, "==", rt.stringEquals())
 	rt.DefineMethod(rt.String, "+", rt.stringAdd())
 	rt.DefineMethod(rt.String, "*", rt.stringMultiply())
@@ -201,4 +202,52 @@ func (rt *Runtime) stringStartWith() object.BuiltInMethod {
 
 		return rt.FALSE
 	}
+}
+
+func (rt *Runtime) stringToI() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := rt.EnforceArity(args, kwargs, 0, 0); err != nil {
+			return object.NewHeapObject(err)
+		}
+
+		return rt.NewInteger(parseLeadingInteger(ctx.Self.Heap.(*StringInstance).Value))
+	}
+}
+
+// parseLeadingInteger mirrors Ruby's String#to_i: skips leading whitespace,
+// accepts an optional sign and digits separated by single underscores, and
+// stops at the first other character. Returns 0 when no digits are found.
+func parseLeadingInteger(s string) int64 {
+	i := 0
+	for i < len(s) && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r' || s[i] == '\f' || s[i] == '\v') {
+		i++
+	}
+
+	negative := false
+	if i < len(s) && (s[i] == '+' || s[i] == '-') {
+		negative = s[i] == '-'
+		i++
+	}
+
+	var result int64
+	seenDigit := false
+	for i < len(s) {
+		c := s[i]
+		if c >= '0' && c <= '9' {
+			result = result*10 + int64(c-'0')
+			seenDigit = true
+			i++
+			continue
+		}
+		if c == '_' && seenDigit && i+1 < len(s) && s[i+1] >= '0' && s[i+1] <= '9' {
+			i++
+			continue
+		}
+		break
+	}
+
+	if negative {
+		return -result
+	}
+	return result
 }

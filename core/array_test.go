@@ -81,6 +81,41 @@ func TestArray_first(t *testing.T) {
 	runCoreTests(t, tests)
 }
 
+func TestArray_last(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			input:    "[12, 24, 49].last",
+			expected: 49,
+		},
+		{
+			input:    "[].last",
+			expected: nil,
+		},
+		{
+			input:    "[36, 24, 49].last(2)",
+			expected: []any{24, 49},
+		},
+		{
+			input:    "[36, 24, 49].last(5)",
+			expected: []any{36, 24, 49},
+		},
+		{
+			input:    "[36, 24, 49].last(0)",
+			expected: []any{},
+		},
+		{
+			input:    "[36, 24, 49].last(-1)",
+			expected: "error:ArgumentError:negative array size",
+		},
+		{
+			input:    "[36, 24, 49].last(2, 3)",
+			expected: "error:ArgumentError:wrong number of arguments (given 2, expected 1)",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestArray_find(t *testing.T) {
 	tests := []coreTestCase{
 		{

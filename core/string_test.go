@@ -279,3 +279,24 @@ func TestString_start_with(t *testing.T) {
 
 	runCoreTests(t, tests)
 }
+
+func TestString_to_i(t *testing.T) {
+	tests := []coreTestCase{
+		{input: `"42".to_i`, expected: 42},
+		{input: `"-17".to_i`, expected: -17},
+		{input: `"+8".to_i`, expected: 8},
+		{input: `"  12abc".to_i`, expected: 12},
+		{input: `"1_000".to_i`, expected: 1000},
+		{input: `"1__0".to_i`, expected: 1},
+		{input: `"_1".to_i`, expected: 0},
+		{input: `"abc".to_i`, expected: 0},
+		{input: `"".to_i`, expected: 0},
+		{input: `"3.9".to_i`, expected: 3},
+		{
+			input:    `"1".to_i(2)`,
+			expected: "error:ArgumentError:wrong number of arguments (given 1, expected 0)",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
