@@ -26,6 +26,23 @@ func TestHashLiteralParsing(t *testing.T) {
 			input:    "{}",
 			expected: map[string]any{},
 		},
+		{
+			input:    "{x:, Y:, z: 2}",
+			expected: map[string]any{":x": "x", ":Y": "Y", ":z": 2},
+		},
+		{
+			input: `
+				{
+					x:,
+					y:
+				}
+			`,
+			expected: map[string]any{":x": "x", ":y": "y"},
+		},
+		{
+			input:    "{x:\n2}",
+			expected: map[string]any{":x": 2},
+		},
 	}
 
 	for _, tt := range tests {

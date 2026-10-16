@@ -154,6 +154,7 @@ Ruby implementation.
     - [x] without parens with args
     - [x] with block arguments
     - [x] keyword arguments
+    - [x] keyword argument shorthand `f(key:)`
 - [x] conditionals
     - [x] if
     - [x] if modifier
@@ -236,6 +237,7 @@ Ruby implementation.
 - [x] hashes
     - [x] literal with `=>` notation
     - [x] literal with `key:` notation
+    - [x] shorthand `{key:}` for `{key: key}`
     - [x] indexing `hash[:foo]`
     - [x] every Ruby Object can be a hash key
 - [ ] symbols

@@ -103,42 +103,23 @@ func (p *Parser) parseArgumentList() ([]ast.Expression, []*ast.HashLiteralElemen
 	args := []ast.Expression{}
 	keywordArgs := []*ast.HashLiteralElement{}
 
-	if p.peekTokenIsMultiple(lexer.COLON, lexer.ARROW) {
-		key := p.parseHashLiteralKey()
-		p.nextToken()
-		keywordArgs = append(keywordArgs, &ast.HashLiteralElement{
-			Key:   key,
-			Value: p.parseExpression(LOWEST),
-		})
-		startedKeywordArgs = true
-	} else {
-		args = append(args, p.parseExpression(LOWEST))
-	}
+	for {
+		p.nextIfCurNewline()
 
-	for p.peekTokenIs(lexer.COMMA) {
-		p.nextToken()
-		p.nextToken()
-
-		if startedKeywordArgs {
-			key := p.parseHashLiteralKey()
-			p.nextToken()
-			keywordArgs = append(keywordArgs, &ast.HashLiteralElement{
-				Key:   key,
-				Value: p.parseExpression(LOWEST),
-			})
-		} else if p.peekTokenIsMultiple(lexer.COLON, lexer.ARROW) {
-			key := p.parseHashLiteralKey()
-			p.nextToken()
-			keywordArgs = append(keywordArgs, &ast.HashLiteralElement{
-				Key:   key,
-				Value: p.parseExpression(LOWEST),
-			})
+		if startedKeywordArgs || p.peekTokenIsMultiple(lexer.COLON, lexer.ARROW) {
+			if element := p.parseHashLiteralElement(); element != nil {
+				keywordArgs = append(keywordArgs, element)
+			}
 			startedKeywordArgs = true
 		} else {
-			p.nextIfCurNewline()
 			args = append(args, p.parseExpression(LOWEST))
 		}
-	}
 
-	return args, keywordArgs
+		if !p.peekTokenIs(lexer.COMMA) {
+			return args, keywordArgs
+		}
+
+		p.nextToken()
+		p.nextToken()
+	}
 }

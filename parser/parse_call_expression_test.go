@@ -77,3 +77,38 @@ func TestCallExpressionParsing(t *testing.T) {
 		})
 	}
 }
+
+func TestKeywordArgumentValueOmission(t *testing.T) {
+	tests := []struct {
+		name           string
+		input          string
+		expectedArgs   []any
+		expectedKwargs map[string]any
+		expectBlock    bool
+	}{
+		{"with parentheses", "add(base:, Other:)", []any{}, map[string]any{":base": "base", ":Other": "Other"}, false},
+		{"with parentheses & positional args", "add(1, base:, other: 2)", []any{1}, map[string]any{":base": "base", ":other": 2}, false},
+		{"without parentheses", "add base:, other:", []any{}, map[string]any{":base": "base", ":other": "other"}, false},
+		{"without parentheses before a semicolon", "add base:; other", []any{}, map[string]any{":base": "base"}, false},
+		{"without parentheses & a do end block", "add base: do\nend", []any{}, map[string]any{":base": "base"}, true},
+		{"with parentheses & newline before closing", "add(base:\n)", []any{}, map[string]any{":base": "base"}, false},
+		{"without parentheses & value on next line", "add base:\nother", []any{}, map[string]any{":base": "other"}, false},
+		{"with keyword names", "add(class:, if:)", []any{}, map[string]any{":class": "class", ":if": "if"}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			program := testParseAST(t, tt.input)
+
+			testExpressionStatement(t, program.Statements[0], func(expression ast.CallExpression) {
+				testCallExpression(t, expression, "add", tt.expectedArgs, nil, tt.expectBlock)
+
+				if len(expression.KeywordArguments) != len(tt.expectedKwargs) {
+					t.Fatalf("wrong number of keyword arguments. got=%d", len(expression.KeywordArguments))
+				}
+
+				testHashLiteral(t, &ast.HashLiteral{Values: expression.KeywordArguments}, tt.expectedKwargs)
+			})
+		})
+	}
+}

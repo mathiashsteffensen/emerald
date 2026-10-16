@@ -18,6 +18,12 @@ func TestKeywordValidation(t *testing.T) {
 		{input: "f(left: 1, right: 2, extra: 3)", expected: "error:ArgumentError:unknown keyword: :extra"},
 		{input: "f(right: 2, left: nil)", expected: []any{nil, 2}},
 		{input: "f(right: 2, left: 1)", expected: []any{1, 2}},
+		{input: "left = 1; right = 2; f(left:, right:)", expected: []any{1, 2}},
+		{input: "def right; 3; end; left = 1; f right:, left:", expected: []any{1, 3}},
+		{input: "left = 1; f(right: 2, left:)", expected: []any{1, 2}},
+		{input: "def g; left = 1; right = 2; f left:, right:\nend; g", expected: []any{1, 2}},
+		{input: "left = 1; right = 2; if true\nf left:, right:\nelse\nnil\nend", expected: []any{1, 2}},
+		{input: "left = 1; right = 2; case 1\nwhen 1\nf left:, right:\nwhen 2\nnil\nend", expected: []any{1, 2}},
 	}, "def f(left:, right:); [left, right]; end")
 }
 

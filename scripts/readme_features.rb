@@ -106,6 +106,19 @@ check("keyword order", 7, keyword_sum(right: 4, left: 3))
 no_parens_keywords = keyword_sum right: 4, left: 3
 check("keyword call without parens", 7, no_parens_keywords)
 check("mixed keyword args", 7, mixed_args(3, extra: 4))
+def right
+  4
+end
+left = 3
+check("keyword shorthand", 7, keyword_sum(left:, right:))
+no_parens_shorthand = keyword_sum right:, left: 3
+check("keyword shorthand without parens", 7, no_parens_shorthand)
+check("keyword shorthand with value", 4, keyword_sum(left: 0, right:))
+def keyword_shorthand_before_end
+  left = 1
+  keyword_sum left:, right:
+end
+check("keyword shorthand before end", 5, keyword_shorthand_before_end)
 
 def empty_method()
 end
@@ -228,6 +241,14 @@ check("append aliases receiver", [1, 2, 3], append_result)
 check("append contents", [1, 2, 3], appended)
 check("hash rocket", 1, {"a" => 1}["a"])
 check("hash labels", 2, {b: 2}[:b])
+shorthand_key = 5
+check("hash shorthand", [5, 2], [{shorthand_key:, b: 2}[:shorthand_key], {shorthand_key:, b: 2}[:b]])
+check("hash shorthand method and constant", [42, Object], [{answer:}[:answer], {Object:}[:Object]])
+multiline_shorthand = {
+  shorthand_key:,
+  answer:
+}
+check("multiline hash shorthand", [5, 42], [multiline_shorthand[:shorthand_key], multiline_shorthand[:answer]])
 check("hash mixed", 2, {"a" => 1, b: 2}[:b])
 check("missing hash key", nil, {}[:missing])
 check("duplicate hash key", 2, {a: 1, a: 2}[:a])

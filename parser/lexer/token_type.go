@@ -121,3 +121,9 @@ func lookupIdent(ident string) TokenType {
 	}
 	return IDENT
 }
+
+// IsKeyword reports whether tok is a keyword such as `if` or `class`
+func IsKeyword(tok Token) bool {
+	keyword, ok := keywords[tok.Literal]
+	return ok && keyword == tok.Type
+}

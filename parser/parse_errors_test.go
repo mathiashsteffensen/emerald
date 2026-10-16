@@ -24,4 +24,9 @@ func TestParseErrors(t *testing.T) {
 	testParseError(t, "def method(, a); end", "expected next token to be IDENT")
 	testParseError(t, "def method(a,.); end", "expected next token to be IDENT")
 	testParseError(t, "def method(a:, b); end", "expected next token to be :")
+	testParseError(t, `{"x":}`, `expected a value for hash key "x"`)
+	testParseError(t, "{valid?:}", `expected a value for hash key "valid?"`)
+	testParseError(t, "{@x:}", `expected a value for hash key "@x"`)
+	testParseError(t, "h = {\n  x:", "syntax error, unexpected end-of-input")
+	testParseError(t, "add(x:", "syntax error, unexpected end-of-input")
 }
