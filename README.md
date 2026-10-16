@@ -59,7 +59,7 @@ networking, sleep, or clock APIs:
 ```go
 sandbox, err := emerald.NewSandbox(emerald.SandboxOptions{
     Timeout:          250 * time.Millisecond,
-    MemoryLimitBytes: 256 << 20,
+    MemoryLimitBytes: 2 << 30,
     WorkerPath:       "/usr/local/bin/emerald-sandbox-worker",
 })
 value, err := sandbox.Eval(source)
@@ -86,7 +86,10 @@ An abrupt worker exit, protocol error, or unrecoverable memory failure matches
 `ErrSandboxUnsupportedResult`.
 
 On Linux, the worker receives a hard address-space limit before it receives
-untrusted source. On macOS, `GOMEMLIMIT` and RSS controls are best effort only.
+untrusted source. This includes the Go runtime's virtual-memory reservations,
+not just resident memory or the script's heap. The 2 GiB example budget leaves
+room for runtime startup; a 256 MiB limit can kill the worker before evaluation.
+On macOS, `GOMEMLIMIT` and RSS controls are best effort only.
 Each evaluation runs in a separate worker process, so VM defects cannot take
 down the embedding process; this is not a security boundary against arbitrary
 native-code compromise.

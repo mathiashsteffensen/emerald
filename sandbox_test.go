@@ -19,7 +19,9 @@ import (
 	"emerald/object"
 )
 
-const testSandboxMemoryLimitBytes int64 = 256 * 1024 * 1024
+// Linux limits virtual address space, including the Go runtime's reservations,
+// not just resident memory. Leave enough room for the worker to start and run.
+const testSandboxMemoryLimitBytes int64 = 2 << 30
 
 var testSandboxWorkerPath string
 
@@ -473,14 +475,23 @@ func TestSandboxLinuxHardMemoryLimitTerminatesWorker(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// A 1 MiB chunk reaches the 256 MiB address-space ceiling in a handful of
-	// native string-builder growth steps, without placing that allocation in the
-	// test process. The result is deliberately small so the transfer limit
-	// cannot cause a false positive.
-	source := fmt.Sprintf("value = %q * 384\n1", strings.Repeat("x", 1<<20))
+	// Verify that this budget permits startup before testing exhaustion.
+	if value, err := sandbox.Eval("21 * 2"); err != nil || value.Inspect() != "42" {
+		t.Fatalf("worker must start under the memory limit: %s, %v", value.Inspect(), err)
+	}
+
+	// Request a string larger than the entire address-space budget. The result
+	// is deliberately small so the transfer limit cannot cause a false positive.
+	const chunkBytes = 1 << 20
+	repetitions := testSandboxMemoryLimitBytes/chunkBytes + 1
+	source := fmt.Sprintf("value = %q * %d\n1", strings.Repeat("x", chunkBytes), repetitions)
 	_, err = sandbox.Eval(source)
 	if !errors.Is(err, emerald.ErrSandboxWorkerFailed) {
 		t.Fatalf("expected hard-limit worker failure, got %v", err)
+	}
+	var workerErr *emerald.SandboxWorkerError
+	if !errors.As(err, &workerErr) || workerErr.Phase != "execute" {
+		t.Fatalf("expected memory exhaustion during execution, got %v", err)
 	}
 }
 
