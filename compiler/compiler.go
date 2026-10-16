@@ -325,7 +325,8 @@ func (c *Compiler) Bytecode() *bytecode.Bytecode {
 	}
 }
 
-func (c *Compiler) enterScope() {
+// enterScope opens a new compilation scope. A gated scope (a method body) cannot see outer locals.
+func (c *Compiler) enterScope(gate bool) {
 	scope := CompilationScope{
 		bytecode: bytecode.Bytecode{
 			Instructions: bytecode.Instructions{},
@@ -339,7 +340,11 @@ func (c *Compiler) enterScope() {
 	c.scopes = append(c.scopes, scope)
 	c.scopeIndex++
 
-	c.symbolTable = heap.NewEnclosedSymbolTable(c.symbolTable)
+	if gate {
+		c.symbolTable = heap.NewGatedSymbolTable(c.symbolTable)
+	} else {
+		c.symbolTable = heap.NewEnclosedSymbolTable(c.symbolTable)
+	}
 }
 
 func (c *Compiler) leaveScope() bytecode.Bytecode {

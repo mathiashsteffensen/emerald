@@ -18,8 +18,8 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
 	c.emit(bytecode.OpDefineMethod, node.Token)
 }
 
-func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*object.Block, int) {
-	c.enterScope()
+func (c *Compiler) compileBlock(node *ast.BlockLiteral, method bool) (*object.Block, int) {
+	c.enterScope(method)
 
 	numParams := len(node.Arguments)
 	for _, p := range append(node.Arguments, node.KeywordArguments...) {
@@ -84,7 +84,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, enforceArity bool) (*obj
 		kwargNames = append(kwargNames, argument.Value)
 	}
 
-	block := object.NewBlock(bytecode, numLocals, numParams, kwargNames, enforceArity)
+	block := object.NewBlock(bytecode, numLocals, numParams, kwargNames, method)
 	block.ExceptionTable = exceptionTable
 	for _, symbol := range freeSymbols {
 		block.FreeBindings = append(block.FreeBindings, object.FreeBinding{Index: symbol.Index, Local: symbol.Scope == heap.LocalScope})

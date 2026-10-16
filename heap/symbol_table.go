@@ -1,5 +1,7 @@
 package heap
 
+import "strings"
+
 type SymbolScope int
 
 const (
@@ -30,6 +32,8 @@ type Symbol struct {
 type SymbolTable struct {
 	Outer       *SymbolTable
 	FreeSymbols []Symbol
+	// Gate marks a method scope: outer locals are invisible, only $globals resolve through it.
+	Gate bool
 
 	store          map[string]Symbol
 	NumDefinitions int
@@ -43,6 +47,12 @@ func NewSymbolTable() *SymbolTable {
 func NewEnclosedSymbolTable(outer *SymbolTable) *SymbolTable {
 	s := NewSymbolTable()
 	s.Outer = outer
+	return s
+}
+
+func NewGatedSymbolTable(outer *SymbolTable) *SymbolTable {
+	s := NewEnclosedSymbolTable(outer)
+	s.Gate = true
 	return s
 }
 
@@ -73,6 +83,9 @@ func (s *SymbolTable) DefineGlobal(name string) Symbol {
 
 func (s *SymbolTable) Resolve(name string) (Symbol, bool) {
 	obj, ok := s.store[name]
+	if !ok && s.Gate && !strings.HasPrefix(name, "$") {
+		return obj, false
+	}
 	if !ok && s.Outer != nil {
 		obj, ok = s.Outer.Resolve(name)
 		if !ok {

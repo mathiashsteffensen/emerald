@@ -4,10 +4,10 @@ import "testing"
 
 func TestIfModifier(t *testing.T) {
 	setup := `
-		i = 1
+		$i = 1
 		
 		def call
-			i = i + 1
+			$i = $i + 1
 		end
 	`
 
@@ -16,7 +16,7 @@ func TestIfModifier(t *testing.T) {
 			input: `
 				call if true && false
 
-				i
+				$i
 			`,
 			expected: 1,
 		},
@@ -24,7 +24,7 @@ func TestIfModifier(t *testing.T) {
 			input: `
 				call if 1 + 1 == 2
 
-				i
+				$i
 			`,
 			expected: 2,
 		},
@@ -40,7 +40,7 @@ func TestIfModifier(t *testing.T) {
 				call if call? true ||
 				
 									false
-				i
+				$i
 			`,
 			expected: 4,
 		},

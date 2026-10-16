@@ -256,7 +256,6 @@ Ruby implementation.
 - [ ] procs `->`
 - [x] variables
     - [x] variable assignments
-    - [x] globals
     - [x] Ruby globals ($ notation)
 - [ ] operators
     - [x] `+`

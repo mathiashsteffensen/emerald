@@ -84,13 +84,13 @@ func TestConditionalSetterEvaluation(t *testing.T) {
 
 func TestCompoundSetterAssignment(t *testing.T) {
 	runVmTests(t, []vmTestCase{
-		{name: "property assignment", input: "item.value += 2; item.value", expected: 12},
+		{name: "property assignment", input: "$item.value += 2; $item.value", expected: 12},
 		{name: "index assignment", input: "hash = {key: 10}; hash[:key] += 2; hash[:key]", expected: 12},
 		{name: "receiver evaluated once", input: `
 			$calls = 0
-			def receiver; $calls += 1; item; end
+			def receiver; $calls += 1; $item; end
 			result = (receiver.value *= 2)
-			[result, item.value, $calls]
+			[result, $item.value, $calls]
 		`, expected: []any{20, 20, 1}},
 		{name: "index evaluated once", input: `
 			$calls = 0
@@ -104,7 +104,7 @@ func TestCompoundSetterAssignment(t *testing.T) {
 		def value; @value; end
 		def value=(n); @value = n; -1; end
 	end
-	item = Item.new`)
+	$item = Item.new`)
 }
 
 func TestSetterAssignmentValueWithKeywords(t *testing.T) {

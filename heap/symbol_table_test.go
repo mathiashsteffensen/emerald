@@ -272,3 +272,27 @@ func TestResolveUnresolvableFree(t *testing.T) {
 		}
 	}
 }
+
+func TestResolveGated(t *testing.T) {
+	global := NewSymbolTable()
+	global.Define("a")
+	global.DefineGlobal("$g")
+
+	method := NewGatedSymbolTable(global)
+	method.Define("b")
+
+	block := NewEnclosedSymbolTable(method)
+
+	if _, ok := method.Resolve("a"); ok {
+		t.Error("gated table resolved outer local a")
+	}
+	if _, ok := block.Resolve("a"); ok {
+		t.Error("block in gated table resolved outer local a")
+	}
+	if sym, ok := block.Resolve("$g"); !ok || sym != (Symbol{Name: "$g", Scope: GlobalScope, Index: 1}) {
+		t.Errorf("expected $g to resolve as global, got=%+v (ok=%t)", sym, ok)
+	}
+	if sym, ok := block.Resolve("b"); !ok || sym != (Symbol{Name: "b", Scope: FreeScope, Index: 0}) {
+		t.Errorf("expected b to resolve as free, got=%+v (ok=%t)", sym, ok)
+	}
+}

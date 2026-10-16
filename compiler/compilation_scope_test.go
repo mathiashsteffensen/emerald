@@ -18,7 +18,7 @@ func TestCompilerScopes(t *testing.T) {
 
 	globalSymbolTable := compiler.symbolTable
 	compiler.emit(bytecode.OpMul, lexer.Token{})
-	compiler.enterScope()
+	compiler.enterScope(false)
 
 	if compiler.scopeIndex != 1 {
 		t.Errorf("scopeIndex wrong. got=%d, want=%d", compiler.scopeIndex, 1)

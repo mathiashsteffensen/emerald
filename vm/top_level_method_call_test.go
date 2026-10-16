@@ -129,16 +129,16 @@ func TestTopLevelMethodCall(t *testing.T) {
 		},
 		{
 			input: `
-			globalSeed = 50
+			$globalSeed = 50
 
 			def minus_one
 				num = 1
-				globalSeed - num
+				$globalSeed - num
 			end
 
 			def minus_two
 				num = 2
-				globalSeed - num
+				$globalSeed - num
 			end
 			minus_one + minus_two
 			`,
@@ -195,18 +195,18 @@ func TestTopLevelMethodCall(t *testing.T) {
 		},
 		{
 			input: `
-			global_num = 10
+			$global_num = 10
 
 			def sum(a, b)
 				c = a + b
-				c + global_num
+				c + $global_num
 			end
 
 			def outer
-				sum(1, 2) + sum(3, 4) + global_num
+				sum(1, 2) + sum(3, 4) + $global_num
 			end
 
-			outer + global_num;
+			outer + $global_num;
 			`,
 			expected: 50,
 		},

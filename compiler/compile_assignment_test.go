@@ -73,8 +73,8 @@ func TestCompileAssignment(t *testing.T) {
 		},
 		{
 			input: `
-			num = 55
-			def method; num; end
+			$num = 55
+			def method; $num; end
 			`,
 			expectedConstants: []any{
 				55,

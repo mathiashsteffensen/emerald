@@ -521,11 +521,6 @@ rescue RuntimeError, TypeError => error
 end
 check("multiple rescues and binding", "boom", multiple_rescues)
 
-readme_plain_global = 42
-def plain_global_reader
-  readme_plain_global
-end
-check("Emerald plain globals", 42, plain_global_reader)
 # Separate instances of the same class must remain separate hash keys.
 first_key = Object.new
 second_key = Object.new
