@@ -23,8 +23,8 @@ func TestReadmeLanguageFeatures(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !value.Is(object.INTEGER_VALUE) || value.Num != 239 {
-		t.Fatalf("feature script did not complete all 239 checks: %s", value.Inspect())
+	if !value.Is(object.INTEGER_VALUE) || value.Num != 245 {
+		t.Fatalf("feature script did not complete all 245 checks: %s", value.Inspect())
 	}
 }
 
@@ -205,7 +205,7 @@ func TestReadmeCommands(t *testing.T) {
 			want := []string{"=> 42", "=> 8", "See you next time!"}
 			if name == "emerald" {
 				cmd.Args = append(cmd.Args, "scripts/readme_features.rb")
-				want = []string{"PASS: 239 README feature checks"}
+				want = []string{"PASS: 245 README feature checks"}
 			} else {
 				cmd.Stdin = strings.NewReader("21 * 2\n$readme = 7\n$readme + 1\nexit\n")
 			}

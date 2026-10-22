@@ -174,8 +174,8 @@ Ruby implementation.
     - [ ] for loop
     - [x] while loop
     - [ ] until loop
-    - [ ] break
-    - [ ] next
+    - [x] break
+    - [x] next
     - [ ] redo
     - [ ] flip flop
 - [ ] numbers

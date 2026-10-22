@@ -206,6 +206,25 @@ while false
   sum = 100
 end
 check("while zero iterations", 10, sum)
+i = 0
+check("break with value from while", 30, while true; i += 1; break i * 10 if i == 3; end)
+check("bare break from while", nil, while true; break; end)
+check("break from native block", 20, [1, 2, 3].each { |x| break x * 10 if x == 2 })
+def readme_yield_twice
+  yield 1
+  yield 2
+  :not_reached
+end
+check("break from yielded block", 2, readme_yield_twice { |x| break x if x == 2 })
+i = 0
+odds = []
+while i < 5
+  i += 1
+  next if i == 2 || i == 4
+  odds.push(i)
+end
+check("next in while", [1, 3, 5], odds)
+check("next with value in block", [1, 20, 3], [1, 2, 3].map { |x| next x * 10 if x == 2; x })
 
 puts "README: strings, escapes, symbols, arrays and hashes"
 check("empty string", 0, "".length)
