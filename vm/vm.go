@@ -24,6 +24,7 @@ type VM struct {
 	executionError   error
 	fibers           []*Fiber
 	fiberIndex       int
+	breakTargets     []*breakTarget
 }
 
 func New(file string, bytecode *bytecode.Bytecode, rt *core.Runtime) *VM {
@@ -329,6 +330,8 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		vm.executeOpReturn()
 	case bytecode.OpReturnValue:
 		vm.executeOpReturnValue()
+	case bytecode.OpBreak:
+		vm.executeOpBreak()
 	case bytecode.OpRescuedError:
 		frame := vm.currentFiber().currentFrame()
 		vm.push(frame.rescuedError)
@@ -460,7 +463,7 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) bool {
 	// Handy for debugging, but makes the VM quite slow when calling DebugF in a hot path
 	// debug.DebugF("Calling method %s#%s %d %s", receiver.Inspect(), name.Value, numArgs)
 
-	vm.withExecutionContext(receiver, block, func() {
+	call := func() {
 		switch m := method.Heap.(type) {
 		case *object.ClosedBlock:
 			kwargsMap = map[string]object.EmeraldValue{}
@@ -514,7 +517,13 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) bool {
 				vm.push(result)
 			}
 		}
-	})
+	}
+
+	if closedBlock, ok := block.Heap.(*object.ClosedBlock); ok {
+		vm.callWithBreakTarget(closedBlock, basePointer-2, func() { vm.withExecutionContext(receiver, block, call) })
+	} else {
+		vm.withExecutionContext(receiver, block, call)
+	}
 
 	// A rescue may clear $! while redirecting execution to another instruction/frame.
 	return vm.executionError == nil && !vm.ExceptionIsRaised() &&

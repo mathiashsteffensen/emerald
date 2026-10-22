@@ -2,25 +2,20 @@ package parser
 
 import (
 	"emerald/parser/ast"
+	"emerald/parser/lexer"
 )
 
 func (p *Parser) parseBreakStatement() ast.Statement {
-	node := &ast.BreakStatement{
-		Token: p.curToken,
+	stmt := &ast.BreakStatement{Token: p.curToken, Value: &ast.NullExpression{Token: p.curToken}}
+	if !p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON, lexer.END, lexer.RBRACE, lexer.RESCUE, lexer.EOF, lexer.IF, lexer.UNLESS) {
+		p.nextToken()
+		stmt.Value = p.parseExpression(MODIFIER)
 	}
 
-	p.nextToken()
-
-	if p.curPrecedence() == MODIFIER {
-		return &ast.ExpressionStatement{Expression: p.parseBoolModifierFromStatement(node)}
+	if !p.curTokenIs(lexer.NEWLINE) && p.peekTokenIsMultiple(lexer.IF, lexer.UNLESS) {
+		p.nextToken()
+		return &ast.ExpressionStatement{Token: stmt.Token, Expression: p.parseBoolModifierFromStatement(stmt)}
 	}
 
-	node.Value = p.parseAsPrefix()
-	p.nextToken()
-
-	if p.curPrecedence() == MODIFIER {
-		return &ast.ExpressionStatement{Expression: p.parseBoolModifierFromStatement(node)}
-	}
-
-	return node
+	return stmt
 }

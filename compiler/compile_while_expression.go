@@ -15,8 +15,9 @@ func (c *Compiler) compileWhileExpression(node *ast.WhileExpression) {
 	c.emit(bytecode.OpPop, node.Token)
 
 	scope := &c.scopes[c.scopeIndex]
-	scope.loops = append(scope.loops, conditionPosition)
+	scope.loops = append(scope.loops, loop{conditionPosition: conditionPosition})
 	c.Compile(node.Consequence)
+	breakJumps := scope.loops[len(scope.loops)-1].breakJumps
 	scope.loops = scope.loops[:len(scope.loops)-1]
 
 	c.emit(bytecode.OpJump, node.Token, conditionPosition)
@@ -25,4 +26,9 @@ func (c *Compiler) compileWhileExpression(node *ast.WhileExpression) {
 	c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
 
 	c.emit(bytecode.OpNull, node.Token)
+
+	// `break` leaves its value on the stack in place of the OpNull above
+	for _, pos := range breakJumps {
+		c.changeOperand(pos, len(c.currentInstructions()))
+	}
 }

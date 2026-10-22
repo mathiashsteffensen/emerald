@@ -79,9 +79,10 @@ func testBreakStatement(t *testing.T, stmt ast.Statement, value any) {
 		t.Fatalf("stmt is not *ast.BreakStatement. got=%T", stmt)
 	}
 
-	if value == nil && breakStmt.Value != nil {
-		t.Fatalf("Expected break without a value but got %s", breakStmt.Value)
-	} else if value == nil {
+	if value == nil {
+		if _, ok := breakStmt.Value.(*ast.NullExpression); !ok {
+			t.Fatalf("Expected break without a value but got %s", breakStmt.Value.String(0))
+		}
 		return
 	}
 

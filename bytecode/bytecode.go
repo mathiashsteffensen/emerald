@@ -115,6 +115,8 @@ const (
 
 	OpReturn
 	OpReturnValue
+	// OpBreak returns from the method call the current block was passed to
+	OpBreak
 	OpRescuedError
 	OpDefineMethod
 
@@ -195,6 +197,7 @@ var definitions = map[Opcode]*Definition{
 	OpSetFree:           {"OpSetFree", []int{1}},
 	OpReturn:            {"OpReturn", []int{}},
 	OpReturnValue:       {"OpReturnValue", []int{}},
+	OpBreak:             {"OpBreak", []int{}},
 	OpRescuedError:      {"OpRescuedError", []int{}},
 	OpDefineMethod:      {"OpDefineMethod", []int{}},
 	OpSend:              {"OpSend", []int{2, 1, 1}},

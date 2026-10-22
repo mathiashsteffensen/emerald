@@ -29,7 +29,7 @@ func (rt *Runtime) defineNativeConstructor(owner object.EmeraldValue, constructo
 			native = &IOInstance{Instance: base, FileDescriptor: ^uintptr(0), Closed: true}
 		case rt.TCPServer:
 			native = &TCPServerInstance{Instance: base}
-		case rt.Exception, rt.StandardError, rt.ArgumentError, rt.TypeError, rt.NameError, rt.NoMethodError, rt.RuntimeError, rt.LoadError:
+		case rt.Exception, rt.StandardError, rt.ArgumentError, rt.TypeError, rt.NameError, rt.NoMethodError, rt.RuntimeError, rt.LoadError, rt.LocalJumpError:
 			native = &ExceptionInstance{Instance: base}
 		case rt.Class:
 			native = object.NewClass("", rt.Object.Heap.(*object.Class), ctx.Self, object.BuiltInMethodSet{}, object.BuiltInMethodSet{})

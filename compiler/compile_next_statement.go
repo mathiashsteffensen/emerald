@@ -12,7 +12,7 @@ func (c *Compiler) compileNextStatement(node *ast.NextStatement) {
 	if len(scope.loops) > 0 {
 		c.Compile(node.Value)
 		c.emit(bytecode.OpPop, node.Token)
-		c.emit(bytecode.OpJump, node.Token, scope.loops[len(scope.loops)-1])
+		c.emit(bytecode.OpJump, node.Token, scope.loops[len(scope.loops)-1].conditionPosition)
 		return
 	}
 
