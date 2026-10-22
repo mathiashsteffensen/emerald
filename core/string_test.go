@@ -300,3 +300,35 @@ func TestString_to_i(t *testing.T) {
 
 	runCoreTests(t, tests)
 }
+
+func TestString_comparison(t *testing.T) {
+	tests := []coreTestCase{
+		{input: `"09:35" < "10:30"`, expected: true},
+		{input: `"10:30" < "09:35"`, expected: false},
+		{input: `"a" < "a"`, expected: false},
+		{input: `"a" <= "a"`, expected: true},
+		{input: `"b" > "a"`, expected: true},
+		{input: `"a" > "ab"`, expected: false},
+		{input: `"b" >= "b"`, expected: true},
+		{input: `"a" <=> "b"`, expected: -1},
+		{input: `"b" <=> "a"`, expected: 1},
+		{input: `"a" <=> "a"`, expected: 0},
+		{input: `"a" <=> 1`, expected: nil},
+		{input: `"a" == "a"`, expected: true},
+		{input: `"a" == 1`, expected: false},
+		{
+			input:    `"a" < 1`,
+			expected: "error:ArgumentError:comparison of String with 1 failed",
+		},
+		{
+			input:    `"a" >= []`,
+			expected: "error:ArgumentError:comparison of String with Array failed",
+		},
+		{
+			input:    `1 < "a"`,
+			expected: "error:ArgumentError:comparison of Integer with String failed",
+		},
+	}
+
+	runCoreTests(t, tests)
+}

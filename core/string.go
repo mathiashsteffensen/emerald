@@ -21,6 +21,8 @@ func (rt *Runtime) NewString(val string) object.EmeraldValue {
 func (rt *Runtime) InitString() {
 	rt.String = rt.DefineClass("String", rt.Object)
 
+	rt.String.Include(rt.Comparable)
+
 	rt.defineNativeConstructor(rt.String, rt.stringNew())
 
 	rt.DefineMethod(rt.String, "to_s", rt.stringToS())
@@ -28,6 +30,7 @@ func (rt *Runtime) InitString() {
 	rt.DefineMethod(rt.String, "to_sym", rt.stringToSym())
 	rt.DefineMethod(rt.String, "to_i", rt.stringToI())
 	rt.DefineMethod(rt.String, "==", rt.stringEquals())
+	rt.DefineMethod(rt.String, "<=>", rt.stringSpaceship())
 	rt.DefineMethod(rt.String, "+", rt.stringAdd())
 	rt.DefineMethod(rt.String, "*", rt.stringMultiply())
 	rt.DefineMethod(rt.String, "=~", rt.stringMatch())
@@ -87,6 +90,21 @@ func (rt *Runtime) stringEquals() object.BuiltInMethod {
 		} else {
 			return rt.NativeBoolToBooleanObject(false)
 		}
+	}
+}
+
+func (rt *Runtime) stringSpaceship() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := rt.EnforceArity(args, kwargs, 1, 1); err != nil {
+			return object.NewHeapObject(err)
+		}
+
+		right, ok := args[0].Heap.(*StringInstance)
+		if !ok {
+			return rt.NULL
+		}
+
+		return rt.NewInteger(int64(strings.Compare(ctx.Self.Heap.(*StringInstance).Value, right.Value)))
 	}
 }
 
