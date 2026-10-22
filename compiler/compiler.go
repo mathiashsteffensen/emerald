@@ -222,6 +222,8 @@ func (c *Compiler) Compile(node ast.Node) {
 			return
 		}
 		c.emit(bytecode.OpReturnValue, node.Token)
+	case *ast.NextStatement:
+		c.compileNextStatement(node)
 	case *ast.PrefixExpression:
 		c.compilePrefixExpression(node)
 	case *ast.AssignmentExpression:

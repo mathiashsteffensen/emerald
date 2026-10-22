@@ -20,6 +20,7 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
 
 func (c *Compiler) compileBlock(node *ast.BlockLiteral, method bool) (*object.Block, int) {
 	c.enterScope(method)
+	c.scopes[c.scopeIndex].block = !method
 
 	numParams := len(node.Arguments)
 	for _, p := range append(node.Arguments, node.KeywordArguments...) {

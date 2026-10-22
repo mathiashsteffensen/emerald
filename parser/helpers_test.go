@@ -57,6 +57,22 @@ func testIfElseExpression(t *testing.T, expr *ast.IfExpression, condition, conse
 	}
 }
 
+func testNextStatement(t *testing.T, stmt ast.Statement, value any) {
+	nextStmt, ok := stmt.(*ast.NextStatement)
+	if !ok {
+		t.Fatalf("stmt is not *ast.NextStatement. got=%T", stmt)
+	}
+
+	if value == nil {
+		if _, ok := nextStmt.Value.(*ast.NullExpression); !ok {
+			t.Fatalf("Expected next without a value but got %s", nextStmt.Value.String(0))
+		}
+		return
+	}
+
+	testLiteralExpression(t, nextStmt.Value, value)
+}
+
 func testBreakStatement(t *testing.T, stmt ast.Statement, value any) {
 	breakStmt, ok := stmt.(*ast.BreakStatement)
 	if !ok {

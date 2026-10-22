@@ -7,7 +7,7 @@ import (
 
 func TestMethodCallParsing(t *testing.T) {
 	input := `
-1.add(2, 3, 4 + 5) do |num, next|
+1.add(2, 3, 4 + 5) do |num, other|
   num + @var.method
 rescue NoMemoryError, SystemError => e
   puts("we done fucked up this time")

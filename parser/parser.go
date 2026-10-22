@@ -223,6 +223,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		result = p.parseReturnStatement()
 	case lexer.BREAK:
 		result = p.parseBreakStatement()
+	case lexer.NEXT:
+		result = p.parseNextStatement()
 	default:
 		result = p.parseExpressionStatement()
 	}

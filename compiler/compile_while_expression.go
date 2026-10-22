@@ -14,7 +14,10 @@ func (c *Compiler) compileWhileExpression(node *ast.WhileExpression) {
 	jumpNotTruthyPos := c.emit(bytecode.OpJumpNotTruthy, node.Token, 9999)
 	c.emit(bytecode.OpPop, node.Token)
 
+	scope := &c.scopes[c.scopeIndex]
+	scope.loops = append(scope.loops, conditionPosition)
 	c.Compile(node.Consequence)
+	scope.loops = scope.loops[:len(scope.loops)-1]
 
 	c.emit(bytecode.OpJump, node.Token, conditionPosition)
 
