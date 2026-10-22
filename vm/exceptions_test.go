@@ -140,3 +140,82 @@ func TestErrorHandling(t *testing.T) {
 
 	runVmTests(t, tests)
 }
+
+func TestRescueThroughNativeIterator(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "through each", input: `
+			def f
+				result = []
+				[1, 2].each { |x| result.push(x); raise "a" }
+				result.push("after")
+			rescue
+				result.push("rescued")
+			end
+			f
+		`, expected: []any{1, "rescued"}},
+		{name: "through map", input: `
+			def f
+				result = []
+				[1, 2].map { |x| result.push(x); raise "a" }
+				result.push("after")
+			rescue
+				result.push("rescued")
+			end
+			f
+		`, expected: []any{1, "rescued"}},
+		{name: "through a bytecode method that yields", input: `
+			def twice
+				yield 1
+				yield 2
+			end
+
+			def f
+				result = []
+				twice { |x| result.push(x); raise "a" }
+				result.push("after")
+			rescue
+				result.push("rescued")
+			end
+			f
+		`, expected: []any{1, "rescued"}},
+		{name: "through nested iterators", input: `
+			def f
+				result = []
+				[1, 2].each { |x| [3, 4].map { |y| result.push(y); raise "a" } }
+			rescue
+				result.push("rescued")
+			end
+			f
+		`, expected: []any{3, "rescued"}},
+		{name: "continues after the call", input: `
+			def f
+				[1, 2].each { |x| raise "a" }
+			rescue
+				"rescued"
+			end
+			[f, f, 1 + 1]
+		`, expected: []any{"rescued", "rescued", 2}},
+		{name: "restores self", input: `
+			class Foo
+				def f
+					[1].each { raise "a" }
+				rescue
+					name
+				end
+
+				def name
+					"foo"
+				end
+			end
+			Foo.new.f
+		`, expected: "foo"},
+		{name: "clears $!", input: `
+			def f
+				[1].each { raise "a" }
+			rescue
+			end
+			f
+			$!
+		`, expected: nil},
+	})
+}

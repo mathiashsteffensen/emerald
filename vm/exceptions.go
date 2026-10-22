@@ -4,6 +4,17 @@ import (
 	"emerald/object"
 )
 
+// runLevel is one runWhile loop, executing frames from frameIndex and up
+type runLevel struct {
+	frameIndex int
+}
+
+// rescueSignal is panicked by handleRaise to unwind the Go stack, through any native methods, to the runWhile
+// loop executing the frame with the matching rescue handler
+type rescueSignal struct {
+	level *runLevel
+}
+
 func (vm *VM) handleRaise(err object.EmeraldError) {
 	fiber := vm.currentFiber()
 
@@ -35,6 +46,11 @@ func (vm *VM) handleRaise(err object.EmeraldError) {
 					fiber.sp = frame.basePointer + block.NumLocals
 					frame.rescuedError = object.NewHeapObject(err)
 					vm.rt.Heap.SetGlobalVariableString("$!", object.EmeraldValue{})
+
+					// Natives between here and the handler stop on $!, which is now cleared, so skip past them
+					if level := vm.runLevelFor(fiber.framesIndex); level != nil {
+						panic(rescueSignal{level: level})
+					}
 					return
 				}
 			}
@@ -42,6 +58,17 @@ func (vm *VM) handleRaise(err object.EmeraldError) {
 
 		fiber.popFrame()
 	}
+}
+
+// runLevelFor finds the innermost runWhile loop executing the frame at frameIndex
+func (vm *VM) runLevelFor(frameIndex int) *runLevel {
+	for i := len(vm.runLevels) - 1; i >= 0; i-- {
+		if vm.runLevels[i].frameIndex <= frameIndex {
+			return vm.runLevels[i]
+		}
+	}
+
+	return nil
 }
 
 func (vm *VM) ExceptionIsRaised() bool {

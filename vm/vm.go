@@ -25,6 +25,7 @@ type VM struct {
 	fibers           []*Fiber
 	fiberIndex       int
 	breakTargets     []*breakTarget
+	runLevels        []*runLevel
 }
 
 func New(file string, bytecode *bytecode.Bytecode, rt *core.Runtime) *VM {
@@ -143,11 +144,37 @@ func (vm *VM) checkContext() bool {
 }
 
 func (vm *VM) runWhile(condition func() bool) {
+	level := &runLevel{frameIndex: vm.currentFiber().framesIndex}
+	vm.runLevels = append(vm.runLevels, level)
+	defer func() {
+		vm.runLevels = vm.runLevels[:len(vm.runLevels)-1]
+	}()
+
+	for !vm.runInstructions(level, condition) {
+	}
+}
+
+// runInstructions returns false when a rescue in one of level's frames interrupted it, and execution resumes at the handler
+func (vm *VM) runInstructions(level *runLevel, condition func() bool) (done bool) {
 	var (
 		ip  int
 		ins bytecode.Instructions
 		op  bytecode.Opcode
+		ctx *object.Context
 	)
+
+	defer func() {
+		if r := recover(); r != nil {
+			signal, ok := r.(rescueSignal)
+			if !ok || signal.level != level {
+				panic(r)
+			}
+
+			// handleRaise already moved frames and sp to the handler, the unwound Go stack did not restore ctx
+			vm.ctx = ctx
+			done = false
+		}
+	}()
 
 	for vm.checkContext() && condition() && vm.currentFiber().framesIndex > 0 {
 		frame := vm.currentFiber().currentFrame()
@@ -159,8 +186,11 @@ func (vm *VM) runWhile(condition func() bool) {
 
 		ip, ins, op = vm.fetch()
 
+		ctx = vm.ctx
 		vm.execute(ip, ins, op)
 	}
+
+	return true
 }
 
 func (vm *VM) fetch() (int, bytecode.Instructions, bytecode.Opcode) {
