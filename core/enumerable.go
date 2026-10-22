@@ -15,6 +15,8 @@ func (rt *Runtime) InitEnumerable() {
 	rt.DefineMethod(rt.Enumerable, "reduce", rt.enumerableReduce())
 	rt.DefineMethod(rt.Enumerable, "inject", rt.enumerableReduce())
 	rt.DefineMethod(rt.Enumerable, "sum", rt.enumerableSum())
+	rt.DefineMethod(rt.Enumerable, "min", rt.enumerableExtreme(func(i int64) bool { return i < 0 }))
+	rt.DefineMethod(rt.Enumerable, "max", rt.enumerableExtreme(func(i int64) bool { return i > 0 }))
 }
 
 func (rt *Runtime) enumerableFirst() object.BuiltInMethod {
@@ -210,5 +212,70 @@ func (rt *Runtime) enumerableReduce() object.BuiltInMethod {
 		rt.Send(self, "each", wrappedBlock, map[string]object.EmeraldValue{})
 
 		return accumulated
+	}
+}
+
+// Shared by min & max, replaces the current extreme when isBetter(element <=> current) holds
+// TODO: Support count argument
+func (rt *Runtime) enumerableExtreme(isBetter func(int64) bool) object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		if _, err := rt.EnforceArity(args, kwargs, 0, 0); err != nil {
+			return object.NewHeapObject(err)
+		}
+
+		var current object.EmeraldValue
+		var failure object.EmeraldError
+		found := false
+
+		blockGiven := ctx.BlockGiven()
+		block := ctx.Block
+
+		wrappedBlock := object.NewHeapObject(&object.WrappedBuiltInMethod{
+			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+				if failure != nil {
+					return rt.NULL
+				}
+
+				element := args[0]
+				if len(args) > 1 {
+					element = rt.NewArray(args)
+				}
+
+				if !found {
+					current, found = element, true
+					return rt.NULL
+				}
+
+				var spaceshipResult object.EmeraldValue
+				if blockGiven {
+					spaceshipResult = rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, element, current)
+				} else {
+					spaceshipResult = rt.Send(element, "<=>", rt.NULL, map[string]object.EmeraldValue{}, current)
+				}
+
+				if !spaceshipResult.Is(object.INTEGER_VALUE) {
+					failure = rt.comparisonFailedError(element, current)
+					return rt.NULL
+				}
+
+				if isBetter(int64(spaceshipResult.Num)) {
+					current = element
+				}
+
+				return rt.NULL
+			},
+		})
+
+		rt.Send(ctx.Self, "each", wrappedBlock, map[string]object.EmeraldValue{})
+
+		if failure != nil {
+			return object.NewHeapObject(rt.Raise(failure))
+		}
+
+		if !found {
+			return rt.NULL
+		}
+
+		return current
 	}
 }

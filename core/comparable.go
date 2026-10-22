@@ -62,15 +62,18 @@ func (rt *Runtime) comparableMethod(spaceshipCallback func(int64) object.Emerald
 		spaceshipResult := rt.Send(ctx.Self, "<=>", rt.NULL, kwargs, args...)
 
 		if spaceshipResult.IsNil() {
-			other := args[0].Class().Inspect()
-			if args[0].IsImmediate() {
-				other = args[0].Inspect()
-			}
-
-			err := rt.newArgumentError(fmt.Sprintf("comparison of %s with %s failed", ctx.Self.Class().Inspect(), other))
-			return object.NewHeapObject(rt.Raise(err))
+			return object.NewHeapObject(rt.Raise(rt.comparisonFailedError(ctx.Self, args[0])))
 		}
 
 		return spaceshipCallback(int64(spaceshipResult.Num))
 	}
+}
+
+func (rt *Runtime) comparisonFailedError(self object.EmeraldValue, other object.EmeraldValue) object.EmeraldError {
+	otherDescription := other.Class().Inspect()
+	if other.IsImmediate() {
+		otherDescription = other.Inspect()
+	}
+
+	return rt.newArgumentError(fmt.Sprintf("comparison of %s with %s failed", self.Class().Inspect(), otherDescription))
 }

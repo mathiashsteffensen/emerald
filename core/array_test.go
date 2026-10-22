@@ -198,6 +198,70 @@ func TestArray_sum(t *testing.T) {
 	runCoreTests(t, tests)
 }
 
+func TestArray_min(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			name:     "integers",
+			input:    "[12, 3, 49].min",
+			expected: 3,
+		},
+		{
+			name:     "strings",
+			input:    `["pear", "apple", "fig"].min`,
+			expected: "apple",
+		},
+		{
+			name:     "with comparison block",
+			input:    `["pear", "apple", "fig"].min { |a, b| a.length <=> b.length }`,
+			expected: "fig",
+		},
+		{
+			name:     "empty",
+			input:    "[].min",
+			expected: nil,
+		},
+		{
+			name:     "incomparable elements",
+			input:    `[1, "a"].min`,
+			expected: "error:ArgumentError:comparison of String with 1 failed",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
+func TestArray_max(t *testing.T) {
+	tests := []coreTestCase{
+		{
+			name:     "integers",
+			input:    "[12, 3, 49].max",
+			expected: 49,
+		},
+		{
+			name:     "strings",
+			input:    `["pear", "apple", "fig"].max`,
+			expected: "pear",
+		},
+		{
+			name:     "with comparison block",
+			input:    `["pear", "apple", "fig"].max { |a, b| a.length <=> b.length }`,
+			expected: "apple",
+		},
+		{
+			name:     "empty",
+			input:    "[].max",
+			expected: nil,
+		},
+		{
+			name:     "incomparable elements",
+			input:    `[1, "a"].max`,
+			expected: "error:ArgumentError:comparison of String with 1 failed",
+		},
+	}
+
+	runCoreTests(t, tests)
+}
+
 func TestArray_index(t *testing.T) {
 	tests := []coreTestCase{
 		{
