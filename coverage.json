@@ -2,14 +2,14 @@
   "packages": {
     "emerald/parser": 98.6,
     "emerald/parser/lexer": 96.2,
-    "emerald/vm": 94.3,
+    "emerald/vm": 94.4,
     "emerald/compiler": 88.1,
     "emerald/core": 86.0,
     "emerald/object": 78.2,
     "emerald/bytecode": 77.3,
     "emerald/heap": 75.7,
     "emerald/internal/sandboxwire": 75.6,
-    "emerald": 56.5,
+    "emerald": 56.8,
     "emerald/parser/ast": 0.2
   },
   "functions": {
@@ -177,14 +177,14 @@
       "vm.go:conditionalJump": 100.0,
       "vm.go:readUint8": 100.0,
       "vm.go:readUint16": 100.0,
-      "fiber.go:stack": 100.0,
       "fiber.go:currentFiber": 100.0,
+      "fiber.go:stack": 100.0,
       "fiber.go:NewFiber": 100.0,
       "exceptions.go:ExceptionIsRaised": 100.0,
       "fiber.go:pop": 100.0,
       "frame.go:NewFrame": 100.0,
-      "frame.go:Instructions": 100.0,
       "eval_block.go:withExecutionContextForBlock": 100.0,
+      "frame.go:Instructions": 100.0,
       "frame.go:currentFrame": 100.0,
       "frame.go:pushFrame": 100.0,
       "frame.go:popFrame": 100.0,
@@ -201,7 +201,7 @@
       "vm.go:execute": 97.7,
       "exceptions.go:handleRaise": 97.4,
       "op_check_case_equal.go:executeOpCheckCaseEqual": 97.0,
-      "eval_block.go:evalBuiltIn": 91.7,
+      "eval_block.go:evalBuiltIn": 95.0,
       "vm.go:RunContext": 91.7,
       "eval_block.go:Send": 90.9,
       "op_break.go:executeOpBreak": 88.9,
@@ -209,9 +209,10 @@
       "op_constant.go:executeOpScopedConstantGet": 86.2,
       "op_constant.go:executeOpConstantGet": 83.3,
       "fiber.go:push": 81.8,
+      "backtrace.go:frameSource": 80.0,
       "exceptions.go:runLevelFor": 75.0,
       "fiber.go:StackTop": 66.7,
-      "backtrace.go:frameLocation": 66.7,
+      "backtrace.go:frameName": 40.0,
       "vm.go:Context": 0.0,
       "vm.go:RunIncremental": 0.0
     },
@@ -735,7 +736,7 @@
       "sandbox_value.go:decodeSandboxValueAt": 76.7,
       "engine.go:evalFileContextWithPhase": 75.0,
       "sandbox_value.go:consume": 75.0,
-      "sandbox_worker.go:evalWorker": 70.1,
+      "sandbox_worker.go:evalWorker": 71.4,
       "sandbox_worker.go:sandboxResponseError": 66.7,
       "sandbox_worker.go:responseErrorPhase": 66.7,
       "sandbox_value.go:unsupportedSandboxValue": 66.7,
@@ -858,5 +859,5 @@
       "case_expression.go:String": 0.0
     }
   },
-  "total": 81.5
+  "total": 81.6
 }

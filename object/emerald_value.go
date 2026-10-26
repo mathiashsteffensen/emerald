@@ -24,6 +24,8 @@ type (
 		*BaseEmeraldValue
 		Method     BuiltInMethod
 		Visibility MethodVisibility
+		// Name labels the method in backtraces. Internal wrapper blocks have none and are left out.
+		Name string
 	}
 
 	// BuiltInMethodSet - Stores an objects built-in method set

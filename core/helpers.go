@@ -59,11 +59,11 @@ func (rt *Runtime) DefineNestedModule(namespace object.EmeraldValue, name string
 }
 
 func (rt *Runtime) DefineMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
-	receiver.BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: rt.getVisibility(visibilities)}
+	receiver.BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Name: name, Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: rt.getVisibility(visibilities)}
 }
 
 func (rt *Runtime) DefineSingletonMethod(receiver object.EmeraldValue, name string, method object.BuiltInMethod, visibilities ...object.MethodVisibility) {
-	receiver.SingletonClass().BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: rt.getVisibility(visibilities)}
+	receiver.SingletonClass().BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Name: name, Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}, Visibility: rt.getVisibility(visibilities)}
 }
 
 func (rt *Runtime) DefineConstant(name string, value, namespace object.EmeraldValue) {

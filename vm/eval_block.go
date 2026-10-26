@@ -108,10 +108,14 @@ func (vm *VM) evalBuiltIn(builtin *object.WrappedBuiltInMethod, block object.Eme
 		return vm.rt.NULL
 	}
 
+	fiber := vm.currentFiber()
+	fiber.nativeFrames = append(fiber.nativeFrames, nativeFrame{name: builtin.Name, depth: fiber.framesIndex})
+
 	oldBlock := vm.ctx.Block
 	vm.ctx.Block = block
 	defer func() {
 		vm.ctx.Block = oldBlock
+		fiber.nativeFrames = fiber.nativeFrames[:len(fiber.nativeFrames)-1]
 	}()
 
 	result := builtin.Method(vm.ctx, kwargs, args...)

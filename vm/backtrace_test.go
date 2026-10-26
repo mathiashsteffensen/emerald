@@ -40,10 +40,37 @@ end
 outer`,
 			expected: []string{
 				"test:4:in 'block (2 levels) in outer'",
+				"test:3:in 'each'",
 				"test:3:in 'block in outer'",
+				"test:2:in 'each'",
 				"test:2:in 'outer'",
 				"test:9:in '<main>'",
 			},
+		},
+		{
+			name:     "errors raised inside native methods include them at the caller's line",
+			input:    "def add(value)\n  1 + value\nend\n\nadd(nil)",
+			expected: []string{"test:2:in '+'", "test:2:in 'add'", "test:5:in '<main>'"},
+		},
+		{
+			name:     "native arity errors",
+			input:    "def shout\n  \"hi\".to_i(1)\nend\n\nshout",
+			expected: []string{"test:2:in 'to_i'", "test:2:in 'shout'", "test:5:in '<main>'"},
+		},
+		{
+			name:     "nested natives",
+			input:    "[1].each do |x|\n  [2].map { |y| y.missing }\nend",
+			expected: []string{"test:2:in 'block (2 levels) in <main>'", "test:2:in 'each'", "test:2:in 'map'", "test:2:in 'block in <main>'", "test:1:in 'each'", "test:1:in '<main>'"},
+		},
+		{
+			name:     "natives are dropped once they return",
+			input:    "[1].each { |x| x }\n[2].map { |x| x }\nraise \"boom\"",
+			expected: []string{"test:3:in '<main>'"},
+		},
+		{
+			name:     "natives unwound by a rescue are dropped",
+			input:    "def f\n  [1].each { |x| raise \"inner\" }\nrescue StandardError\n  nil\nend\nf\nraise \"boom\"",
+			expected: []string{"test:7:in '<main>'"},
 		},
 		{
 			name: "errors raised by native methods point at the caller",

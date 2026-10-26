@@ -90,7 +90,7 @@ func (rt *Runtime) moduleAttrReader() object.BuiltInMethod {
 				}
 			}
 
-			ctx.Self.BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}}
+			ctx.Self.BuiltInMethodSet()[name] = &object.WrappedBuiltInMethod{Name: name, Method: method, BaseEmeraldValue: &object.BaseEmeraldValue{}}
 		}
 
 		return rt.NewArray(args)

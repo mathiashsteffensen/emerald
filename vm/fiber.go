@@ -24,6 +24,14 @@ type Fiber struct {
 	// Call frames
 	frames      []*Frame
 	framesIndex int
+	// Native methods currently executing, innermost last. They have no Frame, so backtraces splice them in by depth.
+	nativeFrames []nativeFrame
+}
+
+// nativeFrame is a running built-in method. depth is framesIndex when it was called: the frame at depth-1 is its caller.
+type nativeFrame struct {
+	name  string
+	depth int
 }
 
 func NewFiber(mainFrame *Frame) *Fiber {
