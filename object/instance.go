@@ -9,6 +9,7 @@ type Instance struct {
 	*BaseEmeraldValue
 	baseClass EmeraldValue
 	singleton *SingletonClass
+	backtrace []string
 }
 
 func (i *Instance) Type() EmeraldValueType { return INSTANCE_VALUE }
@@ -53,3 +54,18 @@ func (i *Instance) Inspect() string {
 	return out.String()
 }
 func (i *Instance) HashKey() string { return i.Inspect() }
+
+// Backtrace returns the call stack captured when this instance was raised as an error, or nil
+func (i *Instance) Backtrace() []string {
+	if i == nil {
+		return nil
+	}
+	return i.backtrace
+}
+
+func (i *Instance) SetBacktrace(backtrace []string) {
+	if i == nil {
+		return
+	}
+	i.backtrace = backtrace
+}

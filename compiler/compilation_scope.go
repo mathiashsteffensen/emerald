@@ -7,6 +7,7 @@ type CompilationScope struct {
 	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
 	block               bool   // a non-method block, where `next` returns from the block
+	name                string // backtrace label of the method or block being compiled
 	loops               []loop // enclosing while loops, innermost last
 }
 

@@ -554,3 +554,11 @@ func (l *Lexer) readIdentifier() string {
 
 	return l.currentInput.content[position:l.position]
 }
+
+// FileName is the name of the input being lexed
+func (l *Lexer) FileName() string {
+	if l == nil || l.currentInput == nil {
+		return ""
+	}
+	return l.currentInput.fileName
+}

@@ -26,6 +26,8 @@ type Block struct {
 	EnforceArity   bool
 	ExceptionTable []ExceptionTableEntry
 	FreeBindings   []FreeBinding
+	// Name labels this block in backtraces, e.g. "foo", "block in foo" or "<main>"
+	Name string
 }
 
 func (b *Block) Class() EmeraldValue          { return EmeraldValue{} }

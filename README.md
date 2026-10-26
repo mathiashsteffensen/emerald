@@ -327,5 +327,5 @@ Ruby implementation.
 - [x] modules
 - [x] object main
 - [x] comments '#'
-- [ ] backtraces (unwinding of the VM call stack for debugging)
+- [x] backtraces (unwinding of the VM call stack for debugging)
 - [ ] C extension compatability

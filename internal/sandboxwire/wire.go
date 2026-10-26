@@ -59,11 +59,13 @@ type Response struct {
 // Error carries an error reported by the worker. Its interpretation is left to
 // the parent-side sandbox API.
 type Error struct {
-	Kind       string `json:"kind,omitempty"`
-	ClassName  string `json:"class_name,omitempty"`
-	Message    string `json:"message"`
-	Phase      Phase  `json:"phase,omitempty"`
-	Stacktrace []byte `json:"stacktrace,omitempty"`
+	Kind      string `json:"kind,omitempty"`
+	ClassName string `json:"class_name,omitempty"`
+	Message   string `json:"message"`
+	Phase     Phase  `json:"phase,omitempty"`
+	// Backtrace lists the Emerald frames an eval error was raised through, innermost first.
+	Backtrace  []string `json:"backtrace,omitempty"`
+	Stacktrace []byte   `json:"stacktrace,omitempty"`
 }
 
 // ValueType tags the active field in a Value.

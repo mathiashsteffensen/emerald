@@ -21,6 +21,8 @@ func (rt *Runtime) InitException() {
 	rt.defineNativeConstructor(rt.Exception, rt.exceptionNew(rt.NewException))
 
 	rt.DefineMethod(rt.Exception, "to_s", rt.exceptionToS())
+	rt.DefineMethod(rt.Exception, "message", rt.exceptionToS())
+	rt.DefineMethod(rt.Exception, "backtrace", rt.exceptionBacktrace())
 }
 
 func (rt *Runtime) NewException(msg string) object.EmeraldError {
@@ -45,5 +47,22 @@ func (rt *Runtime) exceptionNew(initializer func(msg string) object.EmeraldError
 		}
 
 		return object.NewHeapObject(initializer(msg))
+	}
+}
+
+// exceptionBacktrace returns the frames the error was raised through as strings, or nil before it is raised
+func (rt *Runtime) exceptionBacktrace() object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		backtrace := ctx.Self.Heap.(object.EmeraldError).Backtrace()
+		if backtrace == nil {
+			return rt.NULL
+		}
+
+		lines := make([]object.EmeraldValue, len(backtrace))
+		for i, line := range backtrace {
+			lines[i] = rt.NewString(line)
+		}
+
+		return rt.NewArray(lines)
 	}
 }

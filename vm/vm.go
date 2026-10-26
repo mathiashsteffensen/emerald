@@ -34,7 +34,7 @@ func New(file string, bytecode *bytecode.Bytecode, rt *core.Runtime) *VM {
 
 // NewWithOptions creates a VM with explicit arguments and load paths.
 func NewWithOptions(file string, bytecode *bytecode.Bytecode, rt *core.Runtime, options Options) *VM {
-	mainBlock := &object.ClosedBlock{Block: &object.Block{Bytecode: *bytecode}}
+	mainBlock := &object.ClosedBlock{Block: &object.Block{Bytecode: *bytecode, Name: "<main>"}}
 	mainFrame := NewFrame(mainBlock, 0)
 
 	rootFiber := NewFiber(mainFrame)
@@ -87,7 +87,7 @@ func (vm *VM) RunIncremental(instructions bytecode.Instructions, debugTokens map
 			Instructions: instructions,
 			DebugTokens:  debugTokens,
 		}
-		mainBlock := &object.ClosedBlock{Block: &object.Block{Bytecode: bc, NumLocals: numLocals}}
+		mainBlock := &object.ClosedBlock{Block: &object.Block{Bytecode: bc, NumLocals: numLocals, Name: "<main>"}}
 		fiber.pushFrame(NewFrame(mainBlock, 0))
 	} else {
 		// We always want to append to the main frame in the REPL

@@ -8,6 +8,7 @@ import (
 	"emerald/object"
 	"emerald/vm"
 	"fmt"
+	"strings"
 )
 
 type Engine struct {
@@ -48,13 +49,34 @@ func (e *Engine) EvalWithOptions(content string, options EvalOptions) (object.Em
 }
 
 type EvalError struct {
-	ClassName  string
-	Message    string
+	ClassName string
+	Message   string
+	// Backtrace lists the Emerald frames the error was raised through, innermost first, as "file:line:in 'method'"
+	Backtrace  []string
 	Stacktrace []byte
 }
 
 func (e EvalError) Error() string {
 	return fmt.Sprintf("%s: %s", e.ClassName, e.Message)
+}
+
+// FullMessage formats the error like Ruby reports an uncaught exception:
+//
+//	main.rb:2:in 'inner': boom (RuntimeError)
+//		from main.rb:6:in '<main>'
+func (e EvalError) FullMessage() string {
+	if len(e.Backtrace) == 0 {
+		return fmt.Sprintf("%s (%s)", e.Message, e.ClassName)
+	}
+
+	var out strings.Builder
+	fmt.Fprintf(&out, "%s: %s (%s)", e.Backtrace[0], e.Message, e.ClassName)
+	for _, frame := range e.Backtrace[1:] {
+		out.WriteString("\n\tfrom ")
+		out.WriteString(frame)
+	}
+
+	return out.String()
 }
 
 type evaluationPhaseError struct {
@@ -136,6 +158,7 @@ func (e *Engine) evalError() error {
 			return EvalError{
 				ClassName:  emErr.ClassName(),
 				Message:    emErr.Message(),
+				Backtrace:  append([]string(nil), emErr.Backtrace()...),
 				Stacktrace: []byte{},
 			}
 		}

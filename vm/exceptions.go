@@ -18,6 +18,11 @@ type rescueSignal struct {
 func (vm *VM) handleRaise(err object.EmeraldError) {
 	fiber := vm.currentFiber()
 
+	// Capture before unwinding. A re-raised error keeps the backtrace from where it was first raised.
+	if err.Backtrace() == nil {
+		err.SetBacktrace(vm.Backtrace())
+	}
+
 	for fiber.framesIndex > 0 {
 		frame := fiber.currentFrame()
 		block := frame.block

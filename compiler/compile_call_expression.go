@@ -18,7 +18,7 @@ func (c *Compiler) compileCallExpression(node ast.CallExpression) {
 
 func (c *Compiler) compileCallArguments(node ast.CallExpression) (int, int) {
 	if node.Block != nil {
-		block, freeSymbolCount := c.compileBlock(node.Block, false)
+		block, freeSymbolCount := c.compileBlock(node.Block, false, "")
 
 		c.emit(bytecode.OpCloseBlock, node.Block.Token, c.addConstant(object.NewHeapObject(block)), freeSymbolCount)
 	} else {

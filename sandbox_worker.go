@@ -174,6 +174,7 @@ func sandboxResponseError(response *sandboxwire.Error, stderr string) error {
 		return EvalError{
 			ClassName:  response.ClassName,
 			Message:    response.Message,
+			Backtrace:  append([]string(nil), response.Backtrace...),
 			Stacktrace: append([]byte(nil), response.Stacktrace...),
 		}
 	case "deadline":
@@ -284,6 +285,7 @@ func writeSandboxWorkerEvaluationError(
 				ClassName:  evalErr.ClassName,
 				Message:    evalErr.Message,
 				Phase:      phase,
+				Backtrace:  append([]string(nil), evalErr.Backtrace...),
 				Stacktrace: append([]byte(nil), evalErr.Stacktrace...),
 			},
 		})

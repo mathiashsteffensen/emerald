@@ -541,3 +541,17 @@ func assertEvalErrorClass(t *testing.T, err error, className string) {
 		t.Fatalf("expected %s, got %s: %v", className, evalErr.ClassName, err)
 	}
 }
+
+func TestSandboxEvalErrorBacktrace(t *testing.T) {
+	_, err := newTestSandbox(t).EvalFile("script.rb", "def inner\n  raise \"boom\"\nend\n\ninner\n")
+
+	var evalErr emerald.EvalError
+	if !errors.As(err, &evalErr) {
+		t.Fatalf("expected EvalError, got %T: %v", err, err)
+	}
+
+	want := []string{"script.rb:2:in 'inner'", "script.rb:5:in '<main>'"}
+	if fmt.Sprint(evalErr.Backtrace) != fmt.Sprint(want) {
+		t.Fatalf("backtrace = %q, want %q", evalErr.Backtrace, want)
+	}
+}

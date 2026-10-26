@@ -223,3 +223,25 @@ func Lookup(op byte) (*Definition, error) {
 	}
 	return def, nil
 }
+
+// FileName is the source file these instructions were compiled from
+func (bytecode Bytecode) FileName() string {
+	return bytecode.Lexer.FileName()
+}
+
+// LineAt returns the source line of the instruction containing offset, or 0 when unknown.
+// offset may point into an instruction's operands.
+func (bytecode Bytecode) LineAt(offset int) int {
+	bestPos := -1
+	for pos, token := range bytecode.DebugTokens {
+		if pos <= offset && pos > bestPos && token.Line > 0 {
+			bestPos = pos
+		}
+	}
+
+	if bestPos < 0 {
+		return 0
+	}
+
+	return bytecode.DebugTokens[bestPos].Line
+}

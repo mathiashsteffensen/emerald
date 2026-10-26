@@ -31,3 +31,29 @@ func TestEngineExceptionClassName(t *testing.T) {
 		}
 	}
 }
+
+func TestEngineEvalErrorBacktrace(t *testing.T) {
+	_, err := emerald.New().EvalFile("main.rb", "def inner\n  raise \"boom\"\nend\n\ndef outer\n  inner\nend\n\nouter\n")
+	evalErr, ok := err.(emerald.EvalError)
+	if !ok {
+		t.Fatalf("expected EvalError, got %T: %v", err, err)
+	}
+
+	wantBacktrace := []string{"main.rb:2:in 'inner'", "main.rb:6:in 'outer'", "main.rb:9:in '<main>'"}
+	if fmt.Sprint(evalErr.Backtrace) != fmt.Sprint(wantBacktrace) {
+		t.Fatalf("backtrace = %q, want %q", evalErr.Backtrace, wantBacktrace)
+	}
+
+	wantFull := "main.rb:2:in 'inner': boom (RuntimeError)\n\tfrom main.rb:6:in 'outer'\n\tfrom main.rb:9:in '<main>'"
+	if evalErr.FullMessage() != wantFull {
+		t.Fatalf("full message = %q, want %q", evalErr.FullMessage(), wantFull)
+	}
+
+	if evalErr.Error() != "RuntimeError: boom" {
+		t.Fatalf("Error() = %q", evalErr.Error())
+	}
+
+	if (emerald.EvalError{ClassName: "Exception", Message: "no frames"}).FullMessage() != "no frames (Exception)" {
+		t.Fatal("full message without a backtrace")
+	}
+}

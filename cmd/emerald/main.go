@@ -5,6 +5,7 @@ import (
 	"emerald/cmd/emerald/subcmd"
 	"emerald/cmd/helpers"
 	"emerald/debug"
+	"errors"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -44,6 +45,10 @@ var rootCmd = &cobra.Command{
 			})
 
 			if err != nil {
+				var evalErr emerald.EvalError
+				if errors.As(err, &evalErr) {
+					debug.Fatal(evalErr.FullMessage())
+				}
 				debug.Fatal(err.Error())
 			}
 		}

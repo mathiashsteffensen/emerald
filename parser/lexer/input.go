@@ -8,3 +8,5 @@ type Input struct {
 func NewInput(fileName string, content string) *Input {
 	return &Input{fileName: fileName, content: content}
 }
+
+func (i *Input) FileName() string { return i.fileName }

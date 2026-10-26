@@ -150,6 +150,11 @@ func (rt *Runtime) kernelRaise() object.BuiltInMethod {
 
 		switch len(args) {
 		case 1:
+			if exception, ok := args[0].Heap.(object.EmeraldError); ok {
+				rt.Raise(exception)
+				return rt.NULL
+			}
+
 			msg, err := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
 			if err != nil {
 				return object.NewHeapObject(err)
@@ -222,7 +227,7 @@ func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 			BlockGiven: func() bool {
 				return false
 			},
-		}, &object.Block{Bytecode: *bytecode}, nil, "", object.PUBLIC)
+		}, &object.Block{Bytecode: *bytecode, Name: "<top (required)>"}, nil, "", object.PUBLIC)
 
 		rt.EvalBlock(requiredBlock, map[string]object.EmeraldValue{})
 

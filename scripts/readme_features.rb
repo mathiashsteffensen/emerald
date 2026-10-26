@@ -435,6 +435,34 @@ rescue StandardError
   6
 end
 check("rescue not taken", 5, no_error)
+def backtrace_inner
+  raise "boom"
+end
+def backtrace_outer
+  backtrace_inner
+rescue StandardError => error
+  error
+end
+backtrace_error = backtrace_outer
+# The file is relative when run through Go tests and absolute from the CLI, so compare line and label only.
+def backtrace_location(frame)
+  parts = frame.split(":")
+  "#{parts[parts.length - 2]}:#{parts[parts.length - 1]}"
+end
+check("backtrace frames", ["439:in 'backtrace_inner'", "442:in 'backtrace_outer'", "446:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
+check("backtrace file", true, backtrace_error.backtrace[0].split(":")[0].split("/").last == "readme_features.rb")
+check("backtrace before raise", nil, RuntimeError.new("x").backtrace)
+def backtrace_reraise
+  backtrace_inner
+rescue StandardError => error
+  raise error
+end
+def backtrace_reraise_outer
+  backtrace_reraise
+rescue StandardError => error
+  backtrace_location(error.backtrace[0])
+end
+check("re-raise keeps backtrace", "439:in 'backtrace_inner'", backtrace_reraise_outer)
 # Mix constructors, nested calls, block capture, branches, setters and hash keys.
 results = {}
 [1, 2, 3].each do |n|

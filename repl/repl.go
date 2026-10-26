@@ -151,7 +151,8 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 		machine.RunIncremental(newInstructions, newDebugTokens, 0)
 
 		if exception := engine.Runtime.Heap.GetGlobalVariableString("$!"); !exception.IsNil() && exception != engine.Runtime.NULL {
-			printf("%s: %s\n", exception.Heap.(object.EmeraldError).ClassName(), exception.Heap.(object.EmeraldError).Message())
+			emErr := exception.Heap.(object.EmeraldError)
+			print(emerald.EvalError{ClassName: emErr.ClassName(), Message: emErr.Message(), Backtrace: emErr.Backtrace()}.FullMessage())
 			engine.Runtime.Heap.SetGlobalVariableString("$!", object.EmeraldValue{})
 			continue
 		}

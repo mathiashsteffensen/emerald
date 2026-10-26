@@ -47,6 +47,7 @@ func NewContext(ctx context.Context, l *lexer.Lexer, rt *core.Runtime, options .
 			DebugTokens:  map[int]lexer.Token{},
 			Lexer:        l,
 		},
+		name:                "<main>",
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
 	}
