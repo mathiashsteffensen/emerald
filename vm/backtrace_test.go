@@ -63,6 +63,26 @@ outer`,
 			expected: []string{"test:2:in 'block (2 levels) in <main>'", "test:2:in 'each'", "test:2:in 'map'", "test:2:in 'block in <main>'", "test:1:in 'each'", "test:1:in '<main>'"},
 		},
 		{
+			name:     "a call on an instance variable points at its own line",
+			input:    "x = 1\n@a = nil\n@a.foo",
+			expected: []string{"test:3:in '<main>'"},
+		},
+		{
+			name:     "a call on a global variable points at its own line",
+			input:    "x = 1\n$g = nil\n$g.foo",
+			expected: []string{"test:3:in '<main>'"},
+		},
+		{
+			name:     "a call on a double-quoted string points at its own line",
+			input:    "x = 1\n@a = nil\n\"s\".foo",
+			expected: []string{"test:3:in '<main>'"},
+		},
+		{
+			name:     "a call on a single-quoted string points at its own line",
+			input:    "x = 1\n@a = nil\n's'.foo",
+			expected: []string{"test:3:in '<main>'"},
+		},
+		{
 			name:     "natives are dropped once they return",
 			input:    "[1].each { |x| x }\n[2].map { |x| x }\nraise \"boom\"",
 			expected: []string{"test:3:in '<main>'"},

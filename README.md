@@ -139,9 +139,9 @@ Ruby implementation.
 - [x] everything is an object
     - [x] allow method calls on everything
     - [x] operators are method calls
-- [ ] full UTF8 support
-    - [ ] Unicode identifier
-    - [ ] Unicode symbols
+- [x] full UTF8 support
+    - [x] Unicode identifier
+    - [x] Unicode symbols
 - [ ] method definitions
     - [x] with parens
     - [x] without parens

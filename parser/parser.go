@@ -6,6 +6,7 @@ import (
 	"emerald/parser/lexer"
 	"fmt"
 	"strconv"
+	"unicode/utf8"
 )
 
 type (
@@ -14,10 +15,15 @@ type (
 )
 
 type Parser struct {
-	ctx            context.Context
-	l              *lexer.Lexer
-	err            error
-	errors         []string
+	ctx    context.Context
+	l      *lexer.Lexer
+	err    error
+	errors []string
+
+	// reportedInvalidBytes holds the positions of invalid UTF-8 bytes that
+	// already have an error, so that each byte is reported once.
+	reportedInvalidBytes map[int]bool
+
 	curToken       lexer.Token
 	peekToken      lexer.Token
 	prefixParseFns map[lexer.TokenType]prefixParseFn
@@ -44,6 +50,8 @@ func NewContext(ctx context.Context, l *lexer.Lexer) *Parser {
 		ctx:    ctx,
 		l:      l,
 		errors: []string{},
+
+		reportedInvalidBytes: map[int]bool{},
 	}
 
 	p.l.RunContext(ctx)
@@ -135,10 +143,43 @@ func (p *Parser) unexpectedEofError() {
 }
 
 func (p *Parser) peekError(t lexer.TokenType) {
+	// An invalid byte is the cause of the failed expectation, so report it
+	// rather than its token type.
+	if isInvalidUTF8Byte(p.peekToken) {
+		p.invalidUTF8Error(p.peekToken)
+		return
+	}
+
 	msg := fmt.Sprintf(
 		"expected next token to be %s, got %s instead at line %d column %d\n%s",
 		t, p.peekToken.Type, p.peekToken.Line,
 		p.peekToken.Column, p.l.Snapshot(p.peekToken),
+	)
+	p.addError(msg)
+}
+
+// isInvalidUTF8Byte is true for a byte that does not start valid UTF-8. ASCII
+// ILLEGAL bytes such as % and ~ are not invalid: they are operator method
+// names (def %).
+func isInvalidUTF8Byte(token lexer.Token) bool {
+	return token.Type == lexer.ILLEGAL && token.Literal[0] >= utf8.RuneSelf
+}
+
+// invalidUTF8Error reports an invalid UTF-8 byte once, so that no parse step
+// takes it as a name.
+func (p *Parser) invalidUTF8Error(token lexer.Token) {
+	if p.reportedInvalidBytes[token.Pos] {
+		return
+	}
+
+	p.reportedInvalidBytes[token.Pos] = true
+
+	msg := fmt.Sprintf(
+		"invalid multibyte char (UTF-8) \\x%02X at line %d, column %d\n%s",
+		token.Literal[0],
+		token.Line,
+		token.Column,
+		p.l.Snapshot(token),
 	)
 	p.addError(msg)
 }
@@ -171,6 +212,12 @@ func (p *Parser) nextToken() {
 	}
 
 	p.peekToken = token
+
+	// Report an invalid byte when the parser reaches it, not while it is
+	// only the lookahead, so that errors come in source order.
+	if isInvalidUTF8Byte(p.curToken) {
+		p.invalidUTF8Error(p.curToken)
+	}
 }
 
 func (p *Parser) ParseAST() *ast.AST {

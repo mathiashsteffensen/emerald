@@ -4,7 +4,10 @@ import (
 	"context"
 	"strings"
 	"sync"
+	"unicode/utf8"
 )
+
+const byteOrderMark = "\uFEFF"
 
 type Lexer struct {
 	currentInput *Input
@@ -12,9 +15,18 @@ type Lexer struct {
 	Column       int
 	position     int // current position in input (points to current char)
 	nextPosition int
-	currentChar  byte // current char under examination
-	outputChan   chan Token
-	lastEmitted  Token
+
+	// trailingBytesInChar counts the bytes of the current multibyte
+	// character that readChar has yet to read. They add no column.
+	trailingBytesInChar int
+
+	// currentCharIsInvalidUTF8 is true when currentChar is a byte that does
+	// not start a valid UTF-8 character.
+	currentCharIsInvalidUTF8 bool
+
+	currentChar byte // current char under examination
+	outputChan  chan Token
+	lastEmitted Token
 
 	templateNesting uint8
 
@@ -44,13 +56,19 @@ func NewContext(ctx context.Context, input *Input) *Lexer {
 
 	l.currentInput = input
 
+	// Like Ruby, skip a leading byte order mark.
+	if strings.HasPrefix(input.content, byteOrderMark) {
+		l.nextPosition = len(byteOrderMark)
+	}
+
 	l.readChar()
 
 	return l
 }
 
 func (l *Lexer) Snapshot(token Token) string {
-	lines := strings.Split(l.currentInput.content, "\n")
+	// Column does not count a leading byte order mark, so drop it here too.
+	lines := strings.Split(strings.TrimPrefix(l.currentInput.content, byteOrderMark), "\n")
 
 	// token.Line is 1-based, convert to 0-based index
 	tokenLineIdx := token.Line - 1
@@ -82,9 +100,18 @@ func (l *Lexer) Snapshot(token Token) string {
 	// Add second line (the one with the token)
 	writeLine(tokenLineIdx)
 
-	// Add the caret indicator positioned under the token
-	for i := 0; i < token.Column; i++ {
-		buf.WriteString(" ")
+	// Pad the caret the way writeLine shows the characters before the token:
+	// a tab as two spaces, any other character, multibyte too, as one.
+	for i, char := range []rune(lines[tokenLineIdx]) {
+		if i >= token.Column {
+			break
+		}
+
+		if char == '\t' {
+			buf.WriteString("  ")
+		} else {
+			buf.WriteString(" ")
+		}
 	}
 	buf.WriteString("^")
 
@@ -130,11 +157,17 @@ func (l *Lexer) run() {
 			return
 		}
 
+		// Tokens that set only their type and literal start here.
+		tok = Token{Line: l.Line, Column: l.Column, Pos: l.position}
+
 		switch l.currentChar {
 		case '\n':
-			l.Column = 1
-			l.Line += 1
+			// The NEWLINE token keeps its own place at the end of its line.
+			// The next line starts at column 0, as line 1 does: readChar
+			// moves the column from -1 to 0.
 			tok = l.newToken(NEWLINE, l.currentChar)
+			l.Line += 1
+			l.Column = -1
 		case '#':
 			for l.currentChar != '\n' && l.currentChar != 0 && !l.canceled() {
 				l.readChar()
@@ -190,9 +223,7 @@ func (l *Lexer) run() {
 			}
 		case '>':
 			if l.peekChar() == '=' {
-				char := l.currentChar
-				l.readChar()
-				tok = Token{Type: GT_OR_EQ, Literal: string(char) + string(l.currentChar)}
+				tok = l.combineCurrentAndPeek(GT_OR_EQ)
 			} else {
 				tok = l.newToken(GT, l.currentChar)
 			}
@@ -273,16 +304,11 @@ func (l *Lexer) run() {
 			if l.peekChar() == ':' {
 				// Scope operator
 				// File::Stat
-				char := l.currentChar
-				l.readChar()
-				tok = Token{Type: SCOPE, Literal: string(char) + string(l.currentChar)}
-			} else if isLetter(l.peekChar()) {
+				tok = l.combineCurrentAndPeek(SCOPE)
+			} else if l.identifierStartsAt(l.nextPosition) {
 				// A "normal" symbol
 				// :symbol
 				char := l.currentChar
-				tok.Pos = l.position
-				tok.Column = l.Column
-				tok.Line = l.Line
 				tok.Type = SYMBOL
 
 				l.readChar()
@@ -294,9 +320,6 @@ func (l *Lexer) run() {
 				// A quoted symbol (does not support interpolation yet)
 				// :"symbol" or :'symbol'
 				char := l.currentChar
-				tok.Pos = l.position
-				tok.Column = l.Column
-				tok.Line = l.Line
 				tok.Type = SYMBOL
 
 				l.readChar()
@@ -305,6 +328,11 @@ func (l *Lexer) run() {
 				l.sendToken(tok)
 
 				continue
+			} else if l.invalidUTF8At(l.nextPosition) {
+				// Invalid UTF-8 after `:` is no symbol name: send the byte
+				// so that the parser reports it before anything else.
+				l.readChar()
+				tok = l.newToken(ILLEGAL, l.currentChar)
 			} else {
 				tok = l.newToken(COLON, l.currentChar)
 			}
@@ -328,30 +356,24 @@ func (l *Lexer) run() {
 			l.lexSingleQuotedString(&tok)
 		case '&':
 			if l.peekChar() == '&' {
-				char := l.currentChar
-				l.readChar()
+				tok = l.combineCurrentAndPeek(BOOL_AND)
 
 				if l.peekChar() == '=' {
-					secondChar := l.currentChar
 					l.readChar()
-					tok = Token{Type: BOOL_AND_ASSIGN, Literal: string(char) + string(secondChar) + string(l.currentChar)}
-				} else {
-					tok = Token{Type: BOOL_AND, Literal: string(char) + string(l.currentChar)}
+					tok.Type = BOOL_AND_ASSIGN
+					tok.Literal += string(l.currentChar)
 				}
 			} else {
 				tok = l.newToken(BIT_AND, l.currentChar)
 			}
 		case '|':
 			if l.peekChar() == '|' {
-				char := l.currentChar
-				l.readChar()
+				tok = l.combineCurrentAndPeek(BOOL_OR)
 
 				if l.peekChar() == '=' {
-					secondChar := l.currentChar
 					l.readChar()
-					tok = Token{Type: BOOL_OR_ASSIGN, Literal: string(char) + string(secondChar) + string(l.currentChar)}
-				} else {
-					tok = Token{Type: BOOL_OR, Literal: string(char) + string(l.currentChar)}
+					tok.Type = BOOL_OR_ASSIGN
+					tok.Literal += string(l.currentChar)
 				}
 			} else {
 				tok = l.newToken(BIT_OR, l.currentChar)
@@ -376,11 +398,17 @@ func (l *Lexer) run() {
 
 			var ident string
 
-			if !isLetter(l.currentChar) {
+			if l.identifierStartsAt(l.position) {
+				ident = string(char) + l.readIdentifier()
+			} else if l.currentChar >= utf8.RuneSelf {
+				// Invalid UTF-8 after `$`: neither a name nor a special global like `$!`
+				tok = l.newToken(ILLEGAL, l.currentChar)
+				l.readChar()
+				l.sendToken(tok)
+				continue
+			} else {
 				ident = string(char) + string(l.currentChar)
 				l.readChar()
-			} else {
-				ident = string(char) + l.readIdentifier()
 			}
 
 			tok.Literal = ident
@@ -391,10 +419,7 @@ func (l *Lexer) run() {
 			tok.Literal = ""
 			tok.Type = EOF
 		default:
-			if isLetter(l.currentChar) {
-				tok.Pos = l.position
-				tok.Column = l.Column
-				tok.Line = l.Line
+			if l.identifierStartsAt(l.position) {
 				tok.Literal = l.readIdentifier()
 				tok.Type = lookupIdent(tok.Literal)
 				l.sendToken(tok)
@@ -486,7 +511,9 @@ func (l *Lexer) canceled() bool {
 }
 
 func (l *Lexer) newToken(tokenType TokenType, ch byte) Token {
-	return Token{Type: tokenType, Literal: string(ch), Line: l.Line, Column: l.Column, Pos: l.position}
+	// string([]byte{ch}) keeps an invalid UTF-8 byte as is; string(ch) would
+	// turn it into the rune with that number.
+	return Token{Type: tokenType, Literal: string([]byte{ch}), Line: l.Line, Column: l.Column, Pos: l.position}
 }
 
 func (l *Lexer) newTokenStr(tokenType TokenType, str string) Token {
@@ -505,7 +532,22 @@ func (l *Lexer) readChar() {
 	l.position = l.nextPosition
 	l.nextPosition += 1
 
+	// Columns count characters: the trailing bytes of a valid multibyte
+	// character stay in the column of its first byte, and each invalid
+	// byte takes a column of its own.
+	if l.trailingBytesInChar > 0 {
+		l.trailingBytesInChar -= 1
+		return
+	}
+
 	l.Column += 1
+	l.currentCharIsInvalidUTF8 = false
+
+	if l.currentChar >= utf8.RuneSelf {
+		_, charSize := utf8.DecodeRuneInString(l.currentInput.content[l.position:])
+		l.trailingBytesInChar = charSize - 1
+		l.currentCharIsInvalidUTF8 = charSize == 1
+	}
 }
 
 func (l *Lexer) peekChar() byte {
@@ -532,20 +574,50 @@ func (l *Lexer) readNumber() string {
 
 func (l *Lexer) readRegexp() string {
 	position := l.position + 1
+	sentInvalidByte := false
+
 	for {
 		prevChar := l.currentChar
 		l.readChar()
 		if (l.currentChar == '/' && prevChar != '\\') || l.currentChar == 0 || l.canceled() {
 			break
 		}
+
+		// Ruby rejects invalid UTF-8 in literals, but not in comments.
+		if l.currentCharIsInvalidUTF8 && !sentInvalidByte {
+			l.sendToken(l.newToken(ILLEGAL, l.currentChar))
+			sentInvalidByte = true
+		}
 	}
+
 	return l.currentInput.content[position:l.position]
+}
+
+func (l *Lexer) invalidUTF8At(pos int) bool {
+	if pos >= len(l.currentInput.content) || l.currentInput.content[pos] < utf8.RuneSelf {
+		return false
+	}
+
+	_, charSize := utf8.DecodeRuneInString(l.currentInput.content[pos:])
+	return charSize == 1
+}
+
+func (l *Lexer) identifierStartsAt(pos int) bool {
+	return identifierStartSize(l.currentInput.content, pos) > 0
 }
 
 func (l *Lexer) readIdentifier() string {
 	position := l.position
-	for (isLetter(l.currentChar) || isDigit(l.currentChar)) && !l.canceled() {
-		l.readChar()
+
+	for !l.canceled() {
+		charSize := identifierPartSize(l.currentInput.content, l.position)
+		if charSize == 0 {
+			break
+		}
+
+		for range charSize {
+			l.readChar()
+		}
 	}
 
 	if l.currentChar == '?' || l.currentChar == '!' {

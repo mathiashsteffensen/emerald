@@ -2,14 +2,14 @@ package compiler
 
 import (
 	"emerald/bytecode"
+	"emerald/core"
 	ast "emerald/parser/ast"
-	"unicode"
 )
 
 func (c *Compiler) compileIdentifierExpression(node ast.Expression) {
 	switch node := node.(type) {
 	case ast.IdentifierExpression:
-		if unicode.IsUpper(rune(node.Value[0])) {
+		if core.IsConstantName(node.Value) {
 			// Constant reference
 			c.emitConstantGet(node.Value, node.Token)
 		} else {

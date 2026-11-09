@@ -22,6 +22,8 @@ func (l *Lexer) lexSingleQuotedString(tok *Token) {
 
 func (l *Lexer) readString(endChar byte) string {
 	position := l.position + 1
+	sentInvalidByte := false
+
 	for {
 		l.readChar()
 
@@ -35,6 +37,12 @@ func (l *Lexer) readString(endChar byte) string {
 
 		if l.currentChar == endChar || l.currentChar == 0 {
 			break
+		}
+
+		// Ruby rejects invalid UTF-8 in literals, but not in comments.
+		if l.currentCharIsInvalidUTF8 && !sentInvalidByte {
+			l.sendToken(l.newToken(ILLEGAL, l.currentChar))
+			sentInvalidByte = true
 		}
 	}
 

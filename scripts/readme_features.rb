@@ -633,5 +633,81 @@ end
 custom_regexp = ReadmeCustomRegexp.new
 check("native regexp subclass initializer", [ReadmeCustomRegexp, 42], [custom_regexp.class, custom_regexp.value])
 check("native regexp subclass storage", ["//", true], [custom_regexp.inspect, custom_regexp === "abc"])
+
+puts "README: Unicode identifiers and symbols"
+café = 2
+π = 3
+✓ = 1
+x×y = 4
+check("unicode locals", 10, café + π + ✓ + x×y)
+check("unicode local reassignment", 5, (café += 3))
+def naïve?(ключ:)
+  yield(ключ + 1)
+end
+check("unicode method with keyword and block", 16, naïve?(ключ: 7) { |зн| зн * 2 })
+def ключевой(ключ:)
+  ключ
+end
+ключ = 9
+check("unicode keyword argument", 7, ключевой(ключ: 7))
+check("unicode local as keyword value", 9, ключевой(ключ: ключ))
+# Ruby 3.1 keyword argument shorthand
+check("unicode keyword shorthand", 9, ключевой(ключ:))
+def überbang!
+  :über
+end
+check("unicode bang method", :über, überbang!)
+def 二倍(n)
+  n * 2
+end
+check("unicode method with parens", 8, 二倍(4))
+doubled_without_parens = 二倍 4
+check("unicode method without parens", 8, doubled_without_parens)
+class Ärger
+  ZORN = 3
+  def initialize(名前)
+    @名前 = 名前
+  end
+  def 名前
+    @名前
+  end
+  def 名前=(value)
+    @名前 = value
+  end
+end
+ärger = Ärger.new("a")
+check("unicode ivar in unicode class", "a", ärger.名前)
+ärger.名前 = "b"
+check("unicode setter", "b", ärger.名前)
+check("unicode class name", "Ärger", Ärger.name)
+check("constant scoped through unicode class", 3, Ärger::ZORN)
+module Ünit
+  Ω = 9
+end
+check("unicode module and constant", 9, Ünit::Ω)
+ǅx = 1
+Ölwert = 5
+éclair = 1
+def unicode_constants_seen_in_method
+  [ǅx, Ölwert]
+end
+check("uppercase and titlecase unicode constants", [1, 5], unicode_constants_seen_in_method)
+def lowercase_unicode_is_not_constant
+  éclair
+rescue StandardError
+  :not_visible
+end
+check("lowercase unicode name is a local", :not_visible, lowercase_unicode_is_not_constant)
+$π = 3
+check("unicode global", 3, $π)
+check("unicode symbol to_s", "日本", :日本.to_s)
+check("unicode symbol inspect", ":日本", :日本.inspect)
+check("unicode predicate symbol", "café?", :café?.to_s)
+check("unicode bang symbol", "naïve!", :naïve!.to_s)
+check("unicode uppercase symbol", "Ärger", :Ärger.to_s)
+check("quoted and bare unicode symbol", true, :"日本" == :日本)
+check("unicode hash label", 1, {ключ: 1}[:ключ])
+check("unicode symbol hash key", 2, {:日本 => 2}[:日本])
+check("unicode block param", [2, 4], [1, 2].map { |ζ| ζ * 2 })
 puts "PASS: #{$checks} README feature checks"
 $checks

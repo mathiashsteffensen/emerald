@@ -5,7 +5,6 @@ import (
 	"emerald/core"
 	"emerald/object"
 	"fmt"
-	"unicode"
 )
 
 func (vm *VM) executeOpConstantGet(ins bytecode.Instructions, ip int) {
@@ -40,7 +39,7 @@ func (vm *VM) executeOpScopedConstantGet(ins bytecode.Instructions, ip int) {
 
 	var result object.EmeraldValue
 
-	if unicode.IsUpper(rune(name[0])) {
+	if core.IsConstantName(name) {
 		value, err := getConst(self, name, vm.rt)
 		if err != nil {
 			err := vm.rt.NewStandardError(err.Error())

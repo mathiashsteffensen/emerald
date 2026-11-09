@@ -30,3 +30,41 @@ func TestParseErrors(t *testing.T) {
 	testParseError(t, "h = {\n  x:", "syntax error, unexpected end-of-input")
 	testParseError(t, "add(x:", "syntax error, unexpected end-of-input")
 }
+
+func TestParseErrorsOnUnparsableExpressionDoNotHangOrPanic(t *testing.T) {
+	tests := []struct {
+		input         string
+		expectedError string
+	}{
+		{"?.foo", `no prefix parse function for ?:"?"`},
+		{"?::Foo", `no prefix parse function for ?:"?"`},
+		{"? >= 1", `no prefix parse function for ?:"?"`},
+		{"? && 1", `no prefix parse function for ?:"?"`},
+		{"? || 1", `no prefix parse function for ?:"?"`},
+		{")\n.foo", `no prefix parse function for ):")"`},
+		{"\xC3.foo", `invalid multibyte char (UTF-8) \xC3 at line 1, column 0`},
+		{"\xC3(1)", `invalid multibyte char (UTF-8) \xC3 at line 1, column 0`},
+		{"1(2)", "syntax error, unexpected '(' at line 1, column 1"},
+		{`"a"(1)`, "syntax error, unexpected '('"},
+		{"@a(1)", "syntax error, unexpected '('"},
+		{"\x01(", `no prefix parse function for ILLEGAL:"\x01" found at line 1, column 0`},
+		{"class X = 1", "class/module name must be CONSTANT at line 1, column 6"},
+		{"module x y", "class/module name must be CONSTANT at line 1, column 7"},
+		// Only the line: `::` reports its second character's column, a known
+		// fault of combineCurrentAndPeek.
+		{"class :::Foo", "class/module name must be CONSTANT at line 1"},
+		{"module \xF0\x9F", `invalid multibyte char (UTF-8) \xF0 at line 1, column 7`},
+		{"class \xC3", `invalid multibyte char (UTF-8) \xC3 at line 1, column 6`},
+		{"a = 1\nb = ?", `no prefix parse function for ?:"?" found at line 2, column 4`},
+		{"a = 1\nb = 2\nπ = ?", `no prefix parse function for ?:"?" found at line 3, column 4`},
+		{`"#{"` + "\xC3" + `"}"`, `invalid multibyte char (UTF-8) \xC3 at line 1, column 4`},
+		{`x && "#{"` + "\xC3" + `"}"`, `invalid multibyte char (UTF-8) \xC3`},
+		{"module || 1", "class/module name must be CONSTANT"},
+		{"class && x", "class/module name must be CONSTANT"},
+		{">= 1", `no prefix parse function for >=`},
+	}
+
+	for _, tt := range tests {
+		testParseError(t, tt.input, tt.expectedError)
+	}
+}

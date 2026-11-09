@@ -1,9 +1,6 @@
 package lexer
 
 func (l *Lexer) lexNumber(token *Token) {
-	token.Pos = l.position
-	token.Column = l.Column
-	token.Line = l.Line
 	token.Literal = l.readNumber()
 
 	if l.currentChar == '.' && isDigit(l.peekChar()) {

@@ -10,7 +10,16 @@ func (p *Parser) parseModuleLiteral() ast.Expression {
 
 	p.nextToken()
 
-	mod.Name = p.parseIdentifierExpression().(ast.IdentifierExpression)
+	nameToken := p.curToken
+
+	moduleName, isName := p.parseIdentifierExpression().(ast.IdentifierExpression)
+	if !isName {
+		p.classOrModuleNameError(nameToken)
+		return nil
+	}
+
+	mod.Name = moduleName
+
 	if p.peekTokenIs(lexer.SEMICOLON) {
 		p.nextToken()
 	}

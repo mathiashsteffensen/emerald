@@ -3,6 +3,7 @@ package parser
 import (
 	"emerald/parser/ast"
 	"emerald/parser/lexer"
+	"fmt"
 )
 
 func (p *Parser) parseClassLiteral() ast.Expression {
@@ -14,9 +15,15 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 
 	p.nextToken()
 
-	className := p.parseIdentifierExpression()
+	nameToken := p.curToken
 
-	class.Name = className.(ast.IdentifierExpression)
+	className, isName := p.parseIdentifierExpression().(ast.IdentifierExpression)
+	if !isName {
+		p.classOrModuleNameError(nameToken)
+		return nil
+	}
+
+	class.Name = className
 
 	if p.peekTokenIs(lexer.LT) {
 		p.nextToken()
@@ -29,4 +36,16 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 	class.Body = p.parseBlockStatement(lexer.END)
 
 	return class
+}
+
+// classOrModuleNameError reports a class or module name that is not a single
+// name, such as the assignment in `class X = 1`, at the token it starts with.
+func (p *Parser) classOrModuleNameError(nameToken lexer.Token) {
+	msg := fmt.Sprintf(
+		"class/module name must be CONSTANT at line %d, column %d\n%s",
+		nameToken.Line,
+		nameToken.Column,
+		p.l.Snapshot(nameToken),
+	)
+	p.addError(msg)
 }

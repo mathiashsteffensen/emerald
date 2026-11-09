@@ -2,9 +2,9 @@ package compiler
 
 import (
 	"emerald/bytecode"
+	"emerald/core"
 	"emerald/heap"
 	ast "emerald/parser/ast"
-	"unicode"
 )
 
 func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) {
@@ -51,7 +51,7 @@ func (c *Compiler) compileAssignment(node *ast.AssignmentExpression) {
 func (c *Compiler) compileAssignmentTarget(node *ast.AssignmentExpression) {
 	switch name := node.Name.(type) {
 	case ast.IdentifierExpression:
-		if unicode.IsUpper(rune(name.Value[0])) {
+		if core.IsConstantName(name.Value) {
 			c.emit(bytecode.OpConstantSet, node.Token, c.addConstant(c.rt.NewSymbol(name.Value)))
 			return
 		}

@@ -4,8 +4,10 @@ import (
 	ast "emerald/parser/ast"
 	"emerald/parser/lexer"
 	"fmt"
+	"runtime/debug"
 	"strings"
 	"testing"
+	"time"
 )
 
 func testParseAST(t *testing.T, input string) *ast.AST {
@@ -19,21 +21,45 @@ func testParseAST(t *testing.T, input string) *ast.AST {
 	return program
 }
 
+// testParseError expects the first parse error to contain expectedError. It
+// fails fast, instead of hanging the test run, when the parser loops forever
+// or panics.
 func testParseError(t *testing.T, input, expectedError string) {
-	l := lexer.New(lexer.NewInput("test.rb", input))
+	t.Helper()
 
-	p := New(l)
-	p.ParseAST()
+	parseErrors := make(chan []string, 1)
+	panicWithStack := make(chan string, 1)
 
-	if len(p.Errors()) == 0 {
-		t.Fatalf("Expected parser to have errors, but had none")
-	}
+	go func() {
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				// Capture the stack here, inside the panicking goroutine: it shows
+				// where the parser failed, which the panic value alone does not.
+				panicWithStack <- fmt.Sprintf("%v\n%s", recovered, debug.Stack())
+			}
+		}()
 
-	// Compare as substring to be resilient to additional location/context
-	// information that may be appended to error messages in non-test
-	// debug modes.
-	if !strings.Contains(p.Errors()[0], expectedError) {
-		t.Fatalf("Expected parser to have error=%q but got=%q", expectedError, p.Errors()[0])
+		p := New(lexer.New(lexer.NewInput("test.rb", input)))
+		p.ParseAST()
+		parseErrors <- p.Errors()
+	}()
+
+	select {
+	case errors := <-parseErrors:
+		if len(errors) == 0 {
+			t.Fatalf("%q: expected parser to have errors, but had none", input)
+		}
+
+		// Compare as substring to be resilient to additional location/context
+		// information that may be appended to error messages in non-test
+		// debug modes.
+		if !strings.Contains(errors[0], expectedError) {
+			t.Fatalf("%q: expected parser to have error=%q but got=%q", input, expectedError, errors[0])
+		}
+	case panicReport := <-panicWithStack:
+		t.Fatalf("%q: parser panicked: %s", input, panicReport)
+	case <-time.After(2 * time.Second):
+		t.Fatalf("%q: parser did not finish within 2 seconds", input)
 	}
 }
 
