@@ -112,6 +112,26 @@ func TestCompileMethodLiteral(t *testing.T) {
 			},
 		},
 		{
+			input: `def add left, right
+				left + right
+			end`,
+			expectedConstants: []any{
+				":add",
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpGetLocal, 0),
+					bytecode.Make(bytecode.OpGetLocal, 1),
+					bytecode.Make(bytecode.OpAdd),
+					bytecode.Make(bytecode.OpReturnValue),
+				},
+			},
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 0),
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
 			input: `def method(name:); name end`,
 			expectedConstants: []any{
 				":method",

@@ -3,6 +3,7 @@ package parser
 import (
 	ast "emerald/parser/ast"
 	"emerald/parser/lexer"
+	"fmt"
 )
 
 func (p *Parser) parseMethodLiteral() ast.Expression {
@@ -18,7 +19,6 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 		methodIdent.Value = "[]"
 		methodIdent.Token.Literal = "[]"
 	}
-	p.nextIfSemicolonOrNewline()
 
 	if p.peekTokenIs(lexer.ASSIGN) {
 		methodIdent.Value = methodIdent.Value + p.peekToken.Literal
@@ -32,6 +32,8 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 		p.nextToken()
 
 		method.Arguments, method.KeywordArguments = p.parseMethodLiteralArguments(lexer.RPAREN)
+	} else if p.peekTokenIs(lexer.IDENT) {
+		method.Arguments, method.KeywordArguments = p.parseMethodLiteralArgumentsWithoutParentheses()
 	} else {
 		method.Arguments, method.KeywordArguments = []*ast.IdentifierExpression{}, []*ast.IdentifierExpression{}
 	}
@@ -45,6 +47,68 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 	method.EnsureBlock = ensure
 
 	return method
+}
+
+// parseMethodLiteralArgumentsWithoutParentheses parses the parameters that
+// follow a method name without parentheses, as in `def greet name, age`. After
+// a comma the parameter list can continue on the next line.
+func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args []*ast.IdentifierExpression, kwargs []*ast.IdentifierExpression) {
+	p.nextToken()
+
+	startedKeywordArguments := false
+
+	ident := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
+	if p.peekTokenIs(lexer.COLON) {
+		kwargs = append(kwargs, ident)
+		p.nextToken()
+		startedKeywordArguments = true
+	} else {
+		args = append(args, ident)
+	}
+
+	for p.peekTokenIs(lexer.COMMA) {
+		p.nextToken()
+		p.nextIfNewline()
+
+		if !p.expectPeek(lexer.IDENT) {
+			return nil, nil
+		}
+
+		ident := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
+
+		if startedKeywordArguments {
+			if !p.expectPeek(lexer.COLON) {
+				return nil, nil
+			}
+
+			kwargs = append(kwargs, ident)
+		} else if p.peekTokenIs(lexer.COLON) {
+			kwargs = append(kwargs, ident)
+			p.nextToken()
+			startedKeywordArguments = true
+		} else {
+			args = append(args, ident)
+		}
+	}
+
+	if !p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON, lexer.EOF) {
+		p.methodParametersBoundaryError()
+		return nil, nil
+	}
+
+	return
+}
+
+// methodParametersBoundaryError reports the token that cannot continue a
+// parameter list without parentheses, such as the b in `def method a b`.
+func (p *Parser) methodParametersBoundaryError() {
+	msg := fmt.Sprintf(
+		"expected a newline, ';' or end of input after the method parameters at line %d, column %d\n%s",
+		p.peekToken.Line,
+		p.peekToken.Column,
+		p.l.Snapshot(p.peekToken),
+	)
+	p.addError(msg)
 }
 
 func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType) (args []*ast.IdentifierExpression, kwargs []*ast.IdentifierExpression) {

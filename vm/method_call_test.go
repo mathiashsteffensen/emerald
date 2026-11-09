@@ -59,6 +59,55 @@ func TestCapturedLocalMutation(t *testing.T) {
 	})
 }
 
+func TestMethodDefinitionWithoutParentheses(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{
+			name: "single argument",
+			input: `def greet name
+				"Hello, " + name
+			end
+			greet("Ruby")`,
+			expected: "Hello, Ruby",
+		},
+		{
+			name: "multiple arguments",
+			input: `def add left, right
+				left + right
+			end
+			add(3, 4)`,
+			expected: 7,
+		},
+		{
+			name:     "multiple arguments on one line",
+			input:    "def add left, right; left + right; end\nadd(3, 4)",
+			expected: 7,
+		},
+		{
+			name: "positional and keyword arguments",
+			input: `def greet name, greeting:
+				greeting + name
+			end
+			greet("Ruby", greeting: "Hello, ")`,
+			expected: "Hello, Ruby",
+		},
+		{
+			name: "setter",
+			input: `class Box
+				def value= value
+					@value = value
+				end
+				def value
+					@value
+				end
+			end
+			box = Box.new
+			box.value = 3
+			box.value`,
+			expected: 3,
+		},
+	})
+}
+
 func TestMethodCall(t *testing.T) {
 	tests := []vmTestCase{
 		{

@@ -82,6 +82,18 @@ def add(a, b)
   a + b
 end
 
+def greet name
+  "Hello, " + name
+end
+
+def add_without_parens left, right
+  left + right
+end
+
+def greet_with_punctuation name, punctuation:
+  name + punctuation
+end
+
 def choose(flag)
   return 7 if flag
   9
@@ -98,6 +110,9 @@ end
 check("bare call", 42, answer)
 check("empty parens call", 42, answer())
 check("positional call", 7, add(3, 4))
+check("definition arg without parens", "Hello, Ruby", greet("Ruby"))
+check("definition args without parens", 7, add_without_parens(3, 4))
+check("definition args without parens with keyword", "Ruby!", greet_with_punctuation("Ruby", punctuation: "!"))
 no_parens = add 3, 4
 check("call args without parens", 7, no_parens)
 check("early return", 7, choose(true))
@@ -449,7 +464,7 @@ def backtrace_location(frame)
   parts = frame.split(":")
   "#{parts[parts.length - 2]}:#{parts[parts.length - 1]}"
 end
-check("backtrace frames", ["439:in 'backtrace_inner'", "442:in 'backtrace_outer'", "446:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
+check("backtrace frames", ["454:in 'backtrace_inner'", "457:in 'backtrace_outer'", "461:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
 check("backtrace file", true, backtrace_error.backtrace[0].split(":")[0].split("/").last == "readme_features.rb")
 check("backtrace before raise", nil, RuntimeError.new("x").backtrace)
 def backtrace_reraise
@@ -462,7 +477,7 @@ def backtrace_reraise_outer
 rescue StandardError => error
   backtrace_location(error.backtrace[0])
 end
-check("re-raise keeps backtrace", "439:in 'backtrace_inner'", backtrace_reraise_outer)
+check("re-raise keeps backtrace", "454:in 'backtrace_inner'", backtrace_reraise_outer)
 # Mix constructors, nested calls, block capture, branches, setters and hash keys.
 results = {}
 [1, 2, 3].each do |n|

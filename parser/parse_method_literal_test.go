@@ -51,6 +51,102 @@ func TestMethodLiteralExpression(t *testing.T) {
 			0,
 		},
 		{
+			"with a single argument and no parens",
+			`
+			def greet name
+				puts(name)
+			end
+			`,
+			"greet",
+			[]string{"name"},
+			[]string{},
+			0,
+		},
+		{
+			"with multiple arguments and no parens",
+			`
+			def add left, right
+				left + right
+			end
+			`,
+			"add",
+			[]string{"left", "right"},
+			[]string{},
+			0,
+		},
+		{
+			"with multiple arguments across lines and no parens",
+			`
+			def add left,
+				right
+				left + right
+			end
+			`,
+			"add",
+			[]string{"left", "right"},
+			[]string{},
+			0,
+		},
+		{
+			"with a positional argument and a keyword argument across lines and no parens",
+			`
+			def add left,
+				right:
+				left
+			end
+			`,
+			"add",
+			[]string{"left"},
+			[]string{"right"},
+			0,
+		},
+		{
+			"with keyword arguments across lines and no parens",
+			`
+			def add left,
+				right:,
+				other:
+				left
+			end
+			`,
+			"add",
+			[]string{"left"},
+			[]string{"right", "other"},
+			0,
+		},
+		{
+			"with keyword arguments and no parens",
+			"def method name, option:; name; end",
+			"method",
+			[]string{"name"},
+			[]string{"option"},
+			0,
+		},
+		{
+			"with only keyword arguments and no parens",
+			"def method option:; option; end",
+			"method",
+			[]string{},
+			[]string{"option"},
+			0,
+		},
+		{
+			"with multiple keyword arguments and no parens",
+			"def method first:, second:; first; end",
+			"method",
+			[]string{},
+			[]string{"first", "second"},
+			0,
+		},
+		{
+			"with multiple arguments and no parens on one line",
+			"def add left, right; left + right; end",
+			"add",
+			[]string{"left", "right"},
+			[]string{},
+			0,
+		},
+		{
 			"with multiple arguments",
 			`
 			def method(fmt, val)
@@ -215,6 +311,10 @@ func TestMethodLiteralExpression(t *testing.T) {
 					testIdentifier(t, *parameter, tt.expectedArgs[i])
 				}
 
+				if len(literal.KeywordArguments) != len(tt.expectedKwargs) {
+					t.Fatalf("exp %d keyword parameters got=%d", len(tt.expectedKwargs), len(literal.KeywordArguments))
+				}
+
 				for i, argument := range literal.KeywordArguments {
 					testIdentifier(t, *argument, tt.expectedKwargs[i])
 				}
@@ -226,4 +326,33 @@ func TestMethodLiteralExpression(t *testing.T) {
 		})
 	}
 
+}
+
+func TestMethodLiteralBodyWithGroupedExpression(t *testing.T) {
+	program := testParseAST(t, `
+		def foo
+			(1 + 2) * 3
+		end
+	`)
+
+	expectStatementLength(t, program.Statements, 1)
+
+	testExpressionStatement(t, program.Statements[0], func(literal *ast.MethodLiteral) {
+		testLiteralExpression(t, literal.Name, "foo")
+		expectStatementLength(t, literal.Body.Statements, 1)
+
+		testExpressionStatement(t, literal.Body.Statements[0], func(body ast.Expression) {
+			multiplied, ok := body.(*ast.InfixExpression)
+			if !ok {
+				t.Fatalf("body is not *ast.InfixExpression. got=%T", body)
+			}
+
+			if multiplied.Operator != "*" {
+				t.Fatalf("operator is not '*'. got=%q", multiplied.Operator)
+			}
+
+			testInfixExpression(t, multiplied.Left, 1, "+", 2)
+			testLiteralExpression(t, multiplied.Right, 3)
+		})
+	})
 }

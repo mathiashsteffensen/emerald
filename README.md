@@ -145,7 +145,7 @@ Ruby implementation.
 - [ ] method definitions
     - [x] with parens
     - [x] without parens
-    - [ ] without parens with args
+    - [x] without parens with args
     - [x] return keyword
     - [ ] default values for parameters
     - [x] keyword arguments

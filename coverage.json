@@ -9,7 +9,7 @@
     "emerald/bytecode": 77.3,
     "emerald/heap": 75.7,
     "emerald/internal/sandboxwire": 75.6,
-    "emerald": 56.1,
+    "emerald": 59.3,
     "emerald/parser/ast": 0.2
   },
   "functions": {
@@ -64,6 +64,8 @@
       "parse_method_call.go:parseMethodArgsWithParentheses": 100.0,
       "parse_method_call.go:parseMethodArgsWithoutParentheses": 100.0,
       "parse_method_call.go:parseArgumentList": 100.0,
+      "parse_method_literal.go:parseMethodLiteralArgumentsWithoutParentheses": 100.0,
+      "parse_method_literal.go:methodParametersBoundaryError": 100.0,
       "parse_method_literal.go:parseMethodLiteralArguments": 100.0,
       "parse_module_literal.go:parseModuleLiteral": 100.0,
       "parse_next_statement.go:parseNextStatement": 100.0,
@@ -102,13 +104,13 @@
       "parser.go:parseNullExpression": 100.0,
       "parser.go:parseGroupedExpression": 100.0,
       "parser.go:NewContext": 99.7,
-      "parse_method_literal.go:parseMethodLiteral": 92.9,
+      "parse_method_literal.go:parseMethodLiteral": 92.7,
       "parser.go:parseAsInfix": 88.9,
+      "parser.go:expectCur": 83.3,
       "parser.go:parseFloatLiteral": 83.3,
       "parser.go:parseIntegerLiteral": 83.3,
-      "parser.go:expectCur": 83.3,
-      "parser.go:parseBoolModifierFromStatement": 75.0,
       "parser.go:parseReturnStatement": 75.0,
+      "parser.go:parseBoolModifierFromStatement": 75.0,
       "parser.go:nextToken": 70.6,
       "op_precedence.go:curPrecedence": 66.7,
       "parser.go:Err": 0.0
@@ -737,31 +739,31 @@
       "sandbox_value.go:markSandboxReference": 100.0,
       "sandbox_value.go:sandboxInvalidWorkerValue": 100.0,
       "sandbox_worker.go:stopSandboxWorker": 100.0,
+      "sandbox_worker.go:sandboxWorkerFailure": 100.0,
       "sandbox_worker.go:String": 100.0,
+      "sandbox_worker.go:Write": 92.9,
       "sandbox.go:evalFileContext": 84.6,
-      "engine.go:evalError": 83.3,
       "sandbox_value.go:decodeSandboxValue": 83.3,
+      "engine.go:evalError": 83.3,
       "sandbox.go:NewSandbox": 77.8,
       "sandbox_value.go:decodeSandboxValueAt": 76.7,
-      "engine.go:evalFileContextWithPhase": 75.0,
       "sandbox_value.go:consume": 75.0,
+      "engine.go:evalFileContextWithPhase": 75.0,
       "sandbox_worker.go:evalWorker": 71.4,
-      "sandbox_worker.go:sandboxWorkerFailure": 66.7,
+      "sandbox_worker.go:responseErrorPhase": 66.7,
       "engine.go:newEngine": 66.7,
       "sandbox_value.go:unsupportedSandboxValue": 66.7,
       "sandbox_worker.go:sandboxFrameLimit": 66.7,
-      "sandbox_worker.go:responseErrorPhase": 66.7,
       "sandbox_worker.go:sandboxErrorPhaseMatches": 60.0,
       "sandbox_worker.go:sandboxResponseError": 50.0,
       "sandbox_value.go:encodeSandboxValueAt": 37.0,
-      "sandbox.go:Error": 0.0,
-      "sandbox_worker.go:Write": 0.0,
-      "sandbox_limits_darwin.go:applySandboxBestEffortMemoryLimit": 0.0,
-      "engine.go:Unwrap": 0.0,
       "sandbox_worker.go:writeSandboxWorkerEvaluationError": 0.0,
-      "engine.go:Error": 0.0,
+      "sandbox_limits_darwin.go:applySandboxBestEffortMemoryLimit": 0.0,
       "sandbox_worker.go:writeSandboxWorkerError": 0.0,
-      "sandbox_worker.go:ServeSandboxWorker": 0.0
+      "engine.go:Error": 0.0,
+      "engine.go:Unwrap": 0.0,
+      "sandbox_worker.go:ServeSandboxWorker": 0.0,
+      "sandbox.go:Error": 0.0
     },
     "emerald/parser/ast": {
       "method_call.go:Dup": 100.0,
@@ -868,5 +870,5 @@
       "yield.go:String": 0.0
     }
   },
-  "total": 81.7
+  "total": 81.9
 }
