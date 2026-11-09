@@ -31,11 +31,11 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 	if p.peekTokenIs(lexer.LPAREN) {
 		p.nextToken()
 
-		method.Arguments, method.KeywordArguments = p.parseMethodLiteralArguments(lexer.RPAREN)
+		method.Arguments, method.KeywordArguments, method.ArgumentDefaults = p.parseMethodLiteralArguments(lexer.RPAREN, true)
 	} else if p.peekTokenIs(lexer.IDENT) {
-		method.Arguments, method.KeywordArguments = p.parseMethodLiteralArgumentsWithoutParentheses()
+		method.Arguments, method.KeywordArguments, method.ArgumentDefaults = p.parseMethodLiteralArgumentsWithoutParentheses()
 	} else {
-		method.Arguments, method.KeywordArguments = []*ast.IdentifierExpression{}, []*ast.IdentifierExpression{}
+		method.Arguments, method.KeywordArguments, method.ArgumentDefaults = []*ast.IdentifierExpression{}, []*ast.IdentifierExpression{}, []ast.Expression{}
 	}
 
 	p.nextIfSemicolonOrNewline()
@@ -52,7 +52,7 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 // parseMethodLiteralArgumentsWithoutParentheses parses the parameters that
 // follow a method name without parentheses, as in `def greet name, age`. After
 // a comma the parameter list can continue on the next line.
-func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args []*ast.IdentifierExpression, kwargs []*ast.IdentifierExpression) {
+func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args, kwargs []*ast.IdentifierExpression, defaults []ast.Expression) {
 	p.nextToken()
 
 	startedKeywordArguments := false
@@ -63,7 +63,7 @@ func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args []*ast.Id
 		p.nextToken()
 		startedKeywordArguments = true
 	} else {
-		args = append(args, ident)
+		args, defaults = p.addPositionalParameter(args, defaults, ident, true)
 	}
 
 	for p.peekTokenIs(lexer.COMMA) {
@@ -71,14 +71,14 @@ func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args []*ast.Id
 		p.nextIfNewline()
 
 		if !p.expectPeek(lexer.IDENT) {
-			return nil, nil
+			return nil, nil, nil
 		}
 
 		ident := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 
 		if startedKeywordArguments {
 			if !p.expectPeek(lexer.COLON) {
-				return nil, nil
+				return nil, nil, nil
 			}
 
 			kwargs = append(kwargs, ident)
@@ -87,13 +87,13 @@ func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args []*ast.Id
 			p.nextToken()
 			startedKeywordArguments = true
 		} else {
-			args = append(args, ident)
+			args, defaults = p.addPositionalParameter(args, defaults, ident, true)
 		}
 	}
 
 	if !p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON, lexer.EOF) {
 		p.methodParametersBoundaryError()
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	return
@@ -111,7 +111,7 @@ func (p *Parser) methodParametersBoundaryError() {
 	p.addError(msg)
 }
 
-func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType) (args []*ast.IdentifierExpression, kwargs []*ast.IdentifierExpression) {
+func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType, allowDefaults bool) (args, kwargs []*ast.IdentifierExpression, defaults []ast.Expression) {
 	if p.peekTokenIs(delim) {
 		p.nextToken()
 		return
@@ -120,21 +120,20 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType) (args []*ast
 	startedKeywordArguments := false
 
 	if !p.expectPeek(lexer.IDENT) {
-		return nil, nil
+		return nil, nil, nil
+	}
+
+	ident := &ast.IdentifierExpression{
+		Token: p.curToken,
+		Value: p.curToken.Literal,
 	}
 
 	if p.peekTokenIs(lexer.COLON) {
-		kwargs = append(kwargs, &ast.IdentifierExpression{
-			Token: p.curToken,
-			Value: p.curToken.Literal,
-		})
+		kwargs = append(kwargs, ident)
 		p.nextToken()
 		startedKeywordArguments = true
 	} else {
-		args = append(args, &ast.IdentifierExpression{
-			Token: p.curToken,
-			Value: p.curToken.Literal,
-		})
+		args, defaults = p.addPositionalParameter(args, defaults, ident, allowDefaults)
 	}
 
 	for p.peekTokenIs(lexer.COMMA) {
@@ -147,7 +146,7 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType) (args []*ast
 		}
 
 		if !p.expectPeek(lexer.IDENT) {
-			return nil, nil
+			return nil, nil, nil
 		}
 
 		ident := &ast.IdentifierExpression{
@@ -157,7 +156,7 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType) (args []*ast
 
 		if startedKeywordArguments {
 			if !p.expectPeek(lexer.COLON) {
-				return nil, nil
+				return nil, nil, nil
 			}
 
 			kwargs = append(kwargs, ident)
@@ -166,13 +165,43 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType) (args []*ast
 			p.nextToken()
 			startedKeywordArguments = true
 		} else {
-			args = append(args, ident)
+			args, defaults = p.addPositionalParameter(args, defaults, ident, allowDefaults)
 		}
 	}
 
 	if !p.expectPeek(delim) {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	return
+}
+
+// addPositionalParameter records a positional parameter and, when allowDefaults
+// is set, the default value expression that follows it, if any. The defaults
+// stay aligned with the parameters: a required parameter records nil.
+func (p *Parser) addPositionalParameter(
+	args []*ast.IdentifierExpression,
+	defaults []ast.Expression,
+	ident *ast.IdentifierExpression,
+	allowDefaults bool,
+) ([]*ast.IdentifierExpression, []ast.Expression) {
+	var defaultValue ast.Expression
+	if allowDefaults {
+		defaultValue = p.parseParameterDefault()
+	}
+
+	return append(args, ident), append(defaults, defaultValue)
+}
+
+// parseParameterDefault parses the value expression after a parameter's "=".
+// It returns nil when the parameter has no default.
+func (p *Parser) parseParameterDefault() ast.Expression {
+	if !p.peekTokenIs(lexer.ASSIGN) {
+		return nil
+	}
+
+	p.nextToken() // the '='
+	p.nextToken() // the first token of the default value
+
+	return p.parseExpression(ASSIGN)
 }

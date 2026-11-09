@@ -97,7 +97,11 @@ func (rt *Runtime) EnforceArity(
 	numArgsGiven := len(args)
 
 	if numArgsGiven < minArgs || numArgsGiven > maxArgs {
-		err = rt.NewArgumentError(numArgsGiven, maxArgs)
+		if minArgs == maxArgs {
+			err = rt.NewArgumentError(numArgsGiven, maxArgs)
+		} else {
+			err = rt.NewArgumentRangeError(numArgsGiven, minArgs, maxArgs)
+		}
 		rt.Raise(err)
 		return args, err
 	}

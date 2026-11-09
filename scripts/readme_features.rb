@@ -167,6 +167,52 @@ end
 check("do block and captured local", 6, sum)
 check("nested blocks", [[2, 3], [3, 4]], [1, 2].map { |a| [1, 2].map { |b| a + b } })
 
+def with_defaults(base, extra = 10)
+  base + extra
+end
+check("default omitted", 13, with_defaults(3))
+check("default supplied", 7, with_defaults(3, 4))
+
+def default_from_earlier(a, b = a * 2)
+  b
+end
+check("default uses earlier parameter", 6, default_from_earlier(3))
+
+def all_defaulted(first = 1, second = 2, third = 3)
+  [first, second, third]
+end
+check("every default", [1, 2, 3], all_defaulted)
+check("partial defaults", [9, 2, 3], all_defaulted(9, 2))
+
+def required_after_default(optional = 1, required)
+  [optional, required]
+end
+check("required after default", [1, 5], required_after_default(5))
+
+def default_and_keyword(value = 1, label:)
+  [value, label]
+end
+check("default with keyword", [1, "x"], default_and_keyword(label: "x"))
+
+$default_effects = 0
+def bump_default_effects
+  $default_effects += 1
+  9
+end
+
+def uses_default_effect(value = bump_default_effects)
+  value
+end
+check("default not evaluated", [1, 0], [uses_default_effect(1), $default_effects])
+check("default evaluated", [9, 1], [uses_default_effect, $default_effects])
+
+def default_arity_error
+  with_defaults()
+rescue ArgumentError => error
+  error.message
+end
+check("default arity error", "wrong number of arguments (given 0, expected 1..2)", default_arity_error)
+
 puts "README: conditionals and loops"
 check("if true", 1, if true; 1; end)
 check("if false", nil, if false; 1; end)
@@ -464,7 +510,7 @@ def backtrace_location(frame)
   parts = frame.split(":")
   "#{parts[parts.length - 2]}:#{parts[parts.length - 1]}"
 end
-check("backtrace frames", ["454:in 'backtrace_inner'", "457:in 'backtrace_outer'", "461:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
+check("backtrace frames", ["500:in 'backtrace_inner'", "503:in 'backtrace_outer'", "507:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
 check("backtrace file", true, backtrace_error.backtrace[0].split(":")[0].split("/").last == "readme_features.rb")
 check("backtrace before raise", nil, RuntimeError.new("x").backtrace)
 def backtrace_reraise
@@ -477,7 +523,7 @@ def backtrace_reraise_outer
 rescue StandardError => error
   backtrace_location(error.backtrace[0])
 end
-check("re-raise keeps backtrace", "454:in 'backtrace_inner'", backtrace_reraise_outer)
+check("re-raise keeps backtrace", "500:in 'backtrace_inner'", backtrace_reraise_outer)
 # Mix constructors, nested calls, block capture, branches, setters and hash keys.
 results = {}
 [1, 2, 3].each do |n|

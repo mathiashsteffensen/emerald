@@ -108,6 +108,9 @@ const (
 	OpGetLocal
 	// OpSetLocal creates a local variable reference
 	OpSetLocal
+	// OpArgGiven pushes true when the parameter in the operand's local slot
+	// received an argument and false when its default value must be evaluated
+	OpArgGiven
 
 	// OpGetFree like it's local & global variants resolves a variable reference, but from a blocks free variable pool
 	OpGetFree
@@ -193,6 +196,7 @@ var definitions = map[Opcode]*Definition{
 	OpSetGlobal:         {"OpSetGlobal", []int{2}},
 	OpGetLocal:          {"OpGetLocal", []int{1}},
 	OpSetLocal:          {"OpSetLocal", []int{1}},
+	OpArgGiven:          {"OpArgGiven", []int{1}},
 	OpGetFree:           {"OpGetFree", []int{1}},
 	OpSetFree:           {"OpSetFree", []int{1}},
 	OpReturn:            {"OpReturn", []int{}},

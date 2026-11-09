@@ -11,6 +11,9 @@ type Frame struct {
 	basePointer  int
 	locals       map[int]*object.EmeraldValue
 	rescuedError object.EmeraldValue
+	// argGiven marks which parameters received an argument for methods with
+	// default parameters. It is nil when the method has no defaults.
+	argGiven []bool
 }
 
 func NewFrame(block *object.ClosedBlock, basePointer int) *Frame {

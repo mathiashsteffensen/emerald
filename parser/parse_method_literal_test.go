@@ -328,6 +328,119 @@ func TestMethodLiteralExpression(t *testing.T) {
 
 }
 
+func TestMethodLiteralParameterDefaults(t *testing.T) {
+	tests := []struct {
+		name             string
+		input            string
+		expectedArgs     []string
+		expectedDefaults []string // empty string for a required parameter
+		expectedKwargs   []string
+	}{
+		{
+			name:             "trailing default",
+			input:            "def method(a, b = 1); a; end",
+			expectedArgs:     []string{"a", "b"},
+			expectedDefaults: []string{"", "1"},
+		},
+		{
+			name:             "all parameters defaulted",
+			input:            "def method(a = 1, b = 2); a; end",
+			expectedArgs:     []string{"a", "b"},
+			expectedDefaults: []string{"1", "2"},
+		},
+		{
+			name:             "default before a required parameter",
+			input:            "def method(a = 1, b); b; end",
+			expectedArgs:     []string{"a", "b"},
+			expectedDefaults: []string{"1", ""},
+		},
+		{
+			name:             "expression default",
+			input:            "def method(a = 1 + 2); a; end",
+			expectedArgs:     []string{"a"},
+			expectedDefaults: []string{"(1 + 2)"},
+		},
+		{
+			name:             "default referring to an earlier parameter",
+			input:            "def method(a, b = a + 1); b; end",
+			expectedArgs:     []string{"a", "b"},
+			expectedDefaults: []string{"", "(a + 1)"},
+		},
+		{
+			name:             "default and keyword arguments",
+			input:            "def method(a = 1, b:); b; end",
+			expectedArgs:     []string{"a"},
+			expectedDefaults: []string{"1"},
+			expectedKwargs:   []string{"b"},
+		},
+		{
+			name:             "defaults without parentheses",
+			input:            "def method a = 1, b = 2; a; end",
+			expectedArgs:     []string{"a", "b"},
+			expectedDefaults: []string{"1", "2"},
+		},
+		{
+			name: "defaults across lines without parentheses",
+			input: `def method a,
+				b = 2,
+				c = 3
+				a
+			end`,
+			expectedArgs:     []string{"a", "b", "c"},
+			expectedDefaults: []string{"", "2", "3"},
+		},
+		{
+			name:             "method without defaults",
+			input:            "def method(a); a; end",
+			expectedArgs:     []string{"a"},
+			expectedDefaults: []string{""},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			program := testParseAST(t, tt.input)
+
+			expectStatementLength(t, program.Statements, 1)
+
+			testExpressionStatement(t, program.Statements[0], func(literal *ast.MethodLiteral) {
+				if len(literal.Arguments) != len(tt.expectedArgs) {
+					t.Fatalf("exp %d parameters got=%d", len(tt.expectedArgs), len(literal.Arguments))
+				}
+
+				if len(literal.ArgumentDefaults) != len(literal.Arguments) {
+					t.Fatalf(
+						"expected a default entry for each of the %d parameters, got=%d",
+						len(literal.Arguments),
+						len(literal.ArgumentDefaults),
+					)
+				}
+
+				for i, parameter := range literal.Arguments {
+					testIdentifier(t, *parameter, tt.expectedArgs[i])
+
+					defaultValue := ""
+					if defaultValueExpression := literal.ArgumentDefaults[i]; defaultValueExpression != nil {
+						defaultValue = defaultValueExpression.String(0)
+					}
+
+					if defaultValue != tt.expectedDefaults[i] {
+						t.Errorf("parameter %s default: want=%q got=%q", parameter.Value, tt.expectedDefaults[i], defaultValue)
+					}
+				}
+
+				if len(literal.KeywordArguments) != len(tt.expectedKwargs) {
+					t.Fatalf("exp %d keyword parameters got=%d", len(tt.expectedKwargs), len(literal.KeywordArguments))
+				}
+
+				for i, argument := range literal.KeywordArguments {
+					testIdentifier(t, *argument, tt.expectedKwargs[i])
+				}
+			})
+		})
+	}
+}
+
 func TestMethodLiteralBodyWithGroupedExpression(t *testing.T) {
 	program := testParseAST(t, `
 		def foo

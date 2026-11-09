@@ -115,7 +115,7 @@ func TestString_new(t *testing.T) {
 		{
 			name:     "rejects extra arguments",
 			input:    `String.new("a", "b")`,
-			expected: "error:ArgumentError:wrong number of arguments (given 2, expected 1)",
+			expected: "error:ArgumentError:wrong number of arguments (given 2, expected 0..1)",
 		},
 		{
 			name:     "rejects keywords",

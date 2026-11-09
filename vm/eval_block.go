@@ -51,7 +51,7 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 		return vm.evalBuiltIn(bl, block, args, kwargs)
 	case *object.ClosedBlock:
 		if bl.EnforceArity {
-			if _, err := vm.rt.EnforceArity(args, kwargs, bl.NumArgs, bl.NumArgs, bl.Kwargs...); err != nil {
+			if _, err := vm.rt.EnforceArity(args, kwargs, bl.MinArgs, bl.NumArgs, bl.Kwargs...); err != nil {
 				return object.NewHeapObject(err)
 			}
 		}
@@ -68,6 +68,12 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 			vm.push(arg)
 		}
 
+		var argGiven []bool
+		if bl.EnforceArity {
+			argGiven = vm.bindPositionalArgs(bl, basePointer, len(args))
+			vm.currentFiber().sp = basePointer + bl.NumArgs
+		}
+
 		if len(kwargs) != 0 {
 			sortedKwargsHashVal := vm.rt.NewHash()
 			sortedKwargsHash := sortedKwargsHashVal.Heap.(*core.HashInstance)
@@ -82,7 +88,9 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 
 		// Prepare the call frame
 		startFrameIndex := vm.currentFiber().framesIndex
-		vm.currentFiber().pushFrame(NewFrame(bl, basePointer))
+		frame := NewFrame(bl, basePointer)
+		frame.argGiven = argGiven
+		vm.currentFiber().pushFrame(frame)
 
 		// Prepare the vm stack pointer
 		vm.currentFiber().sp = basePointer + bl.NumLocals

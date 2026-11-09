@@ -147,7 +147,7 @@ Ruby implementation.
     - [x] without parens
     - [x] without parens with args
     - [x] return keyword
-    - [ ] default values for parameters
+    - [x] default values for parameters
     - [x] keyword arguments
     - [ ] block arguments
     - [x] yield

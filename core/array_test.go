@@ -74,7 +74,7 @@ func TestArray_first(t *testing.T) {
 		},
 		{
 			input:    "[36, 24, 49].first(2, 3)",
-			expected: "error:ArgumentError:wrong number of arguments (given 2, expected 1)",
+			expected: "error:ArgumentError:wrong number of arguments (given 2, expected 0..1)",
 		},
 	}
 
@@ -109,7 +109,7 @@ func TestArray_last(t *testing.T) {
 		},
 		{
 			input:    "[36, 24, 49].last(2, 3)",
-			expected: "error:ArgumentError:wrong number of arguments (given 2, expected 1)",
+			expected: "error:ArgumentError:wrong number of arguments (given 2, expected 0..1)",
 		},
 	}
 

@@ -12,7 +12,7 @@ import (
 
 func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
 	name := node.Name.(ast.IdentifierExpression).Value
-	block, _ := c.compileBlock(node.BlockLiteral, true, name)
+	block, _ := c.compileBlock(node.BlockLiteral, node.ArgumentDefaults, true, name)
 
 	symbol := c.rt.NewSymbol(name)
 
@@ -21,8 +21,9 @@ func (c *Compiler) compileMethodLiteral(node *ast.MethodLiteral) {
 	c.emit(bytecode.OpDefineMethod, node.Token)
 }
 
-// compileBlock compiles a method body (named name) or a block literal (name ignored) into a Block
-func (c *Compiler) compileBlock(node *ast.BlockLiteral, method bool, name string) (*object.Block, int) {
+// compileBlock compiles a method body (named name) or a block literal (name ignored) into a Block.
+// argumentDefaults is aligned with the method's positional parameters and may be nil.
+func (c *Compiler) compileBlock(node *ast.BlockLiteral, argumentDefaults []ast.Expression, method bool, name string) (*object.Block, int) {
 	if !method {
 		name = blockName(c.currentScope().name)
 	}
@@ -32,9 +33,14 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, method bool, name string
 	c.scopes[c.scopeIndex].name = name
 
 	numParams := len(node.Arguments)
-	for _, p := range append(node.Arguments, node.KeywordArguments...) {
+	for _, p := range node.Arguments {
 		c.symbolTable.Define(p.Value)
 	}
+	for _, p := range node.KeywordArguments {
+		c.symbolTable.Define(p.Value)
+	}
+
+	defaultArgSlots := c.compileArgumentDefaults(node.Arguments, argumentDefaults)
 	startIP := len(c.currentInstructions())
 
 	c.Compile(node.Body)
@@ -95,6 +101,8 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, method bool, name string
 	}
 
 	block := object.NewBlock(bytecode, numLocals, numParams, kwargNames, method)
+	block.MinArgs = numParams - len(defaultArgSlots)
+	block.DefaultArgSlots = defaultArgSlots
 	block.Name = name
 	block.ExceptionTable = exceptionTable
 	for _, symbol := range freeSymbols {
@@ -102,6 +110,44 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, method bool, name string
 	}
 
 	return block, len(freeSymbols)
+}
+
+// compileArgumentDefaults emits the prologue that gives a parameter without a
+// supplied argument its default value. Defaults are evaluated in the method
+// scope, after any earlier parameters, and only when they are needed. The
+// returned slots are the parameters that have a default.
+func (c *Compiler) compileArgumentDefaults(params []*ast.IdentifierExpression, defaults []ast.Expression) []int {
+	if len(defaults) == 0 {
+		return nil
+	}
+
+	defaultArgSlots := []int{}
+
+	for slot, defaultExpression := range defaults {
+		if defaultExpression == nil {
+			continue
+		}
+
+		parameter := params[slot]
+		defaultArgSlots = append(defaultArgSlots, slot)
+
+		c.emit(bytecode.OpArgGiven, parameter.Token, slot)
+		skipDefault := c.emit(bytecode.OpJumpTruthy, parameter.Token, 0)
+
+		c.emit(bytecode.OpPop, parameter.Token)
+		c.Compile(defaultExpression)
+		c.emit(bytecode.OpSetLocal, parameter.Token, slot)
+		c.emit(bytecode.OpPop, parameter.Token)
+
+		c.changeOperand(skipDefault, len(c.currentInstructions()))
+	}
+
+	// The body starts with clean instruction history, so an empty body still
+	// returns nil instead of turning the prologue's last pop into a return.
+	c.scopes[c.scopeIndex].lastInstruction = EmittedInstruction{}
+	c.scopes[c.scopeIndex].previousInstruction = EmittedInstruction{}
+
+	return defaultArgSlots
 }
 
 func (c *Compiler) replaceLastPopWithReturn() {

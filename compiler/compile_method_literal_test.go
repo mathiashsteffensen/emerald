@@ -147,6 +147,51 @@ func TestCompileMethodLiteral(t *testing.T) {
 				bytecode.Make(bytecode.OpPop),
 			},
 		},
+		{
+			input: `def method(a = 1); a; end`,
+			expectedConstants: []any{
+				1,
+				":method",
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpArgGiven, 0),
+					bytecode.Make(bytecode.OpJumpTruthy, 12),
+					bytecode.Make(bytecode.OpPop),
+					bytecode.Make(bytecode.OpPushConstant, 0),
+					bytecode.Make(bytecode.OpSetLocal, 0),
+					bytecode.Make(bytecode.OpPop),
+					bytecode.Make(bytecode.OpGetLocal, 0),
+					bytecode.Make(bytecode.OpReturnValue),
+				},
+			},
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			input: `def method(a = 1); end`,
+			expectedConstants: []any{
+				1,
+				":method",
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpArgGiven, 0),
+					bytecode.Make(bytecode.OpJumpTruthy, 12),
+					bytecode.Make(bytecode.OpPop),
+					bytecode.Make(bytecode.OpPushConstant, 0),
+					bytecode.Make(bytecode.OpSetLocal, 0),
+					bytecode.Make(bytecode.OpPop),
+					bytecode.Make(bytecode.OpReturn),
+				},
+			},
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpPushConstant, 1),
+				bytecode.Make(bytecode.OpPushConstant, 2),
+				bytecode.Make(bytecode.OpDefineMethod),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
 	}
 	runCompilerTests(t, tests)
 }

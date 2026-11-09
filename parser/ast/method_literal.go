@@ -9,6 +9,9 @@ type MethodLiteral struct {
 	Token lexer.Token // The 'def' token
 	*BlockLiteral
 	Name Expression
+	// ArgumentDefaults holds the default value expressions aligned with
+	// Arguments; an entry is nil when the parameter is required.
+	ArgumentDefaults []Expression
 }
 
 func (ml *MethodLiteral) expressionNode()      {}
@@ -20,8 +23,12 @@ func (ml *MethodLiteral) String(indents ...int) string {
 
 	params := []string{}
 
-	for _, p := range ml.Arguments {
-		params = append(params, p.String(0))
+	for i, p := range ml.Arguments {
+		parameter := p.String(0)
+		if i < len(ml.ArgumentDefaults) && ml.ArgumentDefaults[i] != nil {
+			parameter += " = " + ml.ArgumentDefaults[i].String(0)
+		}
+		params = append(params, parameter)
 	}
 
 	indented(&out, indent, "def ")

@@ -34,6 +34,10 @@ func (rt *Runtime) NewArgumentError(given int, expected int) object.EmeraldError
 	return rt.newArgumentError(fmt.Sprintf("wrong number of arguments (given %d, expected %d)", given, expected))
 }
 
+func (rt *Runtime) NewArgumentRangeError(given int, min int, max int) object.EmeraldError {
+	return rt.newArgumentError(fmt.Sprintf("wrong number of arguments (given %d, expected %d..%d)", given, min, max))
+}
+
 func (rt *Runtime) NewKeywordMissingArgumentError(keyword string) object.EmeraldError {
 	return rt.newArgumentError(fmt.Sprintf("missing keyword: :%s", keyword))
 }

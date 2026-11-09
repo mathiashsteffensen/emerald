@@ -20,12 +20,18 @@ type FreeBinding struct {
 type Block struct {
 	*BaseEmeraldValue
 	bytecode.Bytecode
-	NumLocals      int
-	NumArgs        int
-	Kwargs         []string
-	EnforceArity   bool
-	ExceptionTable []ExceptionTableEntry
-	FreeBindings   []FreeBinding
+	NumLocals int
+	NumArgs   int
+	// MinArgs is the number of positional parameters that must receive an
+	// argument; the rest have defaults.
+	MinArgs int
+	Kwargs  []string
+	// DefaultArgSlots holds the parameter slots that have a default value, in
+	// declaration order.
+	DefaultArgSlots []int
+	EnforceArity    bool
+	ExceptionTable  []ExceptionTableEntry
+	FreeBindings    []FreeBinding
 	// Name labels this block in backtraces, e.g. "foo", "block in foo" or "<main>"
 	Name string
 }
@@ -43,6 +49,7 @@ func NewBlock(bytecode bytecode.Bytecode, numLocals int, numArgs int, kwargs []s
 		Bytecode:     bytecode,
 		NumLocals:    numLocals,
 		NumArgs:      numArgs,
+		MinArgs:      numArgs,
 		Kwargs:       kwargs,
 		EnforceArity: enforceArity,
 	}

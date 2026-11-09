@@ -37,6 +37,10 @@ func TestBlock(t *testing.T) {
 	if block.HashKey() == "" {
 		t.Error("block hash key should not be empty")
 	}
+
+	if block.MinArgs != 1 {
+		t.Errorf("block without defaults should require all %d arguments, got %d", block.NumArgs, block.MinArgs)
+	}
 }
 
 func TestClosedBlock(t *testing.T) {

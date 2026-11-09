@@ -298,6 +298,14 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		} else {
 			vm.stack()[frame.basePointer+int(localIndex)] = vm.StackTop()
 		}
+	case bytecode.OpArgGiven:
+		localIndex := vm.readUint8(ins, ip)
+		frame := vm.currentFiber().currentFrame()
+		if int(localIndex) < len(frame.argGiven) && frame.argGiven[localIndex] {
+			vm.push(vm.rt.TRUE)
+		} else {
+			vm.push(vm.rt.FALSE)
+		}
 	case bytecode.OpGetFree:
 		freeIndex := bytecode.ReadUint8(ins[ip+1:])
 		vm.currentFiber().currentFrame().ip += 1
@@ -502,10 +510,15 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) bool {
 					kwargsMap[key.Inspect()] = value
 				})
 			}
+
+			var argGiven []bool
 			if m.EnforceArity {
-				if _, err := vm.rt.EnforceArity(vm.stack()[basePointer:vm.currentFiber().sp], kwargsMap, m.NumArgs, m.NumArgs, m.Kwargs...); err != nil {
+				if _, err := vm.rt.EnforceArity(vm.stack()[basePointer:vm.currentFiber().sp], kwargsMap, m.MinArgs, m.NumArgs, m.Kwargs...); err != nil {
 					return
 				}
+
+				argGiven = vm.bindPositionalArgs(m, basePointer, vm.currentFiber().sp-basePointer)
+				vm.currentFiber().sp = basePointer + m.NumArgs
 			}
 
 			if hasKwargs {
@@ -523,6 +536,7 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) bool {
 			}
 
 			frame := NewFrame(m, basePointer)
+			frame.argGiven = argGiven
 			vm.currentFiber().pushFrame(frame)
 			vm.currentFiber().sp = frame.basePointer + m.NumLocals
 			originalFrameIndex := vm.currentFiber().framesIndex
