@@ -137,7 +137,7 @@ func TestCompileMethodLiteral(t *testing.T) {
 				":method",
 				[]bytecode.Instructions{
 					bytecode.Make(bytecode.OpGetLocal, 0),
-					bytecode.Make(bytecode.OpReturn),
+					bytecode.Make(bytecode.OpReturnValue),
 				},
 			},
 			expectedInstructions: []bytecode.Instructions{

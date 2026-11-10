@@ -105,23 +105,10 @@ func testConstants(
 				return fmt.Errorf("constant %d - testFloatObject failed: %s", i, err)
 			}
 		case string:
-			if strings.HasPrefix(constant, ":") {
-				return testSymbolObject(constant, actual[i])
+			err := testStringConstant(constant, actual[i])
+			if err != nil {
+				return fmt.Errorf("constant %d - testStringConstant failed: %s", i, err)
 			}
-
-			if strings.HasPrefix(constant, "/") && strings.HasSuffix(constant, "/") {
-				return testRegexpObject(constant[1:len(constant)-1], actual[i])
-			}
-
-			if strings.HasPrefix(constant, "class:") {
-				return testClassObject(constant[6:], actual[i])
-			}
-
-			if strings.HasPrefix(constant, "module:") {
-				return testModuleObject(constant[7:], actual[i])
-			}
-
-			return testStringObject(constant, actual[i])
 		case []bytecode.Instructions:
 			fn, ok := actual[i].Heap.(*object.Block)
 			if !ok {
@@ -133,9 +120,32 @@ func testConstants(
 				return fmt.Errorf("constant %d - testInstructions failed: %s",
 					i, err)
 			}
+		default:
+			return fmt.Errorf("constant %d - unsupported expected type: %T", i, constant)
 		}
 	}
 	return nil
+}
+
+// Expected strings encode the object kind: ":sym", "/regexp/", "class:Name", "module:Name"; any other string is a String.
+func testStringConstant(expected string, actual object.EmeraldValue) error {
+	if strings.HasPrefix(expected, ":") {
+		return testSymbolObject(expected, actual)
+	}
+
+	if strings.HasPrefix(expected, "/") && strings.HasSuffix(expected, "/") {
+		return testRegexpObject(expected[1:len(expected)-1], actual)
+	}
+
+	if name, ok := strings.CutPrefix(expected, "class:"); ok {
+		return testClassObject(name, actual)
+	}
+
+	if name, ok := strings.CutPrefix(expected, "module:"); ok {
+		return testModuleObject(name, actual)
+	}
+
+	return testStringObject(expected, actual)
 }
 
 func testIntegerObject(expected int64, actual object.EmeraldValue) error {

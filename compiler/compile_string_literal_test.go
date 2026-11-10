@@ -17,7 +17,7 @@ func TestCompileStringLiteral(t *testing.T) {
 		},
 		{
 			input:             `placeholder = "template"; "This is a #{placeholder.to_s}"`,
-			expectedConstants: []any{"template", "This is a", ":to_s"},
+			expectedConstants: []any{"template", "This is a ", ":to_s"},
 			expectedInstructions: []bytecode.Instructions{
 				bytecode.Make(bytecode.OpPushConstant, 0),
 				bytecode.Make(bytecode.OpSetGlobal, 0),

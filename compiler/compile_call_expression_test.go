@@ -40,6 +40,8 @@ func TestCompileCallExpression(t *testing.T) {
 				2,
 				[]bytecode.Instructions{
 					bytecode.Make(bytecode.OpGetLocal, 0),
+					bytecode.Make(bytecode.OpPushConstant, 1),
+					bytecode.Make(bytecode.OpAdd),
 					bytecode.Make(bytecode.OpReturnValue),
 				},
 			},
