@@ -10,7 +10,7 @@ type Runtime struct {
 	Heap *heap.Heap
 
 	CompileBlock func(fileName string, content string) *bytecode.Bytecode
-	EvalBlock    func(block *object.ClosedBlock, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue
+	EvalBlock    func(block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue
 	Send         func(self object.EmeraldValue, name string, block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue
 	OnRaise      func(err object.EmeraldError)
 
@@ -43,6 +43,7 @@ type Runtime struct {
 	NoMethodError  object.EmeraldValue
 	Numeric        object.EmeraldValue
 	Object         object.EmeraldValue
+	Proc           object.EmeraldValue
 	Range          object.EmeraldValue
 	Regexp         object.EmeraldValue
 	RuntimeError   object.EmeraldValue
@@ -136,6 +137,7 @@ func (rt *Runtime) initCore() {
 	rt.InitEmerald()
 
 	// Initialize remaining core classes & modules
+	rt.InitProc()
 	rt.InitRegexp()
 	rt.InitMatchData()
 	rt.InitRange()

@@ -4,6 +4,8 @@ import (
 	"emerald/core"
 	"emerald/object"
 	"fmt"
+	"sort"
+	"strings"
 )
 
 func (vm *VM) Yield(kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
@@ -21,7 +23,11 @@ func (vm *VM) withExecutionContextForBlock(block object.EmeraldValue, cb func() 
 
 	if closedBlock, ok := block.Heap.(*object.ClosedBlock); ok && closedBlock.Context != nil {
 		vm.ctx = closedBlock.Context
+		// A Proc can outlive the Engine.Eval that created it. Point the
+		// captured context at this VM so yield keeps working.
 		vm.ctx.ExecutionContext = vm.executionContext
+		vm.ctx.Yield = vm.Yield
+		vm.ctx.BlockGiven = vm.BlockGiven
 	}
 
 	return cb()
@@ -54,6 +60,10 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 			if _, err := vm.rt.EnforceArity(args, kwargs, bl.MinArgs, bl.NumArgs, bl.Kwargs...); err != nil {
 				return object.NewHeapObject(err)
 			}
+		} else if len(bl.Kwargs) != 0 {
+			if err := vm.rt.RequireKeywords(kwargs, bl.Kwargs...); err != nil {
+				return object.NewHeapObject(err)
+			}
 		}
 
 		// Method receiver
@@ -63,18 +73,20 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 
 		basePointer := vm.currentFiber().sp
 
-		// Add the arguments to the stack
-		for _, arg := range args {
-			vm.push(arg)
-		}
-
 		var argGiven []bool
 		if bl.EnforceArity {
+			// Add the arguments to the stack
+			for _, arg := range args {
+				vm.push(arg)
+			}
+
 			argGiven = vm.bindPositionalArgs(bl, basePointer, len(args))
 			vm.currentFiber().sp = basePointer + bl.NumArgs
+		} else {
+			vm.bindBlockArguments(bl, basePointer, kwargs, args)
 		}
 
-		if len(kwargs) != 0 {
+		if bl.EnforceArity && len(kwargs) != 0 {
 			sortedKwargsHashVal := vm.rt.NewHash()
 			sortedKwargsHash := sortedKwargsHashVal.Heap.(*core.HashInstance)
 
@@ -109,6 +121,56 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 	}
 
 	return vm.rt.NULL
+}
+
+// bindBlockArguments lays out a block call's arguments in its local slots.
+// Blocks are lenient about positional arity: a parameter without an argument
+// is nil and extra arguments are dropped. Declared keyword parameters take
+// their value by name at the declared slot. With no declared keyword
+// parameters, Ruby passes the keywords on as one trailing positional Hash.
+// Remaining locals start as nil.
+func (vm *VM) bindBlockArguments(bl *object.ClosedBlock, basePointer int, kwargs map[string]object.EmeraldValue, args []object.EmeraldValue) {
+	positional := args
+	if len(bl.Kwargs) == 0 && len(kwargs) != 0 {
+		positional = make([]object.EmeraldValue, len(args), len(args)+1)
+		copy(positional, args)
+		positional = append(positional, vm.kwargsHash(kwargs))
+	}
+
+	for i := 0; i < bl.NumArgs; i++ {
+		if i < len(positional) {
+			vm.push(positional[i])
+		} else {
+			vm.push(vm.rt.NULL)
+		}
+	}
+
+	for _, name := range bl.Kwargs {
+		vm.push(kwargs[":"+name])
+	}
+
+	for vm.currentFiber().sp < basePointer+bl.NumLocals {
+		vm.push(vm.rt.NULL)
+	}
+}
+
+// kwargsHash builds the Hash Ruby passes to a block that declares no keyword
+// parameters. Sorted keys keep the Hash order stable.
+func (vm *VM) kwargsHash(kwargs map[string]object.EmeraldValue) object.EmeraldValue {
+	hashVal := vm.rt.NewHash()
+	hash := hashVal.Heap.(*core.HashInstance)
+
+	keys := make([]string, 0, len(kwargs))
+	for key := range kwargs {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		hash.Set(vm.rt.NewSymbol(strings.TrimPrefix(key, ":")), kwargs[key])
+	}
+
+	return hashVal
 }
 
 func (vm *VM) evalBuiltIn(builtin *object.WrappedBuiltInMethod, block object.EmeraldValue, args []object.EmeraldValue, kwargs map[string]object.EmeraldValue) object.EmeraldValue {

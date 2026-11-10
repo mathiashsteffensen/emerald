@@ -31,9 +31,9 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 	if p.peekTokenIs(lexer.LPAREN) {
 		p.nextToken()
 
-		method.Arguments, method.KeywordArguments, method.ArgumentDefaults = p.parseMethodLiteralArguments(lexer.RPAREN, true)
-	} else if p.peekTokenIs(lexer.IDENT) {
-		method.Arguments, method.KeywordArguments, method.ArgumentDefaults = p.parseMethodLiteralArgumentsWithoutParentheses()
+		method.Arguments, method.KeywordArguments, method.ArgumentDefaults, method.BlockArgument = p.parseMethodLiteralArguments(lexer.RPAREN, true, true)
+	} else if p.peekTokenIs(lexer.IDENT) || p.peekTokenIs(lexer.BIT_AND) {
+		method.Arguments, method.KeywordArguments, method.ArgumentDefaults, method.BlockArgument = p.parseMethodLiteralArgumentsWithoutParentheses()
 	} else {
 		method.Arguments, method.KeywordArguments, method.ArgumentDefaults = []*ast.IdentifierExpression{}, []*ast.IdentifierExpression{}, []ast.Expression{}
 	}
@@ -51,11 +51,24 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 
 // parseMethodLiteralArgumentsWithoutParentheses parses the parameters that
 // follow a method name without parentheses, as in `def greet name, age`. After
-// a comma the parameter list can continue on the next line.
-func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args, kwargs []*ast.IdentifierExpression, defaults []ast.Expression) {
+// a comma the parameter list can continue on the next line, and a trailing
+// &block parameter is allowed.
+func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args, kwargs []*ast.IdentifierExpression, defaults []ast.Expression, blockArgument *ast.IdentifierExpression) {
 	p.nextToken()
 
 	startedKeywordArguments := false
+
+	if p.curTokenIs(lexer.BIT_AND) {
+		blockArgument = p.parseBlockArgument()
+		if blockArgument == nil {
+			return nil, nil, nil, nil
+		}
+		p.checkDuplicateBlockArgument(blockArgument, args, kwargs)
+		if !p.expectMethodParameterListEnd() {
+			return nil, nil, nil, nil
+		}
+		return
+	}
 
 	ident := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 	if p.peekTokenIs(lexer.COLON) {
@@ -70,15 +83,28 @@ func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args, kwargs [
 		p.nextToken()
 		p.nextIfNewline()
 
+		if p.peekTokenIs(lexer.BIT_AND) {
+			p.nextToken()
+			blockArgument = p.parseBlockArgument()
+			if blockArgument == nil {
+				return nil, nil, nil, nil
+			}
+			p.checkDuplicateBlockArgument(blockArgument, args, kwargs)
+			if !p.expectMethodParameterListEnd() {
+				return nil, nil, nil, nil
+			}
+			return
+		}
+
 		if !p.expectPeek(lexer.IDENT) {
-			return nil, nil, nil
+			return nil, nil, nil, nil
 		}
 
 		ident := &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 
 		if startedKeywordArguments {
 			if !p.expectPeek(lexer.COLON) {
-				return nil, nil, nil
+				return nil, nil, nil, nil
 			}
 
 			kwargs = append(kwargs, ident)
@@ -91,16 +117,27 @@ func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args, kwargs [
 		}
 	}
 
-	if !p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON, lexer.EOF) {
-		p.methodParametersBoundaryError()
-		return nil, nil, nil
+	if !p.expectMethodParameterListEnd() {
+		return nil, nil, nil, nil
 	}
 
 	return
 }
 
+// expectMethodParameterListEnd checks that the parenthesis-free parameter list
+// ends at the next token, and records an error when it does not, as in
+// `def method a b`.
+func (p *Parser) expectMethodParameterListEnd() bool {
+	if p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON, lexer.EOF) {
+		return true
+	}
+
+	p.methodParametersBoundaryError()
+	return false
+}
+
 // methodParametersBoundaryError reports the token that cannot continue a
-// parameter list without parentheses, such as the b in `def method a b`.
+// parameter list without parentheses.
 func (p *Parser) methodParametersBoundaryError() {
 	msg := fmt.Sprintf(
 		"expected a newline, ';' or end of input after the method parameters at line %d, column %d\n%s",
@@ -111,7 +148,7 @@ func (p *Parser) methodParametersBoundaryError() {
 	p.addError(msg)
 }
 
-func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType, allowDefaults bool) (args, kwargs []*ast.IdentifierExpression, defaults []ast.Expression) {
+func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType, allowDefaults bool, allowBlockArgument bool) (args, kwargs []*ast.IdentifierExpression, defaults []ast.Expression, blockArgument *ast.IdentifierExpression) {
 	if p.peekTokenIs(delim) {
 		p.nextToken()
 		return
@@ -119,8 +156,14 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType, allowDefault
 
 	startedKeywordArguments := false
 
+	if allowBlockArgument && p.peekTokenIs(lexer.BIT_AND) {
+		blockArgument = p.parseBlockArgumentWithDelimiter(delim)
+		p.checkDuplicateBlockArgument(blockArgument, args, kwargs)
+		return
+	}
+
 	if !p.expectPeek(lexer.IDENT) {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 
 	ident := &ast.IdentifierExpression{
@@ -145,8 +188,14 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType, allowDefault
 			return
 		}
 
+		if allowBlockArgument && p.peekTokenIs(lexer.BIT_AND) {
+			blockArgument = p.parseBlockArgumentWithDelimiter(delim)
+			p.checkDuplicateBlockArgument(blockArgument, args, kwargs)
+			return
+		}
+
 		if !p.expectPeek(lexer.IDENT) {
-			return nil, nil, nil
+			return nil, nil, nil, nil
 		}
 
 		ident := &ast.IdentifierExpression{
@@ -156,7 +205,7 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType, allowDefault
 
 		if startedKeywordArguments {
 			if !p.expectPeek(lexer.COLON) {
-				return nil, nil, nil
+				return nil, nil, nil, nil
 			}
 
 			kwargs = append(kwargs, ident)
@@ -170,10 +219,68 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType, allowDefault
 	}
 
 	if !p.expectPeek(delim) {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 
 	return
+}
+
+// parseBlockArgument parses the name of a method's &block parameter. The
+// current token is '&'.
+func (p *Parser) parseBlockArgument() *ast.IdentifierExpression {
+	if !p.expectPeek(lexer.IDENT) {
+		return nil
+	}
+
+	return &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+// checkDuplicateBlockArgument reports a &block parameter whose name repeats a
+// positional or keyword parameter.
+func (p *Parser) checkDuplicateBlockArgument(blockArgument *ast.IdentifierExpression, args, kwargs []*ast.IdentifierExpression) {
+	if blockArgument == nil {
+		return
+	}
+
+	for _, parameter := range args {
+		if parameter.Value == blockArgument.Value {
+			p.duplicatedArgumentNameError(blockArgument.Token)
+			return
+		}
+	}
+
+	for _, parameter := range kwargs {
+		if parameter.Value == blockArgument.Value {
+			p.duplicatedArgumentNameError(blockArgument.Token)
+			return
+		}
+	}
+}
+
+// duplicatedArgumentNameError reports a parameter name that the method already
+// declares.
+func (p *Parser) duplicatedArgumentNameError(token lexer.Token) {
+	msg := fmt.Sprintf(
+		"duplicated argument name at line %d, column %d\n%s",
+		token.Line,
+		token.Column,
+		p.l.Snapshot(token),
+	)
+	p.addError(msg)
+}
+
+// parseBlockArgumentWithDelimiter parses `&block` and the closing delimiter of
+// a parenthesized parameter list, as in `def method(a, &block)`. The next
+// token is '&'.
+func (p *Parser) parseBlockArgumentWithDelimiter(delim lexer.TokenType) *ast.IdentifierExpression {
+	p.nextToken()
+
+	blockArgument := p.parseBlockArgument()
+	if blockArgument == nil || !p.expectPeek(delim) {
+		return nil
+	}
+
+	return blockArgument
 }
 
 // addPositionalParameter records a positional parameter and, when allowDefaults

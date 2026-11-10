@@ -2,6 +2,7 @@ package emerald_test
 
 import (
 	"emerald"
+	"emerald/object"
 	"fmt"
 	"testing"
 )
@@ -29,6 +30,32 @@ func TestEngineExceptionClassName(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestEngineEscapedProcKeepsYield(t *testing.T) {
+	engine := emerald.New()
+
+	_, err := engine.Eval(`
+		def capture(&block)
+			block
+		end
+		def outer
+			capture { yield }
+		end
+		$saved = outer { 42 }
+	`)
+	if err != nil {
+		t.Fatalf("first eval: %v", err)
+	}
+
+	value, err := engine.Eval(`$saved.call`)
+	if err != nil {
+		t.Fatalf("second eval: %v", err)
+	}
+
+	if !value.Is(object.INTEGER_VALUE) || value.Num != 42 {
+		t.Fatalf("escaped Proc#call = %s, want 42", value.Inspect())
 	}
 }
 

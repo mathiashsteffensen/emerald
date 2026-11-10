@@ -67,6 +67,8 @@ const (
 
 	// OpSelf pushes the current value of self onto the stack
 	OpSelf
+	// OpBlock pushes the block passed to the current method as a Proc, or nil
+	OpBlock
 	// OpTrue pushes core.TRUE onto the stack
 	OpTrue
 	// OpFalse pushes core.FALSE onto the stack
@@ -179,6 +181,7 @@ var definitions = map[Opcode]*Definition{
 	OpLessThan:          {"OpLessThan", []int{}},
 	OpLessThanOrEq:      {"OpLessThanOrEq", []int{}},
 	OpSelf:              {"OpSelf", []int{}},
+	OpBlock:             {"OpBlock", []int{}},
 	OpTrue:              {"OpTrue", []int{}},
 	OpFalse:             {"OpFalse", []int{}},
 	OpNull:              {"OpNull", []int{}},

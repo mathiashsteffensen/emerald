@@ -106,23 +106,43 @@ func (rt *Runtime) EnforceArity(
 		return args, err
 	}
 
-	for _, kwarg := range requiredKwargs {
-		if _, ok := kwargs[":"+kwarg]; !ok {
-			err = rt.NewKeywordMissingArgumentError(kwarg)
-			rt.Raise(err)
-			return args, err
-		}
-	}
-
-	for kwarg := range kwargs {
-		if !slices.Contains(requiredKwargs, strings.TrimPrefix(kwarg, ":")) {
-			err = rt.newArgumentError(fmt.Sprintf("unknown keyword: %s", kwarg))
-			rt.Raise(err)
-			return args, err
-		}
+	if err = rt.EnforceKeywords(kwargs, requiredKwargs...); err != nil {
+		return args, err
 	}
 
 	return args, nil
+}
+
+// RequireKeywords raises ArgumentError for each required keyword that kwargs
+// does not contain. Blocks use it because they accept extra keywords.
+func (rt *Runtime) RequireKeywords(kwargs map[string]object.EmeraldValue, required ...string) object.EmeraldError {
+	for _, kwarg := range required {
+		if _, ok := kwargs[":"+kwarg]; !ok {
+			err := rt.NewKeywordMissingArgumentError(kwarg)
+			rt.Raise(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+// EnforceKeywords checks that every required keyword is given and that no
+// other keyword is present.
+func (rt *Runtime) EnforceKeywords(kwargs map[string]object.EmeraldValue, required ...string) object.EmeraldError {
+	if err := rt.RequireKeywords(kwargs, required...); err != nil {
+		return err
+	}
+
+	for kwarg := range kwargs {
+		if !slices.Contains(required, strings.TrimPrefix(kwarg, ":")) {
+			err := rt.newArgumentError(fmt.Sprintf("unknown keyword: %s", kwarg))
+			rt.Raise(err)
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (rt *Runtime) EnforceIntegerArg(arg object.EmeraldValue) (int64, object.EmeraldError) {

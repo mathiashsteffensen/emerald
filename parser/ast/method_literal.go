@@ -31,6 +31,10 @@ func (ml *MethodLiteral) String(indents ...int) string {
 		params = append(params, parameter)
 	}
 
+	if ml.BlockArgument != nil {
+		params = append(params, "&"+ml.BlockArgument.String(0))
+	}
+
 	indented(&out, indent, "def ")
 	out.WriteString(ml.Name.String(0))
 

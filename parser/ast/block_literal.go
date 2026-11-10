@@ -9,9 +9,12 @@ type BlockLiteral struct {
 	Token            lexer.Token // The 'do' or '{' token
 	Arguments        []*IdentifierExpression
 	KeywordArguments []*IdentifierExpression
-	Body             *BlockStatement
-	RescueBlocks     []*RescueBlock
-	EnsureBlock      *EnsureBlock
+	// BlockArgument is the &block parameter of a method definition. Block
+	// literals never declare one.
+	BlockArgument *IdentifierExpression
+	Body          *BlockStatement
+	RescueBlocks  []*RescueBlock
+	EnsureBlock   *EnsureBlock
 }
 
 func (bl *BlockLiteral) expressionNode()      {}

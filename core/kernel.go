@@ -229,7 +229,7 @@ func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 			},
 		}, &object.Block{Bytecode: *bytecode, Name: "<top (required)>"}, nil, "", object.PUBLIC)
 
-		rt.EvalBlock(requiredBlock, map[string]object.EmeraldValue{})
+		rt.EvalBlock(object.NewHeapObject(requiredBlock), map[string]object.EmeraldValue{})
 
 		rt.RequiredFilesHash.Heap.(*HashInstance).Set(absolutePathStr, rt.TRUE)
 

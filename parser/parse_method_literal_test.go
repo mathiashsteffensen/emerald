@@ -328,6 +328,90 @@ func TestMethodLiteralExpression(t *testing.T) {
 
 }
 
+func TestMethodLiteralBlockArgument(t *testing.T) {
+	tests := []struct {
+		name           string
+		input          string
+		expectedArgs   []string
+		expectedKwargs []string
+		expectedBlock  string
+	}{
+		{
+			name:          "with only a block argument",
+			input:         "def method(&block); block; end",
+			expectedArgs:  []string{},
+			expectedBlock: "block",
+		},
+		{
+			name:          "with a positional and a block argument",
+			input:         "def method(value, &block); block; end",
+			expectedArgs:  []string{"value"},
+			expectedBlock: "block",
+		},
+		{
+			name:           "with a keyword and a block argument",
+			input:          "def method(value:, &block); block; end",
+			expectedKwargs: []string{"value"},
+			expectedBlock:  "block",
+		},
+		{
+			name:          "with a default and a block argument",
+			input:         "def method(value = 1, &block); block; end",
+			expectedArgs:  []string{"value"},
+			expectedBlock: "block",
+		},
+		{
+			name:          "without parentheses after a positional argument",
+			input:         "def method value, &block; block; end",
+			expectedArgs:  []string{"value"},
+			expectedBlock: "block",
+		},
+		{
+			name:          "without parentheses and only a block argument",
+			input:         "def method &block; block; end",
+			expectedBlock: "block",
+		},
+		{
+			name:          "after a line break",
+			input:         "def method value,\n\t&block\n\tblock\nend",
+			expectedArgs:  []string{"value"},
+			expectedBlock: "block",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			program := testParseAST(t, tt.input)
+
+			expectStatementLength(t, program.Statements, 1)
+
+			testExpressionStatement(t, program.Statements[0], func(literal *ast.MethodLiteral) {
+				if len(literal.Arguments) != len(tt.expectedArgs) {
+					t.Fatalf("exp %d parameters got=%d", len(tt.expectedArgs), len(literal.Arguments))
+				}
+
+				for i, parameter := range literal.Arguments {
+					testIdentifier(t, *parameter, tt.expectedArgs[i])
+				}
+
+				if len(literal.KeywordArguments) != len(tt.expectedKwargs) {
+					t.Fatalf("exp %d keyword parameters got=%d", len(tt.expectedKwargs), len(literal.KeywordArguments))
+				}
+
+				for i, argument := range literal.KeywordArguments {
+					testIdentifier(t, *argument, tt.expectedKwargs[i])
+				}
+
+				if literal.BlockArgument == nil {
+					t.Fatalf("expected the block argument %q, got none", tt.expectedBlock)
+				}
+
+				testIdentifier(t, *literal.BlockArgument, tt.expectedBlock)
+			})
+		})
+	}
+}
+
 func TestMethodLiteralParameterDefaults(t *testing.T) {
 	tests := []struct {
 		name             string

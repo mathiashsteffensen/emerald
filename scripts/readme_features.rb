@@ -167,6 +167,52 @@ end
 check("do block and captured local", 6, sum)
 check("nested blocks", [[2, 3], [3, 4]], [1, 2].map { |a| [1, 2].map { |b| a + b } })
 
+def block_argument(&block)
+  block
+end
+
+def call_block(&block)
+  block.call
+end
+
+def call_block_with_value(value, &block)
+  block.call(value)
+end
+
+def keyword_block_argument(value:, &block)
+  block.call(value)
+end
+
+def default_block_argument(value = 2, &block)
+  block.call(value)
+end
+
+def no_parens_block_argument argument, &block
+  block.call(argument)
+end
+
+def yield_and_block_argument(&block)
+  [yield, block.call]
+end
+
+check("block argument", 42, call_block { answer })
+check("block argument with positional parameter", 6, call_block_with_value(3) { |n| n * 2 })
+check("block argument with keyword", 5, keyword_block_argument(value: 4) { |n| n + 1 })
+check("block argument with default", 8, default_block_argument { |n| n * 4 })
+check("block argument without parens definition", 6, no_parens_block_argument(3) { |n| n * 2 })
+check("yield with block argument", [7, 7], yield_and_block_argument { 7 })
+check("block argument without a block", nil, block_argument)
+check("block argument is a Proc", Proc, block_argument { answer }.class)
+saved_block = block_argument { |n| n * 3 }
+check("captured block after return", 9, saved_block.call(3))
+
+def block_argument_arity_error
+  block_argument(1)
+rescue ArgumentError => error
+  error.message
+end
+check("block argument arity error", "wrong number of arguments (given 1, expected 0)", block_argument_arity_error)
+
 def with_defaults(base, extra = 10)
   base + extra
 end
@@ -510,7 +556,7 @@ def backtrace_location(frame)
   parts = frame.split(":")
   "#{parts[parts.length - 2]}:#{parts[parts.length - 1]}"
 end
-check("backtrace frames", ["500:in 'backtrace_inner'", "503:in 'backtrace_outer'", "507:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
+check("backtrace frames", ["546:in 'backtrace_inner'", "549:in 'backtrace_outer'", "553:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
 check("backtrace file", true, backtrace_error.backtrace[0].split(":")[0].split("/").last == "readme_features.rb")
 check("backtrace before raise", nil, RuntimeError.new("x").backtrace)
 def backtrace_reraise
@@ -523,7 +569,7 @@ def backtrace_reraise_outer
 rescue StandardError => error
   backtrace_location(error.backtrace[0])
 end
-check("re-raise keeps backtrace", "500:in 'backtrace_inner'", backtrace_reraise_outer)
+check("re-raise keeps backtrace", "546:in 'backtrace_inner'", backtrace_reraise_outer)
 # Mix constructors, nested calls, block capture, branches, setters and hash keys.
 results = {}
 [1, 2, 3].each do |n|

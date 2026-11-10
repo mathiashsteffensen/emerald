@@ -40,6 +40,10 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, argumentDefaults []ast.E
 		c.symbolTable.Define(p.Value)
 	}
 
+	if node.BlockArgument != nil {
+		c.compileBlockArgument(node.BlockArgument)
+	}
+
 	defaultArgSlots := c.compileArgumentDefaults(node.Arguments, argumentDefaults)
 	startIP := len(c.currentInstructions())
 
@@ -112,6 +116,26 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, argumentDefaults []ast.E
 	return block, len(freeSymbols)
 }
 
+// compileBlockArgument binds a method's &block parameter to its local slot.
+// The body prologue pushes the block passed to the call as a Proc, or nil.
+func (c *Compiler) compileBlockArgument(parameter *ast.IdentifierExpression) {
+	symbol := c.symbolTable.Define(parameter.Value)
+
+	c.emit(bytecode.OpBlock, parameter.Token)
+	c.emit(bytecode.OpSetLocal, parameter.Token, symbol.Index)
+	c.emit(bytecode.OpPop, parameter.Token)
+
+	c.resetInstructionHistory()
+}
+
+// resetInstructionHistory starts the body with clean instruction history, so
+// an empty body still returns nil instead of turning the prologue's last pop
+// into a return.
+func (c *Compiler) resetInstructionHistory() {
+	c.scopes[c.scopeIndex].lastInstruction = EmittedInstruction{}
+	c.scopes[c.scopeIndex].previousInstruction = EmittedInstruction{}
+}
+
 // compileArgumentDefaults emits the prologue that gives a parameter without a
 // supplied argument its default value. Defaults are evaluated in the method
 // scope, after any earlier parameters, and only when they are needed. The
@@ -142,10 +166,7 @@ func (c *Compiler) compileArgumentDefaults(params []*ast.IdentifierExpression, d
 		c.changeOperand(skipDefault, len(c.currentInstructions()))
 	}
 
-	// The body starts with clean instruction history, so an empty body still
-	// returns nil instead of turning the prologue's last pop into a return.
-	c.scopes[c.scopeIndex].lastInstruction = EmittedInstruction{}
-	c.scopes[c.scopeIndex].previousInstruction = EmittedInstruction{}
+	c.resetInstructionHistory()
 
 	return defaultArgSlots
 }

@@ -16,6 +16,16 @@ func TestOpYield(t *testing.T) {
 			expected: 3,
 		},
 		{
+			name:     "missing block parameters become nil",
+			input:    `def f; yield; end; f { |a, b| [a, b] }`,
+			expected: []any{nil, nil},
+		},
+		{
+			name:     "extra yield arguments are ignored",
+			input:    `def f; yield 1, 2; end; f { |a| a }`,
+			expected: 1,
+		},
+		{
 			input: `
 				def run_with_num
 					yield 5

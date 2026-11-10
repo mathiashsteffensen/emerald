@@ -65,9 +65,9 @@ func NewWithOptions(file string, bytecode *bytecode.Bytecode, rt *core.Runtime, 
 	rt.Heap.SetGlobalVariableString("$*", rt.NewArray(argv))
 	setConst(rt.MainObject, "ARGV", rt.NewArray(argv))
 
-	rt.EvalBlock = func(blockVal *object.ClosedBlock, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		return vm.withExecutionContextForBlock(object.NewHeapObject(blockVal), func() object.EmeraldValue {
-			return vm.rawEvalBlock(object.NewHeapObject(blockVal), rt.NULL, kwargs, args...)
+	rt.EvalBlock = func(block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		return vm.withExecutionContextForBlock(block, func() object.EmeraldValue {
+			return vm.rawEvalBlock(block, rt.NULL, kwargs, args...)
 		})
 	}
 	rt.Send = vm.Send
@@ -220,6 +220,8 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		stack[top], stack[top-1] = stack[top-1], stack[top]
 	case bytecode.OpSelf:
 		vm.push(vm.ctx.Self)
+	case bytecode.OpBlock:
+		vm.executeOpBlock()
 	case bytecode.OpTrue:
 		vm.push(vm.rt.TRUE)
 	case bytecode.OpFalse:

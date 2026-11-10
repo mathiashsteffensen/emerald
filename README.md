@@ -142,14 +142,14 @@ Ruby implementation.
 - [x] full UTF8 support
     - [x] Unicode identifier
     - [x] Unicode symbols
-- [ ] method definitions
+- [x] method definitions
     - [x] with parens
     - [x] without parens
     - [x] without parens with args
     - [x] return keyword
     - [x] default values for parameters
     - [x] keyword arguments
-    - [ ] block arguments
+    - [x] block arguments
     - [x] yield
 - [x] method calls
     - [x] with parens

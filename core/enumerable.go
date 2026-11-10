@@ -69,7 +69,7 @@ func (rt *Runtime) enumerableMap() object.BuiltInMethod {
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				arr = append(
 					arr,
-					rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, args...),
+					rt.EvalBlock(block, kwargs, args...),
 				)
 				return rt.NULL
 			},
@@ -93,7 +93,7 @@ func (rt *Runtime) enumerableFind() object.BuiltInMethod {
 					return rt.NULL
 				}
 
-				if rt.IsTruthy(rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, args...)) {
+				if rt.IsTruthy(rt.EvalBlock(block, kwargs, args...)) {
 					if len(args) < 2 {
 						firstTruthyElement = args[0]
 					} else {
@@ -126,7 +126,7 @@ func (rt *Runtime) enumerableFindIndex() object.BuiltInMethod {
 					return rt.NULL
 				}
 
-				if rt.IsTruthy(rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, args...)) {
+				if rt.IsTruthy(rt.EvalBlock(block, kwargs, args...)) {
 					found = true
 					return rt.NULL
 				}
@@ -163,7 +163,7 @@ func (rt *Runtime) enumerableSum() object.BuiltInMethod {
 		wrappedBlock := object.NewHeapObject(&object.WrappedBuiltInMethod{
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if blockGiven {
-					accumulated = rt.Send(accumulated, "+", rt.NULL, map[string]object.EmeraldValue{}, rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, args...))
+					accumulated = rt.Send(accumulated, "+", rt.NULL, map[string]object.EmeraldValue{}, rt.EvalBlock(block, kwargs, args...))
 				} else {
 					accumulated = rt.Send(accumulated, "+", rt.NULL, kwargs, args...)
 				}
@@ -200,7 +200,7 @@ func (rt *Runtime) enumerableReduce() object.BuiltInMethod {
 			Method: func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 				if argGiven || passedFirst {
 					args = append([]object.EmeraldValue{accumulated}, args...)
-					accumulated = rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, args...)
+					accumulated = rt.EvalBlock(block, kwargs, args...)
 				} else {
 					passedFirst = true
 				}
@@ -248,7 +248,7 @@ func (rt *Runtime) enumerableExtreme(isBetter func(int64) bool) object.BuiltInMe
 
 				var spaceshipResult object.EmeraldValue
 				if blockGiven {
-					spaceshipResult = rt.EvalBlock(block.Heap.(*object.ClosedBlock), kwargs, element, current)
+					spaceshipResult = rt.EvalBlock(block, kwargs, element, current)
 				} else {
 					spaceshipResult = rt.Send(element, "<=>", rt.NULL, map[string]object.EmeraldValue{}, current)
 				}
