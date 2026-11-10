@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 )
@@ -155,18 +156,41 @@ func (rt *Runtime) kernelRaise() object.BuiltInMethod {
 				return rt.NULL
 			}
 
-			msg, err := EnforceArgumentType[*StringInstance](rt, rt.String, args[0])
-			if err != nil {
-				return object.NewHeapObject(err)
+			if msg, ok := args[0].Heap.(*StringInstance); ok {
+				rt.Raise(rt.NewRuntimeError(msg.Value))
+				return rt.NULL
 			}
-			rt.Raise(rt.NewRuntimeError(msg.Value))
+
+			rt.raiseNewException(args[0])
 		case 2:
-			exception := rt.Send(args[0], "new", rt.NULL, map[string]object.EmeraldValue{}, args[1])
-			rt.Raise(exception.Heap.(object.EmeraldError))
+			rt.raiseNewException(args[0], args[1])
 		}
 
 		return rt.NULL
 	}
+}
+
+// raiseNewException raises class.new(args...), or a TypeError when class is not an exception class
+func (rt *Runtime) raiseNewException(class object.EmeraldValue, args ...object.EmeraldValue) {
+	if class.Type() != object.CLASS_VALUE || !slices.Contains(class.Ancestors(), rt.Exception) {
+		rt.Raise(rt.NewTypeError("exception class/object expected"))
+		return
+	}
+
+	newException := rt.Send(class, "new", rt.NULL, map[string]object.EmeraldValue{}, args...)
+
+	// A failing constructor has already raised, and that error must surface
+	if rt.ExceptionIsRaised() {
+		return
+	}
+
+	exception, ok := newException.Heap.(object.EmeraldError)
+	if !ok {
+		rt.Raise(rt.NewTypeError("exception object expected"))
+		return
+	}
+
+	rt.Raise(exception)
 }
 
 func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {

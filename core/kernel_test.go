@@ -19,6 +19,107 @@ func TestKernel_raise(t *testing.T) {
 			input:    `raise TypeError, "I wanted an Integer yo"`,
 			expected: "error:TypeError:I wanted an Integer yo",
 		},
+		{
+			name: "raising with just a custom error class",
+			input: `
+				class MyError < StandardError; end
+				def rescued_class
+					raise MyError
+				rescue MyError => e
+					e.class
+				end
+				rescued_class.to_s
+			`,
+			expected: "MyError",
+		},
+		{
+			name: "raising with just a built-in error class",
+			input: `
+				def rescued_class
+					raise StandardError
+				rescue StandardError => e
+					e.class
+				end
+				rescued_class.to_s
+			`,
+			expected: "StandardError",
+		},
+		{
+			name:     "raising with just a non-exception class",
+			input:    `raise Object`,
+			expected: "error:TypeError:exception class/object expected",
+		},
+		{
+			name:     "raising with a non-exception class and a message",
+			input:    `raise Object, "x"`,
+			expected: "error:TypeError:exception class/object expected",
+		},
+		{
+			name: "raising a non-exception class does not call its constructor",
+			input: `
+				class NeedsArgument
+					def initialize(a); end
+				end
+				raise NeedsArgument
+			`,
+			expected: "error:TypeError:exception class/object expected",
+		},
+		{
+			name:     "raising with just a non-class",
+			input:    `raise 3`,
+			expected: "error:TypeError:exception class/object expected",
+		},
+		{
+			name:     "raising with just a module",
+			input:    `raise Kernel`,
+			expected: "error:TypeError:exception class/object expected",
+		},
+		{
+			name:     "raising inside a rescue body",
+			input:    `def f; raise StandardError, "a"; rescue => e; raise TypeError, "b"; end; f`,
+			expected: "error:TypeError:b",
+		},
+		{
+			name:     "raising with a non-class and a message",
+			input:    `raise 3, "x"`,
+			expected: "error:TypeError:exception class/object expected",
+		},
+		{
+			name: "raising a class whose initialize needs an argument",
+			input: `
+				class Needy < StandardError
+					def initialize(a); end
+				end
+				raise Needy
+			`,
+			expected: "error:ArgumentError:wrong number of arguments (given 0, expected 1)",
+		},
+		{
+			name: "raising a class whose initialize raises",
+			input: `
+				class Exploding < StandardError
+					def initialize(message)
+						raise TypeError, "from initialize"
+					end
+				end
+				raise Exploding, "x"
+			`,
+			expected: "error:TypeError:from initialize",
+		},
+		{
+			name: "a non-exception result from new does not panic",
+			input: `
+				class Impostor < StandardError
+					class << self
+						def new
+							3
+						end
+					end
+				end
+				raise Impostor
+			`,
+			expected: "error:TypeError:exception object expected",
+		},
 	}
 	runCoreTests(t, tests)
 }
