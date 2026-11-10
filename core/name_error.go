@@ -9,6 +9,8 @@ func (rt *Runtime) InitNameError() {
 	rt.NameError = rt.DefineClass("NameError", rt.StandardError)
 
 	rt.defineNativeConstructor(rt.NameError, rt.exceptionNew(rt.NewNameError))
+
+	rt.DefineMethod(rt.NameError, "initialize", rt.exceptionInitialize(2))
 }
 
 type NameErrorInstance struct {

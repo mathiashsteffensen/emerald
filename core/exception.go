@@ -20,6 +20,7 @@ func (rt *Runtime) InitException() {
 
 	rt.defineNativeConstructor(rt.Exception, rt.exceptionNew(rt.NewException))
 
+	rt.DefineMethod(rt.Exception, "initialize", rt.exceptionInitialize(1))
 	rt.DefineMethod(rt.Exception, "to_s", rt.exceptionToS())
 	rt.DefineMethod(rt.Exception, "message", rt.exceptionToS())
 	rt.DefineMethod(rt.Exception, "backtrace", rt.exceptionBacktrace())
@@ -47,6 +48,23 @@ func (rt *Runtime) exceptionNew(initializer func(msg string) object.EmeraldError
 		}
 
 		return object.NewHeapObject(initializer(msg))
+	}
+}
+
+// exceptionInitialize stores the optional message on subclass instances, which defineNativeConstructor allocates empty
+func (rt *Runtime) exceptionInitialize(maxArgs int) object.BuiltInMethod {
+	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+		// Drops keywords; MRI instead passes them as one positional Hash argument
+		if _, err := rt.EnforceArity(args, nil, 0, maxArgs); err != nil {
+			return object.NewHeapObject(err)
+		}
+
+		exception, ok := ctx.Self.Heap.(*ExceptionInstance)
+		if ok && len(args) > 0 {
+			exception.message = args[0].Inspect()
+		}
+
+		return rt.NULL
 	}
 }
 

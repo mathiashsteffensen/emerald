@@ -219,3 +219,24 @@ func TestRescueThroughNativeIterator(t *testing.T) {
 		`, expected: nil},
 	})
 }
+
+func TestExceptionSubclassMessage(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "StandardError subclass message", input: `class MyError < StandardError; end; MyError.new("a").message`, expected: "a"},
+		{name: "StandardError subclass to_s", input: `class MyError < StandardError; end; MyError.new("a").to_s`, expected: "a"},
+		{name: "Exception subclass to_s", input: `class Plain < Exception; end; Plain.new("p").to_s`, expected: "p"},
+		{name: "ArgumentError subclass message", input: `class MyArgError < ArgumentError; end; MyArgError.new("g").message`, expected: "g"},
+		{name: "raise class with message", input: `
+			class MyError < StandardError; end
+			def f; raise MyError, "boom"; rescue MyError => e; e.message; end
+			f
+		`, expected: "boom"},
+		{name: "raise subclass instance", input: `
+			class MyError < StandardError; end
+			def f; raise MyError.new("x"); rescue MyError => e; e.message; end
+			f
+		`, expected: "x"},
+		{name: "initialize with too many arguments", input: `class MyError < StandardError; end; MyError.new("a", "b")`,
+			expected: "error:ArgumentError:wrong number of arguments (given 2, expected 0..1)"},
+	})
+}

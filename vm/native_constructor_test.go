@@ -33,7 +33,7 @@ func TestInheritedNativeConstructor(t *testing.T) {
 func TestInheritedNativeConstructorStorage(t *testing.T) {
 	runVmTests(t, []vmTestCase{
 		{name: "exception", input: `class Custom < StandardError; def marker; 42; end; end
-			item = Custom.new("boom"); [item.class == Custom, item.marker, item.to_s]`, expected: []any{true, 42, ""}},
+			item = Custom.new("boom"); [item.class == Custom, item.marker, item.to_s]`, expected: []any{true, 42, "boom"}},
 		{name: "regexp", input: `class Custom < Regexp; def initialize; @value = 42; end; end
 			item = Custom.new; [item.class == Custom, item.inspect, item === "abc"]`, expected: []any{true, "//", true}},
 		{name: "string", input: `class Custom < String; end; [Custom.new.class == Custom, Custom.new.size]`, expected: []any{true, 0}},

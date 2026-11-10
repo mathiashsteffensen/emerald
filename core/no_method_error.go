@@ -14,6 +14,8 @@ func (rt *Runtime) InitNoMethodError() {
 	rt.NoMethodError = rt.DefineClass("NoMethodError", rt.StandardError)
 
 	rt.defineNativeConstructor(rt.NoMethodError, rt.exceptionNew(rt.NewNoMethodError))
+
+	rt.DefineMethod(rt.NoMethodError, "initialize", rt.exceptionInitialize(4))
 }
 
 func (rt *Runtime) NewNoMethodError(msg string) object.EmeraldError {

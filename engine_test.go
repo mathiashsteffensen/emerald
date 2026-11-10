@@ -13,7 +13,7 @@ func TestEngineExceptionClassName(t *testing.T) {
 			name, source, className, message string
 		}{
 			{"owner", `raise ` + parent + `, "boom"`, parent, "boom"},
-			{"subclass", fmt.Sprintf(`class Custom < %s; end; raise Custom, "boom"`, parent), "Custom", ""},
+			{"subclass", fmt.Sprintf(`class Custom < %s; end; raise Custom, "boom"`, parent), "Custom", "boom"},
 			{"descendant with singleton", fmt.Sprintf(`class Custom < %s; end
 				class Child < Custom
 					def initialize(message)
