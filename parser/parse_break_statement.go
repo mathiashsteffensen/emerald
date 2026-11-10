@@ -12,7 +12,7 @@ func (p *Parser) parseBreakStatement() ast.Statement {
 		stmt.Value = p.parseExpression(MODIFIER)
 	}
 
-	if !p.curTokenIs(lexer.NEWLINE) && p.peekTokenIsMultiple(lexer.IF, lexer.UNLESS) {
+	if p.peekTokenIsMultiple(lexer.IF, lexer.UNLESS) {
 		p.nextToken()
 		return &ast.ExpressionStatement{Token: stmt.Token, Expression: p.parseBoolModifierFromStatement(stmt)}
 	}

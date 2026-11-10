@@ -12,9 +12,8 @@ func (vm *VM) executeOpStringJoin(ins bytecode.Instructions, ip int) {
 	stackPointer := vm.currentFiber().sp
 	startPointer := stackPointer - numStrings
 
+	// The parts stay on the stack until the end, so a Ruby to_s cannot push over them
 	objects := vm.stack()[startPointer:stackPointer]
-
-	vm.currentFiber().sp = startPointer
 
 	var out strings.Builder
 
@@ -30,5 +29,6 @@ func (vm *VM) executeOpStringJoin(ins bytecode.Instructions, ip int) {
 		out.WriteString(stringified)
 	}
 
+	vm.currentFiber().sp = startPointer
 	vm.push(vm.rt.NewString(out.String()))
 }

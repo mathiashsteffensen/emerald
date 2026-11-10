@@ -39,11 +39,6 @@ func (p *Parser) parseForExpression() ast.Expression {
 
 // expectLoopBodyStart moves past the `do`, newline or `;` that ends the loop header
 func (p *Parser) expectLoopBodyStart() bool {
-	// A command call collection, `for x in m 1, 2`, already moved past its newline or `;`
-	if p.curTokenIs(lexer.NEWLINE, lexer.SEMICOLON) {
-		return true
-	}
-
 	if p.peekTokenIs(lexer.DO) {
 		p.nextToken()
 		return true

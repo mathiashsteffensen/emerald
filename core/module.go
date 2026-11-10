@@ -34,7 +34,16 @@ func (rt *Runtime) moduleDefineMethod() object.BuiltInMethod {
 			return object.NewHeapObject(err)
 		}
 
-		ctx.Self.DefinedMethodSet()[name.Value] = ctx.Block.Heap.(*object.ClosedBlock)
+		block := ctx.Block.Heap.(*object.ClosedBlock)
+
+		// Like a lambda, the method checks its argument count. It gets its own
+		// copy, as every closure of the block literal shares the compiled block.
+		lambda := *block.Block
+		lambda.EnforceArity = true
+		method := *block
+		method.Block = &lambda
+
+		ctx.Self.DefinedMethodSet()[name.Value] = &method
 
 		return args[0]
 	}

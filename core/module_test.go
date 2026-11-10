@@ -66,6 +66,26 @@ func TestModule_define_method(t *testing.T) {
 			`,
 			expected: "Hello",
 		},
+		{
+			name:     "passing the right number of arguments",
+			input:    `class MyClass; define_method(:pair) { |a, b| a + b }; end; MyClass.new.pair(1, 2)`,
+			expected: 3,
+		},
+		{
+			name:     "passing too few arguments",
+			input:    `class MyClass; define_method(:pair) { |a, b| a + b }; end; MyClass.new.pair(1)`,
+			expected: "error:ArgumentError:wrong number of arguments (given 1, expected 2)",
+		},
+		{
+			name:     "passing too many arguments",
+			input:    `class MyClass; define_method(:pair) { |a, b| a + b }; end; MyClass.new.pair(1, 2, 3)`,
+			expected: "error:ArgumentError:wrong number of arguments (given 3, expected 2)",
+		},
+		{
+			name:     "passing an argument to a method without parameters",
+			input:    `class MyClass; define_method(:hello) { "Hello" }; end; MyClass.new.hello(1)`,
+			expected: "error:ArgumentError:wrong number of arguments (given 1, expected 0)",
+		},
 	}
 
 	runCoreTests(t, tests)

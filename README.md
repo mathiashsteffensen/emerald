@@ -299,7 +299,7 @@ Ruby implementation.
 - [ ] error handling
     - [ ] begin
     - [x] rescue
-    - [ ] ensure
+    - [x] ensure
     - [ ] retry
 - [ ] constants
 - [ ] scope operator `::`

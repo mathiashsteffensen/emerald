@@ -414,6 +414,8 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		frame := vm.currentFiber().currentFrame()
 		vm.push(frame.rescuedError)
 		frame.rescuedError = object.EmeraldValue{}
+	case bytecode.OpEnsureEnd:
+		vm.executeOpEnsureEnd()
 	case bytecode.OpDefineMethod:
 		block := vm.pop().Heap.(*object.Block)
 		name := vm.stack()[vm.currentFiber().sp-1].Heap.(*core.SymbolInstance)

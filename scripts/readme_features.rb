@@ -684,6 +684,46 @@ rescue StandardError => error
   backtrace_location(error.backtrace[0])
 end
 check("re-raise keeps backtrace", "660:in 'backtrace_inner'", backtrace_reraise_outer)
+$readme_ensure_log = []
+def readme_ensure_value
+  1
+ensure
+  $readme_ensure_log << :value
+  2
+end
+check("ensure keeps the body value", 1, readme_ensure_value)
+def readme_ensure_return
+  return :early
+ensure
+  $readme_ensure_log << :return
+end
+check("ensure on return", :early, readme_ensure_return)
+def readme_ensure_rescued
+  raise "boom"
+rescue StandardError => error
+  error.message
+ensure
+  $readme_ensure_log << :rescued
+end
+check("ensure after rescue", "boom", readme_ensure_rescued)
+def readme_ensure_raised
+  raise "boom"
+ensure
+  $readme_ensure_log << :raised
+end
+def readme_ensure_raised_outer
+  readme_ensure_raised
+rescue StandardError => error
+  backtrace_location(error.backtrace[0])
+end
+check("ensure raises the error again with its backtrace", "710:in 'readme_ensure_raised'", readme_ensure_raised_outer)
+check("ensure in a block on next", [10, 2], [1, 2].map do |n|
+  next n * 10 if n == 1
+  n
+ensure
+  $readme_ensure_log << n
+end)
+check("ensure order", [:value, :return, :rescued, :raised, 1, 2], $readme_ensure_log)
 # Mix constructors, nested calls, block capture, branches, setters and hash keys.
 results = {}
 [1, 2, 3].each do |n|
@@ -826,22 +866,50 @@ def readme_empty_rescue
 rescue StandardError => error
 end
 check("empty bound rescue returns nil", nil, readme_empty_rescue)
-class ReadmeRawItem
-  define_method(:initialize) { |value| @value = value }
-  def value; @value; end
-end
-check("raw initializer extra keywords", [42, 42, 42], [ReadmeRawItem.new(42).value, ReadmeRawItem.new(42, extra: 1).value, ReadmeRawItem.new(42, extra: 1, other: 2).value])
-class ReadmeRawPair
-  define_method(:initialize) { |value, left:, right:| @values = [value, left, right] }
-  def values; @values; end
-end
-check("raw initializer declared and extra keywords", [42, 1, 2], ReadmeRawPair.new(42, right: 2, extra: 9, left: 1).values)
+readme_raw_item = Proc.new { |value| value }
+check("raw block extra keywords", [42, 42, 42], [readme_raw_item.call(42), readme_raw_item.call(42, extra: 1), readme_raw_item.call(42, extra: 1, other: 2)])
+readme_raw_pair = Proc.new { |value, left:, right:| [value, left, right] }
+check("raw block declared and extra keywords", [42, 1, 2], readme_raw_pair.call(42, right: 2, extra: 9, left: 1))
 class ReadmeOperatorValue
-  define_method(:"+") { 42 }
+  define_method(:"+") { |other| 42 }
 end
 review_box = ReadmeSpace::Parent.new(ReadmeOperatorValue.new)
 check("block-backed infix operator", 42, review_box.value + 1)
 check("block-backed compound operator", 42, (review_box.value += 1))
+class ReadmeDefinedArity
+  define_method(:pair) { |a, b| [a, b] }
+end
+def readme_defined_arity
+  ReadmeDefinedArity.new.pair(1)
+rescue ArgumentError => error
+  error.message
+end
+check("define_method checks the argument count", "wrong number of arguments (given 1, expected 2)", readme_defined_arity)
+class ReadmeInterpolated
+  def to_s
+    "P(#{1})"
+  end
+end
+readme_interpolated = ReadmeInterpolated.new
+check("interpolated to_s keeps the text after it", "a P(1) b P(1) c", "a #{readme_interpolated} b #{readme_interpolated} c")
+$readme_lines = []
+def readme_push(value)
+  $readme_lines << value
+end
+readme_push 1
+[2].each { |n| readme_push n }
+if true
+  readme_push 3
+end
+[4].each { |n| readme_push n }
+check("a line that starts with [ is a new statement", [1, 2, 3, 4], $readme_lines)
+def readme_raise_if(flag)
+  raise "raised" if flag
+  :not_raised
+rescue RuntimeError => error
+  error.message
+end
+check("raise with an if modifier", ["raised", :not_raised], [readme_raise_if(true), readme_raise_if(false)])
 class ReadmeCustomError < StandardError
   def marker; 42; end
 end

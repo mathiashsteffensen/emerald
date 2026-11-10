@@ -125,6 +125,8 @@ const (
 	// OpReturnFromBlock returns from the method invocation whose body contains the current block
 	OpReturnFromBlock
 	OpRescuedError
+	// OpEnsureEnd ends an ensure clause: it finishes the return or raises the error again that the clause interrupted
+	OpEnsureEnd
 	OpDefineMethod
 
 	// OpSend invokes a method.
@@ -209,6 +211,7 @@ var definitions = map[Opcode]*Definition{
 	OpBreak:             {"OpBreak", []int{}},
 	OpReturnFromBlock:   {"OpReturnFromBlock", []int{}},
 	OpRescuedError:      {"OpRescuedError", []int{}},
+	OpEnsureEnd:         {"OpEnsureEnd", []int{}},
 	OpDefineMethod:      {"OpDefineMethod", []int{}},
 	OpSend:              {"OpSend", []int{2, 1, 1}},
 	OpSendAssign:        {"OpSendAssign", []int{2, 1, 1}},

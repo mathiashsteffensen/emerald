@@ -38,3 +38,20 @@ func TestReturnStatements(t *testing.T) {
 		})
 	}
 }
+
+func TestReturnStatementWithModifier(t *testing.T) {
+	program := testParseAST(t, "return foo 1 if cond")
+
+	expectStatementLength(t, program.Statements, 1)
+	testExpressionStatement(t, program.Statements[0], func(modifier *ast.IfExpression) {
+		testIdentifier(t, modifier.Condition, "cond")
+		expectStatementLength(t, modifier.Consequence.Statements, 1)
+
+		returnStmt, ok := modifier.Consequence.Statements[0].(*ast.ReturnStatement)
+		if !ok {
+			t.Fatalf("modifier statement is not *ast.ReturnStatement. got=%T", modifier.Consequence.Statements[0])
+		}
+
+		testCallExpression(t, returnStmt.ReturnValue, "foo", []any{1}, []string{}, false)
+	})
+}

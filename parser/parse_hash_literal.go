@@ -70,7 +70,8 @@ func (p *Parser) parseHashLiteralElement() *ast.HashLiteralElement {
 		value = p.parseOmittedHashValue(label)
 	} else {
 		p.nextToken()
-		value = p.parseExpression(LOWEST)
+		// The value ends before a statement modifier, so the `if` in `f key: 1 if cond` applies to the call
+		value = p.parseExpression(MODIFIER)
 	}
 
 	if value == nil {

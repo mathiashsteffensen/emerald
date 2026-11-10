@@ -48,3 +48,12 @@ func TestIfModifier(t *testing.T) {
 
 	runVmTests(t, tests, setup)
 }
+
+func TestModifierAfterCallArguments(t *testing.T) {
+	runVmTests(t, []vmTestCase{
+		{name: "if false", input: `raise "x" if false; :reached`, expected: ":reached"},
+		{name: "if true", input: `raise "x" if true`, expected: "error:RuntimeError:x"},
+		{name: "unless true", input: `raise "x" unless true; :reached`, expected: ":reached"},
+		{name: "after keyword argument", input: `def log(message, level:); [message, level]; end; log "x", level: 1 if true`, expected: []any{"x", 1}},
+	})
+}

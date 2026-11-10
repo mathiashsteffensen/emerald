@@ -96,6 +96,11 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, argumentDefaults []ast.E
 		c.changeOperand(pos, len(c.currentInstructions()))
 	}
 
+	// After the rescue entries, so a matching rescue clause handles an error first
+	if node.EnsureBlock != nil {
+		exceptionTable = append(exceptionTable, c.compileEnsureBlock(node.EnsureBlock, startIP))
+	}
+
 	freeSymbols := c.symbolTable.FreeSymbols
 	numLocals := c.symbolTable.NumDefinitions
 	nonLocalReturn := c.scopes[c.scopeIndex].nonLocalReturn
@@ -122,6 +127,22 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, argumentDefaults []ast.E
 	}
 
 	return block, len(freeSymbols)
+}
+
+// compileEnsureBlock compiles the ensure clause after the body and rescue
+// clauses it protects. The VM runs the clause when they return or raise.
+func (c *Compiler) compileEnsureBlock(node *ast.EnsureBlock, startIP int) object.ExceptionTableEntry {
+	ensureIP := len(c.currentInstructions())
+
+	c.Compile(node.Body)
+	c.emit(bytecode.OpEnsureEnd, node.Token)
+
+	return object.ExceptionTableEntry{
+		StartIP:   startIP,
+		EndIP:     ensureIP - 1,
+		HandlerIP: ensureIP,
+		Ensure:    true,
+	}
 }
 
 // compileBlockArgument binds a method's &block parameter to its local slot.

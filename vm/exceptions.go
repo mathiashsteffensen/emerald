@@ -31,12 +31,15 @@ func (vm *VM) handleRaise(err object.EmeraldError) {
 			if frame.ip >= entry.StartIP && frame.ip <= entry.EndIP {
 				matches := false
 
-				if len(entry.CaughtErrorClasses) == 0 {
+				switch {
+				case entry.Ensure:
+					matches = true
+				case len(entry.CaughtErrorClasses) == 0:
 					class := vm.rt.StandardError
 					if vm.rt.IsTruthy(vm.rt.Send(object.NewHeapObject(err), "is_a?", vm.rt.NULL, map[string]object.EmeraldValue{}, class)) {
 						matches = true
 					}
-				} else {
+				default:
 					for _, className := range entry.CaughtErrorClasses {
 						class := vm.rt.Object.NamespaceDefinitionGet(className)
 						if !class.IsNil() && vm.rt.IsTruthy(vm.rt.Send(object.NewHeapObject(err), "is_a?", vm.rt.NULL, map[string]object.EmeraldValue{}, class)) {
@@ -49,7 +52,11 @@ func (vm *VM) handleRaise(err object.EmeraldError) {
 				if matches {
 					frame.ip = entry.HandlerIP - 1
 					fiber.sp = frame.basePointer + block.NumLocals
-					frame.rescuedError = object.NewHeapObject(err)
+					if entry.Ensure {
+						frame.ensuring = &interruptedExit{err: err}
+					} else {
+						frame.rescuedError = object.NewHeapObject(err)
+					}
 					vm.rt.Heap.SetGlobalVariableString("$!", object.EmeraldValue{})
 
 					// Natives between here and the handler stop on $!, which is now cleared, so skip past them

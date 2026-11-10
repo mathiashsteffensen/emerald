@@ -92,15 +92,11 @@ func (p *Parser) parseMethodArgsWithoutParentheses() ([]ast.Expression, []*ast.H
 
 	p.nextToken()
 
-	args, kwargs := p.parseArgumentList()
-
-	if p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON) {
-		p.nextToken()
-	}
-
-	return args, kwargs
+	return p.parseArgumentList()
 }
 
+// parseArgumentList parses call arguments. An argument ends before a statement
+// modifier, so the `if` in `raise "x" if cond` applies to the whole call.
 func (p *Parser) parseArgumentList() ([]ast.Expression, []*ast.HashLiteralElement) {
 	startedKeywordArgs := false
 	args := []ast.Expression{}
@@ -115,7 +111,7 @@ func (p *Parser) parseArgumentList() ([]ast.Expression, []*ast.HashLiteralElemen
 			}
 			startedKeywordArgs = true
 		} else {
-			args = append(args, p.parseExpression(LOWEST))
+			args = append(args, p.parseExpression(MODIFIER))
 		}
 
 		if !p.peekTokenIs(lexer.COMMA) {

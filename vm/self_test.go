@@ -139,7 +139,7 @@ func TestCompoundDefinedOperatorArity(t *testing.T) {
 		runVmTests(t, []vmTestCase{
 			{name: "infix " + op, input: "box.value " + op + " 1", expected: 42},
 			{name: "compound " + op, input: "box.value " + op + "= 1", expected: 42},
-		}, `class Value; define_method(:"`+op+`") { 42 }; end
+		}, `class Value; define_method(:"`+op+`") { |other| 42 }; end
 		class Box; attr_accessor :value; end
 		box = Box.new; box.value = Value.new`)
 		runVmTests(t, []vmTestCase{

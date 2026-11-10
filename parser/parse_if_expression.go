@@ -58,8 +58,6 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		expression.Alternative = p.parseBlockStatement(lexer.END)
 	}
 
-	p.nextIfSemicolonOrNewline()
-
 	return expression
 }
 
@@ -108,8 +106,6 @@ func (p *Parser) parseUnlessExpression() ast.Expression {
 
 		expression.Consequence = p.parseBlockStatement(lexer.END)
 	}
-
-	p.nextIfSemicolonOrNewline()
 
 	return expression
 }

@@ -16,6 +16,14 @@ type Frame struct {
 	argGiven []bool
 	// home is this method invocation, when block literals it creates can `return` from it
 	home *object.Invocation
+	// ensuring is the return or raise that the running ensure clause interrupted
+	ensuring *interruptedExit
+}
+
+// interruptedExit is a return with returnValue, or a raise of err when err is set
+type interruptedExit struct {
+	returnValue object.EmeraldValue
+	err         object.EmeraldError
 }
 
 func NewFrame(block *object.ClosedBlock, basePointer int) *Frame {
@@ -29,6 +37,17 @@ func (f *Frame) homeInvocation() *object.Invocation {
 	}
 
 	return f.block.Home
+}
+
+// ensureEntry is the ensure clause that protects the current instruction, or nil
+func (f *Frame) ensureEntry() *object.ExceptionTableEntry {
+	for i, entry := range f.block.ExceptionTable {
+		if entry.Ensure && f.ip >= entry.StartIP && f.ip <= entry.EndIP {
+			return &f.block.ExceptionTable[i]
+		}
+	}
+
+	return nil
 }
 
 func (f *Frame) Instructions() bytecode.Instructions {

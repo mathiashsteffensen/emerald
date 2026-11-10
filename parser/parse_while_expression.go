@@ -29,8 +29,6 @@ func (p *Parser) parseWhileExpression() ast.Expression {
 		p.nextToken()
 	}
 
-	p.nextIfSemicolonOrNewline()
-
 	return expression
 }
 

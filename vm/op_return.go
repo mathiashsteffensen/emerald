@@ -3,6 +3,10 @@ package vm
 import "emerald/object"
 
 func (vm *VM) executeOpReturn() {
+	if vm.enterEnsure(vm.rt.NULL) {
+		return
+	}
+
 	vm.currentFiber().popFrame()
 
 	vm.push(vm.rt.NULL)
@@ -10,6 +14,10 @@ func (vm *VM) executeOpReturn() {
 
 func (vm *VM) executeOpReturnValue() {
 	returnValue := vm.stack()[vm.currentFiber().sp-1]
+
+	if vm.enterEnsure(returnValue) {
+		return
+	}
 
 	vm.currentFiber().popFrame()
 

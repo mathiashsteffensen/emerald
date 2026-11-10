@@ -10,6 +10,8 @@ type ExceptionTableEntry struct {
 	EndIP              int
 	HandlerIP          int
 	CaughtErrorClasses []string
+	// Ensure marks the ensure clause at HandlerIP. It runs on every return or raise from StartIP to EndIP.
+	Ensure bool
 }
 
 type FreeBinding struct {
