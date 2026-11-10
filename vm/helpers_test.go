@@ -116,32 +116,36 @@ func testExpectedObject(
 			if err != nil {
 				t.Errorf("testSymbolObject failed: %s", err)
 			}
-		} else {
-			if strings.HasPrefix(expected, "class:") {
-				err := testClassObject(expected[6:], actual)
-				if err != nil {
-					t.Errorf("testClassObject failed: %s", err)
-				}
-			} else {
-				if strings.HasPrefix(expected, "instance:") {
-					err := testInstanceObject(expected[9:], actual)
-					if err != nil {
-						t.Errorf("testInstanceObject failed: %s", err)
-					}
-				} else {
-					if strings.HasPrefix(expected, "error:") {
-						err := testErrorObject(expected[6:], rt.Heap.GetGlobalVariableString("$!"))
-						if err != nil {
-							t.Errorf("testErrorObject failed: %s", err)
-						}
-					} else {
-						err := testStringObject(expected, actual)
-						if err != nil {
-							t.Errorf("testStringObject failed: %s", err)
-						}
-					}
-				}
+			return
+		}
+
+		if strings.HasPrefix(expected, "class:") {
+			err := testClassObject(expected[6:], actual)
+			if err != nil {
+				t.Errorf("testClassObject failed: %s", err)
 			}
+			return
+		}
+
+		if strings.HasPrefix(expected, "instance:") {
+			err := testInstanceObject(expected[9:], actual)
+			if err != nil {
+				t.Errorf("testInstanceObject failed: %s", err)
+			}
+			return
+		}
+
+		if strings.HasPrefix(expected, "error:") {
+			err := testErrorObject(expected[6:], rt.Heap.GetGlobalVariableString("$!"))
+			if err != nil {
+				t.Errorf("testErrorObject failed: %s", err)
+			}
+			return
+		}
+
+		err := testStringObject(expected, actual)
+		if err != nil {
+			t.Errorf("testStringObject failed: %s", err)
 		}
 	case []any:
 		err := testArrayObject(t, expected, actual, rt)
@@ -163,6 +167,8 @@ func testExpectedObject(
 }
 
 func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue, rt *core.Runtime) error {
+	t.Helper()
+
 	array, ok := actual.Heap.(*core.ArrayInstance)
 	if !ok {
 		return fmt.Errorf("object not Array: %T (%+v)", actual, actual)
@@ -180,6 +186,8 @@ func testArrayObject(t *testing.T, expected []any, actual object.EmeraldValue, r
 }
 
 func testHashObject(t *testing.T, expected map[object.EmeraldValue]any, actual object.EmeraldValue, rt *core.Runtime) error {
+	t.Helper()
+
 	hash, ok := actual.Heap.(*core.HashInstance)
 	if !ok {
 		return fmt.Errorf("object is not Hash. got=%T (%+v)", actual, actual)
