@@ -157,6 +157,8 @@ func testExpectedObject(
 		if !actual.IsNil() {
 			t.Errorf("object is not Null: %T (%+v)", actual, actual)
 		}
+	default:
+		t.Errorf("unsupported expected type: %T", expected)
 	}
 }
 

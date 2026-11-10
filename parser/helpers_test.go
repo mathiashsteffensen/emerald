@@ -246,7 +246,7 @@ func testLiteralExpression(
 	case bool:
 		return testBooleanLiteral(t, exp, v)
 	}
-	t.Errorf("type of exp not handled. got=%T", exp)
+	t.Errorf("type of expected not handled. got=%T", expected)
 	return false
 }
 
