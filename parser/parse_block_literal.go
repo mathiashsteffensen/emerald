@@ -10,7 +10,7 @@ func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
 	if p.peekTokenIs(lexer.LBRACE) {
 		endToken = lexer.RBRACE
 	} else {
-		if p.peekTokenIs(lexer.DO) {
+		if p.peekTokenStartsDoBlock() {
 			endToken = lexer.END
 		} else {
 			return nil
@@ -18,6 +18,8 @@ func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
 	}
 
 	p.nextToken()
+
+	defer p.allowDoBlocks()()
 
 	block := &ast.BlockLiteral{Body: &ast.BlockStatement{}, Token: p.curToken}
 
@@ -36,4 +38,8 @@ func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
 	}
 
 	return block
+}
+
+func (p *Parser) peekTokenStartsDoBlock() bool {
+	return p.peekTokenIs(lexer.DO) && !p.doStartsLoopBody
 }

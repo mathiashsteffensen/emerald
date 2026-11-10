@@ -9,6 +9,8 @@ type CompilationScope struct {
 	block               bool   // a non-method block, where `next` returns from the block
 	name                string // backtrace label of the method or block being compiled
 	loops               []loop // enclosing while loops, innermost last
+	// nonLocalReturn is set when this scope, or a block literal in it, has a `return` that leaves the home method
+	nonLocalReturn bool
 }
 
 // loop is a while loop being compiled

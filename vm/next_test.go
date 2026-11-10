@@ -76,6 +76,50 @@ func TestNext(t *testing.T) {
 			expected: []any{":skipped", 2},
 		},
 		{
+			name: "in a for loop",
+			input: `
+				odd = []
+				for i in [1, 2, 3]
+					next if i == 2
+					odd << i
+				end
+				odd
+			`,
+			expected: []any{1, 3},
+		},
+		{
+			name: "in a for loop inside a while loop",
+			input: `
+				seen = []
+				i = 0
+				while i < 2
+					i += 1
+					for item in [1, 2]
+						next if item == 1
+						seen << [i, item]
+					end
+				end
+				seen
+			`,
+			expected: []any{[]any{1, 2}, []any{2, 2}},
+		},
+		{
+			name: "in a while loop inside a for loop",
+			input: `
+				seen = []
+				for item in [1, 2]
+					j = 0
+					while j < 3
+						j += 1
+						next if j == 2
+						seen << [item, j]
+					end
+				end
+				seen
+			`,
+			expected: []any{[]any{1, 1}, []any{1, 3}, []any{2, 1}, []any{2, 3}},
+		},
+		{
 			name:     "at the top level",
 			input:    `next`,
 			expected: "error:Exception:Invalid next",

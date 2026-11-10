@@ -84,3 +84,24 @@ func TestEngineEvalErrorBacktrace(t *testing.T) {
 		t.Fatal("full message without a backtrace")
 	}
 }
+
+func TestEngineResultOfReturnFromBlockAtTheTopLevel(t *testing.T) {
+	for _, tt := range []struct {
+		name, source string
+		want         uint64
+	}{
+		{"in a for loop", "for x in [1, 2]; return x; end", 1},
+		{"in a block", "[1].each { return 5 }; 7", 5},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			value, err := emerald.New().Eval(tt.source)
+			if err != nil {
+				t.Fatalf("eval: %v", err)
+			}
+
+			if !value.Is(object.INTEGER_VALUE) || value.Num != tt.want {
+				t.Fatalf("result = %s, want %d", value.Inspect(), tt.want)
+			}
+		})
+	}
+}

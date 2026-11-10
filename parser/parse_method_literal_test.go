@@ -139,6 +139,22 @@ func TestMethodLiteralExpression(t *testing.T) {
 			0,
 		},
 		{
+			"with keywords as keyword argument names",
+			"def method(in:, for:); end",
+			"method",
+			[]string{},
+			[]string{"in", "for"},
+			0,
+		},
+		{
+			"with keywords as keyword argument names and no parens",
+			"def method a, in:, for:; end",
+			"method",
+			[]string{"a"},
+			[]string{"in", "for"},
+			0,
+		},
+		{
 			"with multiple arguments and no parens on one line",
 			"def add left, right; left + right; end",
 			"add",

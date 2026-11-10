@@ -332,6 +332,120 @@ while i < 5
 end
 check("next in while", [1, 3, 5], odds)
 check("next with value in block", [1, 20, 3], [1, 2, 3].map { |x| next x * 10 if x == 2; x })
+for_sum = 0
+for_value = for for_item in [1, 2, 3]
+  for_sum += for_item
+  for_double = for_item * 2
+end
+check("for iterations", 6, for_sum)
+check("for result is the collection", [1, 2, 3], for_value)
+check("for variable after loop", 3, for_item)
+check("for body local after loop", 6, for_double)
+for_one_line = 0
+for for_item in [4, 5]; for_one_line += for_item; end
+check("for on one line", 9, for_one_line)
+for for_item in [6] do for_do = for_item * 10 end
+check("for with do", 60, for_do)
+for for_empty in []
+  for_never = 1
+end
+check("for zero iterations", [nil, nil], [for_empty, for_never])
+check("break with value from for", 20, for x in [1, 2, 3]; break x * 10 if x == 2; end)
+check("bare break from for", nil, for x in [1, 2]; break; end)
+for_odds = []
+for x in [1, 2, 3, 4, 5]
+  next if x == 2 || x == 4
+  for_odds.push(x)
+end
+check("next in for", [1, 3, 5], for_odds)
+class ReadmeForPair
+  def each
+    yield 1
+    yield 2
+    :pair_done
+  end
+end
+for_pair = []
+for_pair_value = for x in ReadmeForPair.new
+  for_pair.push(x)
+end
+check("for over a class with each", [[1, 2], :pair_done], [for_pair, for_pair_value])
+def readme_for_in_method(items)
+  for item in items
+    break if item > 1
+    last_small = item
+  end
+  [item, last_small]
+end
+check("break from for keeps method running", [2, 1], readme_for_in_method([1, 2, 3]))
+for_while = []
+i = 0
+while i < 2
+  i += 1
+  for x in [1, 2, 3]
+    next if x == 1
+    break if x == 3
+    for_while.push([i, x])
+  end
+end
+check("for nested in while", [[1, 2], [2, 2]], for_while)
+for_inner_while = []
+for x in [1, 2]
+  i = 0
+  while true
+    i += 1
+    break if i == 2
+  end
+  for_inner_while.push([x, i])
+end
+check("while nested in for", [[1, 2], [2, 2]], for_inner_while)
+def readme_for_raise
+  for x in [1]
+    raise "for boom"
+  end
+rescue => error
+  error.message
+end
+check("rescue from for body", "for boom", readme_for_raise)
+def readme_for_return
+  for x in [1, 2, 3]
+    return x * 100 if x == 2
+  end
+  :not_returned
+end
+check("return from for body in a method", 200, readme_for_return)
+def readme_block_return
+  [1, 2].map { |x| [3].each { return x * 10 } }
+  :not_returned
+end
+check("return from a block through each and map", 10, readme_block_return)
+def readme_keep_block(&block)
+  block
+end
+def readme_orphan_return
+  readme_keep_block { return 1 }
+end
+def readme_call_orphan_return
+  readme_orphan_return.call
+rescue LocalJumpError => error
+  error.message
+end
+check("return after its method returned", "unexpected return", readme_call_orphan_return)
+class ReadmeDefineMethodReturn
+  define_method(:to_s) { return "defined to_s" }
+end
+check("return from a define_method block called by interpolation", "defined to_s", "#{ReadmeDefineMethodReturn.new}")
+for_one_line_do = 0
+for x in [1, 2] do for_one_line_do += x end
+check("one-line for with do", 3, for_one_line_do)
+def readme_pair(a, b)
+  [a, b]
+end
+for_command_call = []
+for x in readme_pair 1, 2
+  for_command_call << x
+end
+check("for over a command call", [1, 2], for_command_call)
 
 puts "README: strings, escapes, symbols, arrays and hashes"
 check("empty string", 0, "".length)
@@ -556,7 +670,7 @@ def backtrace_location(frame)
   parts = frame.split(":")
   "#{parts[parts.length - 2]}:#{parts[parts.length - 1]}"
 end
-check("backtrace frames", ["546:in 'backtrace_inner'", "549:in 'backtrace_outer'", "553:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
+check("backtrace frames", ["660:in 'backtrace_inner'", "663:in 'backtrace_outer'", "667:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
 check("backtrace file", true, backtrace_error.backtrace[0].split(":")[0].split("/").last == "readme_features.rb")
 check("backtrace before raise", nil, RuntimeError.new("x").backtrace)
 def backtrace_reraise
@@ -569,7 +683,7 @@ def backtrace_reraise_outer
 rescue StandardError => error
   backtrace_location(error.backtrace[0])
 end
-check("re-raise keeps backtrace", "546:in 'backtrace_inner'", backtrace_reraise_outer)
+check("re-raise keeps backtrace", "660:in 'backtrace_inner'", backtrace_reraise_outer)
 # Mix constructors, nested calls, block capture, branches, setters and hash keys.
 results = {}
 [1, 2, 3].each do |n|

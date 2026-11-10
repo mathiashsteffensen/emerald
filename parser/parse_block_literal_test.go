@@ -32,6 +32,11 @@ func TestBlockLiteral(t *testing.T) {
 			end`,
 			[]string{"n"},
 		},
+		{
+			"with 'do' & 'end' on one line ending in an identifier",
+			"[0].each do |n| s = n end",
+			[]string{"n"},
+		},
 	}
 
 	for _, tt := range tests {

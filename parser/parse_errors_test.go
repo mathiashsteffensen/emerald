@@ -44,6 +44,14 @@ func TestParseErrors(t *testing.T) {
 	testParseError(t, "{@x:}", `expected a value for hash key "@x"`)
 	testParseError(t, "h = {\n  x:", "syntax error, unexpected end-of-input")
 	testParseError(t, "add(x:", "syntax error, unexpected end-of-input")
+	testParseError(t, "def method(for); end", "expected next token to be :, got ) instead")
+	testParseError(t, "for in [1]; end", "expected next token to be IDENT, got IN instead at line 1 column 4")
+	testParseError(t, "for x [1]; end", "expected next token to be IN, got [ instead at line 1 column 6")
+	testParseError(t, "for a, b in [[1, 2]]; end", "expected next token to be IN, got , instead")
+	testParseError(t, "for x in [1]; puts(x)", "syntax error, unexpected end-of-input")
+	testParseError(t, "for x in [1]", "syntax error, unexpected end-of-input")
+	testParseError(t, "for x in", "syntax error, unexpected end-of-input")
+	testParseError(t, "for x in [1] puts(x) end", "expected 'do', a newline or ';' after the for loop collection at line 1, column 13")
 }
 
 func TestParseErrorsOnUnparsableExpressionDoNotHangOrPanic(t *testing.T) {

@@ -14,10 +14,21 @@ type Frame struct {
 	// argGiven marks which parameters received an argument for methods with
 	// default parameters. It is nil when the method has no defaults.
 	argGiven []bool
+	// home is this method invocation, when block literals it creates can `return` from it
+	home *object.Invocation
 }
 
 func NewFrame(block *object.ClosedBlock, basePointer int) *Frame {
 	return &Frame{block: block, ip: -1, basePointer: basePointer}
+}
+
+// homeInvocation is the method invocation a `return` in this frame's block leaves
+func (f *Frame) homeInvocation() *object.Invocation {
+	if f.home != nil {
+		return f.home
+	}
+
+	return f.block.Home
 }
 
 func (f *Frame) Instructions() bytecode.Instructions {

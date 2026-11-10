@@ -28,6 +28,10 @@ type Parser struct {
 	peekToken      lexer.Token
 	prefixParseFns map[lexer.TokenType]prefixParseFn
 	infixParseFns  map[lexer.TokenType]infixParseFn
+
+	// doStartsLoopBody is set while parsing the collection of a for loop,
+	// where `do` starts the loop body instead of passing a block.
+	doStartsLoopBody bool
 }
 
 func (p *Parser) registerPrefix(tokenType lexer.TokenType, fn prefixParseFn) {
@@ -68,6 +72,7 @@ func NewContext(ctx context.Context, l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.IF, p.parseIfExpression)
 	p.registerPrefix(lexer.UNLESS, p.parseUnlessExpression)
 	p.registerPrefix(lexer.WHILE, p.parseWhileExpression)
+	p.registerPrefix(lexer.FOR, p.parseForExpression)
 	p.registerPrefix(lexer.STRING, p.parseStringLiteral)
 	p.registerPrefix(lexer.LBRACE, p.parseHashLiteral)
 	p.registerPrefix(lexer.LBRACKET, p.parseArrayLiteral)
@@ -428,6 +433,8 @@ func (p *Parser) parseNullExpression() ast.Expression {
 }
 
 func (p *Parser) parseGroupedExpression() ast.Expression {
+	defer p.allowDoBlocks()()
+
 	p.nextToken()
 
 	exp := p.parseExpression(LOWEST)
@@ -439,6 +446,8 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 }
 
 func (p *Parser) parseExpressionList(delim lexer.TokenType) []ast.Expression {
+	defer p.allowDoBlocks()()
+
 	args := []ast.Expression{}
 
 	if p.peekTokenIs(delim) {
@@ -571,4 +580,12 @@ func (p *Parser) nextIfCurNewline() {
 	for p.curTokenIs(lexer.NEWLINE) {
 		p.nextToken()
 	}
+}
+
+// allowDoBlocks lets `do` pass a block again inside brackets in a for loop header. Call the returned func to restore the enclosing setting.
+func (p *Parser) allowDoBlocks() (restore func()) {
+	enclosing := p.doStartsLoopBody
+	p.doStartsLoopBody = false
+
+	return func() { p.doStartsLoopBody = enclosing }
 }

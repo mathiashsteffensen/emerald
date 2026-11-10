@@ -11,7 +11,7 @@ import (
 func (vm *VM) Yield(kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 	blockToEvaluate := vm.ctx.Block
 	return vm.withExecutionContextForBlock(blockToEvaluate, func() object.EmeraldValue {
-		return vm.rawEvalBlock(blockToEvaluate, vm.rt.NULL, kwargs, args...)
+		return vm.rawEvalBlock(blockToEvaluate, vm.rt.NULL, false, kwargs, args...)
 	})
 }
 
@@ -45,12 +45,12 @@ func (vm *VM) Send(self object.EmeraldValue, name string, block object.EmeraldVa
 		return object.NewHeapObject(err)
 	}
 
-	result := vm.rawEvalBlock(method, block, kwargs, args...)
+	result := vm.rawEvalBlock(method, block, true, kwargs, args...)
 
 	return result
 }
 
-func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
+func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue, asMethod bool, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 	switch bl := method.Heap.(type) {
 	case *object.WrappedBuiltInMethod:
 		// Builtin methods are easy, just call some Go code
@@ -103,14 +103,18 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 		frame := NewFrame(bl, basePointer)
 		frame.argGiven = argGiven
 		vm.currentFiber().pushFrame(frame)
+		vm.initLocals(basePointer, bl.NumLocals)
 
-		// Prepare the vm stack pointer
-		vm.currentFiber().sp = basePointer + bl.NumLocals
-
-		// Execute
-		vm.runWhile(func() bool {
+		inBlock := func() bool {
 			return vm.currentFiber().framesIndex > startFrameIndex
-		})
+		}
+
+		// A method called through Send and a required file body are the home of their block literals; a yielded block returns to its own home
+		if bl.HasNonLocalReturn && (asMethod || bl.Home == nil) {
+			vm.runAsHome(frame, inBlock)
+		} else {
+			vm.runWhile(inBlock)
+		}
 
 		if vm.executionError == nil && !vm.ExceptionIsRaised() {
 			// Return value is left on the stack
@@ -128,7 +132,6 @@ func (vm *VM) rawEvalBlock(method object.EmeraldValue, block object.EmeraldValue
 // is nil and extra arguments are dropped. Declared keyword parameters take
 // their value by name at the declared slot. With no declared keyword
 // parameters, Ruby passes the keywords on as one trailing positional Hash.
-// Remaining locals start as nil.
 func (vm *VM) bindBlockArguments(bl *object.ClosedBlock, basePointer int, kwargs map[string]object.EmeraldValue, args []object.EmeraldValue) {
 	positional := args
 	if len(bl.Kwargs) == 0 && len(kwargs) != 0 {
@@ -147,10 +150,6 @@ func (vm *VM) bindBlockArguments(bl *object.ClosedBlock, basePointer int, kwargs
 
 	for _, name := range bl.Kwargs {
 		vm.push(kwargs[":"+name])
-	}
-
-	for vm.currentFiber().sp < basePointer+bl.NumLocals {
-		vm.push(vm.rt.NULL)
 	}
 }
 

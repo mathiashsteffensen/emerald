@@ -171,7 +171,7 @@ Ruby implementation.
     - [x] `||`
     - [x] `&&`
 - [ ] control flow
-    - [ ] for loop
+    - [x] for loop
     - [x] while loop
     - [ ] until loop
     - [x] break

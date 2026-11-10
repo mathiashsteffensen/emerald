@@ -34,6 +34,8 @@ type SymbolTable struct {
 	FreeSymbols []Symbol
 	// Gate marks a method scope: outer locals are invisible, only $globals resolve through it.
 	Gate bool
+	// ForLoopBody marks the body of a for loop, which shares the locals of its enclosing scope.
+	ForLoopBody bool
 
 	store          map[string]Symbol
 	NumDefinitions int
@@ -66,6 +68,19 @@ func (s *SymbolTable) Define(name string) Symbol {
 
 	s.store[name] = symbol
 	s.NumDefinitions++
+
+	return symbol
+}
+
+// DefineVariable defines a variable the program assigns. A for loop body
+// defines it in the enclosing scope, so it stays visible after the loop.
+func (s *SymbolTable) DefineVariable(name string) Symbol {
+	if !s.ForLoopBody {
+		return s.Define(name)
+	}
+
+	s.Outer.DefineVariable(name)
+	symbol, _ := s.Resolve(name)
 
 	return symbol
 }

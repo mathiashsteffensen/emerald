@@ -11,6 +11,8 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 	token := p.curToken
 	values := []*ast.HashLiteralElement{}
 
+	defer p.allowDoBlocks()()
+
 	p.nextIfNewline()
 
 	for p.curToken.Type != lexer.RBRACE {

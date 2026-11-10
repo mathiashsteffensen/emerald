@@ -31,6 +31,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, argumentDefaults []ast.E
 	c.enterScope(method)
 	c.scopes[c.scopeIndex].block = !method
 	c.scopes[c.scopeIndex].name = name
+	c.symbolTable.ForLoopBody = node.ForLoopBody
 
 	numParams := len(node.Arguments)
 	for _, p := range node.Arguments {
@@ -97,7 +98,13 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, argumentDefaults []ast.E
 
 	freeSymbols := c.symbolTable.FreeSymbols
 	numLocals := c.symbolTable.NumDefinitions
+	nonLocalReturn := c.scopes[c.scopeIndex].nonLocalReturn
 	bytecode := c.leaveScope()
+
+	// The method enclosing this block literal is the home its `return` leaves
+	if nonLocalReturn && !method {
+		c.scopes[c.scopeIndex].nonLocalReturn = true
+	}
 
 	var kwargNames []string
 	for _, argument := range node.KeywordArguments {
@@ -109,6 +116,7 @@ func (c *Compiler) compileBlock(node *ast.BlockLiteral, argumentDefaults []ast.E
 	block.DefaultArgSlots = defaultArgSlots
 	block.Name = name
 	block.ExceptionTable = exceptionTable
+	block.HasNonLocalReturn = nonLocalReturn
 	for _, symbol := range freeSymbols {
 		block.FreeBindings = append(block.FreeBindings, object.FreeBinding{Index: symbol.Index, Local: symbol.Scope == heap.LocalScope})
 	}

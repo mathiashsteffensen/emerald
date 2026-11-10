@@ -42,6 +42,8 @@ func (p *Parser) parseStringLiteralTemplateRecursive() *ast.StringTemplateChainS
 }
 
 func (p *Parser) parseStringTemplateExpression() *ast.StringTemplateChainExpression {
+	defer p.allowDoBlocks()()
+
 	p.nextToken()
 	p.nextToken()
 

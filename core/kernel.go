@@ -227,7 +227,7 @@ func (rt *Runtime) kernelRequireRelative() object.BuiltInMethod {
 			BlockGiven: func() bool {
 				return false
 			},
-		}, &object.Block{Bytecode: *bytecode, Name: "<top (required)>"}, nil, "", object.PUBLIC)
+		}, &object.Block{Bytecode: *bytecode, Name: "<top (required)>", HasNonLocalReturn: true}, nil, "", object.PUBLIC)
 
 		rt.EvalBlock(object.NewHeapObject(requiredBlock), map[string]object.EmeraldValue{})
 

@@ -66,6 +66,14 @@ func TestKernel_require_relative(t *testing.T) {
 			`,
 			expected: "A::B",
 		},
+		{
+			name: "return in a block at the top level of the required file",
+			input: `
+				require_relative("fixtures/return_in_block")
+				[$return_in_block_loaded, :main_goes_on]
+			`,
+			expected: []any{true, ":main_goes_on"},
+		},
 	}
 
 	runCoreTests(t, tests)

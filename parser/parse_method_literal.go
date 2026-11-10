@@ -96,7 +96,7 @@ func (p *Parser) parseMethodLiteralArgumentsWithoutParentheses() (args, kwargs [
 			return
 		}
 
-		if !p.expectPeek(lexer.IDENT) {
+		if !p.expectPeekParameterName() {
 			return nil, nil, nil, nil
 		}
 
@@ -162,7 +162,7 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType, allowDefault
 		return
 	}
 
-	if !p.expectPeek(lexer.IDENT) {
+	if !p.expectPeekParameterName() {
 		return nil, nil, nil, nil
 	}
 
@@ -194,7 +194,7 @@ func (p *Parser) parseMethodLiteralArguments(delim lexer.TokenType, allowDefault
 			return
 		}
 
-		if !p.expectPeek(lexer.IDENT) {
+		if !p.expectPeekParameterName() {
 			return nil, nil, nil, nil
 		}
 
@@ -311,4 +311,21 @@ func (p *Parser) parseParameterDefault() ast.Expression {
 	p.nextToken() // the first token of the default value
 
 	return p.parseExpression(ASSIGN)
+}
+
+// expectPeekParameterName moves to the next parameter name. A keyword can
+// name only a keyword parameter, like `def method(in:)`.
+func (p *Parser) expectPeekParameterName() bool {
+	if !lexer.IsKeyword(p.peekToken) {
+		return p.expectPeek(lexer.IDENT)
+	}
+
+	p.nextToken()
+
+	if !p.peekTokenIs(lexer.COLON) {
+		p.peekError(lexer.COLON)
+		return false
+	}
+
+	return true
 }

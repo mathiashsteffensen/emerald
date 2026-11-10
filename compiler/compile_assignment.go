@@ -60,7 +60,7 @@ func (c *Compiler) compileAssignmentTarget(node *ast.AssignmentExpression) {
 
 		symbol, ok := c.symbolTable.Resolve(stringName)
 		if !ok {
-			symbol = c.symbolTable.Define(stringName)
+			symbol = c.symbolTable.DefineVariable(stringName)
 		}
 
 		switch symbol.Scope {

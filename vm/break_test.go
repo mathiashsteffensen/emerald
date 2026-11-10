@@ -99,6 +99,61 @@ func TestBreak(t *testing.T) {
 			expected: []any{1},
 		},
 		{
+			name:     "in a for loop with a value",
+			input:    `for i in [1, 2, 3]; break i * 10 if i == 2; end`,
+			expected: 20,
+		},
+		{
+			name:     "in a for loop without a value",
+			input:    `for i in [1, 2, 3]; break if i == 2; end`,
+			expected: nil,
+		},
+		{
+			name: "in a for loop inside a method",
+			input: `
+				def first_big(items)
+					for item in items
+						break if item > 1
+					end
+					[item, :after_loop]
+				end
+				first_big([1, 2, 3])
+			`,
+			expected: []any{2, ":after_loop"},
+		},
+		{
+			name: "in a for loop inside a while loop",
+			input: `
+				seen = []
+				i = 0
+				while i < 2
+					i += 1
+					for item in [1, 2]
+						break if item == 2
+						seen << [i, item]
+					end
+				end
+				seen
+			`,
+			expected: []any{[]any{1, 1}, []any{2, 1}},
+		},
+		{
+			name: "in a while loop inside a for loop",
+			input: `
+				seen = []
+				for item in [1, 2]
+					j = 0
+					while true
+						j += 1
+						break if j == 3
+					end
+					seen << [item, j]
+				end
+				seen
+			`,
+			expected: []any{[]any{1, 3}, []any{2, 3}},
+		},
+		{
 			name:     "at the top level",
 			input:    `break`,
 			expected: "error:Exception:Invalid break",

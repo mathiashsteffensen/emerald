@@ -218,11 +218,7 @@ func (c *Compiler) Compile(node ast.Node) {
 			}
 		}
 	case *ast.ReturnStatement:
-		c.Compile(node.ReturnValue)
-		if c.aborted {
-			return
-		}
-		c.emit(bytecode.OpReturnValue, node.Token)
+		c.compileReturnStatement(node)
 	case *ast.BreakStatement:
 		c.compileBreakStatement(node)
 	case *ast.NextStatement:
@@ -260,6 +256,8 @@ func (c *Compiler) Compile(node ast.Node) {
 		}
 	case *ast.WhileExpression:
 		c.compileWhileExpression(node)
+	case *ast.ForExpression:
+		c.compileForExpression(node)
 	case *ast.IntegerLiteral:
 		integer := c.rt.NewInteger(node.Value)
 		c.emit(bytecode.OpPushConstant, node.Token, c.addConstant(integer))

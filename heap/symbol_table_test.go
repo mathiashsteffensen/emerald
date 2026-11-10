@@ -296,3 +296,57 @@ func TestResolveGated(t *testing.T) {
 		t.Errorf("expected b to resolve as free, got=%+v (ok=%t)", sym, ok)
 	}
 }
+
+func TestDefineVariable(t *testing.T) {
+	block := func(method *SymbolTable) *SymbolTable {
+		block := NewEnclosedSymbolTable(method)
+		block.Define("a")
+
+		return block
+	}
+
+	forLoopBody := func(method *SymbolTable) *SymbolTable {
+		forLoopBody := NewEnclosedSymbolTable(method)
+		forLoopBody.ForLoopBody = true
+		forLoopBody.Define("element")
+
+		return forLoopBody
+	}
+
+	nestedForLoopBody := func(method *SymbolTable) *SymbolTable {
+		method.Define("outer")
+
+		nestedForLoopBody := NewEnclosedSymbolTable(forLoopBody(method))
+		nestedForLoopBody.ForLoopBody = true
+
+		return nestedForLoopBody
+	}
+
+	tests := []struct {
+		name           string
+		table          func(method *SymbolTable) *SymbolTable
+		variable       string
+		expectedSymbol Symbol
+		methodSymbol   Symbol
+	}{
+		{"in a block", block, "b", Symbol{Name: "b", Scope: LocalScope, Index: 1}, Symbol{}},
+		{"in a for loop body", forLoopBody, "c", Symbol{Name: "c", Scope: FreeScope, Index: 0}, Symbol{Name: "c", Scope: LocalScope, Index: 0}},
+		{"in a nested for loop body", nestedForLoopBody, "d", Symbol{Name: "d", Scope: FreeScope, Index: 0}, Symbol{Name: "d", Scope: LocalScope, Index: 1}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			method := NewGatedSymbolTable(NewSymbolTable())
+			table := tt.table(method)
+
+			if result := table.DefineVariable(tt.variable); result != tt.expectedSymbol {
+				t.Errorf("wrong symbol. got=%+v, want=%+v", result, tt.expectedSymbol)
+			}
+
+			result, _ := method.Resolve(tt.variable)
+			if result != tt.methodSymbol {
+				t.Errorf("wrong method symbol. got=%+v, want=%+v", result, tt.methodSymbol)
+			}
+		})
+	}
+}

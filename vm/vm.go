@@ -67,7 +67,7 @@ func NewWithOptions(file string, bytecode *bytecode.Bytecode, rt *core.Runtime, 
 
 	rt.EvalBlock = func(block object.EmeraldValue, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return vm.withExecutionContextForBlock(block, func() object.EmeraldValue {
-			return vm.rawEvalBlock(block, rt.NULL, kwargs, args...)
+			return vm.rawEvalBlock(block, rt.NULL, false, kwargs, args...)
 		})
 	}
 	rt.Send = vm.Send
@@ -123,11 +123,47 @@ func (vm *VM) RunContext(ctx context.Context) error {
 	vm.executionError = nil
 	vm.ctx.ExecutionContext = ctx
 
+	vm.runMain()
+
+	return vm.executionError
+}
+
+// runMain runs the main frame. A `return` in a block literal at the top level ends the script, like Ruby.
+func (vm *VM) runMain() {
+	fiber := vm.currentFiber()
+	if fiber.framesIndex == 0 {
+		return
+	}
+
+	main := fiber.frames[0]
+	main.home = &object.Invocation{Running: true}
+	ctx := vm.ctx
+
+	defer func() {
+		main.home.Running = false
+
+		if r := recover(); r != nil {
+			signal, ok := r.(returnSignal)
+			if !ok || signal.home != main.home {
+				panic(r)
+			}
+
+			vm.ctx = ctx
+
+			// Leave the main frame at its last instruction, so a REPL can append more
+			fiber.framesIndex = 1
+			fiber.sp = main.block.NumLocals
+			main.ip = len(main.Instructions()) - 1
+
+			// The returned value is the result of the evaluation
+			fiber.push(signal.value)
+			fiber.pop()
+		}
+	}()
+
 	vm.runWhile(func() bool {
 		return true
 	})
-
-	return vm.executionError
 }
 
 func (vm *VM) checkContext() bool {
@@ -372,6 +408,8 @@ func (vm *VM) execute(ip int, ins bytecode.Instructions, op bytecode.Opcode) {
 		vm.executeOpReturnValue()
 	case bytecode.OpBreak:
 		vm.executeOpBreak()
+	case bytecode.OpReturnFromBlock:
+		vm.executeOpReturnFromBlock()
 	case bytecode.OpRescuedError:
 		frame := vm.currentFiber().currentFrame()
 		vm.push(frame.rescuedError)
@@ -468,7 +506,12 @@ func (vm *VM) closeBlock(constIndex, numFreeVars int) {
 		}
 	}
 
-	vm.push(object.NewHeapObject(object.NewClosedBlockWithCells(vm.ctx, block, free, "", object.PUBLIC)))
+	closed := object.NewClosedBlockWithCells(vm.ctx, block, free, "", object.PUBLIC)
+	if block.HasNonLocalReturn {
+		closed.Home = frame.homeInvocation()
+	}
+
+	vm.push(object.NewHeapObject(closed))
 }
 
 func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) bool {
@@ -540,16 +583,22 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) bool {
 			frame := NewFrame(m, basePointer)
 			frame.argGiven = argGiven
 			vm.currentFiber().pushFrame(frame)
-			vm.currentFiber().sp = frame.basePointer + m.NumLocals
+			vm.initLocals(frame.basePointer, m.NumLocals)
 			originalFrameIndex := vm.currentFiber().framesIndex
 
 			if m.File != "" {
 				vm.ctx.File = m.File
 			}
 
-			vm.runWhile(func() bool {
+			inMethod := func() bool {
 				return vm.currentFiber().framesIndex >= originalFrameIndex
-			})
+			}
+
+			if m.HasNonLocalReturn {
+				vm.runAsHome(frame, inMethod)
+			} else {
+				vm.runWhile(inMethod)
+			}
 		case *object.WrappedBuiltInMethod:
 			if hasKwargs {
 				kwargsMap, argsEndIndex = vm.pushKwargsToStack(kwargsHash)
@@ -574,6 +623,16 @@ func (vm *VM) callMethod(name string, numArgs int, hasKwargs bool) bool {
 	// A rescue may clear $! while redirecting execution to another instruction/frame.
 	return vm.executionError == nil && !vm.ExceptionIsRaised() &&
 		vm.currentFiber().framesIndex > 0 && vm.currentFiber().currentFrame() == caller && caller.ip == resumeIP
+}
+
+// initLocals sets the local variable slots after the arguments to nil and moves sp past all locals
+func (vm *VM) initLocals(basePointer, numLocals int) {
+	fiber := vm.currentFiber()
+	for fiber.sp < basePointer+numLocals {
+		fiber.push(vm.rt.NULL)
+	}
+
+	fiber.sp = basePointer + numLocals
 }
 
 func (vm *VM) extractMethod(self object.EmeraldValue, name string) (object.EmeraldValue, object.EmeraldError) {

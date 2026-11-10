@@ -34,6 +34,9 @@ type Block struct {
 	FreeBindings    []FreeBinding
 	// Name labels this block in backtraces, e.g. "foo", "block in foo" or "<main>"
 	Name string
+	// HasNonLocalReturn is set when a block literal in this method or block, or this block itself, has a `return`
+	// that must leave the method invocation the block literal was created in
+	HasNonLocalReturn bool
 }
 
 func (b *Block) Class() EmeraldValue          { return EmeraldValue{} }
@@ -64,6 +67,13 @@ type ClosedBlock struct {
 	Context       *Context
 	File          string
 	Visibility    MethodVisibility
+	// Home is the method invocation a `return` in this block literal leaves
+	Home *Invocation
+}
+
+// Invocation is one call of a method, the target of a `return` in the block literals it creates
+type Invocation struct {
+	Running bool
 }
 
 func NewClosedBlock(ctx *Context, block *Block, free []EmeraldValue, file string, visibility MethodVisibility) *ClosedBlock {

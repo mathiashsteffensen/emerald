@@ -59,6 +59,7 @@ var endOfMethodArgsWithoutParenthesesTokens = []lexer.TokenType{
 	lexer.ARROW,           // When a hash key
 	lexer.BIT_OR,          // When last block argument
 	lexer.COLON,           // When in a ternary
+	lexer.END,             // When last expression in a single line do block
 }
 
 func (p *Parser) peekTokenDoesntSignifyCallArguments() bool {
@@ -70,6 +71,8 @@ func (p *Parser) parseMethodArgsWithParentheses() ([]ast.Expression, []*ast.Hash
 		p.nextToken()
 		return []ast.Expression{}, []*ast.HashLiteralElement{}
 	}
+
+	defer p.allowDoBlocks()()
 
 	p.nextToken()
 

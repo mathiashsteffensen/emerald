@@ -12,9 +12,12 @@ type BlockLiteral struct {
 	// BlockArgument is the &block parameter of a method definition. Block
 	// literals never declare one.
 	BlockArgument *IdentifierExpression
-	Body          *BlockStatement
-	RescueBlocks  []*RescueBlock
-	EnsureBlock   *EnsureBlock
+	// ForLoopBody marks the block a for loop compiles to, which shares the
+	// locals of its enclosing scope.
+	ForLoopBody  bool
+	Body         *BlockStatement
+	RescueBlocks []*RescueBlock
+	EnsureBlock  *EnsureBlock
 }
 
 func (bl *BlockLiteral) expressionNode()      {}

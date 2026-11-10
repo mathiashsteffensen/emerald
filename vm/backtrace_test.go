@@ -58,6 +58,11 @@ outer`,
 			expected: []string{"test:2:in 'to_i'", "test:2:in 'shout'", "test:5:in '<main>'"},
 		},
 		{
+			name:     "for loops are labelled as blocks",
+			input:    "def outer\n  for x in [1]\n    raise \"boom\"\n  end\nend\n\nouter",
+			expected: []string{"test:3:in 'block in outer'", "test:2:in 'each'", "test:2:in 'outer'", "test:7:in '<main>'"},
+		},
+		{
 			name:     "nested natives",
 			input:    "[1].each do |x|\n  [2].map { |y| y.missing }\nend",
 			expected: []string{"test:2:in 'block (2 levels) in <main>'", "test:2:in 'each'", "test:2:in 'map'", "test:2:in 'block in <main>'", "test:1:in 'each'", "test:1:in '<main>'"},
