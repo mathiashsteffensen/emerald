@@ -430,3 +430,34 @@ func TestLexer_BooleanOperatorsCarryTheirPosition(t *testing.T) {
 		}
 	}
 }
+
+func TestLexer_SpaceBefore(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  []bool
+	}{
+		{"identifiers", "a b\tc", []bool{false, true, true, false}},
+		{"no space", "a[1]", []bool{false, false, false, false, false}},
+		{"after two-character operator", "a.== [1]", []bool{false, false, false, true, false, false, false}},
+		{"after three-character operator", "a.===[1]", []bool{false, false, false, false, false, false, false}},
+		{"after newline", "a\n [", []bool{false, false, true, false}},
+		{"string", "p \"s\"", []bool{false, true, false}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tokens := lexAll(t, tt.input)
+
+			if len(tokens) != len(tt.want) {
+				t.Fatalf("expected %d tokens, got %v", len(tt.want), tokens)
+			}
+
+			for i, tok := range tokens {
+				if tok.SpaceBefore != tt.want[i] {
+					t.Errorf("token %d %q: expected SpaceBefore %t, got %t", i, tok.Literal, tt.want[i], tok.SpaceBefore)
+				}
+			}
+		})
+	}
+}

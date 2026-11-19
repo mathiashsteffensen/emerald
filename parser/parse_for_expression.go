@@ -14,6 +14,7 @@ func (p *Parser) parseForExpression() ast.Expression {
 	}
 
 	expression.Variable = ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
+	p.declareLocal(expression.Variable.Value)
 
 	if !p.expectPeek(lexer.IN) {
 		return nil

@@ -32,6 +32,9 @@ type Parser struct {
 	// doStartsLoopBody is set while parsing the collection of a for loop,
 	// where `do` starts the loop body instead of passing a block.
 	doStartsLoopBody bool
+
+	// locals is the innermost scope of local variable names.
+	locals *localScope
 }
 
 func (p *Parser) registerPrefix(tokenType lexer.TokenType, fn prefixParseFn) {
@@ -56,6 +59,8 @@ func NewContext(ctx context.Context, l *lexer.Lexer) *Parser {
 		errors: []string{},
 
 		reportedInvalidBytes: map[int]bool{},
+
+		locals: &localScope{names: map[string]bool{}},
 	}
 
 	p.l.RunContext(ctx)
@@ -497,6 +502,8 @@ func (p *Parser) parseStaticClassLiteral() ast.Expression {
 	class.Receiver = p.parseExpression(LOWEST)
 
 	p.nextIfSemicolonOrNewline()
+
+	defer p.enterIsolatedLocalScope()()
 
 	class.Body = p.parseBlockStatement(lexer.END)
 

@@ -175,6 +175,15 @@ func TestKernel_require_relative(t *testing.T) {
 			`,
 			expected: []any{true, ":main_goes_on"},
 		},
+		{
+			name: "local of the requiring file does not make a command call in the required file an index",
+			input: `
+				item_count = [9]
+				require_relative("fixtures/command_call_with_array")
+				$item_count
+			`,
+			expected: 3,
+		},
 	}
 
 	runCoreTests(t, tests)

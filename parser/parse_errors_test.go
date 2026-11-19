@@ -91,3 +91,13 @@ func TestParseErrorsOnUnparsableExpressionDoNotHangOrPanic(t *testing.T) {
 		testParseError(t, tt.input, tt.expectedError)
 	}
 }
+
+func TestAssignmentToUnassignableTargetIsSyntaxError(t *testing.T) {
+	testParseError(t, "foo [1] = 2", "syntax error, unexpected '=' at line 1")
+	testParseError(t, "[1] = 2", "syntax error, unexpected '='")
+	testParseError(t, "1 = 2", "syntax error, unexpected '='")
+	testParseError(t, "A::B = 1", "syntax error, unexpected '='")
+	testParseError(t, "foo [1] += 2", "syntax error, unexpected '+='")
+	testParseError(t, "foo [1] ||= 2", "syntax error, unexpected '||='")
+	testParseError(t, "foo [1] &&= 2", "syntax error, unexpected '&&='")
+}

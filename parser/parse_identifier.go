@@ -25,7 +25,7 @@ func (p *Parser) parseIdentifierExpression() ast.Expression {
 		return p.parseAssignmentExpression(node)
 	}
 
-	if p.peekTokenDoesntSignifyCallArguments() {
+	if p.peekTokenDoesntSignifyCallArguments() || p.peekTokenIndexesLocal(node.Value) {
 		return node
 	}
 
@@ -38,6 +38,12 @@ func (p *Parser) parseIdentifierExpression() ast.Expression {
 	callExpression.Block = p.parseBlockLiteral()
 
 	return callExpression
+}
+
+// peekTokenIndexesLocal is true when `[` after a local is an index even after
+// a space: a local cannot take command arguments.
+func (p *Parser) peekTokenIndexesLocal(name string) bool {
+	return p.peekTokenIs(lexer.LBRACKET) && p.isLocalVariable(name)
 }
 
 func (p *Parser) parseInstanceVariable() ast.Expression {

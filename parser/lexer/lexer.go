@@ -25,6 +25,11 @@ type Lexer struct {
 	currentCharIsInvalidUTF8 bool
 
 	currentChar byte // current char under examination
+
+	// nextTokenFollowsSpace is true when whitespace comes just before the
+	// token that sendToken sends next.
+	nextTokenFollowsSpace bool
+
 	outputChan  chan Token
 	lastEmitted Token
 
@@ -156,6 +161,8 @@ func (l *Lexer) run() {
 		if l.canceled() {
 			return
 		}
+
+		l.nextTokenFollowsSpace = l.currentCharFollowsWhiteSpace()
 
 		// Tokens that set only their type and literal start here.
 		tok = Token{Line: l.Line, Column: l.Column, Pos: l.position}
@@ -468,6 +475,10 @@ func (l *Lexer) Close() {
 }
 
 func (l *Lexer) sendToken(token Token) {
+	// Only the first token sent after the whitespace follows it.
+	token.SpaceBefore = l.nextTokenFollowsSpace
+	l.nextTokenFollowsSpace = false
+
 	l.lastEmitted = token
 
 	select {
@@ -548,6 +559,13 @@ func (l *Lexer) readChar() {
 		l.trailingBytesInChar = charSize - 1
 		l.currentCharIsInvalidUTF8 = charSize == 1
 	}
+}
+
+func (l *Lexer) currentCharFollowsWhiteSpace() bool {
+	content := l.currentInput.content
+
+	// At the end of input the position is past the last character.
+	return l.position > 0 && l.position <= len(content) && isWhiteSpace(content[l.position-1])
 }
 
 func (l *Lexer) peekChar() byte {

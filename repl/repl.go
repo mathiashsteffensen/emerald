@@ -88,6 +88,8 @@ func Start(in io.ReadCloser, out io.Writer, config Config) {
 
 		l := lexer.New(lexer.NewInput("repl.rb", buffer+line))
 		p := parser.New(l)
+		p.DeclareLocalVariables(engine.Runtime.Heap.SymbolTable.LocalVariableNames())
+
 		program := p.ParseAST()
 
 		if len(p.Errors()) != 0 {

@@ -33,6 +33,8 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 
 	p.nextIfSemicolonOrNewline()
 
+	defer p.enterIsolatedLocalScope()()
+
 	class.Body = p.parseBlockStatement(lexer.END)
 
 	return class

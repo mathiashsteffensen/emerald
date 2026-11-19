@@ -82,17 +82,21 @@ func Compile(fileName string, content string, rt *core.Runtime) *bytecode.Byteco
 	return bc
 }
 
+// CompileContext compiles source that runs at the top level after earlier
+// evals, so it sees the locals they defined.
 func CompileContext(ctx context.Context, fileName string, content string, rt *core.Runtime) (*bytecode.Bytecode, error) {
-	bc, _, err := compileContext(ctx, fileName, content, rt)
+	bc, _, err := compileContext(ctx, fileName, content, rt, rt.Heap.SymbolTable.LocalVariableNames())
 	return bc, err
 }
 
+// compile compiles a required file, which sees no locals of the file that
+// requires it.
 func compile(fileName string, content string, rt *core.Runtime) (*bytecode.Bytecode, bool) {
-	bc, ok, _ := compileContext(context.Background(), fileName, content, rt)
+	bc, ok, _ := compileContext(context.Background(), fileName, content, rt, nil)
 	return bc, ok
 }
 
-func compileContext(ctx context.Context, fileName string, content string, rt *core.Runtime) (*bytecode.Bytecode, bool, error) {
+func compileContext(ctx context.Context, fileName string, content string, rt *core.Runtime, earlierLocals []string) (*bytecode.Bytecode, bool, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -101,6 +105,8 @@ func compileContext(ctx context.Context, fileName string, content string, rt *co
 	defer l.Close()
 
 	p := parser.NewContext(ctx, l)
+	p.DeclareLocalVariables(earlierLocals)
+
 	ast := p.ParseAST()
 
 	if err := p.Err(); err != nil {

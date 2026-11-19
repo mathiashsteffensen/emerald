@@ -105,3 +105,33 @@ func TestEngineResultOfReturnFromBlockAtTheTopLevel(t *testing.T) {
 		})
 	}
 }
+
+// Each Eval parses alone, so the parser must learn earlier top-level locals.
+func TestEngineEvalKeepsLocalsForSpacedLeftBracket(t *testing.T) {
+	engine := emerald.New()
+
+	for _, source := range []string{"x = [1, 2]", "def size_of(items); items.size; end"} {
+		if _, err := engine.Eval(source); err != nil {
+			t.Fatalf("eval %q: %v", source, err)
+		}
+	}
+
+	tests := []struct {
+		source string
+		want   uint64
+	}{
+		{"x [1]", 2},
+		{"size_of [7, 8, 9].map { |n| n }", 3},
+	}
+
+	for _, tt := range tests {
+		value, err := engine.Eval(tt.source)
+		if err != nil {
+			t.Fatalf("eval %q: %v", tt.source, err)
+		}
+
+		if !value.Is(object.INTEGER_VALUE) || value.Num != tt.want {
+			t.Fatalf("%q = %s, want %d", tt.source, value.Inspect(), tt.want)
+		}
+	}
+}

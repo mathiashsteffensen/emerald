@@ -1,6 +1,9 @@
 package heap
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 func TestDefine(t *testing.T) {
 	expected := map[string]Symbol{
@@ -348,5 +351,22 @@ func TestDefineVariable(t *testing.T) {
 				t.Errorf("wrong method symbol. got=%+v, want=%+v", result, tt.methodSymbol)
 			}
 		})
+	}
+}
+
+func TestLocalVariableNames(t *testing.T) {
+	global := NewSymbolTable()
+	global.Define("b")
+	global.Define("a")
+	global.DefineGlobal("$g")
+
+	local := NewEnclosedSymbolTable(global)
+	local.Define("c")
+
+	got := global.LocalVariableNames()
+	want := []string{"a", "b"}
+
+	if !slices.Equal(got, want) {
+		t.Errorf("expected %v, got %v", want, got)
 	}
 }

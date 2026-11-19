@@ -1,6 +1,9 @@
 package heap
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 type SymbolScope int
 
@@ -126,4 +129,20 @@ func (s *SymbolTable) defineFree(original Symbol) Symbol {
 	s.store[original.Name] = symbol
 
 	return symbol
+}
+
+// LocalVariableNames returns the names of the local variables this scope knows,
+// sorted. Global variables, which start with `$`, are left out.
+func (s *SymbolTable) LocalVariableNames() []string {
+	names := []string{}
+
+	for name := range s.store {
+		if !strings.HasPrefix(name, "$") {
+			names = append(names, name)
+		}
+	}
+
+	slices.Sort(names)
+
+	return names
 }

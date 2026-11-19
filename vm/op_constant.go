@@ -4,6 +4,7 @@ import (
 	"emerald/bytecode"
 	"emerald/core"
 	"emerald/object"
+	"emerald/parser/lexer"
 	"fmt"
 )
 
@@ -39,7 +40,7 @@ func (vm *VM) executeOpScopedConstantGet(ins bytecode.Instructions, ip int) {
 
 	var result object.EmeraldValue
 
-	if core.IsConstantName(name) {
+	if lexer.IsConstantName(name) {
 		value, err := getConst(self, name, vm.rt)
 		if err != nil {
 			err := vm.rt.NewStandardError(err.Error())

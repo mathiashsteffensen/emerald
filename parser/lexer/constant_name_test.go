@@ -1,9 +1,6 @@
-package core_test
+package lexer
 
-import (
-	"emerald/core"
-	"testing"
-)
+import "testing"
 
 func TestIsConstantName(t *testing.T) {
 	tests := []struct {
@@ -25,7 +22,7 @@ func TestIsConstantName(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		if actual := core.IsConstantName(tt.name); actual != tt.expected {
+		if actual := IsConstantName(tt.name); actual != tt.expected {
 			t.Errorf("IsConstantName(%q): expected %t, got %t", tt.name, tt.expected, actual)
 		}
 	}

@@ -24,6 +24,8 @@ func (p *Parser) parseModuleLiteral() ast.Expression {
 		p.nextToken()
 	}
 
+	defer p.enterIsolatedLocalScope()()
+
 	mod.Body = p.parseBlockStatement(lexer.END)
 
 	return mod

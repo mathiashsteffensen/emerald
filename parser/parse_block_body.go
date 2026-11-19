@@ -60,6 +60,7 @@ func (p *Parser) parseBlockRescueParts() []*ast.RescueBlock {
 	if p.curTokenIs(lexer.ARROW) {
 		p.nextToken()
 		rescues[0].ErrorVarName = p.parseIdentifierExpression()
+		p.declareLocalIfIdentifier(rescues[0].ErrorVarName)
 		p.nextToken()
 	}
 

@@ -2,14 +2,14 @@ package compiler
 
 import (
 	"emerald/bytecode"
-	"emerald/core"
 	ast "emerald/parser/ast"
+	"emerald/parser/lexer"
 )
 
 func (c *Compiler) compileIdentifierExpression(node ast.Expression) {
 	switch node := node.(type) {
 	case ast.IdentifierExpression:
-		if core.IsConstantName(node.Value) {
+		if lexer.IsConstantName(node.Value) {
 			// Constant reference
 			c.emitConstantGet(node.Value, node.Token)
 		} else {

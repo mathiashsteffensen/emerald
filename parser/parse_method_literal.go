@@ -28,6 +28,8 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 
 	method.Name = methodIdent
 
+	defer p.enterIsolatedLocalScope()()
+
 	if p.peekTokenIs(lexer.LPAREN) {
 		p.nextToken()
 
@@ -37,6 +39,8 @@ func (p *Parser) parseMethodLiteral() ast.Expression {
 	} else {
 		method.Arguments, method.KeywordArguments, method.ArgumentDefaults = []*ast.IdentifierExpression{}, []*ast.IdentifierExpression{}, []ast.Expression{}
 	}
+
+	p.declareParameters(method.KeywordArguments)
 
 	p.nextIfSemicolonOrNewline()
 
@@ -232,6 +236,8 @@ func (p *Parser) parseBlockArgument() *ast.IdentifierExpression {
 		return nil
 	}
 
+	p.declareLocal(p.curToken.Literal)
+
 	return &ast.IdentifierExpression{Token: p.curToken, Value: p.curToken.Literal}
 }
 
@@ -292,6 +298,8 @@ func (p *Parser) addPositionalParameter(
 	ident *ast.IdentifierExpression,
 	allowDefaults bool,
 ) ([]*ast.IdentifierExpression, []ast.Expression) {
+	p.declareLocal(ident.Value)
+
 	var defaultValue ast.Expression
 	if allowDefaults {
 		defaultValue = p.parseParameterDefault()

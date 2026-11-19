@@ -3,6 +3,9 @@ package parser
 import "emerald/parser/ast"
 
 func (p *Parser) parseBoolOrAssign(left ast.Expression) ast.Expression {
+	p.checkAssignmentTarget(left)
+	p.declareLocalIfIdentifier(left)
+
 	precedence := p.curPrecedence()
 
 	p.nextIfNewline()
@@ -30,6 +33,9 @@ func (p *Parser) parseBoolOrAssign(left ast.Expression) ast.Expression {
 }
 
 func (p *Parser) parseBoolAndAssign(left ast.Expression) ast.Expression {
+	p.checkAssignmentTarget(left)
+	p.declareLocalIfIdentifier(left)
+
 	precedence := p.curPrecedence()
 
 	p.nextToken()

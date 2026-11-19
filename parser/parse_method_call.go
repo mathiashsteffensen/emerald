@@ -63,7 +63,16 @@ var endOfMethodArgsWithoutParenthesesTokens = []lexer.TokenType{
 }
 
 func (p *Parser) peekTokenDoesntSignifyCallArguments() bool {
+	if p.peekTokenIsSpacedLeftBracket() {
+		return false
+	}
+
 	return p.peekPrecedence() != LOWEST || p.peekTokenIsMultiple(endOfMethodArgsWithoutParenthesesTokens...)
+}
+
+// peekTokenIsSpacedLeftBracket is true for the `[` in `puts [1]`, not in `puts[1]`.
+func (p *Parser) peekTokenIsSpacedLeftBracket() bool {
+	return p.peekTokenIs(lexer.LBRACKET) && p.peekToken.SpaceBefore
 }
 
 func (p *Parser) parseMethodArgsWithParentheses() ([]ast.Expression, []*ast.HashLiteralElement) {

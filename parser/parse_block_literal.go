@@ -20,12 +20,14 @@ func (p *Parser) parseBlockLiteral() *ast.BlockLiteral {
 	p.nextToken()
 
 	defer p.allowDoBlocks()()
+	defer p.enterBlockLocalScope()()
 
 	block := &ast.BlockLiteral{Body: &ast.BlockStatement{}, Token: p.curToken}
 
 	if p.peekTokenIs(lexer.BIT_OR) {
 		p.nextToken()
 		block.Arguments, block.KeywordArguments, _, _ = p.parseMethodLiteralArguments(lexer.BIT_OR, false, false)
+		p.declareParameters(block.KeywordArguments)
 	}
 
 	if endToken == lexer.RBRACE {
