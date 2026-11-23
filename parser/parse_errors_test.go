@@ -51,6 +51,8 @@ func TestParseErrors(t *testing.T) {
 	testParseError(t, "for x in [1]; puts(x)", "syntax error, unexpected end-of-input")
 	testParseError(t, "for x in [1]", "syntax error, unexpected end-of-input")
 	testParseError(t, "for x in", "syntax error, unexpected end-of-input")
+	testParseError(t, "while running\n  puts(1)", "syntax error, unexpected end-of-input")
+	testParseError(t, "until true\n  puts(1)", "syntax error, unexpected end-of-input")
 	testParseError(t, "for x in [1] puts(x) end", "expected 'do', a newline or ';' after the for loop collection at line 1, column 13")
 }
 

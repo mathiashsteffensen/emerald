@@ -14,30 +14,19 @@ func (p *Parser) parseWhileExpression() ast.Expression {
 
 	p.nextIfSemicolonOrNewline()
 
-	expression.Consequence = &ast.BlockStatement{Token: p.curToken}
-	expression.Consequence.Statements = []ast.Statement{}
-
-	p.nextToken()
-
-	for !p.curTokenIs(lexer.END) && !p.curTokenIs(lexer.EOF) {
-		stmt := p.parseStatement()
-
-		if stmt != nil {
-			expression.Consequence.Statements = append(expression.Consequence.Statements, stmt)
-		}
-
-		p.nextToken()
-	}
+	expression.Consequence = p.parseBlockStatement(lexer.END)
 
 	return expression
 }
 
 func (p *Parser) parseWhileModifier(consequence ast.Expression) ast.Expression {
-	expression := &ast.WhileExpression{Token: p.curToken, Consequence: &ast.BlockStatement{
-		Statements: []ast.Statement{&ast.ExpressionStatement{
-			Expression: consequence,
-		}},
-	}}
+	return p.parseWhileModifierFromStatement(&ast.ExpressionStatement{
+		Expression: consequence,
+	})
+}
+
+func (p *Parser) parseWhileModifierFromStatement(stmt ast.Statement) ast.Expression {
+	expression := &ast.WhileExpression{Token: p.curToken, Consequence: &ast.BlockStatement{Statements: []ast.Statement{stmt}}}
 
 	p.nextToken()
 

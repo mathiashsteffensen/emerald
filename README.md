@@ -173,7 +173,7 @@ Ruby implementation.
 - [ ] control flow
     - [x] for loop
     - [x] while loop
-    - [ ] until loop
+    - [x] until loop
     - [x] break
     - [x] next
     - [ ] redo

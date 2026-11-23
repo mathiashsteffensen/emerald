@@ -77,6 +77,7 @@ func NewContext(ctx context.Context, l *lexer.Lexer) *Parser {
 	p.registerPrefix(lexer.IF, p.parseIfExpression)
 	p.registerPrefix(lexer.UNLESS, p.parseUnlessExpression)
 	p.registerPrefix(lexer.WHILE, p.parseWhileExpression)
+	p.registerPrefix(lexer.UNTIL, p.parseWhileExpression)
 	p.registerPrefix(lexer.FOR, p.parseForExpression)
 	p.registerPrefix(lexer.STRING, p.parseStringLiteral)
 	p.registerPrefix(lexer.LBRACE, p.parseHashLiteral)
@@ -123,6 +124,7 @@ func NewContext(ctx context.Context, l *lexer.Lexer) *Parser {
 	p.registerInfix(lexer.IF, p.parseIfModifier)
 	p.registerInfix(lexer.UNLESS, p.parseUnlessModifier)
 	p.registerInfix(lexer.WHILE, p.parseWhileModifier)
+	p.registerInfix(lexer.UNTIL, p.parseWhileModifier)
 	p.registerInfix(lexer.QUESTION, p.parseTernary)
 	p.registerInfix(lexer.APPEND, p.parseInfixExpression)
 
@@ -291,12 +293,39 @@ func (p *Parser) parseStatement() ast.Statement {
 	return result
 }
 
-func (p *Parser) parseBoolModifierFromStatement(stmt ast.Statement) ast.Expression {
+// statementModifiers are the keywords that can follow `return`, `break` or `next`, as in `break if done`
+var statementModifiers = []lexer.TokenType{lexer.IF, lexer.UNLESS, lexer.WHILE, lexer.UNTIL}
+
+// peekTokenEndsJumpValue reports whether the next token leaves `return`, `break` or `next` without a value
+func (p *Parser) peekTokenEndsJumpValue() bool {
+	if p.peekTokenIsMultiple(statementModifiers...) {
+		return true
+	}
+
+	return p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON, lexer.END, lexer.RBRACE, lexer.RESCUE, lexer.EOF)
+}
+
+// parseStatementModifiers wraps stmt in each modifier that follows it, left to right, as in `return x if a unless b`.
+// Each wrapping statement keeps stmtToken, the token of the `return`, `break` or `next` it starts with.
+func (p *Parser) parseStatementModifiers(stmtToken lexer.Token, stmt ast.Statement) ast.Statement {
+	result := stmt
+
+	for p.peekTokenIsMultiple(statementModifiers...) {
+		p.nextToken()
+		result = &ast.ExpressionStatement{Token: stmtToken, Expression: p.parseModifierFromStatement(result)}
+	}
+
+	return result
+}
+
+func (p *Parser) parseModifierFromStatement(stmt ast.Statement) ast.Expression {
 	switch p.curToken.Type {
 	case lexer.IF:
 		return p.parseIfModifierFromStatement(stmt)
 	case lexer.UNLESS:
 		return p.parseUnlessModifierFromStatement(stmt)
+	case lexer.WHILE, lexer.UNTIL:
+		return p.parseWhileModifierFromStatement(stmt)
 	default:
 		return nil
 	}
@@ -304,17 +333,12 @@ func (p *Parser) parseBoolModifierFromStatement(stmt ast.Statement) ast.Expressi
 
 func (p *Parser) parseReturnStatement() ast.Statement {
 	stmt := &ast.ReturnStatement{Token: p.curToken, ReturnValue: &ast.NullExpression{Token: p.curToken}}
-	if !p.peekTokenIsMultiple(lexer.NEWLINE, lexer.SEMICOLON, lexer.END, lexer.RBRACE, lexer.RESCUE, lexer.EOF, lexer.IF, lexer.UNLESS) {
+	if !p.peekTokenEndsJumpValue() {
 		p.nextToken()
 		stmt.ReturnValue = p.parseExpression(MODIFIER)
 	}
 
-	if p.peekTokenIsMultiple(lexer.IF, lexer.UNLESS) {
-		p.nextToken()
-		return &ast.ExpressionStatement{Token: stmt.Token, Expression: p.parseBoolModifierFromStatement(stmt)}
-	}
-
-	return stmt
+	return p.parseStatementModifiers(stmt.Token, stmt)
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {

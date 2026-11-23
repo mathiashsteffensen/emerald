@@ -8,7 +8,7 @@ import (
 func (c *Compiler) compileBreakStatement(node *ast.BreakStatement) {
 	scope := &c.scopes[c.scopeIndex]
 
-	// Inside a while loop, `break` jumps past the loop, its value becoming the loop's value
+	// Inside a while or until loop, `break` jumps past the loop, its value becoming the loop's value
 	if len(scope.loops) > 0 {
 		c.Compile(node.Value)
 		innermost := &scope.loops[len(scope.loops)-1]

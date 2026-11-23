@@ -35,3 +35,31 @@ func TestParseWhileExpression(t *testing.T) {
 		})
 	})
 }
+
+func TestParseUntilExpression(t *testing.T) {
+	input := `
+		until done
+			puts(1)
+		end
+		until done; puts(2); end
+		puts(3) until done
+	`
+
+	program := testParseAST(t, input)
+
+	expectStatementLength(t, program.Statements, 3)
+
+	for i, statement := range program.Statements {
+		testExpressionStatement(t, statement, func(expression *ast.WhileExpression) {
+			if !expression.IsUntil() {
+				t.Errorf("statement %d: expected an until loop", i)
+			}
+
+			testIdentifier(t, expression.Condition, "done")
+			expectStatementLength(t, expression.Consequence.Statements, 1)
+			testExpressionStatement(t, expression.Consequence.Statements[0], func(expression ast.CallExpression) {
+				testCallExpression(t, expression, "puts", []any{i + 1}, []string{}, false)
+			})
+		})
+	}
+}

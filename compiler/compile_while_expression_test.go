@@ -70,3 +70,53 @@ func TestCompileWhileExpression(t *testing.T) {
 	}
 	runCompilerTests(t, tests)
 }
+
+func TestCompileUntilExpression(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input: `
+				done = false
+				until done
+					done = true
+				end
+			`,
+			expectedConstants: []any{},
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpSetGlobal, 0),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpGetGlobal, 0),
+				bytecode.Make(bytecode.OpJumpTruthy, 20),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpSetGlobal, 0),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpJump, 5),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			input: `
+				done = false
+				done = true until done
+			`,
+			expectedConstants: []any{},
+			expectedInstructions: []bytecode.Instructions{
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpSetGlobal, 0),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpGetGlobal, 0),
+				bytecode.Make(bytecode.OpJumpTruthy, 20),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpSetGlobal, 0),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpJump, 5),
+				bytecode.Make(bytecode.OpNull),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+	}
+	runCompilerTests(t, tests)
+}

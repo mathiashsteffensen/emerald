@@ -331,6 +331,32 @@ while i < 5
   odds.push(i)
 end
 check("next in while", [1, 3, 5], odds)
+i = 0
+sum = 0
+loop_value = until i == 5
+  sum += i
+  i += 1
+end
+check("until iterations", 10, sum)
+check("until result", nil, loop_value)
+until true
+  sum = 100
+end
+check("until zero iterations", 10, sum)
+i = 0
+check("break with value from until", 30, until false; i += 1; break i * 10 if i == 3; end)
+check("bare break from until", nil, until false; break; end)
+i = 0
+odds = []
+until i == 5
+  i += 1
+  next if i == 2 || i == 4
+  odds.push(i)
+end
+check("next in until", [1, 3, 5], odds)
+i = 0
+i += 1 until i >= 3
+check("until modifier", 3, i)
 check("next with value in block", [1, 20, 3], [1, 2, 3].map { |x| next x * 10 if x == 2; x })
 for_sum = 0
 for_value = for for_item in [1, 2, 3]
@@ -670,7 +696,7 @@ def backtrace_location(frame)
   parts = frame.split(":")
   "#{parts[parts.length - 2]}:#{parts[parts.length - 1]}"
 end
-check("backtrace frames", ["660:in 'backtrace_inner'", "663:in 'backtrace_outer'", "667:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
+check("backtrace frames", ["686:in 'backtrace_inner'", "689:in 'backtrace_outer'", "693:in '<main>'"], backtrace_error.backtrace.map { |frame| backtrace_location(frame) })
 check("backtrace file", true, backtrace_error.backtrace[0].split(":")[0].split("/").last == "readme_features.rb")
 check("backtrace before raise", nil, RuntimeError.new("x").backtrace)
 def backtrace_reraise
@@ -683,7 +709,7 @@ def backtrace_reraise_outer
 rescue StandardError => error
   backtrace_location(error.backtrace[0])
 end
-check("re-raise keeps backtrace", "660:in 'backtrace_inner'", backtrace_reraise_outer)
+check("re-raise keeps backtrace", "686:in 'backtrace_inner'", backtrace_reraise_outer)
 $readme_ensure_log = []
 def readme_ensure_value
   1
@@ -716,7 +742,7 @@ def readme_ensure_raised_outer
 rescue StandardError => error
   backtrace_location(error.backtrace[0])
 end
-check("ensure raises the error again with its backtrace", "710:in 'readme_ensure_raised'", readme_ensure_raised_outer)
+check("ensure raises the error again with its backtrace", "736:in 'readme_ensure_raised'", readme_ensure_raised_outer)
 check("ensure in a block on next", [10, 2], [1, 2].map do |n|
   next n * 10 if n == 1
   n

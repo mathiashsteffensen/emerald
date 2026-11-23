@@ -87,6 +87,7 @@ const (
 	RETURN TokenType = "RETURN"
 	NULL   TokenType = "NULL"
 	WHILE  TokenType = "WHILE"
+	UNTIL  TokenType = "UNTIL"
 	BREAK  TokenType = "BREAK"
 	NEXT   TokenType = "NEXT"
 	FOR    TokenType = "FOR"
@@ -115,6 +116,7 @@ var keywords = map[string]TokenType{
 	"return": RETURN,
 	"nil":    NULL,
 	"while":  WHILE,
+	"until":  UNTIL,
 	"break":  BREAK,
 	"next":   NEXT,
 	"for":    FOR,

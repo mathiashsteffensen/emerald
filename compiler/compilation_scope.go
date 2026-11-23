@@ -8,12 +8,12 @@ type CompilationScope struct {
 	previousInstruction EmittedInstruction
 	block               bool   // a non-method block, where `next` returns from the block
 	name                string // backtrace label of the method or block being compiled
-	loops               []loop // enclosing while loops, innermost last
+	loops               []loop // enclosing while and until loops, innermost last
 	// nonLocalReturn is set when this scope, or a block literal in it, has a `return` that leaves the home method
 	nonLocalReturn bool
 }
 
-// loop is a while loop being compiled
+// loop is a while or until loop being compiled
 type loop struct {
 	conditionPosition int   // where `next` jumps to
 	breakJumps        []int // `break` jumps to patch to the end of the loop

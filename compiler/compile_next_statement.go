@@ -8,7 +8,7 @@ import (
 func (c *Compiler) compileNextStatement(node *ast.NextStatement) {
 	scope := c.currentScope()
 
-	// Inside a while loop, `next` skips to the condition. Its value is discarded.
+	// Inside a while or until loop, `next` skips to the condition. Its value is discarded.
 	if len(scope.loops) > 0 {
 		c.Compile(node.Value)
 		c.emit(bytecode.OpPop, node.Token)
