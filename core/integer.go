@@ -22,10 +22,10 @@ func (rt *Runtime) InitInteger() {
 	rt.DefineMethod(rt.Integer, "===", rt.integerCaseEq())
 	rt.DefineMethod(rt.Integer, "==", rt.integerEquals())
 	rt.DefineMethod(rt.Integer, "!=", rt.integerNotEquals())
-	rt.DefineMethod(rt.Integer, "+", rt.integerAdd())
-	rt.DefineMethod(rt.Integer, "-", rt.integerSubtract())
-	rt.DefineMethod(rt.Integer, "*", rt.integerMultiply())
-	rt.DefineMethod(rt.Integer, "/", rt.integerDivide())
+	rt.DefineMethod(rt.Integer, "+", rt.numericAdd())
+	rt.DefineMethod(rt.Integer, "-", rt.numericSubtract())
+	rt.DefineMethod(rt.Integer, "*", rt.numericMultiply())
+	rt.DefineMethod(rt.Integer, "/", rt.numericDivide())
 	rt.DefineMethod(rt.Integer, "<<", rt.integerLeftShift())
 	rt.DefineMethod(rt.Integer, "-@", rt.integerNegate())
 	rt.DefineMethod(rt.Integer, "to_f", rt.integerToF())
@@ -58,40 +58,12 @@ func (rt *Runtime) integerCaseEq() object.BuiltInMethod {
 	}
 }
 
-func (rt *Runtime) integerAdd() object.BuiltInMethod {
-	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
-		return rt.NewInteger(left + right)
-	})
-}
-
-func (rt *Runtime) integerSubtract() object.BuiltInMethod {
-	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
-		return rt.NewInteger(left - right)
-	})
-}
-
-func (rt *Runtime) integerMultiply() object.BuiltInMethod {
-	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
-		return rt.NewInteger(left * right)
-	})
-}
-
 func (rt *Runtime) integerLeftShift() object.BuiltInMethod {
 	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
 		if right < 0 {
 			return rt.NewInteger(left >> uint64(-right))
 		}
 		return rt.NewInteger(left << uint64(right))
-	})
-}
-
-func (rt *Runtime) integerDivide() object.BuiltInMethod {
-	return rt.integerInfixOperator(func(left int64, right int64) object.EmeraldValue {
-		if left%right == 0 {
-			return rt.NewInteger(left / right)
-		} else {
-			return rt.NewFloat(float64(left) / float64(right))
-		}
 	})
 }
 

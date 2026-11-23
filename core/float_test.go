@@ -32,6 +32,16 @@ func TestFloat_infix_operators(t *testing.T) {
 			expected: nil,
 		},
 		{
+			name:     "NaN <=> Float",
+			input:    "(0.0 / 0.0) <=> 4.2",
+			expected: nil,
+		},
+		{
+			name:     "NaN <=> Integer",
+			input:    "(0.0 / 0.0) <=> 4",
+			expected: nil,
+		},
+		{
 			input:    "70.0 <=> 100",
 			expected: -1,
 		},
@@ -78,6 +88,18 @@ func TestFloat_infix_operators(t *testing.T) {
 		{
 			input:    "2.2 / 1.1",
 			expected: 2.0,
+		},
+		{
+			input:    "2.2 / 2",
+			expected: 1.1,
+		},
+		{
+			input:    "3.1 + nil",
+			expected: "error:TypeError:nil can't be coerced into Float",
+		},
+		{
+			input:    `3.1 * "2"`,
+			expected: "error:TypeError:String can't be coerced into Float",
 		},
 	}
 

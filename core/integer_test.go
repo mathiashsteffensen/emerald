@@ -1,6 +1,7 @@
 package core_test
 
 import (
+	"math"
 	"testing"
 )
 
@@ -50,6 +51,41 @@ func TestIntegerOperators(t *testing.T) {
 			name:     "multiplying with .",
 			input:    "6.*(2)",
 			expected: 12,
+		},
+		{
+			name:     "adding a Float",
+			input:    "2+1.5",
+			expected: 3.5,
+		},
+		{
+			name:     "subtracting a Float",
+			input:    "2-1.5",
+			expected: 0.5,
+		},
+		{
+			name:     "multiplying by a Float",
+			input:    "2*1.5",
+			expected: 3.0,
+		},
+		{
+			name:     "dividing by a Float",
+			input:    "3/1.5",
+			expected: 2.0,
+		},
+		{
+			name:     "dividing by Float zero",
+			input:    "3/0.0",
+			expected: math.Inf(1),
+		},
+		{
+			name:     "shifting left",
+			input:    "6<<2",
+			expected: 24,
+		},
+		{
+			name:     "shifting left by a negative count",
+			input:    "8<<-1",
+			expected: 4,
 		},
 		{
 			name:     "equals",
@@ -113,7 +149,23 @@ func TestIntegerOperators(t *testing.T) {
 		},
 		{
 			input:    "6 + false",
-			expected: "error:TypeError:no implicit conversion of FalseClass into Integer",
+			expected: "error:TypeError:false can't be coerced into Integer",
+		},
+		{
+			input:    `6 + "1"`,
+			expected: "error:TypeError:String can't be coerced into Integer",
+		},
+		{
+			input:    "6.+()",
+			expected: "error:ArgumentError:wrong number of arguments (given 0, expected 1)",
+		},
+		{
+			input:    "6 << nil",
+			expected: "error:TypeError:no implicit conversion of NilClass into Integer",
+		},
+		{
+			input:    "6.<<()",
+			expected: "error:ArgumentError:wrong number of arguments (given 0, expected 1)",
 		},
 		{
 			input:    "6 === 6",
@@ -164,6 +216,11 @@ func TestInteger_spaceship(t *testing.T) {
 		},
 		{
 			input:    `-2 <=> "boop"`,
+			expected: nil,
+		},
+		{
+			name:     "with NaN",
+			input:    "1 <=> (0.0 / 0.0)",
 			expected: nil,
 		},
 	}

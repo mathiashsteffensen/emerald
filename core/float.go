@@ -15,10 +15,10 @@ func (rt *Runtime) InitFloat() {
 	rt.DefineMethod(rt.Float, "to_s", rt.floatToS())
 	rt.DefineMethod(rt.Float, "inspect", rt.floatToS())
 	rt.DefineMethod(rt.Float, "<=>", rt.floatSpaceship())
-	rt.DefineMethod(rt.Float, "+", rt.floatAdd())
-	rt.DefineMethod(rt.Float, "-", rt.floatSubtract())
-	rt.DefineMethod(rt.Float, "*", rt.floatMultiply())
-	rt.DefineMethod(rt.Float, "/", rt.floatDivide())
+	rt.DefineMethod(rt.Float, "+", rt.numericAdd())
+	rt.DefineMethod(rt.Float, "-", rt.numericSubtract())
+	rt.DefineMethod(rt.Float, "*", rt.numericMultiply())
+	rt.DefineMethod(rt.Float, "/", rt.numericDivide())
 	rt.DefineMethod(rt.Float, "-@", rt.floatNegate())
 	rt.DefineMethod(rt.Float, "round", rt.floatRound())
 }
@@ -34,70 +34,6 @@ func (rt *Runtime) NewFloat(val float64) object.EmeraldValue {
 func (rt *Runtime) floatToS() object.BuiltInMethod {
 	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
 		return rt.NewString(strconv.FormatFloat(math.Float64frombits(ctx.Self.Num), 'f', -1, 64))
-	}
-}
-
-func (rt *Runtime) floatAdd() object.BuiltInMethod {
-	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := math.Float64frombits(ctx.Self.Num)
-
-		var newValue float64
-
-		if args[0].Is(object.INTEGER_VALUE) {
-			newValue = left + float64(int64(args[0].Num))
-		} else if args[0].Is(object.FLOAT_VALUE) {
-			newValue = left + math.Float64frombits(args[0].Num)
-		}
-
-		return rt.NewFloat(newValue)
-	}
-}
-
-func (rt *Runtime) floatSubtract() object.BuiltInMethod {
-	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := math.Float64frombits(ctx.Self.Num)
-
-		var newValue float64
-
-		if args[0].Is(object.INTEGER_VALUE) {
-			newValue = left - float64(int64(args[0].Num))
-		} else if args[0].Is(object.FLOAT_VALUE) {
-			newValue = left - math.Float64frombits(args[0].Num)
-		}
-
-		return rt.NewFloat(newValue)
-	}
-}
-
-func (rt *Runtime) floatMultiply() object.BuiltInMethod {
-	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := math.Float64frombits(ctx.Self.Num)
-
-		var newValue float64
-
-		if args[0].Is(object.INTEGER_VALUE) {
-			newValue = left * float64(int64(args[0].Num))
-		} else if args[0].Is(object.FLOAT_VALUE) {
-			newValue = left * math.Float64frombits(args[0].Num)
-		}
-
-		return rt.NewFloat(newValue)
-	}
-}
-
-func (rt *Runtime) floatDivide() object.BuiltInMethod {
-	return func(ctx *object.Context, kwargs map[string]object.EmeraldValue, args ...object.EmeraldValue) object.EmeraldValue {
-		left := math.Float64frombits(ctx.Self.Num)
-
-		var newValue float64
-
-		if args[0].Is(object.INTEGER_VALUE) {
-			newValue = left / float64(int64(args[0].Num))
-		} else if args[0].Is(object.FLOAT_VALUE) {
-			newValue = left / math.Float64frombits(args[0].Num)
-		}
-
-		return rt.NewFloat(newValue)
 	}
 }
 
